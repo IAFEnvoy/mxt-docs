@@ -1,0 +1,210 @@
+/**
+ * The single source of truth for the site structure.
+ *
+ * Every page is described once, with a Chinese label (the root locale) and an English
+ * label (the `/en/` locale). `page` is the path relative to the locale root and without
+ * an extension, so `datapack/json/ability` means:
+ *
+ *   zh: docs/datapack/json/ability.md   ->  /datapack/json/ability
+ *   en: docs/en/datapack/json/ability.md ->  /en/datapack/json/ability
+ *
+ * A page that exists in only one language is silently dropped from the other language's
+ * sidebar (see `buildSidebar`), so no sidebar entry ever points at a 404. Run
+ * `pnpm run check:i18n` to list those gaps.
+ */
+
+export const sections = [
+  {
+    text: { zh: '开始', en: 'Getting Started' },
+    items: [
+      { page: 'index', zh: '文档首页', en: 'Home' },
+      { page: 'installation', zh: '基本信息与安装', en: 'Installation' },
+      { page: 'faq', zh: '常见问题', en: 'FAQ' }
+    ]
+  },
+  {
+    text: { zh: '游玩指南', en: 'Player Guide' },
+    items: [
+      { page: 'player-guide/index', zh: '总览', en: 'Overview' },
+      { page: 'player-guide/keys-and-hud', zh: '按键与 HUD', en: 'Keys and HUD' },
+      { page: 'player-guide/items', zh: '物品与方块', en: 'Items and Blocks' },
+      {
+        // The page itself is the group's entry; one sub-page per root command. `alpha`
+        // tells the sidebar and the index list to sort the pages A→Z and to pin `/mxt`
+        // to the top, so a new command only has to be added anywhere in this list.
+        page: 'player-guide/commands',
+        zh: '命令',
+        en: 'Commands',
+        alpha: true,
+        items: [
+          { page: 'player-guide/commands/mxt', zh: '/mxt（含子命令）', en: '/mxt (and subcommands)' },
+          { page: 'player-guide/commands/ability', zh: '/ability', en: '/ability' },
+          { page: 'player-guide/commands/aura', zh: '/aura', en: '/aura' },
+          { page: 'player-guide/commands/curse', zh: '/curse', en: '/curse' },
+          { page: 'player-guide/commands/display', zh: '/display', en: '/display' },
+          { page: 'player-guide/commands/formation', zh: '/formation', en: '/formation' },
+          { page: 'player-guide/commands/friend', zh: '/friend', en: '/friend' },
+          { page: 'player-guide/commands/lightning', zh: '/lightning', en: '/lightning' },
+          { page: 'player-guide/commands/picker', zh: '/picker', en: '/picker' },
+          { page: 'player-guide/commands/talisman', zh: '/talisman', en: '/talisman' },
+          { page: 'player-guide/commands/technique', zh: '/technique', en: '/technique' },
+          { page: 'player-guide/commands/trade', zh: '/trade', en: '/trade' },
+          { page: 'player-guide/commands/tribulation', zh: '/tribulation', en: '/tribulation' }
+        ]
+      },
+      { page: 'player-guide/curios-slots', zh: 'Curios 槽位', en: 'Curios Slots' }
+    ]
+  },
+  {
+    text: { zh: '开发教程', en: 'Tutorials' },
+    items: [
+      { page: 'tutorial/index', zh: '教程索引', en: 'Tutorials' },
+      { page: 'tutorial/add-an-ability', zh: '定义一个技能', en: 'Add an Ability' },
+      { page: 'tutorial/define-aura-and-realms', zh: '定义灵气与境界', en: 'Define Aura and Realms' },
+      { page: 'tutorial/aura-environment', zh: '搭建灵气环境', en: 'Build the Aura Environment' },
+      { page: 'tutorial/create-items-with-kubejs', zh: '用 KubeJS 创建物品', en: 'Create Items with KubeJS' }
+    ]
+  },
+  {
+    text: { zh: '数据包', en: 'Datapack' },
+    items: [
+      { page: 'datapack/overview', zh: '总览', en: 'Overview' },
+      { page: 'datapack/damage', zh: '伤害结算', en: 'Damage Pipeline' },
+      { page: 'datapack/examples', zh: '示例', en: 'Examples' },
+      { page: 'datapack/loot-and-criteria', zh: '战利品与进度条件', en: 'Loot and Advancement Criteria' },
+      {
+        text: { zh: 'JSON 数据格式', en: 'JSON Data Formats' },
+        items: [
+          { page: 'datapack/json/index', zh: '注册表总览', en: 'Registry Overview' },
+          { page: 'datapack/json/ability', zh: 'ability（技能）', en: 'ability' },
+          { page: 'datapack/json/alchemy_recipe', zh: 'alchemy_recipe（炼丹配方）', en: 'alchemy_recipe' },
+          { page: 'datapack/json/aura', zh: 'aura（灵气）', en: 'aura' },
+          { page: 'datapack/json/aura_zone', zh: 'aura_zone（灵气区域）', en: 'aura_zone' },
+          { page: 'datapack/json/block_aura', zh: 'block_aura（方块灵气）', en: 'block_aura' },
+          { page: 'datapack/json/blueprint_binding', zh: 'blueprint_binding（图纸绑定）', en: 'blueprint_binding' },
+          { page: 'datapack/json/contract_type', zh: 'contract_type（契约类型）', en: 'contract_type' },
+          { page: 'datapack/json/creature_profile', zh: 'creature_profile（生物档案）', en: 'creature_profile' },
+          { page: 'datapack/json/cultivate_action', zh: 'cultivate_action（修炼行为）', en: 'cultivate_action' },
+          { page: 'datapack/json/currency', zh: 'currency（货币）', en: 'currency' },
+          { page: 'datapack/json/curse', zh: 'curse（诅咒）', en: 'curse' },
+          { page: 'datapack/json/element', zh: 'element（元素）', en: 'element' },
+          { page: 'datapack/json/forging_blueprint', zh: 'forging_blueprint（锻造图纸）', en: 'forging_blueprint' },
+          { page: 'datapack/json/forging_method', zh: 'forging_method（锻造手法）', en: 'forging_method' },
+          { page: 'datapack/json/formation', zh: 'formation（阵法）', en: 'formation' },
+          { page: 'datapack/json/item_archetype', zh: 'item_archetype（法器原型）', en: 'item_archetype' },
+          { page: 'datapack/json/item_aura', zh: 'item_aura（物品灵气）', en: 'item_aura' },
+          { page: 'datapack/json/item_binding', zh: 'item_binding（物品绑定）', en: 'item_binding' },
+          { page: 'datapack/json/item_quality', zh: 'item_quality（品质）', en: 'item_quality' },
+          { page: 'datapack/json/physique', zh: 'physique（体质）', en: 'physique' },
+          { page: 'datapack/json/pill_binding', zh: 'pill_binding（丹药绑定）', en: 'pill_binding' },
+          { page: 'datapack/json/realm_instance', zh: 'realm_instance（秘境实例）', en: 'realm_instance' },
+          { page: 'datapack/json/realm_stage', zh: 'realm_stage（境界阶段）', en: 'realm_stage' },
+          { page: 'datapack/json/resource', zh: 'resource（资源）', en: 'resource' },
+          { page: 'datapack/json/skill_stage', zh: 'skill_stage（技能水平）', en: 'skill_stage' },
+          { page: 'datapack/json/spirit_crafting', zh: 'spirit_crafting（灵性合成）', en: 'spirit_crafting' },
+          { page: 'datapack/json/spirit_herb', zh: 'spirit_herb（灵植）', en: 'spirit_herb' },
+          { page: 'datapack/json/spirit_root', zh: 'spirit_root（灵根）', en: 'spirit_root' },
+          { page: 'datapack/json/talisman', zh: 'talisman（符箓）', en: 'talisman' },
+          { page: 'datapack/json/technique', zh: 'technique（功法）', en: 'technique' },
+          { page: 'datapack/json/technique_binding', zh: 'technique_binding（功法绑定）', en: 'technique_binding' },
+          { page: 'datapack/json/tool_binding', zh: 'tool_binding（工具绑定）', en: 'tool_binding' },
+          { page: 'datapack/json/tribulation', zh: 'tribulation（天劫）', en: 'tribulation' },
+          { page: 'datapack/json/trigger', zh: 'trigger（事件规则）', en: 'trigger' },
+          { page: 'datapack/json/weapon_binding', zh: 'weapon_binding（武器绑定）', en: 'weapon_binding' }
+        ]
+      },
+      {
+        text: { zh: '类型参考', en: 'Type Reference' },
+        items: [
+          { page: 'datapack/types/index', zh: '类型参考总览', en: 'Type Reference' },
+          {
+            text: { zh: '行为（Action）', en: 'Actions' },
+            items: [
+              { page: 'datapack/types/action/entity_action_types', zh: '实体行为', en: 'Entity Actions' },
+              { page: 'datapack/types/action/bientity_action_types', zh: '双实体行为', en: 'Bi-entity Actions' },
+              { page: 'datapack/types/action/block_action_types', zh: '方块行为', en: 'Block Actions' },
+              { page: 'datapack/types/action/item_action_types', zh: '物品行为', en: 'Item Actions' }
+            ]
+          },
+          {
+            text: { zh: '条件（Condition）', en: 'Conditions' },
+            items: [
+              { page: 'datapack/types/condition/entity_condition_types', zh: '实体条件', en: 'Entity Conditions' },
+              { page: 'datapack/types/condition/bientity_condition_types', zh: '双实体条件', en: 'Bi-entity Conditions' },
+              { page: 'datapack/types/condition/block_condition_types', zh: '方块条件', en: 'Block Conditions' },
+              { page: 'datapack/types/condition/item_condition_types', zh: '物品条件', en: 'Item Conditions' },
+              { page: 'datapack/types/condition/damage_condition_types', zh: '伤害条件', en: 'Damage Conditions' }
+            ]
+          },
+          { page: 'datapack/types/formula_variables', zh: '公式变量', en: 'Formula Variables' },
+          { page: 'datapack/types/number_provider_types', zh: '数值提供器', en: 'Number Providers' },
+          { page: 'datapack/types/shared_data_types', zh: '共享数据类型', en: 'Shared Data Types' },
+          {
+            page: 'datapack/types/other_types',
+            zh: '其他类型族',
+            en: 'Other Type Families',
+            items: [
+              { page: 'datapack/types/other/trigger-and-cost', zh: '触发器与消耗类型', en: 'Trigger and Cost Types' },
+              { page: 'datapack/types/other/ability-and-curse', zh: '技能、状态与诅咒类型', en: 'Ability, State and Curse Types' },
+              { page: 'datapack/types/other/resource-bar', zh: '资源条与灵气类型', en: 'Resource Bar and Aura Types' },
+              {
+                page: 'datapack/types/other/formation-and-matcher',
+                zh: '阵法、时间线与匹配器类型',
+                en: 'Formation, Timeline and Matcher Types'
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    text: { zh: 'KubeJS', en: 'KubeJS' },
+    items: [
+      { page: 'kubejs/index', zh: '总览', en: 'Overview' },
+      { page: 'kubejs/items', zh: '物品与绑定', en: 'Items and Bindings' },
+      {
+        // The reference page is the group's entry; each API surface is a sub-page.
+        page: 'kubejs/api-reference',
+        zh: 'API 参考',
+        en: 'API Reference',
+        items: [
+          { page: 'kubejs/api/actions', zh: 'MxtActions：脚本 Action', en: 'MxtActions: Script Actions' },
+          { page: 'kubejs/api/conditions', zh: 'MxtConditions：脚本 Condition', en: 'MxtConditions: Script Conditions' },
+          { page: 'kubejs/api/values', zh: 'MxtValues：脚本数值', en: 'MxtValues: Script Providers' },
+          { page: 'kubejs/api/costs', zh: 'MxtCosts 与 MxtResources', en: 'MxtCosts and MxtResources' },
+          { page: 'kubejs/api/runtime', zh: '运行时领域 API', en: 'Runtime Domain APIs' },
+          { page: 'kubejs/api/events', zh: 'MxtEvents：事件', en: 'MxtEvents: Events' }
+        ]
+      },
+      { page: 'kubejs/examples', zh: '示例', en: 'Examples' }
+    ]
+  },
+  {
+    text: { zh: 'Java API', en: 'Java API' },
+    items: [
+      { page: 'java/index', zh: '总览', en: 'Overview' },
+      { page: 'java/registries', zh: '注册表与数据表', en: 'Registries and Data Tables' },
+      { page: 'java/api', zh: '公开 API', en: 'Public API' },
+      { page: 'java/interfaces', zh: '接口', en: 'Interfaces' },
+      { page: 'java/network', zh: '网络协议', en: 'Network Protocol' },
+      { page: 'java/screens', zh: '客户端界面', en: 'Client Screens' },
+      { page: 'java/hotbar', zh: '快捷栏条目', en: 'Hotbar Entries' },
+      { page: 'java/information-panel', zh: '人物信息面板', en: 'Information Panel' },
+      { page: 'java/friends', zh: '好友与敌我识别', en: 'Friends and Foe Identification' }
+    ]
+  }
+]
+
+/** Every page path in the spec, in sidebar order. */
+export function allPages() {
+  const out = []
+  const walk = (items) => {
+    for (const item of items) {
+      if (item.page) out.push(item.page)
+      if (item.items) walk(item.items)
+    }
+  }
+  walk(sections)
+  return out
+}

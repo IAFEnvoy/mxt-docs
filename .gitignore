@@ -1,6 +1,9 @@
 node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+# Only a stray `.vitepress/` in the repository root — the artefact of running
+# `vitepress build` without the `docs` argument. A bare `.vitepress` pattern would also
+# ignore `docs/.vitepress/`, which holds the site config, theme and locales.
+/.vitepress/
 *.log
 .DS_Store
-.vitepress

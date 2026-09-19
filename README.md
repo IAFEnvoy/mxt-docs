@@ -93,6 +93,35 @@ pnpm run build               # 构建失败会报告死链
 
 安装页（中英）里的「配置 / Configuration」一节是这条规则的正典说明，其他页面只引用标签页与条目名。
 
+## 部署（Cloudflare Pages）
+
+本站的 VitePress **源目录是 `docs/`**，而仓库根只是工程目录，所以 Pages 的构建设置必须指向 `docs`：
+
+| 设置项 | 值 |
+| --- | --- |
+| Root directory（根目录） | 留空（即仓库根） |
+| Build command（构建命令） | `pnpm run build`（等于 `vitepress build docs`） |
+| Build output directory（输出目录） | `docs/.vitepress/dist` |
+| Node / pnpm | 无需设置：`packageManager` 已锁 pnpm 11.5.2，Pages 自带的 Node 22 可用 |
+
+**为什么不能写 `npx vitepress build`**：VitePress 的 CLI 不带目录参数时会把**当前目录**当作源目录，
+于是页面路径全变成 `/docs/**`、`docs/.vitepress/config.ts` 也不会被加载，页内所有绝对链接
+（`/installation`、`/datapack/json/element`…）统统变成死链，构建以
+`[vitepress] 123 dead link(s) found` 失败。本地一条命令即可复现：
+
+```bash
+npx vitepress build        # ✗ 在仓库根执行：把仓库根当源目录，报一大堆 dead link
+pnpm run build             # ✅ 等价于 vitepress build docs
+```
+
+> 注意 `.gitignore`：**不要**写不带路径的 `.vitepress`，那会连 `docs/.vitepress/`（配置、主题、语言包）
+> 一起忽略，仓库里就没有配置文件了，线上会得到没有侧边栏、没有语言切换、没有搜索的裸站点。
+> 现在文件里是 `/.vitepress/`（只忽略仓库根那个误建目录）。提交后可以这样确认：
+
+```bash
+git ls-files docs/.vitepress        # 应列出 config.ts、theme/、locales/ 等
+```
+
 ## 已知情况
 
 - 文档里的 ` ```mcfunction ` 代码块会以纯文本渲染：当前 VitePress 使用的 Shiki 没有内置 mcfunction 语法，
