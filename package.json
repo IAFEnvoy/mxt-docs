@@ -1,0 +1,21 @@
+{
+  "name": "mxt-docs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MiXianTu documentation site (VitePress, i18n: zh-CN primary + en)",
+  "type": "module",
+  "packageManager": "pnpm@11.5.2",
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs",
+    "migrate": "node scripts/migrate-docs.mjs && node scripts/fix-links.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "check:links": "node scripts/check-links.mjs",
+    "check:config": "node scripts/check-config-labels.mjs",
+    "fix:links": "node scripts/fix-links.mjs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}

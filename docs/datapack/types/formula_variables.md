@@ -1,0 +1,21 @@
+---
+title: 公式变量
+---
+
+# 公式变量
+
+## 常见公式变量
+
+`mxt:formula_variable` 是**固有注册表**，数据包不能添加条目：每个条目负责从 `FormulaContext` 携带的对象里"拆出"一个数字——施法者、目标、资源对象或随机源。变量按需读取，公式只为自己真正用到的名字付出代价；名字与变量的对应关系在每个表达式里只解析一次（`caster_` 之类的名字族会按前缀切开，只把后半段交给条目处理），之后每次求值只是重新取值。事件载荷（`damage`、`block_x` 等）不属于任何对象，仍由调用方写入上下文的显式值表。
+
+取值顺序是：上下文显式值 → 变量注册表；`params` 只覆盖它所在的那一个表达式。
+
+- 实体族（`caster_` / `target_`）：`caster_health`、`caster_max_health`、`caster_level`，以及 `caster_<资源 ID>`、`caster_<属性 ID>`（命名空间与路径用 `_` 连接，路径中的 `/`、`.`、`-` 也替换为 `_`）。双实体上下文另有同名的 `target_` 前缀变量。客户端只认识同步过来的属性，其余属性名读作 `0`。
+- 资源族：`realm`、`realm_rank`、`level`（三者都是该数值修炼链的境界序号，与实体的 `caster_level` 无关）以及 `absorbed_aura`、`cultivation_progress`。它们只在该数值的修炼上下文里存在。
+- 所有上下文都可用：`zero`（恒为 `0`）和 `random`（从上下文的权威随机源取 `0..1`）。
+- 技能：配置了 `element_affinity` 时提供 `element_modifier`；`aura` 类型的每目标求值另有 `aura_radius` 与 `distance`。
+- 技能伤害：一次施放提供了 `damage_multiplier`（授予这个能力、且施法者当前所在的技能水平的 `damage_multiplier`），伤害管线的第一层会读它；内容自己的公式也可以读同一个名字。
+- 触发器：`attack` 提供 `target_is_living`、`target_health`；`hurt` 提供 `damage`；`kill` 提供 `target_health`；`death` 提供 `victim_health`；`block_break` / `block_use` 提供 `block_x`、`block_y`、`block_z`；`item_use` 提供 `use_duration`；`equip` 提供 `equipment_slot`；`breakthrough` 提供 `breakthrough`（恒为 `1`）。
+- 其他系统：契约战斗行为提供 `damage`；阵法 `entity_tick_action` 提供 `formation_radius` 与 `distance`；天劫时间线提供 `aura_tribulation_modifier`。
+
+名字写错、或当前上下文确实无法提供该名字时会在求值时被报告：开发环境打印完整 ERROR 日志（有异常时包含异常与堆栈）方便立刻定位，生产环境每个不同消息只记录一行 WARN；两者都不会中断调用方，而是按 `0` 继续求值。不要再依赖"未知变量静默为 0"来写完数据包。某个公式点具体能用哪些变量，以文档站点的 Formula Variables 页为准。使用 `params` 可以为同一公式显式提供变量，并覆盖同名上下文变量。
