@@ -78,7 +78,7 @@ description: 模组注册的全部内置双实体行为类型，以及每种类�
 | 类型 | 字段 | 说明 |
 |------|--------|-------------|
 | `mxt:mount` | — | 让施动者开始骑乘目标。 |
-| `mxt:damage_target` | `amount` | 对目标造成伤害，并把施动者记为攻击者，因此击杀归属与仇恨都会跟着它；[伤害结算](../../damage.md)的两层都会生效。 |
+| `mxt:damage_target` | `amount`、`damage_type?`、`element?` | 对目标造成伤害，并把施动者记为攻击者，因此击杀归属与仇恨都会跟着它；[伤害系统](/technical/damage)的两层都会生效。可选的 `damage_type` 构造这一击的来源，可选的 `element` 声明这一击的元素（只写元素时取它认领的第一个类型；两个都写时在**首次使用**这一击时核对元素确实认领了它，不一致各报一次日志）。 |
 | `mxt:heal_target` | `amount` | 治疗目标。 |
 | `mxt:transfer_resource` | `resource`、`amount` | 把一定量的[数值](../../json/resource.md)从施动者转移给目标，并做夹取，使数值不会变成负数，也不会超过目标的上限。 |
 | `mxt:add_velocity` | `x?`、`y?`、`z?`、`reference?`、`client?`、`server?`、`set?` | 给目标增加速度；`set` 为 `true` 时改为直接设置速度；`reference` 选择该向量所用的参考系。 |

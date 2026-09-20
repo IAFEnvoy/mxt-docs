@@ -5,8 +5,7 @@ import en from './locales/en'
 export default defineConfig({
   // Shared configuration — every locale inherits these values.
   title: 'MiXianTu',
-  description:
-    'MiXianTu（觅仙途）文档：安装、游玩内容、数据包 JSON 格式、类型参考、KubeJS 与 Java 扩展 API。',
+  description: 'MiXianTu（觅仙途）文档：安装、游玩内容、数据包 JSON 格式、类型参考、KubeJS 与 Java 扩展 API。',
   lang: 'zh-CN',
   cleanUrls: true,
   lastUpdated: true,
@@ -19,7 +18,24 @@ export default defineConfig({
 
   markdown: {
     theme: { light: 'github-light', dark: 'github-dark' },
-    lineNumbers: false
+    lineNumbers: false,
+    
+    config(md) {
+      const originalFence = md.renderer.rules.fence?.bind(md.renderer.rules)
+      md.renderer.rules.fence = (tokens, idx, options, env, slf) => {
+        const token = tokens[idx]
+        const info = token.info?.trim()
+        if (info === 'mermaid') {
+          const code = token.content.trim()
+          // encodeURIComponent escapes quotes, `<` and newlines, so the source survives
+          // being written into an HTML attribute. A bare JSON.stringify leaves `\"` behind,
+          // and the Vue template compiler then fails the whole build with
+          // "Attribute name cannot contain U+0022". The component decodes it again.
+          return `<ClientOnly><Mermaid code="${encodeURIComponent(code)}" /></ClientOnly>`
+        }
+        return originalFence ? originalFence(tokens, idx, options, env, slf) : ''
+      }
+    }
   },
 
   themeConfig: {
@@ -79,5 +95,12 @@ export default defineConfig({
   locales: {
     root: zh,
     en
-  }
+  },
+
+  vite: {
+    // 只预构建mermaid，不要写dayjs
+    optimizeDeps: {
+      include: ['mermaid']
+    }
+  },
 })

@@ -37,7 +37,7 @@ Entries listed in `disabled` are not used by the corresponding service, but they
 
 ## Registries
 
-The table below lists the 33 datapack registries the mod registers, in registry id order, plus the two recipe types documented in this section. `mxt:alchemy`, `mxt:spirit_shaped` and `mxt:spirit_shapeless` are vanilla recipe types rather than datapack registries, and are listed here because their JSON is documented in this section too.
+The table below lists the 34 datapack registries the mod registers, in registry id order, plus the two recipe types documented in this section. `mxt:alchemy`, `mxt:spirit_shaped` and `mxt:spirit_shapeless` are vanilla recipe types rather than datapack registries, and are listed here because their JSON is documented in this section too.
 
 | Registry | Directory | Purpose |
 |----------|-----------|---------|
@@ -52,7 +52,8 @@ The table below lists the 33 datapack registries the mod registers, in registry 
 | [`cultivate_action`](./cultivate_action.md) | `mxt/cultivate_action` | The cultivation process and its environment requirements. |
 | [`currency`](./currency.md) | `mxt/currency` | Item currency denominations and exchange. |
 | [`curse`](./curse.md) | `mxt/curse` | Curse definitions that can be referenced. |
-| [`element`](./element.md) | `mxt/element` | Element relations (`overcomes`/`adapted_to`), what each relation is worth in damage, and their display colour; an aura points at one through its `aura_type`. |
+| [`element`](./element.md) | `mxt/element` | Element relations (`overcomes`/`adapted_to`), what each relation is worth in damage, the damage types the element claims (`damage_types`), its accumulation numbers, and its display colour; an aura points at one through its `aura_type`. |
+| [`element_reaction`](./element_reaction.md) | `mxt/element_reaction` | What happens once enough of an element has accumulated on a body: the demand, what it consumes and the action it runs. |
 | [`forging_blueprint`](./forging_blueprint.md) | `mxt/forging_blueprint` | Forging targets and quality settlement. |
 | [`forging_method`](./forging_method.md) | `mxt/forging_method` | A single forging strike method. |
 | [`formation`](./formation.md) | `mxt/formation` | Formation lifecycle and aura overrides. |
@@ -62,7 +63,7 @@ The table below lists the 33 datapack registries the mod registers, in registry 
 | [`item_quality`](./item_quality.md) | `mxt/item_quality` | Shared quality and quality conditions. |
 | [`physique`](./physique.md) | `mxt/physique` | Physique bonuses that are independent of elements. |
 | [`pill_binding`](./pill_binding.md) | `mxt/pill_binding` | Pill and pill toxicity rules for existing items. |
-| [`realm_instance`](./realm_instance.md) | `mxt/realm_instance` | Realm instance strategies. |
+| [`realm_instance`](./realm_instance.md) | `mxt/realm_instance` | Realm templates: instance dimension generation, borders, structures, landing points, claiming and the entry and exit rules. |
 | [`realm_stage`](./realm_stage.md) | `mxt/realm_stage` | Linear realm chains and breakthrough. |
 | [`resource`](./resource.md) | `mxt/resource` | Entity resources such as cultivation progress, spirit power and stamina, plus inline resource bars. |
 | [`skill_stage`](./skill_stage.md) | `mxt/skill_stage` | One level of a skill mastery chain. |

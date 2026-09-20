@@ -66,6 +66,8 @@ A context built from an entity provides two families, one for the acting entity 
 | `caster_level` / `target_level` | Vanilla experience level when the entity is a player, otherwise `0` |
 | `caster_<resource>` / `target_<resource>` | Current amount of that resource; `0` when the entity does not hold it |
 | `caster_<attribute>` / `target_<attribute>` | Current value of that attribute |
+| `caster_element_<element>` / `target_element_<element>` | `1` when the entity's spirit roots name that element, otherwise `0` |
+| `caster_element_count` / `target_element_count` | How many elements the entity's spirit roots name |
 
 `<resource>` and `<attribute>` are the registry ID with the namespace and the path joined by `_`; `/`, `.` and `-` inside the path also become `_`:
 
@@ -75,6 +77,7 @@ A context built from an entity provides two families, one for the acting entity 
 | `example:fire/qi` | `caster_example_fire_qi` |
 | `minecraft:max_health` | `caster_minecraft_max_health` |
 | `minecraft:attack_damage` | `caster_minecraft_attack_damage` |
+| `example:fire` (an element) | `caster_element_example_fire` |
 
 Every resource and attribute of the loaded registries can be named this way, whether or not the entity currently uses it. Because two different IDs can flatten to the same name (`example:fire_qi` and `example_fire:qi` both become `example_fire_qi`), a collision is reported instead of being resolved silently.
 
@@ -122,7 +125,7 @@ These names are provided as explicit context values by the system that starts th
 | Variable | Available when | Description |
 |----------|----------------|-------------|
 | `element_modifier` | The ability declares a non-empty `element_affinity` | The element affinity multiplier computed for the caster |
-| `damage_multiplier` | The cast belongs to a mastery chain that grants the ability | The `damage_multiplier` of the level the caster stands on, which the [damage pipeline](../damage.md) also applies to the damage this cast deals |
+| `damage_multiplier` | The cast belongs to a mastery chain that grants the ability | The `damage_multiplier` of the level the caster stands on, which the [damage system](../../technical/damage.md) also applies to the damage this cast deals |
 | `aura_radius` | An `aura` ability evaluates its target action | The radius resolved for this pulse |
 | `distance` | An `aura` ability evaluates its target action | Distance in blocks between the caster and the current target |
 
@@ -152,6 +155,21 @@ An ability with a `triggered` ability type is evaluated when its trigger fires, 
 | `distance` | Formation `entity_tick_action` | Distance in blocks between the formation centre and the entity |
 | `aura_tribulation_modifier` | Tribulation timeline | Local aura influence, taken from the `tribulation_modify` rule of the aura zone and sampled once when each timeline entry begins |
 
+### Realm Instance Values
+
+Any formula evaluated for a member of a [realm instance](../json/realm_instance.md) can read the instance itself — most usefully the definition's own `enter_condition`, `exit_condition`, `enter_action` and `exit_action`:
+
+| Variable | Description |
+|----------|-------------|
+| `realm_instance_members` | How many members are inside the instance right now |
+| `realm_instance_limit` | The instance's member cap, taken from `max_members`; `-1` when it is unlimited |
+| `realm_instance_elapsed` | Ticks since the current visit began |
+| `realm_instance_duration` | The configured `duration_ticks` |
+| `realm_instance_index` | The index of this instance, counted from `0` |
+| `realm_instance_is_owner` | `1` when the reading entity owns the instance, otherwise `0` |
+
+The names carry the `realm_instance_` prefix because `realm`, `realm_rank` and `level` already mean a cultivation stage. Outside any realm instance they cannot be provided at all, so they are reported as an error instead of silently reading as `0`.
+
 ## Where Each Variable Is Available
 
 Which variables a formula can read is decided by the objects the caller puts into the context. The table below lists the main evaluation sites.
@@ -169,7 +187,7 @@ Which variables a formula can read is decided by the objects the caller puts int
 | Realm-stage and technique passive attribute modifiers | caster | Entity family |
 | Curse duration, tick interval, conditions, actions | caster (or the context of whatever applied the curse) | Entity family, plus the payload of the ability that applied it |
 | Item, weapon, pill and technique bindings, item quality, pill toxicity | the user or holder entity | Entity family, plus `target_health` / `target_is_living` on a weapon attack |
-| Forging, formations, contracts, creature profiles, realm instances, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for `entity_tick_action`) |
+| Forging, formations, contracts, creature profiles, realm instances, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for `entity_tick_action`; + the realm instance family inside an instance) |
 | Tribulation timeline entry duration and conditions | caster | Entity family + `aura_tribulation_modifier` |
 | Formulas evaluated from a `Level` instead of an entity: formation `tick_action` and `deactivate_action`, formation aura bonus, spirit crafting table costs, KubeJS block actions and conditions | nothing | `zero`, `random` only |
 | Client-side previews that use an empty context: item and weapon tooltips, item-aura capacity, currency value checks | nothing | `zero`, `random` only |

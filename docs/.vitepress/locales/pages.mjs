@@ -52,7 +52,8 @@ export const sections = [
           { page: 'player-guide/commands/tribulation', zh: '/tribulation', en: '/tribulation' }
         ]
       },
-      { page: 'player-guide/curios-slots', zh: 'Curios 槽位', en: 'Curios Slots' }
+      { page: 'player-guide/curios-slots', zh: 'Curios 槽位', en: 'Curios Slots' },
+      { page: 'player-guide/rift', zh: '裂隙', en: 'Rifts' }
     ]
   },
   {
@@ -69,7 +70,6 @@ export const sections = [
     text: { zh: '数据包', en: 'Datapack' },
     items: [
       { page: 'datapack/overview', zh: '总览', en: 'Overview' },
-      { page: 'datapack/damage', zh: '伤害结算', en: 'Damage Pipeline' },
       { page: 'datapack/examples', zh: '示例', en: 'Examples' },
       { page: 'datapack/loot-and-criteria', zh: '战利品与进度条件', en: 'Loot and Advancement Criteria' },
       {
@@ -88,6 +88,7 @@ export const sections = [
           { page: 'datapack/json/currency', zh: 'currency（货币）', en: 'currency' },
           { page: 'datapack/json/curse', zh: 'curse（诅咒）', en: 'curse' },
           { page: 'datapack/json/element', zh: 'element（元素）', en: 'element' },
+          { page: 'datapack/json/element_reaction', zh: '元素反应', en: 'Element Reactions' },
           { page: 'datapack/json/forging_blueprint', zh: 'forging_blueprint（锻造图纸）', en: 'forging_blueprint' },
           { page: 'datapack/json/forging_method', zh: 'forging_method（锻造手法）', en: 'forging_method' },
           { page: 'datapack/json/formation', zh: 'formation（阵法）', en: 'formation' },
@@ -190,8 +191,19 @@ export const sections = [
       { page: 'java/network', zh: '网络协议', en: 'Network Protocol' },
       { page: 'java/screens', zh: '客户端界面', en: 'Client Screens' },
       { page: 'java/hotbar', zh: '快捷栏条目', en: 'Hotbar Entries' },
-      { page: 'java/information-panel', zh: '人物信息面板', en: 'Information Panel' },
-      { page: 'java/friends', zh: '好友与敌我识别', en: 'Friends and Foe Identification' }
+      { page: 'java/information-panel', zh: '人物信息面板', en: 'Information Panel' }
+    ]
+  },
+  {
+    // The last category on purpose: these pages are source-level explanations of how a
+    // subsystem is built, not recipes for using it. `page` is required, so the sidebar
+    // entry and the link target are always the same file.
+    text: { zh: '技术细节', en: 'Technical Details' },
+    items: [
+      { page: 'technical/index', zh: '总览', en: 'Overview' },
+      { page: 'technical/damage', zh: '伤害系统', en: 'Damage System' },
+      { page: 'technical/identification', zh: '敌我识别系统', en: 'Foe Identification' },
+      { page: 'technical/aura', zh: '灵气计算', en: 'Aura Calculation' }
     ]
   }
 ]

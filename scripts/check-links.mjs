@@ -78,6 +78,9 @@ const anchorOf = (file) => {
   return anchorCache.get(file)
 }
 
+/** A static asset is served from `docs/public`, not resolved as a page. */
+const ASSET = /\.(png|jpe?g|gif|svg|webp|avif|ico)$/i
+
 for (const file of walk(DOCS)) {
   const rel = path.relative(DOCS, file).replace(/\\/g, '/')
   const lines = readFileSync(file, 'utf8').split('\n')
@@ -97,6 +100,14 @@ for (const file of walk(DOCS)) {
       if (target === '') {
         if (fragment && !anchorOf(file).has(fragment)) {
           problems.push(`${rel}:${index + 1} missing anchor #${fragment} in this page`)
+        }
+        continue
+      }
+      if (ASSET.test(target)) {
+        // Images and other assets live in `docs/public` and are referenced from both locales.
+        const asset = path.join(DOCS, 'public', target.replace(/^\/+/, ''))
+        if (!existsSync(asset) || !statSync(asset).isFile()) {
+          problems.push(`${rel}:${index + 1} missing asset -> ${raw}`)
         }
         continue
       }

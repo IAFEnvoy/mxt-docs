@@ -87,7 +87,7 @@ Rules:
 | `effects` | `List<ApplyEffect>` | `[]` | The status effects applied each period. The fields are exactly those of `mxt:apply_effect`: `effect`, `duration_ticks` and `amplifier`. |
 | `target_condition` | Entity Condition | `mxt:always_true` | An extra filter on the **target entity** (undead only, players only, …), evaluated after the friend-or-foe decision. |
 
-Every per-entity strike goes through the [damage pipeline](../damage.md): when the owner is credited, their spirit roots are read against the target's element on the attacking side, and the target's own adaptation reduces what it takes. The multipliers live in the `element` definitions, not here.
+Every per-entity strike goes through the [damage system](../../technical/damage.md): when the owner is credited, their spirit roots are read against the target's element on the attacking side, and the target's own adaptation reduces what it takes. The multipliers live in the `element` definitions, not here.
 
 ### `mxt:buff`
 

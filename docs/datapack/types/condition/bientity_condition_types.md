@@ -66,7 +66,8 @@ description: 模组注册的全部内置双实体条件类型，以及每种类�
 | `mxt:team` | `same_team?` | 比较施动者与目标的结盟关系；`same_team` 默认为 `true` 时要求结盟，为 `false` 时要求相反。 |
 | `mxt:relation` | `allied?` | 比较施动者与目标的盟友关系；`allied` 默认为 `true` 时要求是盟友，为 `false` 时要求不是盟友。 |
 | `mxt:friend` | — | 当施动者把目标当自己人时通过。 |
-| `mxt:element_overcomes` | — | 当施动者的灵根元素中至少有一个克制目标灵根的某个元素时通过。它只问这条关系是否存在，不问它值多少——这条克制关系的倍率属于 [伤害结算](../../damage.md)，因此只需要这层配对关系的内容写 `1.0`。 |
+| `mxt:element_overcomes` | — | 当施动者的灵根元素中至少有一个克制目标灵根的某个元素时通过。它只问这条关系是否存在，不问它值多少——这条克制关系的倍率属于 [伤害系统](/technical/damage)，因此只需要这层配对关系的内容写 `1.0`。 |
+| `mxt:element_adapted_to` | — | 当施动者适应（`adapted_to`）目标携带的某个元素时通过。它是 `mxt:element_overcomes` 的防御镜像，回答的是"我抗不抗你"；与那条一样，这里只问关系是否存在，倍率仍属于 [伤害系统](/technical/damage)。被停用的元素不算。 |
 | `mxt:can_see` | `shape_type?`、`fluid_handling?` | 检查目标是否在施动者所在维度中 128 格以内，并且两个实体眼睛位置之间的连线没有被方块遮挡。 |
 | `mxt:actor_condition` | `condition` | 对施动者测试一条 [实体条件](entity_condition_types.md)。 |
 | `mxt:target_condition` | `condition` | 对目标测试一条 [实体条件](entity_condition_types.md)。 |

@@ -22,7 +22,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/spirit_herb/f
 | `items` | `ItemMatcher` | **required** | Binds existing items. It does not create a new spirit herb item. |
 | `quality` | `Holder<item_quality>` | **required** | The default quality of that item. |
 | `age` | `NumberProvider` | `0` | Age metadata. |
-| `element_tags` | Identifier[] | `[]` | Element classification tags. |
+| `element_tags` | `HolderOrTag<element>[]` | `[]` | The element alignment of this herb, written against the **element registry**: an entry is one element and a `#` tag is a set of them, and disabled elements do not count. It is matched by `mxt:herb_tag` (`element`), so a herb can be named anywhere an `ItemMatcher` is accepted (item conditions, bindings, `mxt:item_matcher`, …). |
 | `material_tags` | Identifier[] | `[]` | Material classification tags. |
 | `growth_rate` | `NumberProvider` | `0` | Growth rate metadata. |
 | `drop_chance` | `NumberProvider` | `1` | Drop chance metadata. |

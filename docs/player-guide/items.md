@@ -58,7 +58,8 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 御兽铃 | `mxt:beast_taming_bell` | 无 | 对自己的契约灵宠执行统一召回。 |
 | 灵兽袋 | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | 保存一只已契约生物的完整持久化实体数据；对灵宠使用收纳，空袋右键释放。 |
 | 阵盘 | `mxt:formation_plate` | `mxt:formation_plate` | 保存 `allowed`（允许激活哪些阵法，支持 `#标签`）与 `formation`（当前选中）；对方块使用时调用 `FormationWorldService`。没绑定阵法时会**自动识别**脚下这座阵法。 |
-| 秘境令牌 | `mxt:realm_token` | `mxt:realm_token` | 保存 `realm_instance`；右键进入绑定秘境，在秘境内右键返回原位置。 |
+| 秘境令牌 | `mxt:realm_token` | `mxt:realm_token` | 保存一份 `realm_instance` 定义；右键进入绑定秘境（走定义自己的进入条件、实例上限与在场人数上限），在秘境内右键返回原位置（受定义的退出条件约束）。 |
+| 裂隙（方块物品） | `mxt:rift` | `mxt:rift` | 摆放裂隙方块；堆叠上带组件时按组件里的目标与颜色摆。整套机制见[裂隙](./rift.md)。 |
 | 灵力容器 | `mxt:spirit_vessel` | `mxt:resource_container` | 保存任意 `resource`；右键释放给持有者，潜行右键从持有者存入，每种资源容量为 1000。 |
 | 木/石令牌 | `mxt:wooden_token`、`mxt:stone_token` | `mxt:token` | 统一承载 `kind`、`value`、`owner`，供秘境和交易等权限系统共用。 |
 | 鉴定镜 | `mxt:identification_mirror` | 消费 `mxt:identification` | 统一解析带有鉴定组件的物品；具体待鉴定物品由内容包或其他模组提供。 |
@@ -73,6 +74,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_servant"}]
 give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
 give @s mxt:realm_token[mxt:realm_token={realm:"mxt_test:trial_realm"}]
+give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
 give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
 ```
@@ -88,3 +90,8 @@ give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:common_sigil"]},mxt:spir
 阵盘也可以在游戏内绑定：主手持有阵盘时执行 `/mxt formation bind <formation>`（需要 gamemaster 权限）。绑定不再是取得可用阵盘的前提——**没绑定的阵盘右键时会自己认出脚下的阵法**（见 [未绑定的阵盘会自动识别](/datapack/json/formation)），命令与组件语法的用处变成了**限制**这块盘能立哪一座。组件语法要求先知道注册表 ID 和 NBT 结构，命令则由服务端做 Tab 补全并在 ID 不存在时拒绝。
 
 契约卷轴、阵盘和秘境令牌没有绑定定义时会安全失败，并显示提示；灵兽袋、灵力容器和令牌的状态保存在 ItemStack 数据组件中，服务端是唯一权威。
+
+## 另见
+
+- 裂隙方块与裂隙锚的完整机制见[裂隙](./rift.md)。
+- 管理单个裂隙的命令见[命令](./commands/mxt.md)。

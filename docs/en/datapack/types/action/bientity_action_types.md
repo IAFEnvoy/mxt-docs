@@ -78,7 +78,7 @@ Each entry of a `choice` list is a weighted wrapper around a nested action:
 | Type | Fields | Description |
 |------|--------|-------------|
 | `mxt:mount` | — | Makes the actor start riding the target. |
-| `mxt:damage_target` | `amount` | Damages the target, crediting the actor as the attacker so kill credit and aggro follow them; both layers of the [damage pipeline](../../damage.md) apply. |
+| `mxt:damage_target` | `amount`, `damage_type?`, `element?` | Damages the target, crediting the actor as the attacker so kill credit and aggro follow them; both layers of the [damage system](../../../technical/damage.md) apply. The optional `damage_type` builds the source of this hit, and the optional `element` declares what the hit is (writing only `element` takes the first type that element claims; writing both checks on **first use** of the strike that the element really claims that type, logging one line per distinct mismatch). |
 | `mxt:heal_target` | `amount` | Heals the target. |
 | `mxt:transfer_resource` | `resource`, `amount` | Moves a [resource](../../json/resource.md) amount from the actor to the target, clamped so values never become negative or exceed the target's maximum. |
 | `mxt:add_velocity` | `x?`, `y?`, `z?`, `reference?`, `client?`, `server?`, `set?` | Adds velocity to the target, or sets it when `set` is `true`; `reference` chooses the frame the vector is expressed in. |

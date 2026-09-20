@@ -27,10 +27,10 @@ Each alias is toggled on its own in the **Command Aliases** tab of the server co
 
 ## Permissions
 
-Commands that need administrator rights validate the `gamemaster` permission in the command tree: `/mxt resource <id> set`, `/mxt breakthrough`, `/mxt realm set`, `/mxt soul reclaim`, `/aura cache clear`, `/ability cast`, `/ability grant`, `/ability revoke`, `/curse apply`, `/curse remove`, `/curse cleanse`, `/formation bind`, `/technique repair`, `/technique drop`, and every node of `/lightning`, `/talisman` and `/tribulation`. `/picker` additionally requires the `gamemaster` permission, an executing player and creative mode.
+Commands that need administrator rights validate the `gamemaster` permission in the command tree: `/mxt resource <id> set`, `/mxt breakthrough`, `/mxt realm set`, `/mxt realm_instance enter`, `/mxt realm_instance destroy`, `/mxt soul reclaim`, `/aura cache clear`, `/ability cast`, `/ability grant`, `/ability revoke`, `/curse apply`, `/curse remove`, `/curse cleanse`, `/formation bind`, `/technique repair`, `/technique drop`, and every node of `/lightning`, `/talisman` and `/tribulation`. `/picker` additionally requires the `gamemaster` permission, an executing player and creative mode.
 
 The remaining commands have no permission requirement — the read-only nodes such as `/mxt curse list`, `/ability list` and `/mxt trigger list` are among them — but several of them need an executing player and either report that requirement or return no result when they are run from the console.
 
 ## Tab Completion
 
-Registry IDs in commands use the vanilla `IdentifierArgument`, and tab completion is generated from the server's current registries, so it always suggests the IDs that the loaded datapacks actually define. Two subtrees complete from somewhere more specific: `/formation bind` offers the allow list of the plate in your main hand, and `/aura query` completes its `type` from the `mxt:element` registry.
+Registry IDs in commands use the vanilla `IdentifierArgument`, and tab completion is generated from the server's current registries, so it always suggests the IDs that the loaded datapacks actually define. A few subtrees complete from somewhere more specific: `/formation bind` offers the allow list of the plate in your main hand, `/aura query` completes its `type` from the `mxt:aura` registry, and `/aura query element` completes its element argument from the `mxt:element` registry.

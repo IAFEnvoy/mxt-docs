@@ -19,7 +19,7 @@ title: aura（灵气）
 | `cultivation_to_resource` | 对象 | `multiplier=1,max_per_tick=1` | 从修为计数抽取数值回复。 |
 | `resource_to_cultivation` | 对象 | `multiplier=1,max_per_tick=1` | 仅修炼模式下把数值转回修为。 |
 | `regen` | `NumberProvider` | `0` | 每 tick 的自然恢复值；未被修炼行为接管时生效，公式可读取该数值的境界变量。 |
-| `aura_type` | `Holder<element>` | 无 | 该数值的灵气标记。用于灵气类型判定（灵根、生物元素偏好、环境灵气渲染），并显示在数值名称旁（例如 `/mxt aura query`）。 |
+| `aura_type` | `Holder<element>` | 无 | 该数值的灵气标记。用于灵气类型判定（灵根、生物元素偏好、环境灵气渲染），并显示在数值名称旁（例如 `/mxt aura query`）。元素被停用（`mxt:disabled`）时这个标记整个失效：不再参与匹配、不再着色、也不产生灵力爆发。 |
 | `burst_amount` | `NumberProvider` | `0` | 大于 `0` 时，该数值可由“发射灵力”快捷键消耗并作为每发灵力射线的数值。每个数据包应只配置一个此值大于 `0` 的默认灵力资源。 |
 | `use_condition` | `EntityCondition` | `mxt:always_true` | 控制实体是否能主动消耗该数值，并决定其资源条是否显示；不影响修炼、环境吸收、自然恢复或突破。 |
 | `show_cultivation_info` | Boolean | `true` | 是否在角色信息面板显示该数值对应的境界和修为进度。 |

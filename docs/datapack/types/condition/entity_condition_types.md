@@ -64,11 +64,15 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 | `mxt:sneaking` | — | 检查实体是否正在潜行。 |
 | `mxt:has_ability` | `ability` | 检查实体当前是否持有给定的 [技能](../../json/ability.md)。 |
 | `mxt:has_curse` | `curse?`、`tags?`、`stacks?`、`remaining_ticks?` | 检查实体是否持有一条满足**全部**给定筛选条件的 [诅咒](../../json/curse.md)：某个定义、列出的全部标签、层数范围与剩余 tick 范围。范围是 `{min?, max?}` 窗口；永不过期的诅咒按无限计，因此它能回答 `min`，却永远不会满足 `max`。完全不写筛选条件时，问的是是否持有任意诅咒。 |
-| `mxt:has_spirit_root` | `spirit_root` | 检查实体当前是否持有给定的 [灵根](../../json/spirit_root.md)。 |
+| `mxt:has_spirit_root` | `spirit_root` | 检查实体当前是否持有给定的 [灵根](../../json/spirit_root.md)；`spirit_root` 接受条目、`#` 标签或它们的数组，所以"任意火属灵根"写一条标签即可。被停用的灵根不算持有。 |
 | `mxt:has_physique` | `physique` | 检查实体当前是否持有给定的 [体质](../../json/physique.md)。 |
 | `mxt:realm` | `realm`、`comparison?` | 把实体的 [境界阶段](../../json/realm_stage.md) 与 `realm` 比较，`comparison` 可用 `exact`（默认）、`at_least` 或 `at_most`。 |
 | `mxt:has_realm` | `aura` | 对已针对给定 [灵气](../../json/aura.md) 进入境界链的实体通过。 |
 | `mxt:aura_range` | `aura` | 把服务端解析出的实体所在位置的灵气浓度与逐灵气的需求相比较。`aura` 把灵气 ID 映射到一个对象，其中有必填的 `max` 与可选的 `min`（默认 `0`）；两者都接受 [数值提供器](../number_provider_types.md)。 |
+| `mxt:has_element` | `elements` | 当实体的**启用**灵根所命名的元素中有一个出现在 `elements` 里时通过。`elements` 是 `HolderOrTag<element>[]`，因此"任意火属灵根"写一条 `#` 标签即可，之后新加的同类灵根无需改动这里；被停用的元素不算。 |
+| `mxt:aura_element` | `elements` | 按**元素**而不是按具名灵气测试实体所在位置的灵气。`elements` 把元素映射到一个对象，其中有必填的 `max` 与可选的 `min`（默认 `0`），两者都接受 [数值提供器](../number_provider_types.md)；该位置上所有携带这个元素的**存活**灵气会先求和再比较（被停用的元素不参与），每一项都要通过。给区域再加另一种同元素灵气即可满足要求，不必改动查询。 |
+| `mxt:element_attachment` | `elements` | 读取元素在实体身上的积累量（`mxt:element_attachment` 附件，见 [element_reaction](../../json/element_reaction.md)）。`elements` 把元素映射到同样的 `{min?, max}` 窗口，每一项都要通过。这是积累系统的只读一侧：可以让效果取决于身上攒了多少火，而不需要任何反应触发。 |
+| `mxt:in_realm_instance` | `definition?`、`role?` | 判定实体是否在某份[秘境实例](../../json/realm_instance.md)里。`definition` 接受一条 `mxt:realm_instance` 定义或 `#标签`，省略时不限定是哪一份定义；`role` 取 `any`（默认，在里面即可）、`owner`（自己是主人）或 `guest`（在里面但不是主人）。不在任何实例里时恒为 `false`，因此 `owner` 与 `guest` 都隐含"在里面"。 |
 | `mxt:resource_compare` | `resource`、`min` | 检查实体某个数值的取值至少为 `min`。 |
 | `mxt:entity_tag` | `tag` | 把实体与实体类型标签匹配。 |
 | `mxt:formation_member` | — | 当实体在当前维度拥有任意已注册的 [阵法](../../json/formation.md) 时通过。 |
@@ -116,5 +120,5 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 | `mxt:has_equipped_item` | `item_condition?`、`slots?` | 当实体穿戴或手持的物品堆满足一条 [物品条件](item_condition_types.md) 时通过——这是把被动 `mxt:modifier` 绑定在装备上的自然做法，例如 `{"type": "mxt:item_tag", "tag": "#example:swords"}`。`slots` 可以写原版装备槽名（`mainhand`、`offhand`、`head`、`chest`、`legs`、`feet`、`body`），也可以写带 `curios:` 前缀的 Curios 槽位（`curios:back_weapon`）；不写则询问全部原版槽位与全部 Curios 槽位。匹配不到任何东西的名字只是永远不通过。 |
 
 ::: info 类型引用
-`ability`、`curse`、`spirit_root`、`physique`、`realm`、`aura` 和 `resource` 接受对应数据包注册表的 ID，因此它们可以指向任意数据包添加的内容，而不只是模组自带的条目。
+`ability`、`curse`、`spirit_root`、`physique`、`realm`、`aura`、`element` 和 `resource` 接受对应数据包注册表的 ID，因此它们可以指向任意数据包添加的内容，而不只是模组自带的条目。
 :::

@@ -30,6 +30,7 @@ The project is still in development. Datapack formats and other interfaces are n
 | Browse the built-in action and condition types | [Types Reference](./datapack/types/index.md) |
 | Extend the framework from a script | [KubeJS](./kubejs/index.md) |
 | Build an addon in Java | [Java API](./java/index.md) |
+| Read how a subsystem is implemented inside | [Technical Details](./technical/index.md) |
 | Common questions | [FAQ](./faq.md) |
 
 ## Requirements
@@ -61,7 +62,7 @@ The project is still in development. Datapack formats and other interfaces are n
 | Formations |   ✅    | Players can build and activate formations; a formation keeps running by consuming resources, applies effects within its area and temporarily provides buffs/debuffs. |
 | Tribulations |   🔲   | A tribulation can be triggered on a realm breakthrough: it consumes a timeline of entries, gets harder with the environment, and success or failure each run their own outcome. |
 | Creature Profiles and Contracts |   🔲   | Creature profiles define a creature's strength, inner core and drops; players can also sign a contract with a creature, letting the spirit beast follow and fight, be stored in a Spirit Beast Bag or recalled with a Beast Taming Bell. |
-| Secret Realms |   🔲   | Players can enter a separate secret realm with a Realm Token; a realm has player count and time limits, and is cleaned up and returns players to where they came from when it expires. |
+| Secret Realms |   ✅    | A realm definition is a template: every entry opens an instance dimension of its own, with a border, structures and landing points, plus caps on instances, members and time; a realm can be claimed by its first visitor, and a claimed realm is unloaded but keeps its terrain for the next visit. |
 | Spirit Crafting Table |   ✅    | Crafting at the Spirit Crafting Table costs aura in addition to materials, deducted when the result is taken out. |
 | Forging |   ✅    | At a Forge Table, several materials are hammered into a result following a blueprint; different tools unlock different methods, and the quality of the result depends on the process and the number of steps. |
 | Alchemy |   🚧   | Recipes combine materials, aura, temperature and furnace tier to produce pills, with both the success and failure outcomes decided by the recipe; taking a pill applies its effect, and taking too many accumulates toxicity. |

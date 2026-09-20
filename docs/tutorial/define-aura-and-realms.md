@@ -56,7 +56,7 @@ realm_stage chain             progress + conditions + costs → next realm
 }
 ```
 
-`overcomes` 与 `adapted_to` 是指向其他元素的可选关系。每个条目写出它指向的元素（`elements`，单个 ID、数组或 `#` 标签）以及这条关系值多少（`multiplier`，有限非负数），[伤害结算](../datapack/damage.md)会分别在攻击方与受击方读取它们；在你拥有不止一个元素之前，可以先不写。完整字段表见 [element（元素）](../datapack/json/element.md)。
+`overcomes` 与 `adapted_to` 是指向其他元素的可选关系。每个条目写出它指向的元素（`elements`，单个 ID、数组或 `#` 标签）以及这条关系值多少（`multiplier`，有限非负数），[伤害系统](../technical/damage.md)会分别在攻击方与受击方读取它们；在你拥有不止一个元素之前，可以先不写。完整字段表见 [element（元素）](../datapack/json/element.md)。
 
 ## 第 2 步 —— 灵气与它的数值
 

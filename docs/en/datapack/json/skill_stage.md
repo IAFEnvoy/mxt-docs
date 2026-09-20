@@ -27,7 +27,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/skill_stage/s
 `mastery` belongs to the level, not to a technique: a chain measures the same climb for everyone who shares it. It is a `NumberProvider`, so it may be a formula, but a decreasing requirement anywhere in a chain is rejected.
 
 ::: info Where `damage_multiplier` is read
-Casting an ability puts the multiplier of the level the caster stands on, in a chain whose `configuration` grants that ability, onto the cast's formula context as `damage_multiplier`; the [damage pipeline](../damage.md) then multiplies the damage that cast deals by it. When several techniques grant the same ability, the highest of their levels speaks — they do not stack. The multiplier therefore belongs to the abilities a chain grants rather than to everything the holder does, and it applies to damage such a cast deals to its own caster as well (a stronger technique has a heavier backlash). A chain that grants nothing has nothing to scale.
+Casting an ability puts the multiplier of the level the caster stands on, in a chain whose `configuration` grants that ability, onto the cast's formula context as `damage_multiplier`; the [damage system](../../technical/damage.md) then multiplies the damage that cast deals by it. When several techniques grant the same ability, the highest of their levels speaks — they do not stack. The multiplier therefore belongs to the abilities a chain grants rather than to everything the holder does, and it applies to damage such a cast deals to its own caster as well (a stronger technique has a heavier backlash). A chain that grants nothing has nothing to scale.
 :::
 
 ## Example

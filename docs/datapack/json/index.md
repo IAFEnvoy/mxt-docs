@@ -4,14 +4,15 @@ title: 动态注册表
 
 # 动态注册表
 
-下表列出 `MxtDatapackRegistries` 注册的 33 个数据包注册表。字段表中的“默认”是 Codec 默认值；“必填”表示缺失时加载失败。表格末尾的 `alchemy_recipe` 与 `spirit_crafting` 不是数据包注册表，而是使用原版配方系统的配方类型，一并列在此处便于查阅。
+下表列出 `MxtDatapackRegistries` 注册的 34 个数据包注册表。字段表中的“默认”是 Codec 默认值；“必填”表示缺失时加载失败。表格末尾的 `alchemy_recipe` 与 `spirit_crafting` 不是数据包注册表，而是使用原版配方系统的配方类型，一并列在此处便于查阅。
 
 | 注册表 | 文件目录 | 用途 |
 | --- | --- | --- |
 | `resource` | `mxt/resource` | 修为、灵力、体力等实体资源及内联资源条。 |
 | `aura` | `mxt/aura` | 单个数值的灵气定义：它是什么（元素标记、灵力射线量）、境界链入口、恢复、换算与可用性。 |
 | `realm_stage` | `mxt/realm_stage` | 线性境界链和突破。 |
-| `element` | `mxt/element` | 元素关系（`overcomes`/`adapted_to`，每条关系自带伤害倍率）与显示色；灵气用自身的 `aura_type` 指向一个元素，统一伤害管线按双方灵根的元素关系结算克制与适应。 |
+| `element` | `mxt/element` | 元素关系（`overcomes`/`adapted_to`，每条关系自带伤害倍率）、它认领的伤害类型（`damage_types`）、附着与衰减参数与显示色；灵气用自身的 `aura_type` 指向一个元素，统一伤害管线按双方灵根的元素关系结算克制与适应，元素附着由 `element_reaction` 结算。 |
+| `element_reaction` | `mxt/element_reaction` | 元素附着达到要求时触发的反应。 |
 | `spirit_root` | `mxt/spirit_root` | 与单一元素绑定的灵根。 |
 | `physique` | `mxt/physique` | 独立于元素的体质加成。 |
 | `ability` | `mxt/ability` | 主动、被动和触发技能。 |
@@ -31,7 +32,7 @@ title: 动态注册表
 | `tribulation` | `mxt/tribulation` | 天劫：启动门槛、时间线节拍与成败行为。 |
 | `creature_profile` | `mxt/creature_profile` | 生物档案和实体绑定条件。 |
 | `contract_type` | `mxt/contract_type` | 契约生命周期。 |
-| `realm_instance` | `mxt/realm_instance` | 秘境实例策略。 |
+| `realm_instance` | `mxt/realm_instance` | 秘境模板：实例维度生成、边界、结构、落点、认领与进出规则。 |
 | `currency` | `mxt/currency` | 物品货币面值和兑换。 |
 | `item_binding` | `mxt/item_binding` | 现有物品到行为数组的绑定。 |
 | `weapon_binding` | `mxt/weapon_binding` | 现有物品的武器属性和行为。 |
@@ -101,7 +102,7 @@ title: 动态注册表
 
 - `curse`：可被多个模块引用的诅咒定义与持续类型；到期与被解毒各有一个行为，而「谁能解我」不由诅咒决定——解毒剂用 `mxt:remove_curses_by_tag` 声明它能解的 `mxt:curse` 标签，标签文件列出诅咒。物品可以携带诅咒（`mxt:curse_container`，装上即施加、脱下即移除），`display_condition` 决定它在人物信息面板里露不露面。详见[数据包格式](/datapack/json/curse)。
 - `creature_profile` / `contract_type`：生物档案和契约规则，框架不提供具体生物数值。
-- `realm_instance`：运行时维度实例入口。
+- `realm_instance`：秘境模板，按需为每次进入开出实例维度。
 - `spirit_herb`：绑定现有物品的灵植数据。
 - `item_archetype`：法器和飞行能力定义。
 - `talisman`：符箓定义，目前只声明铭刻后授予的 `ability`；“已经铭刻了哪些符箓”由物品 `mxt:talisman` 的组件保存，见[数据包格式](/datapack/json/talisman)。

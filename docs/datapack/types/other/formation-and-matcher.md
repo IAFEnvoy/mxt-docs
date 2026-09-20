@@ -79,7 +79,7 @@ title: 阵法、时间线与匹配器类型
 | `mxt:wildcard` | `pattern` | 用 `*` 和 `?` 通配符匹配物品 ID |
 | `mxt:regex` | `pattern` | 用正则表达式匹配物品 ID |
 | `mxt:spirit_storage` | 无 | 匹配每一个存储灵气的物品，也就是每一个实现了 `ItemAuraAccess` 的物品 |
-| `mxt:herb_tag` | `element?`、`material?` | 匹配这样一个物品：它是一个灵植，且其 `element_tags` / `material_tags` 含有给定的 ID |
+| `mxt:herb_tag` | `element?`、`material?` | 匹配这样一个物品：它是一个灵植，且其 `element_tags` / `material_tags` 与给定的查询相交（`element` 两边都展开成元素集合） |
 
 | `type` | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- | --- |
@@ -88,7 +88,7 @@ title: 阵法、时间线与匹配器类型
 | `mxt:wildcard` | `pattern` | String | **必填** | `*` 匹配任意长度的字符，`?` 匹配单个字符；不能为空 |
 | `mxt:regex` | `pattern` | String | **必填** | 对物品 ID 匹配的完整正则表达式；不能为空 |
 | `mxt:spirit_storage` | — | — | — | 无字段；`{"type": "mxt:spirit_storage"}` 就是整个条目 |
-| `mxt:herb_tag` | `element` | Identifier | 无 | 匹配的灵植必须在 `element_tags` 中列出的元素 ID |
+| `mxt:herb_tag` | `element` | `HolderOrTag<element>` | 无 | 匹配的灵植的元素归属；两边都写元素注册表的引用（条目或 `#` 标签），并**双向**展开成元素集合再取交集，因此标签写在哪一边都不影响结果 |
 | `mxt:herb_tag` | `material` | Identifier | 无 | 匹配的灵植必须在 `material_tags` 中列出的材料 ID；`element` 与 `material` 至少要给出一个 |
 
 通配符和正则条目是针对物品 ID 匹配的，例如 `minecraft:apple`，而不是针对显示名。`mxt:spirit_storage` 是唯一按能力而非按 ID 匹配的条目，因此之后新增的、实现了 `ItemAuraAccess` 的物品无需修改声明该匹配器的文件就会被覆盖。
@@ -101,7 +101,7 @@ title: 阵法、时间线与匹配器类型
 ]
 ```
 
-`mxt:herb_tag` 是读取 `mxt:spirit_herb` 数据包注册表、而不只是原版物品注册表的条目：它匹配这样一个物品——它是一个[灵植](../../json/spirit_herb.md)，即某条 `mxt:spirit_herb` 定义自己的匹配器接受该物品堆——然后再问那条定义的 `element_tags` / `material_tags` 是否含有给定的 ID。写出的每个字段都必须存在于该灵植上，因此同时给出 `element` 和 `material` 的条目只匹配同时列出这两个 ID 的灵植，而只给出一个字段的条目只问那一个字段。两个字段都不给出的条目会在数据包加载时被拒绝；灵植注册表只在服务器运行时存在，因此在客户端该条目直接报告不匹配。
+`mxt:herb_tag` 是读取 `mxt:spirit_herb` 数据包注册表、而不只是原版物品注册表的条目：它匹配这样一个物品——它是一个[灵植](../../json/spirit_herb.md)，即某条 `mxt:spirit_herb` 定义自己的匹配器接受该物品堆——然后再问那条定义的归属：`element` 查 `element_tags`、`material` 查 `material_tags`，两者都写就要同时满足，两个都不写会被加载期拒绝。`element` 与 `element_tags` 两边都写元素注册表的引用（条目或 `#` 标签），并**双向**展开成元素集合再取交集——草写的是"火灵草"、问的是"#温热元素"能匹配，反过来也能，所以标签写在哪一边都不影响结果；被停用的元素不参与。`material` 仍是普通标识符。标签是草的属性而不是物品的属性，所以内容可以写"任意火属性灵草"而不必知道之后有哪些物品被绑到那条草上。灵植注册表只在服务器运行时存在，因此在客户端该条目直接报告不匹配。
 
 ```json
 {

@@ -17,8 +17,8 @@ title: aura_zone（灵气区域）
 | `biomes` | `HolderOrTag<Biome>[]` | `[]` | 群系匹配。 |
 | `fluctuation` | Object | static/0 | 昼夜或月相波动。 |
 | `rules` | Object | 全部关闭 | 修炼压制、天劫、灵植和炼丹环境规则。 |
-| `element_fit_bonus` | Double | `0` | 灵根元素适配奖励。 |
-| `element_conflict_penalty` | Double | `0` | 元素冲突惩罚。 |
+| `element_fit_bonus` | Double | `0` | 灵根元素适配奖励：这里存在该灵根自己的灵气时加这么多。 |
+| `element_conflict_penalty` | Double | `0` | 元素冲突惩罚：乘在"对立浓度"上——对立浓度是本区域内所有与灵根元素有 `overcomes`/`adapted_to` 关系的**其它**元素的浓度之和，所以空区域不再被当成对立区域。 |
 | `noise` | Object | 关闭 | 带 seed 的二维噪声分布。 |
 | `particle` | `ParticleEffect` | 无 | 服务端控制的可选粒子。 |
 | `client_render` | Object | 白色、64、0.35 | 客户端雾色和雾强度。 |

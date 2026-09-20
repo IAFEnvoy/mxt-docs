@@ -32,6 +32,8 @@ data/mxt/tags/mxt/<registry>/disabled.json
 
 被列入 `mxt:disabled` 的条目不会参与运行时查询。标签值顺序不作为玩法顺序；品质顺序由品质读取接口根据原版标签顺序处理。
 
+元素同样吃这个标签：被停用的元素不再参与持有关系（`overcomes`/`adapted_to` 不再结算）、不再着色、不能被灵根绑定，也不参与任何元素匹配。注意这与灵根/体质的开关是两件事：`mxt:disabled` 是数据包对整个定义下的封条，所有内容方都看不见它；而每条**已持有的**灵根和体质可以被单独**关闭而仍然持有**（见 [spirit_root](/datapack/json/spirit_root)），那条路只影响被关的那一条，`mxt:has_spirit_root` / `mxt:has_physique` 照旧为真。
+
 ## 数值字段
 
 数值可以写成常量、表达式字符串或 NumberProvider 对象：
@@ -54,7 +56,7 @@ data/mxt/tags/mxt/<registry>/disabled.json
 
 | 分类 | 注册表 |
 | --- | --- |
-| 资源与修炼 | `resource`、`aura`、`element`、`realm_stage`、`spirit_root`、`physique`、`technique`、`skill_stage`、`cultivate_action` |
+| 资源与修炼 | `resource`、`aura`、`element`、`element_reaction`、`realm_stage`、`spirit_root`、`physique`、`technique`、`skill_stage`、`cultivate_action` |
 | 技能与规则 | `ability`、`curse`、`formation`、`tribulation`、`trigger`、`talisman` |
 | 灵气与世界 | `aura_zone`、`block_aura`、`item_aura`、`realm_instance` |
 | 物品与品质 | `item_binding`、`weapon_binding`、`pill_binding`、`technique_binding`、`tool_binding`、`blueprint_binding`、`item_archetype`、`item_quality` |
@@ -73,7 +75,7 @@ data/mxt/tags/mxt/<registry>/disabled.json
 
 ## 加载与覆盖
 
-- 33 个动态注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。
+- 34 个动态注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。
 - 文件冲突遵循 Minecraft 数据包优先级：高优先级数据包覆盖低优先级数据包的同一路径。
 - 原版标签使用 `replace: false` 时，值按数据包合并顺序追加；除品质排序标签外，玩法不依赖标签值顺序。
 - 数据包只读，定义中没有通用的 `schema_version`、`enabled` 或 `tags` 字段。

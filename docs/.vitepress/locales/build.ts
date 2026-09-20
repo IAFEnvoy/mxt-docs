@@ -99,9 +99,17 @@ function firstPage(items: any[]): string | null {
 }
 
 /**
+ * The path prefix a section's sidebar is filed under: `/` (or `/en/`) for a category whose
+ * pages sit at the locale root, `/<segment>/` for one that owns a directory.
+ */
+function sidebarKey(prefix: string, page: string | null): string {
+  return page === null || !page.includes('/') ? `${prefix}/` : `${prefix}/${page.split('/')[0]}/`
+}
+
+/**
  * One sidebar per top-level category: a page only shows the directory of the category it
- * belongs to (开始 / 游玩指南 / 开发教程 / 数据包 / KubeJS / Java API), each with its own
- * sub-groups. VitePress picks the longest matching path prefix.
+ * belongs to (开始 / 游玩指南 / 开发教程 / 数据包 / KubeJS / Java API / 技术细节), each with
+ * its own sub-groups. VitePress picks the longest matching path prefix.
  */
 export function buildSidebars(locale: Locale): DefaultTheme.SidebarMulti {
   const prefix = localePrefix(locale)
@@ -109,33 +117,56 @@ export function buildSidebars(locale: Locale): DefaultTheme.SidebarMulti {
   for (const section of sections) {
     const items = filter(section.items, locale)
     if (items.length === 0) continue
-    const page = firstPage(section.items)
-    const segment = page === null ? '' : page.split('/')[0]
-    const key = page !== null && page.includes('/') ? `${prefix}/${segment}/` : `${prefix}/`
+    const key = sidebarKey(prefix, firstPage(section.items))
     sidebars[key] = [{ text: section.text[locale], items, collapsed: false }]
   }
   return sidebars
 }
 
-/** Localized navigation bar (the same entry points in both languages). */
+/**
+ * The sidebar keys that exist in this locale. A category whose pages are all missing owns
+ * no key, so a path inside it falls through to the `/` key — the root category's sidebar.
+ */
+function liveSidebarKeys(locale: Locale): Set<string> {
+  const prefix = localePrefix(locale)
+  const keys = new Set<string>()
+  for (const section of sections) {
+    if (filter(section.items, locale).length === 0) continue
+    keys.add(sidebarKey(prefix, firstPage(section.items)))
+  }
+  return keys
+}
+
+/**
+ * Localized navigation bar (the same entry points in both languages).
+ *
+ * An entry is only kept while its category actually has pages in this locale. A nav item is
+ * written by hand and cannot check for itself, and VitePress falls back to the `/` key when
+ * a path matches no sidebar — so a category listed here but not yet written would open the
+ * root category's sidebar. Dropping it instead leaves the bar one entry short until the
+ * pages exist, which is the honest failure.
+ */
 export function buildNav(locale: Locale): DefaultTheme.NavItem[] {
   const p = localePrefix(locale)
-  if (locale === 'zh') {
-    return [
-      { text: '开始', link: '/installation', activeMatch: '^/(installation|faq)' },
-      { text: '游玩指南', link: '/player-guide/', activeMatch: '^/player-guide/' },
-      { text: '开发教程', link: '/tutorial/', activeMatch: '^/tutorial/' },
-      { text: '数据包', link: '/datapack/overview', activeMatch: '^/datapack/' },
-      { text: 'KubeJS', link: '/kubejs/', activeMatch: '^/kubejs/' },
-      { text: 'Java API', link: '/java/', activeMatch: '^/java/' }
-    ]
-  }
-  return [
-    { text: 'Getting Started', link: `${p}/installation`, activeMatch: `^${p}/(installation|faq)` },
-    { text: 'Player Guide', link: `${p}/player-guide/`, activeMatch: `^${p}/player-guide/` },
-    { text: 'Tutorials', link: `${p}/tutorial/`, activeMatch: `^${p}/tutorial/` },
-    { text: 'Datapack', link: `${p}/datapack/overview`, activeMatch: `^${p}/datapack/` },
-    { text: 'KubeJS', link: `${p}/kubejs/`, activeMatch: `^${p}/kubejs/` },
-    { text: 'Java API', link: `${p}/java/`, activeMatch: `^${p}/java/` }
-  ]
+  const live = liveSidebarKeys(locale)
+  const bar = locale === 'zh'
+    ? [
+        { text: '开始', link: '/installation', activeMatch: '^/(installation|faq)' },
+        { text: '游玩指南', link: '/player-guide/', activeMatch: '^/player-guide/' },
+        { text: '开发教程', link: '/tutorial/', activeMatch: '^/tutorial/' },
+        { text: '数据包', link: '/datapack/overview', activeMatch: '^/datapack/' },
+        { text: 'KubeJS', link: '/kubejs/', activeMatch: '^/kubejs/' },
+        { text: 'Java API', link: '/java/', activeMatch: '^/java/' },
+        { text: '技术细节', link: '/technical/', activeMatch: '^/technical/' }
+      ]
+    : [
+        { text: 'Getting Started', link: `${p}/installation`, activeMatch: `^${p}/(installation|faq)` },
+        { text: 'Player Guide', link: `${p}/player-guide/`, activeMatch: `^${p}/player-guide/` },
+        { text: 'Tutorials', link: `${p}/tutorial/`, activeMatch: `^${p}/tutorial/` },
+        { text: 'Datapack', link: `${p}/datapack/overview`, activeMatch: `^${p}/datapack/` },
+        { text: 'KubeJS', link: `${p}/kubejs/`, activeMatch: `^${p}/kubejs/` },
+        { text: 'Java API', link: `${p}/java/`, activeMatch: `^${p}/java/` },
+        { text: 'Technical Details', link: `${p}/technical/`, activeMatch: `^${p}/technical/` }
+      ]
+  return bar.filter((item) => [...live].some((key) => item.link.startsWith(key)))
 }

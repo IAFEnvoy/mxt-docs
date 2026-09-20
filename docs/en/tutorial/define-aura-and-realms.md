@@ -56,7 +56,7 @@ A definition's aura is a separate `aura` entry, and the `element` registry is wh
 }
 ```
 
-`overcomes` and `adapted_to` are optional relations to other elements. Each entry names the elements it points at (`elements`, one id, an array, or `#` tags) together with what the edge is worth (`multiplier`, a finite non-negative number), and the [damage pipeline](../datapack/damage.md) reads them on the attacking and defending side of a hit respectively; leave them out until you have more than one element. The full field list is in [Element](../datapack/json/element.md).
+`overcomes` and `adapted_to` are optional relations to other elements. Each entry names the elements it points at (`elements`, one id, an array, or `#` tags) together with what the edge is worth (`multiplier`, a finite non-negative number), and the [damage system](../technical/damage.md) reads them on the attacking and defending side of a hit respectively; leave them out until you have more than one element. The full field list is in [Element](../datapack/json/element.md).
 
 ## Step 2 — The Aura and Its Value
 

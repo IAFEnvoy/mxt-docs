@@ -67,6 +67,7 @@ The [Datapack Visual Editor](https://datapack.mcdev.tech/) shows the field list 
 | `mxt:fire` | — | Matches damage that belongs to the vanilla fire damage tag. |
 | `mxt:magic` | — | Matches vanilla damage sources that are classified as magic. |
 | `mxt:projectile` | `projectile?`, `projectile_condition?` | Matches projectile damage, optionally restricted to one projectile entity type and filtered by an [entity condition](entity_condition_types.md) on the projectile. |
+| `mxt:element` | `elements` | Matches the strike by the elements it is made of. `elements` is a `HolderOrTag<element>[]`, and the condition passes when any element the strike belongs to is listed. The strike's elements are exactly the ones the damage pipeline reads — the damage type's claimants, falling back to the attacker's spirit roots only when nobody claims it — so the condition can never disagree with the multiplier the target actually took, and it answers for a lava tick once an element claims `minecraft:lava`. |
 
 ::: info Difference Between `mxt:fire` and a Damage Tag
 `mxt:fire` takes no fields and is equivalent to `mxt:damage_type_tag` with the vanilla fire damage tag. Use the tag form when you want to point at a different tag without writing a new type.

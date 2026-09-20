@@ -50,7 +50,7 @@ Every setting lives in the **in-game config screen**: open **Mods → MiXianTu �
 
 | Part | Permission | Tabs |
 |---|---|---|
-| Client Settings | none (this machine only) | Ability Hotbar, Resource Bars, Information Panel, Techniques |
+| Client Settings | none (this machine only) | Ability Hotbar, Resource Bars, Information Panel, Techniques, Rifts |
 | MiXianTu Server Config | **operator** | Curios Slots, Cultivation, Talisman, Aura, Formations, Command Aliases, Compatibility |
 
 Server settings are synced to connected clients after a change. These docs name a setting as **Server Config → Tab → Entry** or **Client Settings → Tab → Entry**, which is what you look up in the screen.

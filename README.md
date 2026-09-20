@@ -25,8 +25,9 @@ mxt-docs
 │  ├─ player-guide/         # 游玩指南
 │  ├─ kubejs/               # KubeJS
 │  ├─ java/                 # Java API
+│  ├─ technical/            # 技术细节：源码级实现说明（伤害系统、敌我识别系统…）
 │  ├─ en/                   # 英文镜像（与根目录一一对应，URL 带 /en/ 前缀）
-│  ├─ public/               # logo、favicon 等静态资源（所有语言共用）
+│  ├─ public/               # logo、favicon、文章配图等静态资源（所有语言共用）
 │  └─ .vitepress/
 │     ├─ config.ts          # 公共配置 + locales 挂载
 │     ├─ locales/
@@ -65,10 +66,14 @@ mxt-docs
 - **索引页的「子页面」链接列表由页面清单生成。** `refreshGroupNav()` 依据 `pages.mjs` 给每个「自身是页面又有
   子页」的分组重建导航块（含二级小分组），所以侧边栏与索引页永远一致。
 - **侧边栏按顶部大类分区。** 每个页面左侧只显示**当前大类**的目录（开始 / 游玩指南 / 开发教程 / 数据包 /
-  KubeJS / Java API），由 VitePress 按路径前缀匹配最贴切的一份；大类内部的分组（如「JSON 数据格式」的 34 个
+  KubeJS / Java API / 技术细节），由 VitePress 按路径前缀匹配最贴切的一份；大类内部的分组（如「JSON 数据格式」的 34 个
   注册表页、「类型参考」下的子分组）默认折叠，读者进入其中时由 VitePress 自动展开。
 - **侧边栏按语言过滤。** `docs/.vitepress/locales/pages.mjs` 声明全站页面，`build.ts` 会检查文件是否存在，
   缺失的页面自动从该语言侧边栏消失，因此侧边栏不会指向 404。
+- **新增页面或大类之后要让配置重新求值。** 侧边栏与导航栏都是在配置求值时生成的，`pnpm run dev` 只在
+  `config.ts` / `pages.mjs` 这些文件变化时重新求值：**只把 `.md` 文件放进去，侧边栏不会自己长出来**，
+  要重启 dev（或改动 `pages.mjs` 触发重载），否则浏览器拿到的还是旧的那份。导航项也只在对应大类真的
+  有页面时才出现，所以某一类缺页时最坏的结果是少一个入口，而不是点进去看到根大类（开始）的侧边栏。
 
 ## 校验
 
@@ -92,6 +97,42 @@ pnpm run build               # 构建失败会报告死链
 - `pnpm run check:config` 会把这些名字与语言文件逐个比对，改名字后会立刻报错。
 
 安装页（中英）里的「配置 / Configuration」一节是这条规则的正典说明，其他页面只引用标签页与条目名。
+
+## 图表（Mermaid）与配图
+
+**Mermaid 是本站自己的三个文件接的，没有用第三方插件**（`vitepress-mermaid-viewer` 已卸载：它的
+`optimizeDeps`/alias 补丁在 pnpm 的严格布局下会把 `tsc dev` 打崩）：
+
+| 文件 | 职责 |
+| --- | --- |
+| `docs/.vitepress/config.ts` | 把 ` ```mermaid ` 围栏改写成 `<ClientOnly><Mermaid code="…" /></ClientOnly>` |
+| `docs/.vitepress/theme/index.ts` | 全局注册 `Mermaid` 组件 |
+| `docs/.vitepress/theme/components/Mermaid.vue` | 调 `mermaid.render()` 画图，并提供点击放大 |
+
+写图表就是普通代码块：
+
+````
+```mermaid
+flowchart TD
+    A["中文标签"] --> B["也可以换行<br/>第二行"]
+```
+````
+
+四个必须知道的约束：
+
+- **围栏里的源码要经过 `encodeURIComponent` 再进属性**。`JSON.stringify` 会留下 `\"`，Vue 模板编译器
+  直接报 `Attribute name cannot contain U+0022`，**整站构建失败**——而且只有含引号的图（也就是全部）会触发。
+  组件侧对应 `decodeURIComponent`。
+- **`htmlLabels` 顶层与 `flowchart.*` 必须同时为 `true`。** 布局靠渲染出来的盒子量宽度，两处不一致时布局会
+  退回 SVG 文本量法、渲染却仍输出 `<foreignObject>`，于是每个标签都塌到 120px 下限，中文变成一字一行
+  （看起来像字间塞了全角空格）。`wrappingWidth: 400` 是为了不把长标签自动折行。
+- **图在客户端绘制**，所以每张图的源码都留在页面里（它就是内容的唯一来源）。
+- **点击图放大**：全屏浮层里按原始尺寸渲染，`缩小 / 放大 / 恢复原始大小 / 关闭`，支持 `Ctrl`+滚轮缩放、
+  滚轮平移，`Esc`、点击背景或 `✕` 关闭；按钮提示按当前语言显示（`zh` → 中文，其余 → 英文）。
+
+**配图**放在 `docs/public/images/<主题>/`，两种语言共用同一份（`public/` 不属于任何语言目录），引用写绝对路径
+`/images/aura/xxx.png`。研究用的图来自仓库的 `research/`，放进来之前确认它描述的是**当前代码**
+（例如 `aura_subchunk_*.png` 是 `1/r²` 模型下的研究，而运行时是 `1/max(1, d²)`，页面里必须写明这一点）。
 
 ## 部署（Cloudflare Pages）
 

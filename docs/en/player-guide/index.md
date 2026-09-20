@@ -10,6 +10,7 @@ The mod itself provides framework items, slots, commands and interaction; the ac
 | Goal | Documentation |
 | --- | --- |
 | Meet the built-in items, blocks and item bindings | [Items and Blocks](./items.md) |
+| Look up the Rift block and the Rift Anchor | [Rifts](./rift.md) |
 | Look up keybinds, the hotbar, resource bars and the character panel | [Keys and HUD](./keys-and-hud.md) |
 | Debug or manage gameplay with commands | [Commands](./commands.md) |
 | Configure the back weapon and belt slots | [Curios Slots](./curios-slots.md) |

@@ -26,8 +26,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/aura_zone/spi
 | `biomes` | `HolderOrTag<Biome>[]` | `[]` | Biome matching. |
 | `fluctuation` | Object | static/0 | Day/night or moon phase fluctuation. |
 | `rules` | Object | all off | Cultivation suppression, tribulation, spirit herb and alchemy environment rules. |
-| `element_fit_bonus` | Double | `0` | Spirit root element fit bonus. |
-| `element_conflict_penalty` | Double | `0` | Element conflict penalty. |
+| `element_fit_bonus` | Double | `0` | Spirit root element fit bonus: added when this root's own aura is present in the zone. |
+| `element_conflict_penalty` | Double | `0` | Element conflict penalty: multiplied by the **opposition concentration**, the sum of the concentrations of every *other* element this root's element has an `overcomes`/`adapted_to` relation with, so an empty zone is no longer treated as a hostile one. |
 | `noise` | Object | off | Two-dimensional noise distribution driven by a seed. |
 | `particle` | `ParticleEffect` | none | Optional server-controlled particles. |
 | `client_render` | Object | white, 64, 0.35 | Client fog colour and fog strength. |

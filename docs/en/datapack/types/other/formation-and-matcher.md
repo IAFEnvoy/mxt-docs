@@ -79,7 +79,7 @@ These entries make up an [ItemMatcher](../shared_data_types.md#itemmatcher). An 
 | `mxt:wildcard` | `pattern` | Matches item IDs with `*` and `?` wildcards |
 | `mxt:regex` | `pattern` | Matches item IDs with a regular expression |
 | `mxt:spirit_storage` | none | Matches every item that stores aura, that is, every item implementing `ItemAuraAccess` |
-| `mxt:herb_tag` | `element?`, `material?` | Matches an item that is a spirit herb whose `element_tags` / `material_tags` carry the given ids |
+| `mxt:herb_tag` | `element?`, `material?` | Matches an item that is a spirit herb whose `element_tags` / `material_tags` intersect the query (`element` expands both sides to element sets) |
 
 | `type` | Field | Type | Default | Description |
 |--------|-------|------|---------|-------------|
@@ -88,7 +88,7 @@ These entries make up an [ItemMatcher](../shared_data_types.md#itemmatcher). An 
 | `mxt:wildcard` | `pattern` | String | **required** | `*` matches any run of characters and `?` matches one character; must not be empty |
 | `mxt:regex` | `pattern` | String | **required** | A full regular expression matched against the item ID; must not be empty |
 | `mxt:spirit_storage` | — | — | — | Fieldless; `{"type": "mxt:spirit_storage"}` is the whole entry |
-| `mxt:herb_tag` | `element` | Identifier | none | Element id the matching spirit herb has to list in its `element_tags` |
+| `mxt:herb_tag` | `element` | `HolderOrTag<element>` | none | The element alignment of the matching spirit herb. Both sides are written against the element registry (entries or `#` tags) and are expanded to element sets before they are intersected, so it does not matter which side the tag sits on |
 | `mxt:herb_tag` | `material` | Identifier | none | Material id the matching spirit herb has to list in its `material_tags`; at least one of `element` and `material` must be given |
 
 Wildcard and regex entries are matched against the item ID, such as `minecraft:apple`, not against display names. `mxt:spirit_storage` is the one entry that matches by capability rather than by ID, so an item added later that implements `ItemAuraAccess` is covered without editing the file that declared the matcher.
@@ -101,7 +101,7 @@ Wildcard and regex entries are matched against the item ID, such as `minecraft:a
 ]
 ```
 
-`mxt:herb_tag` is the entry that reads the `mxt:spirit_herb` data pack registry rather than only vanilla's item registry: it matches an item that is a [spirit herb](../../json/spirit_herb.md) — a `mxt:spirit_herb` definition whose own matcher accepts the stack — and then asks whether that definition's `element_tags` / `material_tags` contain the given ids. Every field that is written has to be present on the herb, so an entry that gives both `element` and `material` matches only a herb that lists both ids, while an entry that gives one field asks about that one alone. An entry that gives neither field is rejected when the data pack loads; the herb registry only exists while a server runs, so on the client the entry simply reports no match.
+`mxt:herb_tag` is the entry that reads the `mxt:spirit_herb` data pack registry rather than only vanilla's item registry: it matches an item that is a [spirit herb](../../json/spirit_herb.md) — a `mxt:spirit_herb` definition whose own matcher accepts the stack — and then asks about that definition's alignment. `element` queries `element_tags` and `material` queries `material_tags`; giving both means both have to be satisfied, while giving neither is rejected when the data pack loads. `element` and `element_tags` are both written against the element registry (entries or `#` tags) and are expanded to element sets on **both** sides before they are intersected, so a herb aligned with `#example:fire_like` matches a query for `example:fire` and vice versa, and it does not matter which side the tag is written on; disabled elements take no part. `material` stays a plain identifier. The tags are a property of the herb rather than of the item, so content can say "any fire-aligned spirit herb" without knowing which items a later pack binds to that herb. The herb registry only exists while a server runs, so on the client the entry simply reports no match.
 
 ```json
 {

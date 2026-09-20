@@ -84,6 +84,8 @@ data/mxt/tags/mxt/<registry>/disabled.json
 
 The tag ID is `mxt:disabled`. Entries listed in it are not actively used by the matching service, but they are still kept in the registry, so other definitions can safely hold a reference to them. Editing this tag is subject to the same rule as every other data pack file: it is applied when the world loads.
 
+Elements are covered by the same tag: a disabled element stops holding relations (`overcomes`/`adapted_to` are no longer settled), stops being coloured, cannot be bound by a spirit root and takes no part in any element matching. That is a different switch from the spirit-root and physique toggle: `mxt:disabled` is a data pack's seal over a whole definition, invisible to every consumer, while each **held** spirit root and physique can be switched off without being lost (see [Spirit Root](./json/spirit_root.md)) — that path only affects the one entry, and `mxt:has_spirit_root` / `mxt:has_physique` stay true.
+
 ::: info
 
 The mod has not been released yet, so no compatibility with old JSON or old saves is promised.
@@ -171,11 +173,11 @@ See [Types Reference](./types/index.md) for the built-in action and condition ty
 
 ## Registry Index
 
-The mod registers **33** data pack registries, all of them declared in `MxtDatapackRegistries`:
+The mod registers **34** data pack registries, all of them declared in `MxtDatapackRegistries`:
 
 | Category | Registries |
 | --- | --- |
-| Resources and cultivation | `resource`, `aura`, `element`, `realm_stage`, `spirit_root`, `physique`, `technique`, `skill_stage`, `cultivate_action` |
+| Resources and cultivation | `resource`, `aura`, `element`, `element_reaction`, `realm_stage`, `spirit_root`, `physique`, `technique`, `skill_stage`, `cultivate_action` |
 | Abilities and rules | `ability`, `curse`, `formation`, `tribulation`, `trigger`, `talisman` |
 | Aura and world | `aura_zone`, `block_aura`, `item_aura`, `realm_instance` |
 | Items and quality | `item_binding`, `weapon_binding`, `pill_binding`, `technique_binding`, `item_archetype`, `item_quality` |

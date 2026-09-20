@@ -54,6 +54,7 @@ A loot condition uses the vanilla `"condition"` dispatch key: `{"condition": "mx
 | `mxt:has_curse` | The entity carries a curse the query accepts (`curse?`, `tags?`, `stacks?`, `remaining_ticks?`, all optional and all required to hold for the same instance) | — |
 | `mxt:realm` | The entity is in that realm, in any resource chain | `realm` |
 | `mxt:has_spirit_root` | The entity has that spirit root | `spirit_root` |
+| `mxt:has_element` | Any element the entity's **enabled** spirit roots name is listed in `elements` | `elements` |
 | `mxt:has_physique` | The entity has that physique | `physique` |
 | `mxt:js` | A server script callback returns `true` | `id` |
 
@@ -62,6 +63,8 @@ A loot condition uses the vanilla `"condition"` dispatch key: `{"condition": "mx
 | `entity` | `EntityTarget` | `this` | Which entity of the loot context is checked: `this`, `attacker`, `direct_attacker`, `attacking_player`, `target_entity` or `interacting_entity` |
 
 When the selected entity is not present in the loot context, the condition is false.
+
+The `spirit_root` field of `mxt:has_spirit_root` accepts an entry, a `#` tag or an array of them, so "any fire root" is one tag. `mxt:has_element` asks the coarser question — "is this a fire cultivator" — with `elements` as a `HolderOrTag<element>[]`, so a later data pack that adds another way to be one needs no edit to the loot table; a disabled element takes no part.
 
 ```json
 {

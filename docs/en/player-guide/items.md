@@ -55,12 +55,24 @@ The items below are backed by a unified server-side implementation shipped with 
 | Beast Taming Bell | `mxt:beast_taming_bell` | none | Performs a unified recall of your own contracted spirit beast. |
 | Spirit Beast Bag | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | Stores the complete persistent entity data of one contracted creature. Use it on a spirit beast to store it, and right-click an empty bag to release it. |
 | Formation Plate | `mxt:formation_plate` | `mxt:formation_plate` | Stores `allowed` (which formations may be run, `#tags` included) and the selected `formation`. Using it on a block calls `FormationWorldService`; a plate with no bound formation identifies the structure built in front of it. |
-| Realm Token | `mxt:realm_token` | `mxt:realm_token` | Stores a `realm_instance`. Right-click to enter the bound secret realm, and right-click inside the realm to return to the origin position. |
+| Realm Token | `mxt:realm_token` | `mxt:realm_token` | Stores a `realm_instance` definition. Right-click to enter the bound secret realm — the definition's own entry condition, instance cap and member cap all apply — and right-click inside the realm to return to the origin position, subject to its exit condition. |
+| Rift (block item) | `mxt:rift` | `mxt:rift` | Places rift blocks; a stack carrying the component places a rift with that destination and colour. The whole mechanic is on the [Rifts](./rift.md) page. |
 | Spirit Vessel | `mxt:spirit_vessel` | `mxt:resource_container` | Stores any `resource`. Right-click releases it to the holder, sneak-right-click stores from the holder; each resource has a capacity of 1000. |
 | Wooden Token / Stone Token | `mxt:wooden_token`, `mxt:stone_token` | `mxt:token` | Carry `kind`, `value` and `owner` together for the secret realm and trade permission systems. |
 | Identification Mirror | `mxt:identification_mirror` | consumes `mxt:identification` | Resolves items that carry an identification component in a unified way; the items to identify come from content packs or other mods. |
 | Talisman Brush / Talisman Ink | `mxt:talisman_brush`, `mxt:talisman_ink` | none | Generic base inputs for talisman crafting and formation content, used together with Blank Talisman; the recipes come from datapacks or KubeJS. |
 | Talisman | `mxt:talisman` | `mxt:talisman`, `mxt:spirit_storage` | Holds the `talisman` definitions inscribed on it, in order, plus a `mode` (`fire` by default, or `store`). Holding right-click pours spirit power in; a full carrier fires everything inscribed on it, and a sneak-use switches the mode. |
+
+The value of `mxt:resource_container` is a bare map whose keys are resource IDs; there is no `values` wrapper, and a wrongly wrapped value is silently read as one unreadable key — the container stays empty and only a warning is logged.
+
+When a Contract Scroll, Formation Plate or Realm Token has no binding definition, it fails safely and shows a message. The state of Spirit Beast Bags, Spirit Vessels and tokens is kept in ItemStack data components, and the server is the only authority.
+
+## See Also
+
+- The rift block and the Rift Anchor are documented on the [Rifts](./rift.md) page.
+- The commands that manage a single rift are in [Commands](./commands/mxt.md).
+
+## Data Component Examples
 
 Component values can be written directly with the item component syntax or from KubeJS, and the referenced datapack registry IDs are parsed by the vanilla registry codec:
 
@@ -68,13 +80,10 @@ Component values can be written directly with the item component syntax or from 
 give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_servant"}]
 give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
 give @s mxt:realm_token[mxt:realm_token={realm:"mxt_test:trial_realm"}]
+give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
 give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
 ```
-
-The value of `mxt:resource_container` is a bare map whose keys are resource IDs; there is no `values` wrapper, and a wrongly wrapped value is silently read as one unreadable key — the container stays empty and only a warning is logged.
-
-When a Contract Scroll, Formation Plate or Realm Token has no binding definition, it fails safely and shows a message. The state of Spirit Beast Bags, Spirit Vessels and tokens is kept in ItemStack data components, and the server is the only authority.
 
 ## Blocks and Workstations
 

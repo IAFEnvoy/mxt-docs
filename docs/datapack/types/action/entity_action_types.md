@@ -76,7 +76,8 @@ description: 模组注册的全部内置实体行为类型，以及每种类型�
 | `mxt:dismount` | — | 让实体停止骑乘其载具。 |
 | `mxt:extinguish` | — | 熄灭实体身上的火。 |
 | `mxt:heal` | `amount` | 治疗实体。 |
-| `mxt:damage` | `amount` | 对实体施加伤害。它**没有归属**，因此不结算灵根元素关系，也不记攻击者：反噬、丹药毒性和环境 tick 这类"代价"用它是对的。当它落在施法者以外的人身上时，改为把施法者记为加害者。见[伤害结算](../../damage.md)。 |
+| `mxt:damage` | `amount`、`damage_type?`、`element?` | 对实体施加伤害。它**没有归属**，因此不结算灵根元素关系，也不记攻击者：反噬、丹药毒性和环境 tick 这类"代价"用它是对的。当它落在施法者以外的人身上时，改为把施法者记为加害者。可选的 `damage_type` 构造这一击的来源，可选的 `element` 声明这一击的元素（只写元素时取它认领的第一个类型；两个都写时在**首次使用**这一击时核对元素确实认领了它，不一致各报一次日志）。见[伤害系统](/technical/damage)。 |
+| `mxt:attach_element` | `element`、`amount` | 给实体加上（或减去）某个元素的附着：`element` 是 `Holder<element>`，`amount` 是数值提供器，负数表示净化，求值不是有限值或等于 `0` 时什么也不做。写正数会走与打击**同一条**反应管线（攒够即触发 [element_reaction](../../json/element_reaction.md)），所以"泡在岩浆里""服丹""诅咒持续喂火"都用它。 |
 | `mxt:add_resource` | `resource`、`amount` | 给服务端持有的实体[数值](../../json/resource.md)加上一个有符号数值。 |
 | `mxt:grant_ability` | `ability`、`source` | 使用显式的持久化来源标识授予一个[技能](../../json/ability.md)。 |
 | `mxt:grant_spirit_root` | `spirit_root` | 授予实体一个[灵根](../../json/spirit_root.md)。 |
