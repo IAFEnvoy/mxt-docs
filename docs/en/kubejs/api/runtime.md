@@ -77,6 +77,76 @@ Curses and ability grants share one source ledger: **it exists while at least on
 
 `addBox` only accepts a `ServerLevel`, and `zone` must be a loaded `aura_zone` data pack ID; otherwise it throws an exception. The commonly used read-only methods of `AuraResult` are `aura()`, `concentration()`, `maximum()`, `regenPerTick()`, `cultivationSpeed()`, `source()`, `sourceKind()` and `suppressCultivate()`.
 
+## `MxtElements`
+
+| Method | Parameters | Return value | Description |
+| --- | --- | --- | --- |
+| `list(entity)` | `Entity` | `List<String>` | The element IDs the entity's **currently active** spirit roots name, sorted. Disabled elements and switched-off roots contribute nothing; an entity with no roots answers an empty list. |
+| `has(entity, element)` | `Entity`, element ID | `boolean` | Whether the entity's spirit roots name that element. |
+| `amount(entity, element)` | `Entity`, element ID | `double` | How much of that element has built up on the entity; `0` when none has, and `0` for a disabled or unknown element. A client reads its synchronised copy. |
+| `attach(entity, element, amount)` | `Entity`, element ID, finite number | `double` | Builds that element up on the entity (a negative amount wears it off) through the **same** pipeline a strike uses, and returns the new total. A qualifying [`element_reaction`](/en/datapack/json/element_reaction) fires as usual. |
+
+Elements and accumulation are two different things: `list`/`has` read the spirit roots (what the body *is*), while `amount`/`attach` read and write a per-element accumulation table (how much it has *built up*). `attach` is equivalent to the entity action `mxt:attach_element`, so a lava bath, a pill or a curse written from a script behaves the same way, and a negative amount cleanses. The three readers work on either side — the accumulation is a synchronised attachment, so a client script reads its local copy, which is exactly what an item tooltip does — and only `attach` is a server operation: on a client, or with an unknown or disabled element, a non-finite value or `0`, it returns `0` and changes nothing.
+
+```js
+// kubejs/server_scripts/mxt_element.js
+PlayerEvents.tick(event => {
+  const player = event.player
+  if (player.level().isClientSide()) return
+  // "has a water root and has built up 8 fire" — visible before any reaction fires.
+  if (MxtElements.has(player, 'mxt_test:water') && MxtElements.amount(player, 'mxt_test:fire') >= 8) {
+    console.info(`water cultivator carrying ${MxtElements.list(player)}`)
+  }
+})
+
+// Let a custom event build fire up on a target; the element_reaction in the data pack settles it.
+MxtElements.attach(target, 'mxt_test:fire', 4)
+```
+
+## `MxtSpiritRoots`
+
+A spirit root is the **element half** of a body's cultivation identity: holding one binds that body to an element, changes the cultivation speed of that element's aura, and scales the abilities attuned to that element.
+
+| Method | Parameters | Return value | Description |
+| --- | --- | --- | --- |
+| `list(entity)` | `Entity` | `List<String>` | Every spirit root the entity **holds**, sorted by ID. A switched-off root, or one whose definition is disabled or deleted, is still listed — it really is still held. |
+| `active(entity)` | `Entity` | `List<String>` | The roots that are **in effect** right now: switched-off ones, and ones whose bound element is disabled, do not count. |
+| `has(entity, root)` | `Entity`, root ID | `boolean` | Whether it is held (the same meaning as `mxt:has_spirit_root`: a switched-off root still counts). |
+| `enabled(entity, root)` | `Entity`, root ID | `boolean` | Whether that root is currently switched on; `false` when it is not held. |
+| `grant(entity, root)` | `LivingEntity`, root ID | `{changed, failure}` | Goes through the authoritative service, so [`conflicting_elements`](/en/datapack/json/spirit_root) and the granted abilities are handled as usual. |
+| `remove(entity, root)` | `LivingEntity`, root ID | `boolean` | Gives up that root together with its element and everything it granted; `false` when it was not held. |
+| `setEnabled(entity, root, enabled)` | `LivingEntity`, root ID, `boolean` | `{changed, failure}` | "Switch off without losing": `changed: true` only when the state really changed and the grants were recomputed, and `failure: "NOT_HELD"` when it is not held. |
+
+## `MxtPhysiques`
+
+A physique is the **element-independent half** of the same identity: it grants vanilla attributes and abilities, scales the damage its holder deals and takes, and excludes other physiques through its mutual-exclusion tags.
+
+| Method | Parameters | Return value | Description |
+| --- | --- | --- | --- |
+| `list(entity)` | `Entity` | `List<String>` | Every physique the entity **holds**, sorted by ID (with `allow_stacking` the same ID can appear more than once). |
+| `active(entity)` | `Entity` | `List<String>` | The physiques that are **in effect** right now. |
+| `has(entity, physique)` | `Entity`, physique ID | `boolean` | Whether it is held. |
+| `enabled(entity, physique)` | `Entity`, physique ID | `boolean` | Whether that physique is currently switched on; `false` when it is not held. |
+| `grant(entity, physique)` | `LivingEntity`, physique ID | `{changed, failure}` | Goes through the authoritative service; [`holder_condition`](/en/datapack/json/physique) and `exclusive_tags` are judged against the **current** entity. |
+| `remove(entity, physique)` | `LivingEntity`, physique ID | `boolean` | Removes that physique together with its attributes, abilities and damage multipliers; `false` when it was not held. |
+| `setEnabled(entity, physique, enabled)` | `LivingEntity`, physique ID, `boolean` | `{changed, failure}` | The same switch as a spirit root. |
+
+Both share one `failure` vocabulary: `DISABLED` (the definition does not exist, or is disabled by `mxt:disabled`), `ALREADY_HELD`, `CONDITIONS` (the physique's `holder_condition` is not met), `EXCLUSIVE_CONFLICT`, `ELEMENT_CONFLICT` (the root's `conflicting_elements`), `NOT_HELD` and `SERVER_ONLY` (called on a client). The four readers work on either side — the `spirit_identity` attachment is synchronised, and an item tooltip asking "are you a fire root?" is exactly that use — while the state-changing methods are server operations.
+
+```js
+// kubejs/server_scripts/mxt_identity.js
+// Reshaping: swap one spirit root for another and switch the new physique on along the way.
+const result = MxtSpiritRoots.grant(player, 'mxt_test:qingxiao_fire_root')
+if (result.changed) {
+  MxtSpiritRoots.remove(player, 'mxt_test:water_root')
+  MxtPhysiques.setEnabled(player, 'mxt_test:blazing_body', true)
+} else {
+  console.warn(`grant refused: ${result.failure}`)
+}
+// "Is he on a fire root right now?" — a switched-off root is still held, so ask active rather than has.
+const active = MxtSpiritRoots.active(player)
+```
+
 ## `MxtSouls`
 
 | Method | Parameters | Return value | Description |

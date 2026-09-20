@@ -23,7 +23,7 @@ title: ability（技能）
 | `target_selector` | `AbilityTargetSelector` | `mxt:self` | `bi_entity_action` 作用于哪些实体：`mxt:self` 只有施法者，`mxt:area` 取 `radius`（必填，上限 128）与 `include_actor`（默认 `false`），`mxt:js` 交给服务端脚本。 |
 | `target_condition` | `BiEntityCondition` | `mxt:always_true` | 目标关系条件。 |
 | `bi_entity_action` | `BiEntityAction` | `mxt:no_op` | 对施法者和目标执行的行为。 |
-| `element_affinity` | `HolderOrTag<element>[]` | `[]` | 技能的元素亲和标记；非空时既是**施放门槛**（没有任何匹配灵根就不放行），也是公式变量 `element_modifier` 的来源。 |
+| `element_affinity` | `HolderOrTag<element>[]` | `[]` | 技能的元素亲和标记；非空时既是**施放门槛**（没有任何匹配灵根就不放行），也是 `element_modifier` 的来源——[伤害管线](/technical/damage)第一层会把它直接乘进这次施放打出的伤害（匹配灵根的 `element_ability_modifier`，按 `element_affinity_mode` 合并），所以伤害公式里**不要**再手写 `* element_modifier`。 |
 | `element_affinity_mode` | `average` / `max` | `average` | 多条灵根都匹配时 `element_modifier` 怎么算：`average` 取平均（老行为），`max` 取最好的那条。 |
 
 ```json

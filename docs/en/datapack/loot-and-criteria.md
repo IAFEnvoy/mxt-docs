@@ -64,7 +64,7 @@ A loot condition uses the vanilla `"condition"` dispatch key: `{"condition": "mx
 
 When the selected entity is not present in the loot context, the condition is false.
 
-The `spirit_root` field of `mxt:has_spirit_root` accepts an entry, a `#` tag or an array of them, so "any fire root" is one tag. `mxt:has_element` asks the coarser question — "is this a fire cultivator" — with `elements` as a `HolderOrTag<element>[]`, so a later data pack that adds another way to be one needs no edit to the loot table; a disabled element takes no part.
+The `spirit_root` field of `mxt:has_spirit_root` accepts an entry, a `#` tag or an array of them, so "any fire root" is one tag. `mxt:has_element` asks the coarser question — "is this a fire cultivator" — with `elements` as a `HolderOrTag<element>[]`, so a later data pack that adds another way to be one needs no edit to the loot table; a disabled element takes no part, and `elements` needs at least one entry (an empty array is refused at load).
 
 ```json
 {

@@ -67,7 +67,7 @@ description: 模组注册的所有内置伤害条件类型，以及每种类型�
 | `mxt:fire` | — | 匹配属于原版火焰伤害标签的伤害。 |
 | `mxt:magic` | — | 匹配被归类为魔法的原版伤害来源。 |
 | `mxt:projectile` | `projectile?`, `projectile_condition?` | 匹配弹射物伤害，可选限定某一种弹射物实体类型，并用作用于该弹射物的 [实体条件](entity_condition_types.md) 进行过滤。 |
-| `mxt:element` | `elements` | 按这一击的**元素**匹配：`elements` 是 `HolderOrTag<element>[]`，当这一击的元素中有列出的一个时通过。这一击的元素就是伤害管线读的那一份——伤害类型的认领者，没人认领时才回落到攻击者灵根——所以条件说的元素与目标实际吃到的倍率永远一致；元素一旦认领 `minecraft:lava`，岩浆伤害也会命中这条条件。 |
+| `mxt:element` | `elements` | 按这一击的**元素**匹配：`elements` 是 `HolderOrTag<element>[]`，当这一击的元素中有列出的一个时通过。这一击的元素就是伤害管线读的那一份——伤害类型的认领者，没人认领时才回落到攻击者灵根——所以条件说的元素与目标实际吃到的倍率永远一致；元素一旦认领 `minecraft:lava`，岩浆伤害也会命中这条条件。`elements` 至少写一项：写空数组会在加载期被拒绝，而不是变成一条恒不成立的条件。 |
 
 ::: info `mxt:fire` 与伤害标签的区别
 `mxt:fire` 不接收任何字段，等价于使用原版火焰伤害标签的 `mxt:damage_type_tag`。当你想要指向另一个标签而不想新写一个类型时，请使用标签形式。

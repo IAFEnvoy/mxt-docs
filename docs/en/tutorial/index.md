@@ -76,7 +76,7 @@ data/example/
 - **Applying changes.** MiXianTu data tables are native data pack registries, which Minecraft reads **while the world loads**, so `/reload` does not re-read them. After editing a data pack file, leave to the title screen and open the world again (or restart the server). `/reload` only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts. Registering new items or blocks with KubeJS also needs a game restart.
 - **Broken files block the world.** There is no previous snapshot to fall back on: if a definition fails to decode, the world will not load until the file is fixed. The log names the file and the codec error, so keep the last working copy of a file you are editing.
 - **Verifying.** `/mxt registries validate` reports the registry count, the total entry count and whether validation passed, and `/mxt registries list` prints each registry id with its entry count. The other commands are listed in [Commands](../player-guide/commands.md).
-- **Version.** These pages follow version `1.0-alpha.2` of the mod, which is still in development and whose data pack format is not frozen; when a field changes, the reference page changes with it.
+- **Version.** These pages follow the mod's **current development version** (no version number is pinned in the documentation — the jar you installed is the authority). The mod is still in development and its data pack format is not frozen; when a field changes, the reference page changes with it.
 
 ## Where to Go Next
 

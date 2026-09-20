@@ -23,24 +23,50 @@ The filename corresponds to its ID. For example, `data/example/mxt/physique/blaz
 | `granted_abilities` | `HolderOrTag<ability>[]` | `[]` | Granted abilities. |
 | `holder_condition` | `EntityCondition` | `mxt:always_true` | The holder condition checked before granting; conditions such as `mxt:has_spirit_root` and `mxt:has_physique` can be combined to express prerequisite physiques or spirit roots. |
 | `exclusive_tags` | `Identifier[]` | `[]` | Mutual exclusion tags. |
-| `rarity` | String | `common` | Rarity marker used by content packs. |
+| `rarity` | String | `common` | Rarity marker; the info panel and `/mxt identity physique list` show the raw text, and the `mxt.rarity.<rarity>` translation is used when one exists. |
 | `allow_stacking` | Boolean | `false` | Whether the same physique may stack. |
+| `damage_dealt_multiplier` | `NumberProvider` | `1` | Damage the holder **deals** is multiplied by this in layer one of the pipeline. Several active physiques multiply together. |
+| `damage_taken_multiplier` | `NumberProvider` | `1` | Damage the holder **takes** is multiplied by this in layer two of the pipeline. Several active physiques multiply together. |
 
 ::: info Elements
 A physique is not bound to an element; element-related logic belongs in spirit roots or environment configuration.
 :::
 
-::: info Granting and Removing
-Granting and removing both spirit roots and physiques is done with entity actions: `mxt:grant_spirit_root`, `mxt:remove_spirit_root`, `mxt:grant_physique` and `mxt:remove_physique`. Ownership can be tested with the entity conditions `mxt:has_spirit_root` and `mxt:has_physique`.
-:::
-
 ## Example
 
 ```json
+// data/example/mxt/physique/innate_sword_bone.json
 {
-  "attribute_modifiers": [{"attribute": "minecraft:max_health", "id": "example:physique/blazing_body", "amount": 2, "operation": "add_value"}],
-  "granted_abilities": [],
-  "holder_condition": {"type": "mxt:has_spirit_root", "spirit_root": "example:fire_root"}
+  "attribute_modifiers": [
+    { "attribute": "minecraft:attack_damage", "id": "example:physique/sword_bone", "amount": 2, "operation": "add_value" }
+  ],
+  "granted_abilities": ["example:sword_intent"],
+  "exclusive_tags": ["example:physique/skeletal"],
+  "rarity": "epic",
+  "damage_dealt_multiplier": "1 + 0.05 * realm_rank",
+  "damage_taken_multiplier": 0.9
 }
 ```
 
+## Element Fields Are Refused {#element-fields}
+
+"A physique carries no element" is a rule the code **enforces**, not a convention. As soon as one of the following keys appears in a physique definition, **the whole pack is refused while loading, and the error names that field**:
+
+`element`, `elements`, `element_affinity`, `element_tags`, `element_ability_modifier`, `conflicting_elements`, `relations`, `overcomes`, `adapted_to`, `damage_types`, `attachment_decay`, `damage_attachment`, `aura_type`, `cultivation_multiplier`.
+
+The reason is a practical one: by default `RecordCodecBuilder` **silently drops** every key it does not recognise, so a physique that "looks like it has elements but actually carries nothing" would keep running, and its author would only see numbers that are wrong without seeing which line caused it. An error while loading when the registry is wrong (writing `spirit_root` or `element` by mistake) is the only moment that makes the mistake immediately visible.
+
+## The Two Damage Multipliers {#damage-multipliers}
+
+They are the seam through which a physique can talk about combat without talking about elements: the numbers themselves have nothing to do with elements, and the two layers of [damage settlement](../../technical/damage.md) read them separately — layer one reads the attacker's `damage_dealt_multiplier`, layer two reads the target's `damage_taken_multiplier`.
+
+- The multiplier is evaluated in the **holder's own** formula context: how much this body takes cannot depend on who is asking, and the formula can read the `caster_*` family of variables.
+- `0` is a legal value (immunity, or being unable to deal anything), and written as a number it is validated as finite and non-negative while loading; a negative or non-finite value produced by a formula counts as "no contribution" (the same rule as the same class of formula used for passive attributes).
+- Several active physiques **multiply**, because each one is an independent source.
+- They **do not enter the formula context**: only the pipeline reads them, so there is no chance for the data pack to multiply them a second time. This is where they differ from `element_modifier`, whose historical use was being written into formulas by hand, which is why the documentation specifically warns against multiplying it twice.
+
+## Holding and Switching Off {#holding}
+
+Both `spirit_root` and `physique` can be granted and removed with entity actions: `mxt:grant_spirit_root`, `mxt:remove_spirit_root`, `mxt:grant_physique` and `mxt:remove_physique`. Whether one is held can be tested with the entity conditions `mxt:has_spirit_root` and `mxt:has_physique`; the script side is `MxtSpiritRoots` and `MxtPhysiques`, and the administrator side is `/mxt identity`.
+
+A physique that is already held can be **switched off** without being lost: once it is off, its attribute modifiers, granted abilities and both damage multipliers all stop applying, but it is still "held" (`mxt:has_physique` still answers true, and it can still be removed normally).

@@ -1,8 +1,10 @@
 # MiXianTu 文档站（VitePress 多语言）
 
-`E:\Website\mxt-docs` 是 MiXianTu（模组 ID `mxt`）的文档站，用 [VitePress](https://vitepress.dev/) 构建，
+本站（仓库 `mxt-docs`）是 MiXianTu（模组 ID `mxt`）的文档站，用 [VitePress](https://vitepress.dev/) 构建，
 **中文（简体）是主语言，位于站点根路径**，英文镜像放在 `/en/` 下。两套文档的文件名与目录层级完全一致，
 导航栏右上角由 VitePress 自动生成语言切换下拉框，不需要额外组件。
+
+模组本体在**另一个仓库**（<https://github.com/Nova-Committee/MiXianTu>），本站不包含它，也不假设它被克隆在哪里。
 
 ## 快速开始
 
@@ -37,9 +39,11 @@ mxt-docs
 │     │  └─ pages.mjs       # 全站页面清单（唯一结构来源）
 │     └─ theme/             # 默认主题 + 自定义样式
 └─ scripts/
+   ├─ repos.mjs             # 模组仓库等外部仓库的定位（环境变量优先，其次自动发现）
    ├─ migrate-docs.mjs      # 从两份既有文档生成站点内容
    ├─ check-i18n.mjs        # 列出只存在于单一语言的页面
-   └─ check-links.mjs       # 校验站内链接与锚点
+   ├─ check-links.mjs       # 校验站内链接与锚点
+   └─ check-config-labels.mjs # 校验配置名与模组语言文件逐字一致
 ```
 
 ## 内容从哪里来
@@ -48,8 +52,12 @@ mxt-docs
 
 | 语言 | 来源 | 处理方式 |
 | --- | --- | --- |
-| 英文 | `E:\Website\docs\docs\mod\mxt`（Docusaurus） | 目录结构原样保留到 `docs/en/`，只转换 front matter 与 `:::note` 之类容器语法 |
-| 中文 | `E:\Java\MiXianTu\docs`（Docusaurus） | 按目标结构重新组装：`数据包格式.md` 按注册表拆成 `docs/datapack/json/*.md`，各篇指南合并到对应页面 |
+| 英文 | 旧的英文文档仓库 `docs` 的 `docs/mod/mxt/`（Docusaurus） | 目录结构原样保留到 `docs/en/`，只转换 front matter 与 `:::note` 之类容器语法 |
+| 中文 | 模组仓库 `MiXianTu` 的 `docs/`（Docusaurus） | 按目标结构重新组装：`数据包格式.md` 按注册表拆成 `docs/datapack/json/*.md`，各篇指南合并到对应页面 |
+
+两份来源都是外部仓库，位置由环境变量给出：`MXT_EN_DOCS`（英文来源，默认找本站同级、名为 `docs` 的仓库）与 `MXT_ZH_DOCS`（中文来源，默认就是自动发现到的模组仓库）。迁移已经跑完，这一节是给需要重跑的人看的。
+
+**现在重跑会被拒绝**：模组仓库在 2026-09-21 删掉了 5 篇迁移前的散篇（`灵气环境数据包.md`、`经济系统数据包格式.md`、`通用物品.md`、`curios槽位.md`、`item-bindings.md`），而 `aura_zone`、`currency`、`player-guide/items`、`player-guide/curios-slots` 这几页当初就是由它们生成的。脚本会**先列出缺哪些语料再退出**，不会拿剩下的输入重写页面（那几页现在是手工维护）；真要重跑就从 git 历史恢复语料，或用 `MXT_ZH_DOCS` 指向旧快照。
 
 两点约定：
 
@@ -82,9 +90,12 @@ pnpm run check:i18n          # 列出只有中文或只有英文的页面（翻�
 pnpm run check:i18n -- --strict
 pnpm run check:links         # 校验站内链接与 #锚点
 pnpm run check:links -- --strict
-pnpm run check:config        # 校验文档里的配置名与模组语言文件逐字一致
+pnpm run check:config        # 校验文档里的配置名与模组语言文件逐字一致（需要模组仓库，见下）
 pnpm run build               # 构建失败会报告死链
 ```
+
+`check:i18n`、`check:links` 和 `build` 只需要本仓库；`check:config` 还要读模组仓库的语言文件，所以额外接受
+`MXT_REPO=<模组仓库路径>`（不设时会自动发现，找不到会明确报错）。
 
 ## 配置类内容的写法
 
@@ -94,7 +105,12 @@ pnpm run build               # 构建失败会报告死链
 - **不写** `config/mxt-server.json` 之类的文件路径，也**不写**原始键（`formation.respect_friends`）；
 - 一律写作 **「服务端配置「标签页 → 条目」」** 或 **「客户端配置「标签页 → 条目」」**，名字取自模组自己的
   语言文件（`src/main/resources/assets/mxt/lang/zh_cn.json` / `en_us.json`）；
-- `pnpm run check:config` 会把这些名字与语言文件逐个比对，改名字后会立刻报错。
+- `pnpm run check:config` 会把这些名字与语言文件逐个比对，改名字后会立刻报错。它要读模组仓库里的两份
+  `lang/*.json`，而模组不在本站里，所以这个检查会去找模组仓库：`MXT_REPO` 环境变量优先，其次是自动发现
+  常见位置；找不到时它会直接告诉你 `MXT_REPO` 该设成什么，而不是悄悄跳过。
+  ```bash
+  MXT_REPO=/path/to/MiXianTu pnpm run check:config
+  ```
 
 安装页（中英）里的「配置 / Configuration」一节是这条规则的正典说明，其他页面只引用标签页与条目名。
 

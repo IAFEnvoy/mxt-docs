@@ -1,17 +1,17 @@
 ---
-title: spirit_crafting（灵性合成）
-description: 灵性合成台接受 mxt:spirit_shaped 与 mxt:spirit_shapeless 两种配方，它们除材料外还要消耗灵气。
+title: spirit_crafting（灵气合成）
+description: 灵气合成配方接受 mxt:spirit_shaped 与 mxt:spirit_shapeless 两种类型，它们除材料外还要消耗灵气，只在灵气工作台里跑。
 ---
 
-# spirit_crafting（灵性合成）
+# spirit_crafting（灵气合成）
 
-灵性合成台沿用原版工作台的布局，但只接受本模组注册的两种配方类型：`mxt:spirit_shaped` 与 `mxt:spirit_shapeless`。除常规材料之外，每个配方还声明一份灵气消耗。
+灵气工作台（方块 `mxt:spirit_crafting_table`）沿用原版工作台的布局，但只接受本模组注册的两种配方类型：`mxt:spirit_shaped` 与 `mxt:spirit_shapeless`。除常规材料之外，每个配方还声明一份灵气消耗。
 
 ## 文件位置
 
-灵性合成配方就是普通的配方文件，因此放在数据包内的 `data/<namespace>/recipe/` 目录。
+灵气合成配方就是普通的配方文件，因此放在数据包内的 `data/<namespace>/recipe/` 目录。
 
-**用途**：灵性合成配方。
+**用途**：灵气合成配方，只在灵气工作台里跑。
 
 文件名对应它的 ID。例如 `data/example/recipe/spirit_iron_ingot.json` 的 ID 是 `example:spirit_iron_ingot`。
 

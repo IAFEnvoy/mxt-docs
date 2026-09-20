@@ -3,11 +3,15 @@
  * migrate-docs.mjs — seed the bilingual VitePress site from the two documentation
  * corpora that already exist:
  *
- *   English source: E:\Website\docs\docs\mod\mxt   (Docusaurus, one page per topic)
- *     -> docs/en/**                                (tree preserved 1:1)
+ *   English source: the older English documentation repository (`docs`), `docs/mod/mxt/`
+ *     -> docs/en/**                                (Docusaurus, tree preserved 1:1)
  *
- *   Chinese source: E:\Java\MiXianTu\docs          (Docusaurus, topic pages + one big
+ *   Chinese source: the mod repository's `docs/`   (Docusaurus, topic pages + one big
  *     -> docs/**                                   JSON spec that is split per registry)
+ *
+ * Neither repository is vendored here, so both locations are configuration rather than
+ * constants: `MXT_EN_DOCS` and `MXT_ZH_DOCS` override them, and the mod repository is
+ * otherwise discovered the same way `check:config` discovers it (see `repos.mjs`).
  *
  * What the script does:
  *   - converts Docusaurus front matter and `:::note`-style admonitions to VitePress syntax
@@ -24,6 +28,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { sections as pageSpec } from '../docs/.vitepress/locales/pages.mjs'
+import { PROJECT, requireModRepo } from './repos.mjs'
 
 /** page path -> its entry in the site spec (used to build hub-page navigation lists). */
 const pageItems = new Map()
@@ -35,12 +40,28 @@ const indexPages = (items) => {
 }
 indexPages(pageSpec)
 
-const PROJECT = path.resolve(import.meta.dirname, '..')
 const DOCS = path.join(PROJECT, 'docs')
 const MANIFEST = path.join(PROJECT, 'scripts', '.migrated.json')
-const EN_SRC = process.env.MXT_EN_DOCS ?? 'E:\\Website\\docs\\docs\\mod\\mxt'
-const ZH_SRC = process.env.MXT_ZH_DOCS ?? 'E:\\Java\\MiXianTu\\docs'
+const EN_SRC = process.env.MXT_EN_DOCS ?? path.join(PROJECT, '..', 'docs', 'docs', 'mod', 'mxt')
+const ZH_SRC = process.env.MXT_ZH_DOCS ?? path.join(requireModRepo('pnpm run migrate'), 'docs')
 const SPEC = '数据包格式.md'
+
+// Both sources are separate checkouts, so a missing one is a setup problem. Say which variable
+// names it rather than failing later with a bare ENOENT from somewhere inside the walk.
+for (const [label, dir] of [['MXT_EN_DOCS', EN_SRC], ['MXT_ZH_DOCS', ZH_SRC]]) {
+  if (existsSync(dir)) continue
+  console.error(
+    [
+      `migrate-docs reads its sources from other checkouts, and ${dir} does not exist.`,
+      `Point ${label} at the right directory and run it again, for example:`,
+      '',
+      `  ${label}=/path/to/source pnpm run migrate`,
+      '',
+      'The migration has already been run for this site; it is kept so a re-run is possible.',
+    ].join('\n')
+  )
+  process.exit(1)
+}
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -564,6 +585,53 @@ const REGISTRY_TITLES = {
 }
 
 /* ------------------------------------------------------------------ migration */
+
+/**
+ * The compose step reads its `file:` sources by name, and five of them were retired on
+ * 2026-09-21: the mod repository deleted its pre-migration long-form pages, because that content
+ * now lives here (the pages below) and in its `数据包格式.md`. A re-run without them would rewrite
+ * the pages that used to be generated from them with whatever is left, so it refuses instead and
+ * names the missing file. `scripts/.migrated.json` still remembers what was generated.
+ */
+const RETIRED_ZH_SOURCES = {
+  'curios槽位.md': 'player-guide/curios-slots',
+  '通用物品.md': 'player-guide/items',
+  '灵气环境数据包.md': 'datapack/json/aura_zone',
+  '经济系统数据包格式.md': 'datapack/json/currency',
+  'item-bindings.md': null
+}
+
+/** Every Chinese document the compose step reads: the `file:` entries plus the registry extras. */
+function requiredZhSources() {
+  const required = new Set([SPEC, ...Object.values(REGISTRY_EXTRA)])
+  for (const entries of Object.values(COMPOSE))
+    for (const entry of entries)
+      if (entry.startsWith('file:')) required.add(entry.slice('file:'.length))
+  return [...required]
+}
+
+const missingZh = requiredZhSources().filter((name) => !existsSync(path.join(ZH_SRC, name)))
+if (missingZh.length > 0) {
+  console.error(
+    [
+      'migrate-docs cannot re-run: these Chinese sources are missing from',
+      `  ${ZH_SRC}`,
+      '',
+      ...missingZh.map((name) => {
+        const page = RETIRED_ZH_SOURCES[name]
+        if (page === undefined) return `  - ${name}`
+        return page === null
+          ? `  - ${name}（从未发布，仅内部参考）`
+          : `  - ${name}（已退役；那一页现在手工维护：${page}）`
+      }),
+      '',
+      'The migration has already been run, and the pages it produced are maintained by hand now.',
+      'Restore those sources (git history has them) or point MXT_ZH_DOCS at an older snapshot if',
+      'you really need to re-run it.',
+    ].join('\n')
+  )
+  process.exit(1)
+}
 
 const manifest = []
 const report = { copied: 0, composed: 0, split: 0, registryPurpose: 0, gaps: [], warnings: [] }

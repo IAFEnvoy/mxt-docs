@@ -61,15 +61,15 @@ The table below lists the 34 datapack registries the mod registers, in registry 
 | [`item_aura`](./item_aura.md) | `mxt/item_aura` | Cultivation fuel provided by held items. |
 | [`item_binding`](./item_binding.md) | `mxt/item_binding` | Bindings from existing items to action arrays. |
 | [`item_quality`](./item_quality.md) | `mxt/item_quality` | Shared quality and quality conditions. |
-| [`physique`](./physique.md) | `mxt/physique` | Physique bonuses that are independent of elements. |
+| [`physique`](./physique.md) | `mxt/physique` | Physique bonuses that are independent of elements: vanilla attributes, granted abilities, exclusion tags and rarity, plus the two multipliers for damage dealt and damage taken. |
 | [`pill_binding`](./pill_binding.md) | `mxt/pill_binding` | Pill and pill toxicity rules for existing items. |
 | [`realm_instance`](./realm_instance.md) | `mxt/realm_instance` | Realm templates: instance dimension generation, borders, structures, landing points, claiming and the entry and exit rules. |
 | [`realm_stage`](./realm_stage.md) | `mxt/realm_stage` | Linear realm chains and breakthrough. |
 | [`resource`](./resource.md) | `mxt/resource` | Entity resources such as cultivation progress, spirit power and stamina, plus inline resource bars. |
 | [`skill_stage`](./skill_stage.md) | `mxt/skill_stage` | One level of a skill mastery chain. |
-| [`spirit_crafting`](./spirit_crafting.md) | `recipe` | Vanilla recipe types (`mxt:spirit_shaped`, `mxt:spirit_shapeless`), not a datapack registry. |
+| [`spirit_crafting`](./spirit_crafting.md) | `recipe` | Spirit crafting recipes, which only run in the Spirit Crafting Table (`mxt:spirit_crafting_table`); vanilla recipe types (`mxt:spirit_shaped`, `mxt:spirit_shapeless`), not a datapack registry. |
 | [`spirit_herb`](./spirit_herb.md) | `mxt/spirit_herb` | Spirit herb metadata for existing items. |
-| [`spirit_root`](./spirit_root.md) | `mxt/spirit_root` | A spirit root bound to a single element. |
+| [`spirit_root`](./spirit_root.md) | `mxt/spirit_root` | A spirit root bound to a single element: the cultivation multiplier, the element affinity ability multiplier (a factor of layer one of the damage pipeline), granted abilities, rarity and same-body exclusivity. |
 | [`talisman`](./talisman.md) | `mxt/talisman` | Talisman definitions: the abilities one inscribed talisman carries. |
 | [`technique`](./technique.md) | `mxt/technique` | Cultivation technique definitions: learnable, granting abilities and cultivation modifiers by level. |
 | [`technique_binding`](./technique_binding.md) | `mxt/technique_binding` | Bindings from existing items to cultivation technique learning. |

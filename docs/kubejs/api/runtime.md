@@ -77,6 +77,76 @@ MxtAbilities.selector('example:nearest_three', (actor, context, params) => {
 
 `addBox` 仅接受 `ServerLevel`，且 `zone` 必须是已加载的 `aura_zone` 数据包 ID；否则抛出异常。`AuraResult` 常用只读方法：`aura()`、`concentration()`、`maximum()`、`regenPerTick()`、`cultivationSpeed()`、`source()`、`sourceKind()`、`suppressCultivate()`。
 
+## `MxtElements`
+
+| 方法 | 参数 | 返回值 | 说明 |
+| --- | --- | --- | --- |
+| `list(entity)` | `Entity` | `List<String>` | 该实体**当前生效**的灵根所指的元素 ID，按 ID 排序。停用的元素与关闭的灵根都不算，没有灵根则为空列表。 |
+| `has(entity, element)` | `Entity`、元素 ID | `boolean` | 该实体的灵根是否指向这个元素。 |
+| `amount(entity, element)` | `Entity`、元素 ID | `double` | 这个元素在该实体身上的附着量；没有则为 `0`，元素被停用或不存在也返回 `0`。客户端读同步过来的副本。 |
+| `attach(entity, element, amount)` | `Entity`、元素 ID、有限数值 | `double` | 走与打击**同一条**管线给实体加上（负数则扣掉）该元素的附着，返回新的附着量。攒够时 [`element_reaction`](/datapack/json/element_reaction) 照常触发。 |
+
+元素与附着是两件事：`list`/`has` 读的是灵根（这个身体"是什么"），`amount`/`attach` 读写的是一张按元素记数的附着表（这个身体"攒了多少"）。`attach` 与实体行为 `mxt:attach_element` 等价，因此"泡在岩浆里""服丹""诅咒持续喂火"这类来源用脚本写也一样；负数可以用来净化。三个读方法两侧都能用（附着表是同步过来的附件，客户端脚本读的是本地副本，物品悬浮提示那类逻辑正是这么用的）；只有 `attach` 是服务端操作，客户端、未知或被停用的元素、非有限值、`0` 一律返回 `0` 且不改动任何东西。
+
+```js
+// kubejs/server_scripts/mxt_element.js
+PlayerEvents.tick(event => {
+  const player = event.player
+  if (player.level().isClientSide()) return
+  // "身上有水灵根、且火气攒到 8 了" —— 反应还没触发就能先看到苗头。
+  if (MxtElements.has(player, 'mxt_test:water') && MxtElements.amount(player, 'mxt_test:fire') >= 8) {
+    console.info(`water cultivator carrying ${MxtElements.list(player)}`)
+  }
+})
+
+// 让一次自定义事件给目标攒火气；攒够时数据包里的 element_reaction 会自己结算。
+MxtElements.attach(target, 'mxt_test:fire', 4)
+```
+
+## `MxtSpiritRoots`
+
+灵根是身体修炼身份的**元素那一半**：持有它就绑定了元素、改变该元素灵气的修炼速度，并缩放亲和这个元素的技能。
+
+| 方法 | 参数 | 返回值 | 说明 |
+| --- | --- | --- | --- |
+| `list(entity)` | `Entity` | `List<String>` | 该实体**持有**的灵根 ID，按 ID 排序。关闭的灵根、定义已被停用或删除的灵根仍会列出——它确实还持有。 |
+| `active(entity)` | `Entity` | `List<String>` | 现在**生效**的灵根：关掉的、以及绑定元素被停用的都不算。 |
+| `has(entity, root)` | `Entity`、灵根 ID | `boolean` | 是否持有（与 `mxt:has_spirit_root` 同义：关闭也算持有）。 |
+| `enabled(entity, root)` | `Entity`、灵根 ID | `boolean` | 该灵根是否处于开启状态；不持有则为 `false`。 |
+| `grant(entity, root)` | `LivingEntity`、灵根 ID | `{changed, failure}` | 走权威服务授予，[`conflicting_elements`](/datapack/json/spirit_root) 与授予的能力都照常处理。 |
+| `remove(entity, root)` | `LivingEntity`、灵根 ID | `boolean` | 放弃该灵根及其元素与一切授予；本来没持有则为 `false`。 |
+| `setEnabled(entity, root, enabled)` | `LivingEntity`、灵根 ID、`boolean` | `{changed, failure}` | 「关闭但不失去」：状态真的变了并重算了授予才返回 `changed: true`，没持有则 `failure: "NOT_HELD"`。 |
+
+## `MxtPhysiques`
+
+体质是同一身份的**元素无关那一半**：授予原版属性与能力、缩放持有者打出与受到的伤害，并通过互斥标签排除其他体质。
+
+| 方法 | 参数 | 返回值 | 说明 |
+| --- | --- | --- | --- |
+| `list(entity)` | `Entity` | `List<String>` | 该实体**持有**的体质 ID，按 ID 排序（`allow_stacking` 时同一个 ID 可能出现多次）。 |
+| `active(entity)` | `Entity` | `List<String>` | 现在**生效**的体质。 |
+| `has(entity, physique)` | `Entity`、体质 ID | `boolean` | 是否持有。 |
+| `enabled(entity, physique)` | `Entity`、体质 ID | `boolean` | 该体质是否处于开启状态；不持有则为 `false`。 |
+| `grant(entity, physique)` | `LivingEntity`、体质 ID | `{changed, failure}` | 走权威服务授予，[`holder_condition`](/datapack/json/physique) 与 `exclusive_tags` 按**当前**实体判定。 |
+| `remove(entity, physique)` | `LivingEntity`、体质 ID | `boolean` | 移除该体质及其属性、能力与伤害倍率；本来没持有则为 `false`。 |
+| `setEnabled(entity, physique, enabled)` | `LivingEntity`、体质 ID、`boolean` | `{changed, failure}` | 与灵根同义的开关。 |
+
+两者的 `failure` 是同一套词表：`DISABLED`（定义不存在或被 `mxt:disabled` 停用）、`ALREADY_HELD`、`CONDITIONS`（体质 `holder_condition` 不满足）、`EXCLUSIVE_CONFLICT`、`ELEMENT_CONFLICT`（灵根 `conflicting_elements`）、`NOT_HELD`、`SERVER_ONLY`（在客户端调用）。四个读方法两侧都能用（`spirit_identity` 附件是同步的，物品悬浮提示问"你是不是火灵根"正是这个用途），四个改变状态的方法是服务端操作。
+
+```js
+// kubejs/server_scripts/mxt_identity.js
+// 洗练：把一条灵根换成另一条，并顺手把新体质打开。
+const result = MxtSpiritRoots.grant(player, 'mxt_test:qingxiao_fire_root')
+if (result.changed) {
+  MxtSpiritRoots.remove(player, 'mxt_test:water_root')
+  MxtPhysiques.setEnabled(player, 'mxt_test:blazing_body', true)
+} else {
+  console.warn(`grant refused: ${result.failure}`)
+}
+// "他是不是正在火灵根上" —— 关闭的灵根仍然持有，所以要问 active 而不是 has。
+const active = MxtSpiritRoots.active(player)
+```
+
 ## `MxtSouls`
 
 | 方法 | 参数 | 返回值 | 说明 |

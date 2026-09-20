@@ -192,7 +192,7 @@ A pellet that hands out a spirit root:
 }
 ```
 
-The spirit root is what makes the fire element matter: it changes the cultivation multiplier, and its `element_ability_modifier` scales abilities whose `element_affinity` includes fire.
+The spirit root is what makes the fire element matter: it changes the cultivation multiplier, and its `element_ability_modifier` scales abilities whose `element_affinity` includes fire — that damage side is applied automatically by the [damage pipeline](../technical/damage.md), so a skill definition only has to write its base number.
 
 ## Step 4 — Pill Bindings
 

@@ -13,8 +13,8 @@ title: 动态注册表
 | `realm_stage` | `mxt/realm_stage` | 线性境界链和突破。 |
 | `element` | `mxt/element` | 元素关系（`overcomes`/`adapted_to`，每条关系自带伤害倍率）、它认领的伤害类型（`damage_types`）、附着与衰减参数与显示色；灵气用自身的 `aura_type` 指向一个元素，统一伤害管线按双方灵根的元素关系结算克制与适应，元素附着由 `element_reaction` 结算。 |
 | `element_reaction` | `mxt/element_reaction` | 元素附着达到要求时触发的反应。 |
-| `spirit_root` | `mxt/spirit_root` | 与单一元素绑定的灵根。 |
-| `physique` | `mxt/physique` | 独立于元素的体质加成。 |
+| `spirit_root` | `mxt/spirit_root` | 与单一元素绑定的灵根：修炼倍率、元素亲和技能倍率（伤害管线第一层的因子）、授予能力、稀有度与同体互斥。 |
+| `physique` | `mxt/physique` | 独立于元素的体质加成：原版属性、授予能力、互斥标签、稀有度，以及打出/受到伤害的两个倍率。 |
 | `ability` | `mxt/ability` | 主动、被动和触发技能。 |
 | `curse` | `mxt/curse` | 可引用的诅咒定义。 |
 | `forging_method` | `mxt/forging_method` | 单次锻打方式。 |
@@ -27,7 +27,7 @@ title: 动态注册表
 | `item_archetype` | `mxt/item_archetype` | 法器原型和能力。 |
 | `spirit_herb` | `mxt/spirit_herb` | 已有物品的灵植元数据。 |
 | `alchemy_recipe` | `recipe`（配方类型 `mxt:alchemy`） | 炼丹配方。 |
-| `spirit_crafting` | `recipe`（配方类型 `mxt:spirit_shaped` / `mxt:spirit_shapeless`） | 灵性合成配方。 |
+| `spirit_crafting` | `recipe`（配方类型 `mxt:spirit_shaped` / `mxt:spirit_shapeless`） | 灵气合成配方，只在灵气工作台（`mxt:spirit_crafting_table`）里跑。 |
 | `formation` | `mxt/formation` | 阵法生命周期和灵气覆写。 |
 | `tribulation` | `mxt/tribulation` | 天劫：启动门槛、时间线节拍与成败行为。 |
 | `creature_profile` | `mxt/creature_profile` | 生物档案和实体绑定条件。 |

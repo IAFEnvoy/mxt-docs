@@ -56,7 +56,7 @@ This tutorial adds two abilities to the example pack: an active bolt cast from t
 Two extra fields are worth knowing about:
 
 - `components` adds state instead of a plain number: `mxt:charges`, `mxt:cooldown`, `mxt:toggle`, `mxt:timer`, `mxt:resource` and `mxt:target_lock`. Each of them declares a storage slot, and the values live in the ability attachment that owns the grant, addressed by the ability's id; see [Data Storage Types](/en/datapack/types/other/ability-and-curse#data-storage-type) for which of them anything actually reads yet.
-- `element_affinity` lists elements (or element tags) the ability belongs to. When it is not empty, the formula variable `element_modifier` becomes available and can scale damage or costs by how well the caster's spirit root matches.
+- `element_affinity` lists elements (or element tags) the ability belongs to. When it is not empty, the formula variable `element_modifier` becomes available; the **damage** side is handled for you — layer one of the [damage pipeline](/en/technical/damage) multiplies it in itself, so do not write `* element_modifier` by hand when writing a damage number (that would be the same number multiplied twice). Read the variable explicitly only when scaling something that is not damage, such as **costs** or **duration**.
 
 ::: warning Where realm ranks come from
 

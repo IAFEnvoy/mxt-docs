@@ -30,6 +30,9 @@ MiXianTu 的 KubeJS 桥接按领域提供独立对象，不提供承载全部方
 | `MxtCultivation` | 增加修为、尝试境界突破。 |
 | `MxtCurses` | 施加（可带时长）、显式移除与查询诅咒。 |
 | `MxtAura` | 查询、添加、移除服务端灵气区域。 |
+| `MxtElements` | 查询实体身上的元素与元素附着，并施加附着。 |
+| `MxtSpiritRoots` | 查询、授予、移除与开关灵根。 |
+| `MxtPhysiques` | 查询、授予、移除与开关体质。 |
 | `MxtSouls` | 回收实体可转移的魂魄。 |
 | `MxtTriggers` | 发布自定义触发器信号，并让脚本订阅信号。 |
 | `MxtLoot` | 注册脚本战利品条件与战利品函数。 |
@@ -77,7 +80,7 @@ MxtActions.entity('example:heal', (entity, params) => {
 
 服务 API 返回的 Java record 一律使用 Java accessor，例如 `result.committed()`，而非假设存在 JavaScript 字段。失败通常不会抛出：请检查 `failure()`、`committed()`、`advanced()`、`applied()` 等返回值。只有 API 参数非法、标识符非法、JSON 无法被对应 Codec 解码，或对错误事件阶段调用可变 setter 时才会抛异常。
 
-只在服务端才有意义的操作遇到客户端脚本时都不会改动玩家或世界：`MxtCosts.consume` 与 `MxtTriggers.subscribe` / `subscribeOnce` 会记录一次警告并返回 `false`；`MxtAbilities`、`MxtCultivation`、`MxtCurses`、`MxtSouls` 以及 `MxtTriggers.publish` 直接返回 `false`，或把结果里的 `failure()` 置为 `SERVER_ONLY`，不写日志。唯一的例外是 `MxtAura.addBox`：它在客户端会抛 `IllegalArgumentException`（只接受 `ServerLevel`）。
+只在服务端才有意义的操作遇到客户端脚本时都不会改动玩家或世界：`MxtCosts.consume` 与 `MxtTriggers.subscribe` / `subscribeOnce` 会记录一次警告并返回 `false`；`MxtAbilities`、`MxtCultivation`、`MxtCurses`、`MxtSouls`、`MxtElements.attach`、`MxtSpiritRoots` 与 `MxtPhysiques` 的改变状态方法，以及 `MxtTriggers.publish` 直接返回 `false`（`MxtElements.attach` 返回 `0`），或把结果里的 `failure()` / `failure` 置为 `SERVER_ONLY`，不写日志。唯一的例外是 `MxtAura.addBox`：它在客户端会抛 `IllegalArgumentException`（只接受 `ServerLevel`）。
 
 `MxtActions.execute*` 故意不设该保护，因为内置 Action 自己决定作用端：JSON 里声明了客户端执行的 Action（例如带 `client` 标志的速度 Action）本来就应当就地运行。
 

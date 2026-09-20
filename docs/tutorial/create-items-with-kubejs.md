@@ -192,7 +192,7 @@ ServerEvents.recipes(event => {
 }
 ```
 
-灵根才是让火元素变得有意义的东西：它改变修炼倍率，而它的 `element_ability_modifier` 会缩放 `element_affinity` 包含火的技能。
+灵根才是让火元素变得有意义的东西：它改变修炼倍率，而它的 `element_ability_modifier` 会缩放 `element_affinity` 包含火的技能——伤害那一侧由[伤害管线](/technical/damage)自动乘上，技能定义里写基础数值就够了。
 
 ## 第 4 步 —— 丹药绑定
 

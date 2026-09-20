@@ -44,6 +44,7 @@ export const sections = [
           { page: 'player-guide/commands/display', zh: '/display', en: '/display' },
           { page: 'player-guide/commands/formation', zh: '/formation', en: '/formation' },
           { page: 'player-guide/commands/friend', zh: '/friend', en: '/friend' },
+          { page: 'player-guide/commands/identity', zh: '/identity', en: '/identity' },
           { page: 'player-guide/commands/lightning', zh: '/lightning', en: '/lightning' },
           { page: 'player-guide/commands/picker', zh: '/picker', en: '/picker' },
           { page: 'player-guide/commands/talisman', zh: '/talisman', en: '/talisman' },

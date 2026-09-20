@@ -1,0 +1,23 @@
+---
+title: /identity
+---
+
+# `/identity`
+
+灵根与体质的管理入口。定义本身是数据包，授予、移除和开关则是实体身上的状态：这一页是操作这三件事的地方，也是「关闭但不失去」那个模块的管理员侧入口（模块没有玩家界面）。
+
+| 命令 | 作用 |
+| --- | --- |
+| `/identity root list [<目标>]`（= `/mxt identity root list`） | 列出持有的灵根：名字、稀有度、绑定元素与是否生效。不填目标时看自己，查询不需要权限。 |
+| `/identity root grant <目标s> <灵根>` | 授予灵根（gamemaster）。被 `conflicting_elements` 挡住、已经持有或定义不存在时，逐个目标报出原因。 |
+| `/identity root remove <目标s> <灵根>` | 移除该灵根，连同它的元素与一切授予。 |
+| `/identity root enable` / `disable <目标s> <灵根>` | 「关闭但不失去」：关掉的灵根仍然持有，只是什么都不再提供。 |
+| `/identity physique list [<目标>]` | 列出持有的体质：名字、稀有度与是否生效（叠加时同名只列一行）。 |
+| `/identity physique grant` / `remove <目标s> <体质>` | 授予（按当前实体判定 `holder_condition` 与互斥标签）或移除体质。 |
+| `/identity physique enable` / `disable <目标s> <体质>` | 与灵根同义的开关。 |
+
+授予与移除走的是数据包行为 `mxt:grant_spirit_root` / `mxt:remove_physique` 等**同一套服务**，所以冲突规则、持有条件与来源清理完全一致，命令不会绕过任何一条校验。失败按目标逐个报告，因为值得知道的失败都是逐个目标的——一个已经持有，另一个的元素与它相冲——原因写在后面正是这个命令值得再跑一次的地方。
+
+`root` / `physique` 的参数补全只列出仍在加载的定义；一个身体仍然持有、而定义已被删除或停用的条目，可以手打 ID 来移除或关闭——那正是这个命令要能处理的场景。
+
+顶层别名 `/identity` 由服务端配置的**「命令别名」标签页**控制（条目名 `identity`，默认开启）；关闭后 `/mxt identity` 照旧可用。

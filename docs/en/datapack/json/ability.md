@@ -32,7 +32,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/ability/fireb
 | `target_selector` | `AbilityTargetSelector` | `mxt:self` | Which entities `bi_entity_action` applies to: `mxt:self` selects only the caster, `mxt:area` takes `radius` (required, capped at `128`) and `include_actor` (default `false`), and `mxt:js` asks a server script. |
 | `target_condition` | `BiEntityCondition` | `mxt:always_true` | Target relation condition. |
 | `bi_entity_action` | `BiEntityAction` | `mxt:no_op` | Behaviour executed on the caster and the target. |
-| `element_affinity` | `HolderOrTag<element>[]` | `[]` | Element affinity markers of the ability. A non-empty list is both the **cast gate** — with no matching spirit root the ability is not allowed — and the source of the `element_modifier` formula value. |
+| `element_affinity` | `HolderOrTag<element>[]` | `[]` | Element affinity markers of the ability. A non-empty list is both the **cast gate** — with no matching spirit root the ability is not allowed — and the source of `element_modifier`: layer one of the [damage pipeline](../../technical/damage.md) multiplies it straight into the damage this cast deals (the `element_ability_modifier` of the matching spirit roots, combined per `element_affinity_mode`), so a damage formula must **not** write `* element_modifier` by hand. |
 | `element_affinity_mode` | `average` / `max` | `average` | How the `element_ability_modifier` of several matching spirit roots becomes the single `element_modifier` formula value: `average` takes the mean (the old behaviour) and `max` takes the best matching root. |
 
 ### ability.type

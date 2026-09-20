@@ -18,7 +18,7 @@ description: 炼丹的教程还没写：这一页先说清这套系统现在有�
 | 炼丹配方 | `data/<命名空间>/recipe/<路径>.json`，`"type": "mxt:alchemy"` | 格式已定稿，字段见 [alchemy_recipe](../datapack/json/alchemy_recipe.md)。 |
 | 会话与结算 | `runtime/alchemy` 下的 `AlchemySession`、`AlchemyWorkstationState`、`AlchemyWorkstationService` | 逻辑完整：锁材料、按 tick 推进、到点产出成功或失败产物、执行实体行为与方块行为。 |
 | 工作台接口 | `AlchemyWorkstation` | **只是一个接口**：仓库里没有任何类实现它，也没有任何地方调用 `startAlchemy` / `tickAlchemy`。温度与丹炉等级都由实现方给出。 |
-| 灵气工作台 | 方块 `mxt:spirit_crafting_table` | 只跑[灵性合成](../datapack/json/spirit_crafting.md)（`mxt:spirit_shaped` / `mxt:spirit_shapeless`），**与炼丹之间没有任何代码路径**。 |
+| 灵气工作台 | 方块 `mxt:spirit_crafting_table` | 只跑[灵气合成](../datapack/json/spirit_crafting.md)（`mxt:spirit_shaped` / `mxt:spirit_shapeless`），**与炼丹之间没有任何代码路径**。 |
 | 丹药与丹毒 | [pill_binding](../datapack/json/pill_binding.md) | 完整可用：产出的物品一匹配上就有丹毒收益、阈值与过量行为。 |
 | 灵植 | [spirit_herb](../datapack/json/spirit_herb.md) | 完整可用：给**已有物品**挂元数据（品质、生长、掉落），它本身不注册物品。 |
 | 品质的炼丹修正 | [item_quality](../datapack/json/item_quality.md) 的 `alchemy_modifier` | 完整可用：只改炼制时长，取这一批材料里**最低**的一档。 |
@@ -57,4 +57,4 @@ description: 炼丹的教程还没写：这一页先说清这套系统现在有�
 ## 接下来
 
 - [锻造一件法器](./forge-a-treasure.md) —— 同样是"工位 + 配方 + 品质"的写法，而这一套今天是能跑通的。
-- [灵性合成](../datapack/json/spirit_crafting.md) —— 目前唯一接好线的灵气工作台配方族。
+- [灵气合成](../datapack/json/spirit_crafting.md) —— 目前唯一接好线的灵气工作台配方族。

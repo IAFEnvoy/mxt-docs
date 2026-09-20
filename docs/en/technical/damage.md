@@ -24,12 +24,12 @@ The package prefix is `com.iafenvoy.mxt`; every file is under `src/main/java/com
 flowchart TD
     A["mxt:damage / mxt:damage_target / mxt:explode<br/>a formation attack module / an action in a tribulation timeline"] --> DEAL
     DEAL["DamageCalculationService#deal<br/>server only; returns 0 on a client"] --> STRIKE["DamageElements#strike(level, damageType, attacker)<br/>what this strike is made of"]
-    STRIKE --> OUT["outgoing: base value × damage_multiplier × the attacker's overcomes"]
+    STRIKE --> OUT["outgoing: base value × damage_multiplier × element_modifier<br/>× the attacker's damage_dealt_multiplier × the attacker's overcomes"]
     OUT --> SRC["source: damage type and kill credit"]
     SRC --> HURT["Entity#hurtServer<br/>vanilla runs immunity and resistances first, then fires the event"]
     HURT --> EV["LivingIncomingDamageEvent"]
     EV --> BRIDGE["DamageEventBridge#onIncomingDamage"]
-    BRIDGE --> IN["incoming: × the target's adapted_to"]
+    BRIDGE --> IN["incoming: × the target's adapted_to<br/>× the target's damage_taken_multiplier"]
     BRIDGE --> REACT["ElementReactionService#applyFromStrike<br/>element buildup and reactions"]
 ```
 
@@ -50,16 +50,19 @@ The cost is that the two must not overlap: `DamageEventBridge` therefore lives o
 public static double outgoing(@Nullable Entity attacker, Entity target, double amount,
                               @Nullable FormulaContext context, Set<Holder<Element>> elements) {
     if (!Double.isFinite(amount) || amount <= 0.0D) return 0.0D;
-    double result = amount * masteryMultiplier(context) * overcomeMultiplier(elements, target);
+    double result = amount * masteryMultiplier(context) * elementMultiplier(context)
+            * physiqueMultiplier(attacker, true) * overcomeMultiplier(elements, target);
     return Double.isFinite(result) && result > 0.0D ? result : 0.0D;
 }
 ```
 
-The order of operations is fixed: **the base value from the pack or a formula → × `damage_multiplier` → × the attacker's `overcomes`**. The target's `adapted_to` only enters afterwards, in layer two.
+The order of operations is fixed: **the base value from the pack or a formula → × `damage_multiplier` → × `element_modifier` → × the attacker's `damage_dealt_multiplier` → × the attacker's `overcomes`**. The target's `adapted_to` and `damage_taken_multiplier` only enter afterwards, in layer two.
 
 - **`damage_multiplier` belongs to the casting.** `AbilityService#withAbilityScaling` writes it into the formula context, and its value comes from `SkillStageService#damageMultiplier`: it walks the holder's learned techniques, keeps the ones whose current stage actually unlocks this ability, and takes the **largest** multiplier among them — several techniques do not stack their multipliers, because only one strike is being dealt. A `skill_stage` defaults `damage_multiplier` to `1.0`, and a negative or non-finite value is rejected while loading.
-- **The element factor belongs to the person.** `overcomeMultiplier` runs a **double loop over the attacking and defending element sets, multiplying every pair**, and each pair goes through `Element#overcomeMultiplier`, which multiplies every matching relation in that element's `overcomes`. An empty set on either side (no spirit roots, no elements), or a target that is not a `LivingEntity`, reads as `1.0` — "there is no relation to apply".
-- **Backlash and self-damage therefore have no element edge at all.** When `mxt:damage` lands on the caster themself the attacker is `null` (`DamageAction#attacker` returns `null` as soon as `caster == entity`), the element set is empty and no relation is read — but `damage_multiplier` still applies: a stronger technique hurts more when it backfires, because that is the worth of the casting, not a property of the strike.
+- **`element_modifier` is the spirit-root half, and it belongs to the casting as well.** The same `withAbilityScaling` folds "the `element_ability_modifier` of the matching roots" into one value through `element_affinity_mode` (average or best) and writes it into the context, and `elementMultiplier(context)` multiplies it straight in. It is **not only** a variable for formulas to read — whether content writes `"damage": 12` or `"damage": "12 * element_modifier"`, the latter now multiplies twice, so **do not write it by hand again**. When the ability carries no `element_affinity`, or the damage does not come from a casting (a formation tick, a curse, a vanilla attack), the context has no such value and it reads `1.0`; a root that writes this multiplier as `0` means "this element of mine deals nothing", and this layer still multiplies by `0` (the same reading the casting gate uses).
+- **`damage_dealt_multiplier` / `damage_taken_multiplier` belong to the person.** They come from active `physique` definitions: layer one reads the attacker's "dealt" multiplier and layer two reads the target's "taken" one, and several active physiques **multiply** (each one is an independent source). They are evaluated in the **holder's own** formula context rather than the other side's — how much this body takes cannot depend on who is asking. A literal number is validated as finite and non-negative while loading, and a negative or non-finite value produced by a formula counts as "no contribution" (the same rule, for the same class of formula, as passive attributes); `0` is legal and means immunity, or that nothing can be dealt.
+- **The element factor belongs to both sides.** `overcomeMultiplier` runs a **double loop over the attacking and defending element sets, multiplying every pair**, and each pair goes through `Element#overcomeMultiplier`, which multiplies every matching relation in that element's `overcomes`. An empty set on either side (no spirit roots, no elements), or a target that is not a `LivingEntity`, reads as `1.0` — "there is no relation to apply".
+- **Backlash and self-damage therefore have no element edge at all.** When `mxt:damage` lands on the caster themself the attacker is `null` (`DamageAction#attacker` returns `null` as soon as `caster == entity`), the element set is empty, no relation is read and the "dealt" multiplier has nothing to be read from either (there is no attacker) — but `damage_multiplier` and `element_modifier` still apply: the stronger the technique and the better the root fits, the heavier the backlash, because that is the worth of the casting, not a property of the strike.
 - **Nothing is clamped.** Anything non-finite or ≤ 0 counts as "no damage"; otherwise the number is returned as computed. Numeric discipline is the pack's job (a multiplier must be finite and non-negative, but `0.0` is legal and means "no damage").
 
 ## Layer two: reduction
@@ -67,12 +70,13 @@ The order of operations is fixed: **the base value from the pack or a formula �
 ```java
 public static double incoming(LivingEntity target, Set<Holder<Element>> attacking, double amount) {
     if (!Double.isFinite(amount) || amount <= 0.0D) return 0.0D;
-    double result = amount * adaptationMultiplier(target, attacking);
+    double result = amount * adaptationMultiplier(target, attacking) * physiqueMultiplier(target, false);
     return Double.isFinite(result) && result > 0.0D ? result : 0.0D;
 }
 ```
 
 - **Only the target's `adapted_to` is read.** `adaptationMultiplier` also multiplies pair by pair, but takes only the defending side's relations. Being overcome is the attacker's advantage, not a second bonus for the defender, so `overcomes` does not take part in this layer.
+- **The target's own `damage_taken_multiplier` is read here too**, and `physiqueMultiplier` looks only at the physique definitions rather than at who is attacking: a layer of physical reduction, a layer of attribute resistance or a one-off "unyielding body" all sit on the same table and behave the same whoever deals the hit. It likewise has no special case between `1.0` and `0.0` — `0.0` is immunity.
 - **It runs once.** `LivingIncomingDamageEvent` fires exactly once per damage sequence, whoever dealt the hit — that is what keeps this layer from being applied twice.
 - **This layer never cancels.** Refusing a hit belongs to the protection and invulnerability rules (`FormationProtection`, vanilla resistances); a relation only changes what the hit is worth. The listener therefore starts with "if it is already cancelled, do nothing": a cancelled sequence applies nothing, so rewriting its amount would only rewrite a number nobody reads.
 - **A hit dropped by the invulnerability timer still goes through this layer.** Vanilla discards a repeated small hit *after* the event fires, so "no health lost" does not mean "nothing was computed" — the reduced amount goes nowhere, but the element has already been built up on the target (next section).

@@ -7,6 +7,12 @@ description: An alchemy recipe combines materials, aura, temperature and furnace
 
 An alchemy recipe is a vanilla recipe type registered by the mod. It tells an alchemy workstation which materials it accepts, what temperature and furnace tier it needs, how long a batch runs and what it produces on success or on failure.
 
+::: warning The alchemy workstation has not been started
+
+This page describes the **recipe format** and the rules an alchemy workstation will have to follow. The recipe type and the batch state machine (`AlchemySession` / `AlchemyWorkstationService`) are ready and recipe files load normally, but **there is no workstation**: `AlchemyWorkstation` is only an interface, nothing in the repository implements it, and nothing ever matches a recipe and begins a batch. A recipe written today therefore does not run in game, and nothing can satisfy `minimum_furnace_tier` or `target_temperature` yet — see [Refining a Pill](../../tutorial/refine-a-pill.md) for how far the pipeline goes today.
+
+:::
+
 ## File Location
 
 Alchemy recipes are ordinary recipe files, so they go in `data/<namespace>/recipe/` within your data pack, exactly like a crafting or smelting recipe.

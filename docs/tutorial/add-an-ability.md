@@ -56,7 +56,7 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 还有两个字段值得了解：
 
 - `components` 添加的是状态而不是一个普通数字：`mxt:charges`、`mxt:cooldown`、`mxt:toggle`、`mxt:timer`、`mxt:resource` 与 `mxt:target_lock`。它们各自声明一个存储槽，值住在拥有该授予的那份技能附件里，按技能 ID 寻址；至于目前是否真的有人读取它们，见[数据存储类型](/datapack/types/other/ability-and-curse#data-storage-type)。
-- `element_affinity` 列出该技能所属的元素（或元素标签）。它非空时，公式变量 `element_modifier` 就可用，可以按施法者灵根的匹配程度缩放伤害或消耗。
+- `element_affinity` 列出该技能所属的元素（或元素标签）。它非空时，公式变量 `element_modifier` 就可用；**伤害**这一侧不用你操心——[伤害管线](/technical/damage)第一层会自己乘上它，所以写伤害数字时不要再手写 `* element_modifier`（那是同一个数的第二次相乘）。要拿它缩放**消耗、时长**之类不是伤害的东西，才需要显式读这个变量。
 
 ::: warning 境界序号从哪来
 

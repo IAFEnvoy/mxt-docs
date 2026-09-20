@@ -6,15 +6,20 @@
  * (`zh_cn.json`, `en_us.json`), so a renamed entry fails here instead of silently pointing
  * at a tab that no longer exists.
  *
+ * The mod repository is a separate checkout; see `repos.mjs` for how it is found and how to
+ * point at it explicitly with `MXT_REPO`.
+ *
  * Usage: pnpm run check:config [--strict]
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
+import { PROJECT, requireModRepo } from './repos.mjs'
 
-const DOCS = 'E:/Website/mxt-docs/docs'
+const DOCS = process.env.MXT_DOCS ?? path.join(PROJECT, 'docs')
+const MOD_REPO = requireModRepo('pnpm run check:config')
 const load = (file) => JSON.parse(readFileSync(file, 'utf8'))
-const zh = load('E:/Java/MiXianTu/src/main/resources/assets/mxt/lang/zh_cn.json')
-const en = load('E:/Java/MiXianTu/src/main/resources/assets/mxt/lang/en_us.json')
+const zh = load(path.join(MOD_REPO, 'src/main/resources/assets/mxt/lang/zh_cn.json'))
+const en = load(path.join(MOD_REPO, 'src/main/resources/assets/mxt/lang/en_us.json'))
 
 /** label -> key, per container, from a language file. */
 function index(lang, prefix) {

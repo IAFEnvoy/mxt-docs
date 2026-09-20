@@ -31,6 +31,9 @@ The identifiers below — `id`, `resource`, `ability`, `curse`, `zone` and so on
 | `MxtCultivation` | Add cultivation progress and attempt a realm breakthrough. |
 | `MxtCurses` | Apply (with an optional duration), release, remove and query curses. |
 | `MxtAura` | Query, add and remove server-side aura areas. |
+| `MxtElements` | Read the elements and element accumulation on an entity, and apply accumulation. |
+| `MxtSpiritRoots` | Query, grant, remove and switch spirit roots on and off. |
+| `MxtPhysiques` | Query, grant, remove and switch physiques on and off. |
 | `MxtSouls` | Reclaim the transferable soul of an entity. |
 | `MxtTriggers` | Publish custom trigger signals and subscribe scripts to them. |
 | `MxtLoot` | Register script loot conditions and loot functions. |
@@ -78,7 +81,7 @@ An `id` is unique **within the same callback category**. KubeJS clears every cal
 
 Java records returned by the service APIs always use Java accessors, for example `result.committed()`, rather than assuming that JavaScript fields exist. A failure usually does not throw: check the return values such as `failure()`, `committed()`, `advanced()` and `applied()`. An exception is only thrown when an API parameter is invalid, an identifier is invalid, JSON cannot be decoded by the matching codec, or a mutable setter is called on the wrong event phase.
 
-An operation that only makes sense on the server refuses to run from a client script, so a script cannot desync a client: `MxtCosts.consume` and the state-changing methods of `MxtAbilities`, `MxtCultivation`, `MxtCurses`, `MxtAura`, `MxtSouls` and `MxtTriggers` return their failure result unchanged, and `MxtCosts.consume`, `MxtTriggers.subscribe` and `MxtTriggers.subscribeOnce` also write a single warning to the log instead of throwing. `MxtAura.addBox` is the exception: it needs a `ServerLevel` and throws otherwise.
+An operation that only makes sense on the server refuses to run from a client script, so a script cannot desync a client: `MxtCosts.consume` and the state-changing methods of `MxtAbilities`, `MxtCultivation`, `MxtCurses`, `MxtAura`, `MxtSouls`, `MxtElements`, `MxtSpiritRoots`, `MxtPhysiques` and `MxtTriggers` return their failure result unchanged — for `MxtSpiritRoots` and `MxtPhysiques` that is a result whose `failure` is `SERVER_ONLY` (`MxtElements.attach` answers `0`) — and `MxtCosts.consume`, `MxtTriggers.subscribe` and `MxtTriggers.subscribeOnce` also write a single warning to the log instead of throwing. `MxtAura.addBox` is the exception: it needs a `ServerLevel` and throws otherwise.
 
 `MxtActions.execute*` is deliberately not guarded, because the built-in actions decide their own side: an action whose JSON opts into client execution, such as a velocity action with its `client` flag, is meant to run where it is called.
 

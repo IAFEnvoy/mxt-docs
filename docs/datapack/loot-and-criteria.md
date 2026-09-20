@@ -64,7 +64,7 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 
 当所选实体不在战利品上下文中时，该条件为假。
 
-`mxt:has_spirit_root` 的 `spirit_root` 字段接受条目、`#` 标签或它们的数组，所以"任意火属灵根"写一条标签即可。`mxt:has_element` 问的是更粗的那一层——"是不是火属修士"：`elements` 是一个 `HolderOrTag<element>[]`，之后新加的同类灵根无需改动战利品表；被停用的元素不算。
+`mxt:has_spirit_root` 的 `spirit_root` 字段接受条目、`#` 标签或它们的数组，所以"任意火属灵根"写一条标签即可。`mxt:has_element` 问的是更粗的那一层——"是不是火属修士"：`elements` 是一个 `HolderOrTag<element>[]`，之后新加的同类灵根无需改动战利品表；被停用的元素不算，`elements` 至少写一项（空数组在加载期被拒绝）。
 
 ```json
 {

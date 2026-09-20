@@ -15,7 +15,6 @@ MiXianTu is a NeoForge mod, so it installs like any other mod: set up a matching
 | NeoForge | `26.1.2.99` or newer |
 | Side | Client and server (`BOTH`) |
 | Mod ID | `mxt` |
-| Version | `1.0-alpha.2` |
 | License | `All Rights Reserved` |
 
 ## Dependencies

@@ -7,7 +7,7 @@ description: Every command MiXianTu adds, with its effect, its permission requir
 
 Every command MiXianTu adds hangs under the `/mxt` root: its own registries, resources, cultivation, world state and operator tooling. The player-facing subtrees are also registered as top-level aliases, so `/aura` and `/mxt aura` are the same tree, `/formation` and `/mxt formation`, and so on. Commands are diagnostic and administrative helpers for the framework; the gameplay itself is driven by datapacks.
 
-Each alias is toggled on its own in the **Command Aliases** tab of the server configuration — the entry shows the command itself, and all of them default to on. Disabling `aura` removes only the top-level `/aura` spelling; the `/mxt` entries stay complete, so a configuration mistake can never make a command unreachable. The alias set is `ability`, `aura`, `curse`, `display`, `formation`, `friend`, `lightning`, `picker`, `talisman`, `technique`, `trade` and `tribulation`.
+Each alias is toggled on its own in the **Command Aliases** tab of the server configuration — the entry shows the command itself, and all of them default to on. Disabling `aura` removes only the top-level `/aura` spelling; the `/mxt` entries stay complete, so a configuration mistake can never make a command unreachable. There are thirteen aliases in all: `ability`, `aura`, `curse`, `display`, `formation`, `friend`, `identity`, `lightning`, `picker`, `talisman`, `technique`, `trade` and `tribulation`.
 
 ## Sub-pages
 
@@ -18,6 +18,7 @@ Each alias is toggled on its own in the **Command Aliases** tab of the server co
 - [/display](/en/player-guide/commands/display)
 - [/formation](/en/player-guide/commands/formation)
 - [/friend](/en/player-guide/commands/friend)
+- [/identity](/en/player-guide/commands/identity)
 - [/lightning](/en/player-guide/commands/lightning)
 - [/picker](/en/player-guide/commands/picker)
 - [/talisman](/en/player-guide/commands/talisman)

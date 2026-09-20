@@ -24,12 +24,12 @@ description: 源码级说明：一次打击在 DamageCalculationService 里怎�
 flowchart TD
     A["mxt:damage / mxt:damage_target / mxt:explode<br/>阵法 attack 模块 / 天劫时间线里的动作"] --> DEAL
     DEAL["DamageCalculationService#deal<br/>只在服务端做，客户端直接返回 0"] --> STRIKE["DamageElements#strike(level, damageType, attacker)<br/>这一击是什么元素"]
-    STRIKE --> OUT["outgoing：基础值 × damage_multiplier × 攻击方 overcomes"]
+    STRIKE --> OUT["outgoing：基础值 × damage_multiplier × element_modifier<br/>× 攻击方 damage_dealt_multiplier × 攻击方 overcomes"]
     OUT --> SRC["source：伤害类型与击杀归属"]
     SRC --> HURT["Entity#hurtServer<br/>原版先过免疫与抗性，之后触发事件"]
     HURT --> EV["LivingIncomingDamageEvent"]
     EV --> BRIDGE["DamageEventBridge#onIncomingDamage"]
-    BRIDGE --> IN["incoming：× 受击方 adapted_to"]
+    BRIDGE --> IN["incoming：× 受击方 adapted_to<br/>× 受击方 damage_taken_multiplier"]
     BRIDGE --> REACT["ElementReactionService#applyFromStrike<br/>元素附着与反应"]
 ```
 
@@ -50,16 +50,19 @@ flowchart TD
 public static double outgoing(@Nullable Entity attacker, Entity target, double amount,
                               @Nullable FormulaContext context, Set<Holder<Element>> elements) {
     if (!Double.isFinite(amount) || amount <= 0.0D) return 0.0D;
-    double result = amount * masteryMultiplier(context) * overcomeMultiplier(elements, target);
+    double result = amount * masteryMultiplier(context) * elementMultiplier(context)
+            * physiqueMultiplier(attacker, true) * overcomeMultiplier(elements, target);
     return Double.isFinite(result) && result > 0.0D ? result : 0.0D;
 }
 ```
 
-运算顺序是固定的：**数据包/公式给的基础值 → × `damage_multiplier` → × 攻击方的 `overcomes`**。往后才是受击方的 `adapted_to`（在第二层）。
+运算顺序是固定的：**数据包/公式给的基础值 → × `damage_multiplier` → × `element_modifier` → × 攻击方的 `damage_dealt_multiplier` → × 攻击方的 `overcomes`**。往后才是受击方的 `adapted_to` 与 `damage_taken_multiplier`（在第二层）。
 
 - **`damage_multiplier` 属于「这次施放」**，由 `AbilityService#withAbilityScaling` 写进公式上下文，值来自 `SkillStageService#damageMultiplier`：它遍历持有者已学的功法，挑出「当前所处水平确实授予了这个能力」的那些，取其中**最大的**倍率——几个功法各给一份倍率不会相乘，因为打出去的只有一击。`skill_stage` 的 `damage_multiplier` 默认 `1.0`，负数或非有限值在加载期就被拒。
-- **元素倍率属于「这个人」**。`overcomeMultiplier` 对攻击方元素集合与防御方元素集合做**双重循环逐对相乘**，每一对由 `Element#overcomeMultiplier` 把该元素 `overcomes` 里所有匹配关系相乘。任一集合为空（无灵根、无元素）或目标不是 `LivingEntity` 时是 `1.0`，也就是「没有关系可算」。
-- **反噬与自伤因此自然地没有元素边**：`mxt:damage` 打在施法者自己身上时，加害者是 `null`（`DamageAction#attacker` 里 `caster == entity` 就返回 `null`），元素集合为空，克制不参与；但 `damage_multiplier` 照样生效——功法越强，反噬越重，那是这次施放的价值，不是某一击的属性。
+- **`element_modifier` 是灵根的那一半，也属于「这次施放」**：同一个 `withAbilityScaling` 把「匹配灵根的 `element_ability_modifier`」按 `element_affinity_mode`（平均或取最好）算成一个值写进上下文，`elementMultiplier(context)` 直接乘进去。它**不只是**给公式看的变量——内容是写 `"damage": 12` 还是 `"damage": "12 * element_modifier"`，现在后者会乘两次，所以**不要再手写**。能力不带 `element_affinity` 或伤害不是由施放产生（阵法 tick、诅咒、原版攻击）时上下文里没有这个值，读作 `1.0`；灵根把这个倍率写成 `0` 表示「我这门元素打不出东西」，这一层照样乘 `0`（与施放门槛同一套读法）。
+- **`damage_dealt_multiplier` / `damage_taken_multiplier` 属于「这个人」**：它们来自在效 `physique` 定义，第一层读加害者的「打出」倍率、第二层读受击者的「受到」倍率，多条生效体质**相乘**（每一条都是一个独立来源）。求值用的是**持有者自己的**公式上下文，不是对方的——「这个身体挨多少」不能取决于谁在问。写死的数字在加载期校验有限非负，公式算出的负数或非有限值按不贡献处理（与被动属性同一类公式同一条规则）；`0` 合法，等于免疫或打不动。
+- **元素倍率属于「双方」**。`overcomeMultiplier` 对攻击方元素集合与防御方元素集合做**双重循环逐对相乘**，每一对由 `Element#overcomeMultiplier` 把该元素 `overcomes` 里所有匹配关系相乘。任一集合为空（无灵根、无元素）或目标不是 `LivingEntity` 时是 `1.0`，也就是「没有关系可算」。
+- **反噬与自伤因此自然地没有元素边**：`mxt:damage` 打在施法者自己身上时，加害者是 `null`（`DamageAction#attacker` 里 `caster == entity` 就返回 `null`），元素集合为空，克制不参与，「打出」倍率也无从谈起（没有加害者）；但 `damage_multiplier` 与 `element_modifier` 照样生效——功法越强、灵根越合，反噬越重，那是这次施放的价值，不是某一击的属性。
 - **没有 clamp、没有上下限**：非有限值或 ≤ 0 一律当作「没有伤害」，除此之外原样返回。数值纪律交给数据包（倍率必须有限非负，但 `0.0` 合法，等于免伤/无效）。
 
 ## 第二层：减免
@@ -67,12 +70,13 @@ public static double outgoing(@Nullable Entity attacker, Entity target, double a
 ```java
 public static double incoming(LivingEntity target, Set<Holder<Element>> attacking, double amount) {
     if (!Double.isFinite(amount) || amount <= 0.0D) return 0.0D;
-    double result = amount * adaptationMultiplier(target, attacking);
+    double result = amount * adaptationMultiplier(target, attacking) * physiqueMultiplier(target, false);
     return Double.isFinite(result) && result > 0.0D ? result : 0.0D;
 }
 ```
 
 - **只读受击方的 `adapted_to`**：`adaptationMultiplier` 同样是逐对相乘，但只取防御方那一侧的关系。「被克制」是攻击方的优势，不是受击侧的第二次加成，所以 `overcomes` 在这一层不再参与。
+- **受击方自己的 `damage_taken_multiplier` 也在这里**，而 `physiqueMultiplier` 只看体质定义、不看攻击者是谁：一层物理减伤、一层属性抗性、一次「霸体」都写在同一张表上，谁打过来都一样。它同样在 `1.0` 与 `0.0` 之间没有特例——`0.0` 就是免疫。
 - **只触发一次**：`LivingIncomingDamageEvent` 在一次伤害序列里只发一次，无论这一击是谁发出来的，这就是第二层不会被重复计算的原因。
 - **本层从不取消事件**：拒绝一次伤害属于保护与无敌规则的事（`FormationProtection`、原版抗性），关系只改变这一击值多少。因此监听器里第一件事是「已取消就什么都不做」——被取消的序列不会应用任何东西，改它的数字只是改一个没人读的值。
 - **被无敌帧挡掉的一击也会走完这一层**：原版把重复的小伤害丢掉发生在事件之后，所以「没掉血」不代表「没算过」——减免写回去的数字没人读，但元素的附着已经落在身上了（见下一节）。
