@@ -9,7 +9,7 @@ The reference pages on this site describe one file, one field or one API at a ti
 
 ## The Example Pack
 
-Every tutorial extends the same small content pack in the `example` namespace. The first four form one chain, each assuming the pages before it are done; the last four stand on their own and only use definitions the pack already has. By the end of the series it looks like this:
+Every tutorial extends the same small content pack in the `example` namespace. The first four form one chain, each assuming the pages before it are done; the rest stand on their own and only use definitions the pack already has. By the end of the series it looks like this:
 
 ```text
 data/example/
@@ -36,8 +36,14 @@ data/example/
 │   ├── formation/ward_array.json            Protection + attack modules
 │   ├── realm_instance/trial_realm.json      A pocket world template
 │   ├── tribulation/heavenly_gate.json       The trial a breakthrough starts
+│   ├── forging_method/light_strike.json     One strike: meter shift, cost, cooldown
+│   ├── forging_method/heavy_strike.json
+│   ├── tool_binding/smith_hammer.json       Which methods a placed tool unlocks
+│   ├── forging_blueprint/spirit_sword.json  Materials, target band, quality ladder
+│   ├── blueprint_binding/sword_manual.json  Which blueprint the item offers
 │   ├── item_quality/common.json             Quality tiers
 │   ├── item_quality/refined.json
+│   ├── item_quality/flawless.json
 │   ├── item_binding/qi_pill.json            Bindings attach rules to real items
 │   ├── item_binding/root_pellet.json
 │   ├── pill_binding/qi_pill.json
@@ -60,6 +66,8 @@ data/example/
 | [Open a Realm Instance](./open-a-realm.md) | A pocket-world template that opens separate instance dimensions: generation, border, landing points, claiming and lifetime. | You want a throwaway or claimable little world. |
 | [Inscribe a Talisman](./inscribe-a-talisman.md) | Carrying abilities on an item, pouring aura into it, firing it, and the two rule sets for the hand and a display stand. | You want magic the player can carry around. |
 | [Bring Down a Tribulation](./bring-down-a-tribulation.md) | A tribulation timeline a breakthrough starts: wind-up, beats, coloured lightning, and what success and failure do. | You want a breakthrough to be dangerous. |
+| [Forge a Treasure](./forge-a-treasure.md) | A forge-table line that runs end to end: methods, tool bindings, a blueprint item, plus the meter, target range, finish pattern, quality ladder and failure settlement. | You want the player to *hammer* an item out rather than craft it. |
+| [Refine a Pill](./refine-a-pill.md) | A placeholder: the alchemy data format is settled but the workbench is not wired up, so this page lists the parts that exist and the entry points that are missing. | You want pills, and want to know how far you can get today. |
 
 ## Conventions
 

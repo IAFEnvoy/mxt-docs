@@ -9,7 +9,7 @@ description: "一步步搭建一个小型 MiXianTu 内容包：灵气与境界�
 
 ## 示例包
 
-所有教程都在扩展同一个位于 `example` 命名空间下的小型内容包。前面四篇是一条线，每一篇都假定前面的页面已经完成；后面四篇各自独立，只用到这个包里已有的那几个定义。整组教程结束时，它长这样：
+所有教程都在扩展同一个位于 `example` 命名空间下的小型内容包。前面四篇是一条线，每一篇都假定前面的页面已经完成；后面几篇各自独立，只用到这个包里已有的那几个定义。整组教程结束时，它长这样：
 
 ```text
 data/example/
@@ -36,8 +36,14 @@ data/example/
 │   ├── formation/ward_array.json            Protection + attack modules
 │   ├── realm_instance/trial_realm.json      A pocket world template
 │   ├── tribulation/heavenly_gate.json       The trial a breakthrough starts
+│   ├── forging_method/light_strike.json     One strike: meter shift, cost, cooldown
+│   ├── forging_method/heavy_strike.json
+│   ├── tool_binding/smith_hammer.json       Which methods a placed tool unlocks
+│   ├── forging_blueprint/spirit_sword.json  Materials, target band, quality ladder
+│   ├── blueprint_binding/sword_manual.json  Which blueprint the item offers
 │   ├── item_quality/common.json             Quality tiers
 │   ├── item_quality/refined.json
+│   ├── item_quality/flawless.json
 │   ├── item_binding/qi_pill.json            Bindings attach rules to real items
 │   ├── item_binding/root_pellet.json
 │   ├── pill_binding/qi_pill.json
@@ -60,6 +66,8 @@ data/example/
 | [开一个秘境](./open-a-realm.md) | 一份能开出独立实例维度的秘境模板：生成、边界、落点、认领与时限。 | 你想要一次性或可认领的小世界。 |
 | [刻一张符箓](./inscribe-a-talisman.md) | 把技能铭刻到载体上、灌注灵气、右键发动，以及手持与展示架的两套规则。 | 你想让法术能被"带在身上"。 |
 | [让突破引来天劫](./bring-down-a-tribulation.md) | 一条突破时启动的天劫时间线：前摇、节拍、带颜色的雷击与成败结果。 | 你想让突破有风险。 |
+| [锻造一件法器](./forge-a-treasure.md) | 一条能跑通的锻造产线：手法、工具绑定、图纸物品，以及锻打条、目标区间、收尾模式、品质阶梯与失败结算。 | 你想让玩家把东西"打"出来，而不是合成出来。 |
+| [炼制一枚丹药](./refine-a-pill.md) | 占位页：炼丹的数据格式已经定稿，但工作台还没接线；这里先列清已有的部件与缺掉的入口。 | 你想做丹药，想知道今天能走到哪一步。 |
 
 ## 约定
 

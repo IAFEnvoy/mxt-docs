@@ -67,7 +67,11 @@ export const sections = [
       { page: 'tutorial/define-a-formation', zh: '定义一个阵法', en: 'Define a Formation' },
       { page: 'tutorial/open-a-realm', zh: '开一个秘境', en: 'Open a Realm Instance' },
       { page: 'tutorial/inscribe-a-talisman', zh: '刻一张符箓', en: 'Inscribe a Talisman' },
-      { page: 'tutorial/bring-down-a-tribulation', zh: '让突破引来天劫', en: 'Bring Down a Tribulation' }
+      { page: 'tutorial/bring-down-a-tribulation', zh: '让突破引来天劫', en: 'Bring Down a Tribulation' },
+      { page: 'tutorial/forge-a-treasure', zh: '锻造一件法器', en: 'Forge a Treasure' },
+      // Deliberately a placeholder: the page lists what the alchemy system is made of and is honest
+      // about the tutorial not being written yet, so the sidebar slot exists before the content does.
+      { page: 'tutorial/refine-a-pill', zh: '炼制一枚丹药', en: 'Refine a Pill' }
     ]
   },
   {
