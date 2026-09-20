@@ -63,7 +63,11 @@ export const sections = [
       { page: 'tutorial/add-an-ability', zh: '定义一个技能', en: 'Add an Ability' },
       { page: 'tutorial/define-aura-and-realms', zh: '定义灵气与境界', en: 'Define Aura and Realms' },
       { page: 'tutorial/aura-environment', zh: '搭建灵气环境', en: 'Build the Aura Environment' },
-      { page: 'tutorial/create-items-with-kubejs', zh: '用 KubeJS 创建物品', en: 'Create Items with KubeJS' }
+      { page: 'tutorial/create-items-with-kubejs', zh: '用 KubeJS 创建物品', en: 'Create Items with KubeJS' },
+      { page: 'tutorial/define-a-formation', zh: '定义一个阵法', en: 'Define a Formation' },
+      { page: 'tutorial/open-a-realm', zh: '开一个秘境', en: 'Open a Realm Instance' },
+      { page: 'tutorial/inscribe-a-talisman', zh: '刻一张符箓', en: 'Inscribe a Talisman' },
+      { page: 'tutorial/bring-down-a-tribulation', zh: '让突破引来天劫', en: 'Bring Down a Tribulation' }
     ]
   },
   {

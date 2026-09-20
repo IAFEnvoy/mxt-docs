@@ -9,7 +9,7 @@ The reference pages on this site describe one file, one field or one API at a ti
 
 ## The Example Pack
 
-Every tutorial extends the same small content pack in the `example` namespace, and each one assumes the previous pages have been done. By the end of the series it looks like this:
+Every tutorial extends the same small content pack in the `example` namespace. The first four form one chain, each assuming the pages before it are done; the last four stand on their own and only use definitions the pack already has. By the end of the series it looks like this:
 
 ```text
 data/example/
@@ -30,6 +30,12 @@ data/example/
 │   ├── technique/azure_breath.json
 │   ├── ability/qi_bolt.json                 An active ability
 │   ├── ability/qi_recovery.json             A triggered ability
+│   ├── ability/spark.json                   An ability a talisman inscribes
+│   ├── talisman/flame_sigil.json            The talisman: abilities + aura bill
+│   ├── formation/spirit_gathering_array.json Structure, upkeep, buff module
+│   ├── formation/ward_array.json            Protection + attack modules
+│   ├── realm_instance/trial_realm.json      A pocket world template
+│   ├── tribulation/heavenly_gate.json       The trial a breakthrough starts
 │   ├── item_quality/common.json             Quality tiers
 │   ├── item_quality/refined.json
 │   ├── item_binding/qi_pill.json            Bindings attach rules to real items
@@ -50,6 +56,10 @@ data/example/
 | [Build the Aura Environment](./aura-environment.md) | Layered aura zones, block aura, item fuel, noise, fluctuation, fog and HUD bars. | The basic loop works and you want the world to matter. |
 | [Create Items with KubeJS and Bind Them](./create-items-with-kubejs.md) | Real items registered by a script, plus the four binding tables, quality tiers and recipes that give them gameplay. | You need pills, weapons or manuals of your own. |
 | [Add an Ability](./add-an-ability.md) | An active ability, a triggered ability, and the ways to grant them. | You want something for the player to spend aura on. |
+| [Define a Formation](./define-a-formation.md) | An array that activates on a structure and pays upkeep every period: buff, aura-zone, attack and protection modules, plus the plate. | You want the player to build something that keeps running. |
+| [Open a Realm Instance](./open-a-realm.md) | A pocket-world template that opens separate instance dimensions: generation, border, landing points, claiming and lifetime. | You want a throwaway or claimable little world. |
+| [Inscribe a Talisman](./inscribe-a-talisman.md) | Carrying abilities on an item, pouring aura into it, firing it, and the two rule sets for the hand and a display stand. | You want magic the player can carry around. |
+| [Bring Down a Tribulation](./bring-down-a-tribulation.md) | A tribulation timeline a breakthrough starts: wind-up, beats, coloured lightning, and what success and failure do. | You want a breakthrough to be dangerous. |
 
 ## Conventions
 

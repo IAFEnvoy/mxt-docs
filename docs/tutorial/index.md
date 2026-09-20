@@ -9,7 +9,7 @@ description: "一步步搭建一个小型 MiXianTu 内容包：灵气与境界�
 
 ## 示例包
 
-所有教程都在扩展同一个位于 `example` 命名空间下的小型内容包，每一篇都假定前面的页面已经完成。整组教程结束时，它长这样：
+所有教程都在扩展同一个位于 `example` 命名空间下的小型内容包。前面四篇是一条线，每一篇都假定前面的页面已经完成；后面四篇各自独立，只用到这个包里已有的那几个定义。整组教程结束时，它长这样：
 
 ```text
 data/example/
@@ -30,6 +30,12 @@ data/example/
 │   ├── technique/azure_breath.json
 │   ├── ability/qi_bolt.json                 An active ability
 │   ├── ability/qi_recovery.json             A triggered ability
+│   ├── ability/spark.json                   An ability a talisman inscribes
+│   ├── talisman/flame_sigil.json            The talisman: abilities + aura bill
+│   ├── formation/spirit_gathering_array.json Structure, upkeep, buff module
+│   ├── formation/ward_array.json            Protection + attack modules
+│   ├── realm_instance/trial_realm.json      A pocket world template
+│   ├── tribulation/heavenly_gate.json       The trial a breakthrough starts
 │   ├── item_quality/common.json             Quality tiers
 │   ├── item_quality/refined.json
 │   ├── item_binding/qi_pill.json            Bindings attach rules to real items
@@ -50,6 +56,10 @@ data/example/
 | [搭建灵气环境](./aura-environment.md) | 分层灵气区域、方块灵气、物品燃料、噪声、波动、雾效和 HUD 条。 | 基础循环已经跑通，你想让世界参与进来。 |
 | [用 KubeJS 创建物品并绑定它们](./create-items-with-kubejs.md) | 由脚本注册的真实物品，加上四张绑定表、品质层级，以及让它们有玩法意义的配方。 | 你需要自己的丹药、武器或手册。 |
 | [添加技能](./add-an-ability.md) | 一个主动技能、一个触发技能，以及授予它们的方式。 | 你想给玩家一个花灵气的地方。 |
+| [定义一个阵法](./define-a-formation.md) | 一座按结构激活、每周期收维持费的阵法：增益、灵气域、攻击与守御模块，以及阵盘。 | 你想让玩家搭出会运转的东西。 |
+| [开一个秘境](./open-a-realm.md) | 一份能开出独立实例维度的秘境模板：生成、边界、落点、认领与时限。 | 你想要一次性或可认领的小世界。 |
+| [刻一张符箓](./inscribe-a-talisman.md) | 把技能铭刻到载体上、灌注灵气、右键发动，以及手持与展示架的两套规则。 | 你想让法术能被"带在身上"。 |
+| [让突破引来天劫](./bring-down-a-tribulation.md) | 一条突破时启动的天劫时间线：前摇、节拍、带颜色的雷击与成败结果。 | 你想让突破有风险。 |
 
 ## 约定
 
