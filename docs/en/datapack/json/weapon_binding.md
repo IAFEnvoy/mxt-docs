@@ -28,6 +28,10 @@ The filename corresponds to its ID. For example, `data/example/mxt/weapon_bindin
 | `tick_action` | `EntityAction` | `mxt:no_op` | The action executed while the weapon is held in the main hand |
 | `quality_group` | `Tag<item_quality>` | none | The allowed quality group |
 | `conditions` | `EntityCondition[]` | `[]` | The conditions checked before use, attack and attribute application; supports inline conditions or described condition objects |
+| `element` | `HolderOrTag<element>[]` | `[]` | What this weapon **is made of**: an entry names one element and a `#tag` names a set of them. This is the first source of "the element of an item", explained below. |
+| `attachment_multiplier` | Double | `1.0` | What this weapon is worth as a ward: while it is carried (both hands and the Curios slots), every strike that leaves an element on the carrier leaves this fraction of it — `0.5` for half, `0` for none. Several carried items multiply, and the default is a no-op. See the buildup step on [The damage system](/en/technical/damage). |
+
+**The element of an item** has exactly one reading, which asks two questions in order. First the **declarations**: whichever of `weapon_binding`, [item_binding](./item_binding.md) or [artifact](./artifact.md) claims the stack and writes `element` (the three registries are unioned, tags expand to every element they hold, and anything disabled by `mxt:disabled` is left out). Only when none of them declares anything does it read the **aura the item carries**: the single aura in its `mxt:spirit_storage`, or — for a store that is empty or names several — the aura its `mxt:item_aura` definition declares, and then that aura's `aura_type`. The `mxt:item_element` condition is this same reading.
 
 ### `items`
 

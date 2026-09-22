@@ -35,13 +35,13 @@ title: physique（体质）
 }
 ```
 
-## 元素字段会被拒绝 {#element-fields}
+## 元素字段会被忽略 {#element-fields}
 
-"体质不含元素"是**执行**的规则而不是约定。下面这些键一旦出现在体质定义里，**整份包在加载期就会被拒绝，并且报错会指名那个字段**：
+"体质不含元素"这条边界由**字段表**划出，而不是由加载期检查划出。体质只读上面列出的那些键，下面这些键写进体质定义里**既不报错也不生效**：
 
 `element`、`elements`、`element_affinity`、`element_tags`、`element_ability_modifier`、`conflicting_elements`、`relations`、`overcomes`、`adapted_to`、`damage_types`、`attachment_decay`、`damage_attachment`、`aura_type`、`cultivation_multiplier`。
 
-原因很实际：`RecordCodecBuilder` 默认会把不认识的键**悄悄丢掉**，于是一份"看着有元素、实际上什么都没有"的体质会一路跑下去，作者只看得到数值不对、看不到哪一行错了。写错注册表（想写 `spirit_root` 或 `element`）在加载期报错，是唯一能让人立刻发现的时机。
+原因很实际：`RecordCodecBuilder` **只读它被告知的键**，其余一律忽略（这是全仓统一的口径，2026-09 之前这里曾用点名拒绝，现已取消）。所以一份"看着有元素、实际上什么都没有"的体质会安静地跑下去——**字段名要对着上面那张表核对**，别指望加载期替你发现。写错注册表（想写 `spirit_root` 或 `element`）同样不会报错。
 
 ## 两个伤害倍率 {#damage-multipliers}
 

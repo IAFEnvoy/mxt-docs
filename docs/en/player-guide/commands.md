@@ -9,6 +9,15 @@ Every command MiXianTu adds hangs under the `/mxt` root: its own registries, res
 
 Each alias is toggled on its own in the **Command Aliases** tab of the server configuration — the entry shows the command itself, and all of them default to on. Disabling `aura` removes only the top-level `/aura` spelling; the `/mxt` entries stay complete, so a configuration mistake can never make a command unreachable. There are thirteen aliases in all: `ability`, `aura`, `curse`, `display`, `formation`, `friend`, `identity`, `lightning`, `picker`, `talisman`, `technique`, `trade` and `tribulation`.
 
+**Two commands live outside `/mxt`: `/hud` and `/wheel`**. They are registered with the client's own dispatcher, so they only work when typed into chat by hand, they need no permission, and nothing is sent to the server.
+
+| Command | Effect |
+| --- | --- |
+| `/hud` | Lists every movable HUD element: layout key, position, size and whether it currently has anything to draw. When the HUD layout editor shows nothing, this is what tells "nothing is registered" apart from "it is registered but has no content right now". |
+| `/hud open` | Opens the HUD layout editor, the same as the `key.mxt.hud_layout` keybind (right `Shift` by default). |
+| `/hud <layout key> reset` | Puts one element back in its default position; the layout key is in the `/hud` output, such as `resource_bars.left`. The reset also **deletes the saved value for that element** from `config/mxt/mxt-hud.json`, so it is still in its default place after a restart (with nothing saved, the element follows the window again until you move it once more). |
+| `/wheel` | Opens the **wheel editor**, the same as the `key.mxt.wheel_configuration` keybind (**unbound by default** - set one in the controls screen if you want it). Six columns of spirit power on the left, six columns of abilities on the right, and the **main wheel**'s twelve cells in one shared row underneath; `Escape` saves and closes. The pages behind it are not edited here: they are read from what you carry. |
+
 ## Sub-pages
 
 - [/mxt (and subcommands)](/en/player-guide/commands/mxt)

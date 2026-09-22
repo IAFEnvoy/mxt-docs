@@ -91,6 +91,7 @@ pnpm run check:i18n -- --strict
 pnpm run check:links         # 校验站内链接与 #锚点
 pnpm run check:links -- --strict
 pnpm run check:config        # 校验文档里的配置名与模组语言文件逐字一致（需要模组仓库，见下）
+pnpm run check:mermaid       # 体检所有 ```mermaid 围栏（图在浏览器里画，构建发现不了画错的图）
 pnpm run build               # 构建失败会报告死链
 ```
 
@@ -116,14 +117,16 @@ pnpm run build               # 构建失败会报告死链
 
 ## 图表（Mermaid）与配图
 
-**Mermaid 是本站自己的三个文件接的，没有用第三方插件**（`vitepress-mermaid-viewer` 已卸载：它的
+**Mermaid 是本站自己的文件接的，没有用第三方插件**（`vitepress-mermaid-viewer` 已卸载：它的
 `optimizeDeps`/alias 补丁在 pnpm 的严格布局下会把 `tsc dev` 打崩）：
 
 | 文件 | 职责 |
 | --- | --- |
 | `docs/.vitepress/config.ts` | 把 ` ```mermaid ` 围栏改写成 `<ClientOnly><Mermaid code="…" /></ClientOnly>` |
-| `docs/.vitepress/theme/index.ts` | 全局注册 `Mermaid` 组件 |
-| `docs/.vitepress/theme/components/Mermaid.vue` | 调 `mermaid.render()` 画图，并提供点击放大 |
+| `docs/.vitepress/theme/index.ts` | 全局注册 `Mermaid` 组件，并在 `layout-bottom` 挂上配图放大层 |
+| `docs/.vitepress/theme/components/Mermaid.vue` | 调 `mermaid.render()` 画图，内联一份 + 点击进放大视图 |
+| `docs/.vitepress/theme/components/ZoomViewer.vue` | **放大视图本身**：虚化背景上的浮层卡片、滚轮缩放、拖动平移 |
+| `docs/.vitepress/theme/components/ImageZoomLayer.vue` | 把正文里的配图也接进同一个放大视图 |
 
 写图表就是普通代码块：
 
@@ -134,7 +137,7 @@ flowchart TD
 ```
 ````
 
-四个必须知道的约束：
+五个必须知道的约束：
 
 - **围栏里的源码要经过 `encodeURIComponent` 再进属性**。`JSON.stringify` 会留下 `\"`，Vue 模板编译器
   直接报 `Attribute name cannot contain U+0022`，**整站构建失败**——而且只有含引号的图（也就是全部）会触发。
@@ -143,8 +146,17 @@ flowchart TD
   退回 SVG 文本量法、渲染却仍输出 `<foreignObject>`，于是每个标签都塌到 120px 下限，中文变成一字一行
   （看起来像字间塞了全角空格）。`wrappingWidth: 400` 是为了不把长标签自动折行。
 - **图在客户端绘制**，所以每张图的源码都留在页面里（它就是内容的唯一来源）。
-- **点击图放大**：全屏浮层里按原始尺寸渲染，`缩小 / 放大 / 恢复原始大小 / 关闭`，支持 `Ctrl`+滚轮缩放、
-  滚轮平移，`Esc`、点击背景或 `✕` 关闭；按钮提示按当前语言显示（`zh` → 中文，其余 → 英文）。
+- **改完图跑 `pnpm run check:mermaid`**。图在客户端画，`pnpm run build` 不会替你发现画错的图（它只会
+  变成页面上一个红色错误框）。这个检查先用 **mermaid 自己的解析器**逐张解析——Node 里唯一跑不动的是
+  DOMPurify 那个浏览器钩子，脚本在内存里给它打两个桩就够了，没有新增依赖——再叠一层结构规则
+  （开头是不是已知图型、引号与方括号是否成对、有没有 `%%` 与分号、`alt`/`opt` 与 `end` 是否配平、
+  标签里有没有裸的 `<` `>`）。它保证**语法**正确，排版好不好看仍要在 `pnpm run dev` 里看一眼。
+- **点击图放大**：正文里点一下就进放大视图——**虚化**的半透明背景上浮起一张卡片（不是整页接管），
+  初始按"适应窗口"显示整张图，**滚轮缩放**（以指针为中心）、**按住拖动平移**，工具条是
+  `缩小 / 百分比 / 放大 / 适应窗口 / 关闭`，`Esc`、点击卡片外或 `✕` 关闭，`+` `-` `0` 也能用；
+  提示语按当前语言显示（`zh` → 中文，其余 → 英文）。放大视图是 `ZoomViewer.vue` 一个组件，Mermaid
+  图与正文配图共用它：**配图**（`docs/public/images/…`）只要不是整张图被链接包着、也没有标
+  `data-no-zoom`，点击后同样进这个视图。
 
 **配图**放在 `docs/public/images/<主题>/`，两种语言共用同一份（`public/` 不属于任何语言目录），引用写绝对路径
 `/images/aura/xxx.png`。研究用的图来自仓库的 `research/`，放进来之前确认它描述的是**当前代码**

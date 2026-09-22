@@ -87,6 +87,7 @@ export const sections = [
           { page: 'datapack/json/index', zh: '注册表总览', en: 'Registry Overview' },
           { page: 'datapack/json/ability', zh: 'ability（技能）', en: 'ability' },
           { page: 'datapack/json/alchemy_recipe', zh: 'alchemy_recipe（炼丹配方）', en: 'alchemy_recipe' },
+          { page: 'datapack/json/artifact', zh: 'artifact（法器）', en: 'artifact' },
           { page: 'datapack/json/aura', zh: 'aura（灵气）', en: 'aura' },
           { page: 'datapack/json/aura_zone', zh: 'aura_zone（灵气区域）', en: 'aura_zone' },
           { page: 'datapack/json/block_aura', zh: 'block_aura（方块灵气）', en: 'block_aura' },
@@ -101,7 +102,6 @@ export const sections = [
           { page: 'datapack/json/forging_blueprint', zh: 'forging_blueprint（锻造图纸）', en: 'forging_blueprint' },
           { page: 'datapack/json/forging_method', zh: 'forging_method（锻造手法）', en: 'forging_method' },
           { page: 'datapack/json/formation', zh: 'formation（阵法）', en: 'formation' },
-          { page: 'datapack/json/item_archetype', zh: 'item_archetype（法器原型）', en: 'item_archetype' },
           { page: 'datapack/json/item_aura', zh: 'item_aura（物品灵气）', en: 'item_aura' },
           { page: 'datapack/json/item_binding', zh: 'item_binding（物品绑定）', en: 'item_binding' },
           { page: 'datapack/json/item_quality', zh: 'item_quality（品质）', en: 'item_quality' },
@@ -199,7 +199,7 @@ export const sections = [
       { page: 'java/interfaces', zh: '接口', en: 'Interfaces' },
       { page: 'java/network', zh: '网络协议', en: 'Network Protocol' },
       { page: 'java/screens', zh: '客户端界面', en: 'Client Screens' },
-      { page: 'java/hotbar', zh: '快捷栏条目', en: 'Hotbar Entries' },
+      { page: 'java/wheel', zh: '轮盘条目', en: 'Wheel Entries' },
       { page: 'java/information-panel', zh: '人物信息面板', en: 'Information Panel' }
     ]
   },

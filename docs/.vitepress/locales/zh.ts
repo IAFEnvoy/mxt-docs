@@ -9,7 +9,7 @@ const zh: DefaultTheme.LocaleConfig<any> = {
   label: '简体中文',
   lang: 'zh-CN',
   link: '/',
-  title: 'MiXianTu 文档',
+  title: '觅仙途文档',
   description:
     'MiXianTu（觅仙途，模组 ID：mxt）的安装、游玩、数据包、KubeJS 与 Java 开发文档。',
   themeConfig: {

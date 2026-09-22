@@ -11,7 +11,7 @@ title: 技能、状态与诅咒类型
 | `type` | 字段 | 说明 |
 | --- | --- | --- |
 | `mxt:empty` | 无 | 自身没有生命周期 |
-| `mxt:active` | `slot` | 从快捷栏槽位显式触发 |
+| `mxt:active` | `slot` | 可从轮盘施放；具体落在哪一扇由玩家自己的 12 格布局决定 |
 | `mxt:triggered` | `triggers`、`chance` | 当它的某个事件规则匹配时触发 |
 | `mxt:modifier` | 无 | 被动修正技能，在授予期间生效，并每 tick 依据 `condition` 重新检查 |
 | `mxt:aura` | `interval`、`radius` | 按间隔在施法者周围重复 |
@@ -21,7 +21,7 @@ title: 技能、状态与诅咒类型
 
 | `type` | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- | --- |
-| `mxt:active` | `slot` | String | `primary` | 快捷栏槽位名；不能为空 |
+| `mxt:active` | `slot` | String | `primary` | **不再被读取**：轮盘的位置由玩家自己的 12 格布局决定。不能为空。 |
 | `mxt:triggered` | `triggers` | `Trigger` 列表 | `[]` | 触发该技能的触发器匹配器 |
 | `mxt:triggered` | `chance` | `NumberProvider` | `1` | 匹配的触发器实际触发该技能的概率 |
 | `mxt:aura` | `interval` | `NumberProvider` | `20` | 两次灵气施加之间的 tick 数 |

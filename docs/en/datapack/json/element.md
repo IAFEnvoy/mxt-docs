@@ -21,10 +21,11 @@ The filename corresponds to its ID. For example, `data/example/mxt/element/fire.
 |-------|------|---------|-------------|
 | `overcomes` | `ElementRelation[]` | `[]` | The elements this element overcomes, and what each of those edges is worth on the attacking side. |
 | `adapted_to` | `ElementRelation[]` | `[]` | The elements this element is adapted to, and what each of those edges is worth on the defending side. |
-| `damage_types` | `HolderOrTag<damage_type>[]` | `[]` | The damage types this element claims: a claimed damage type **means** this element. |
+| `damage_types` | `HolderOrTag<damage_type>[]`, entries may also be objects | `[]` | The damage types this element claims: a claimed damage type **means** this element. The two shapes are equivalent — a bare string (or `#tag`) uses the element's own `damage_attachment`, while `{"damage_type": "minecraft:lava", "damage_attachment": 2.0}` gives that kind of hit **its own amount**. See "A claimed type is a group" below. |
 | `attachment_decay` | Double | `0` | How much of this element's accumulation on a body decays per tick (`0` means it never decays). |
-| `damage_attachment` | Double | `0` | How much accumulation one strike made of this element leaves on the target (`0` means it leaves none). |
+| `damage_attachment` | Double | `0` | How much accumulation one strike made of this element leaves on the target (`0` means it leaves none). **This is the default**: a claimed type written as an object with its own `damage_attachment` follows its own number instead. **Only a strike whose damage type was claimed leaves anything**: one that fell back to the attacker's spirit roots takes part in the relations and leaves nothing behind. |
 | `color` | `RGBColor` | `#FFFFFF` | Colour used when the element is shown, such as in aura cost text. Accepts `#RRGGBB` or an integer. |
+| `conflict_multiplier` | Double | `1.0` | What this element is worth in the hand of somebody it conflicts with: when a striker's active spirit root lists it in `conflicting_elements`, everything that striker deals is multiplied by this number. It is applied once per element however many roots conflict with it. |
 
 `ElementRelation` is one edge: who it points at, and what that edge is worth.
 
@@ -48,7 +49,7 @@ Element relations may contain cycles, so do not rely on tag value order. Element
 
 ## Reading the Element of a Strike
 
-What element a strike is **made of** is read from its damage type rather than inferred from the attacker's spirit roots. An element claims damage types through `damage_types` (entries or `#` tags), and the fixed priority is:
+What element a strike is **made of** is read from its damage type rather than inferred from the attacker's spirit roots. An element claims damage types through `damage_types` (bare entries, `#tags`, or objects carrying their own buildup), and the fixed priority is:
 
 | Situation | The element of the strike |
 |-----------|---------------------------|
@@ -57,6 +58,10 @@ What element a strike is **made of** is read from its damage type rather than in
 | Nobody claims it and there is no attacker | Empty = no relation applies |
 
 This channel is the **only** basis of the reduction layer: the defending side receives nothing but a `DamageSource`, so the element has to be readable from the damage type. The payoff is that **environmental damage becomes elemental without touching vanilla code**: claim `minecraft:lava`, `minecraft:in_fire` and `minecraft:lightning_bolt` for an element and a lava bath, a lightning strike and a blast all settle as that element; `mxt:explode` uses `minecraft:explosion`, so claiming it makes explosions elemental. Several elements claiming one damage type is legal (they multiply) but warns once, the first time such a strike is actually used.
+
+A damage type listed in the `mxt:no_bonus` tag is the exception: that strike reads no element at all, so claiming it changes nothing (by default the tag holds only the void, `minecraft:out_of_world`; see [The damage system](/en/technical/damage)).
+
+Everything above is about **a strike**. What an **item** is made of is a second reading: the `element` field of its `weapon_binding` / `item_binding` / `artifact` (those are unioned), and only when none of them declares anything does it fall back to the `aura_type` of the aura the item carries. The `mxt:item_element` condition is that reading; the full explanation is on [weapon_binding](./weapon_binding.md).
 
 A damage type is a declaration by the element, so **the declared element and the damage type have to agree**: writing `element` on `mxt:damage` / `mxt:damage_target` lets the `damage_type` be omitted (the pipeline takes the first type the element claims); when both are written, the first strike that actually uses them checks that the element really claims that type and logs one line per distinct mismatch. It is deliberately **not** a load-time check: the value behind a declared element is not necessarily bound yet while another datapack registry page is being decoded, so the same pack would pass or fail depending on which page finished first. That is what makes "a fire-root cultivator casting a water art" expressible while the reduction layer still reads back the same answer.
 
@@ -72,9 +77,40 @@ A damage type is a declaration by the element, so **the declared element and the
 
 The damage condition `mxt:element` (see the condition tables) reads the **same** resolution, so the element a condition names and the element the pipeline actually multiplies can never disagree.
 
+### A claimed type is a group: giving each type its own buildup
+
+An entry of `damage_types` may also be written as an object that prices that kind of hit — so "a lava bath builds up slower than a fireball" needs no second element:
+
+```json
+// data/example/mxt/element/fire.json
+{
+  "damage_types": [
+    "minecraft:in_fire",
+    "minecraft:on_fire",
+    "#example:fire_like",
+    { "damage_type": "minecraft:lava", "damage_attachment": 2.0 },
+    { "damage_type": "minecraft:campfire", "damage_attachment": 0 }
+  ],
+  "damage_attachment": 4.0
+}
+```
+
+- A bare string or `#tag` means "use the element's own number": above, `in_fire`, `on_fire` and everything the tag expands to leave `4.0`.
+- `damage_attachment` inside the object may be omitted (the element's default), and an explicit `0` is a real answer — **that group never builds up from a strike at all**.
+- Types and tags are accepted in both shapes, and when one element writes two entries for one type, the **first** one is the one that speaks.
+- The amount is resolved in the **same reading that classifies the strike** (the pipeline's `DamageElements.Strike` carries the elements, the origin and the amounts together), so it cannot disagree with "what this strike is made of".
+
 ## Element Accumulation
 
-The two numbers describe how an element builds up on a body: `damage_attachment` is what one strike made of that element leaves on the target (default `0`, so nothing accumulates by default), and `attachment_decay` is how much leaves per tick on its own (default `0`, so nothing wears off by default). What happens once enough has built up is defined by [Element Reaction](./element_reaction.md), so "an element is a relation" and "an element accumulates" are two things a pack turns on separately. The entity action `mxt:attach_element` adds to or subtracts from one element's accumulation directly, and the entity condition `mxt:element_attachment` reads the current amount.
+The two numbers describe how an element builds up on a body: `damage_attachment` is what one strike made of that element leaves on the target (default `0`, so nothing accumulates by default), and `attachment_decay` is how much leaves per tick on its own (default `0`, so nothing wears off by default). What happens once enough has built up is defined by [Element Reaction](./element_reaction.md), so "an element is a relation" and "an element accumulates" are two things a pack turns on separately. The entity action `mxt:attach_element` adds to or subtracts from one element's accumulation directly, and the entity condition `mxt:element_attachment` reads the current amount. **`damage_attachment` is the default**: a type that should leave a different amount is written as an object with its own number (see "A claimed type is a group" above).
+
+**Only a declared element accumulates.** A strike's element comes from one of two places: its damage type was **claimed** by an element (an attack that writes `element` / `damage_type`, lava, an explosion, another mod's fireball), or nobody claimed it and it fell back to the attacker's **spirit roots**. Both take part in overcoming and adapting, but only the first leaves `damage_attachment` — the fire in a body decides how hard the hit lands, it does not set anyone alight. An attack that should ignite or fire a reaction therefore has to declare what it is made of. (This is what keeps "the element of a spirit root" and "the element of a weapon" apart: a root shapes the damage, a weapon leaves the mark.)
+
+**How much of it gets through also depends on what the victim carries.** The amount is then multiplied by the `attachment_multiplier` declared by the items the target **carries** (both hands and the Curios slots, multiplied together): `0.5` lets half through and `0` lets none, which is how an artifact resists part of an elemental reaction — it slows the buildup, so the reaction answers later or never; what the reaction itself does is not affected. See [artifact](./artifact.md) / [weapon_binding](./weapon_binding.md).
+
+## Conflict With The Wielder
+
+`conflict_multiplier` (default `1.0`) is what an element is worth when somebody it conflicts with **wields** it: if the striker's active spirit root lists it in `conflicting_elements`, everything that striker deals is multiplied by this number. The number lives on the element being wielded rather than on the root, it is applied once per element however many roots conflict with it, and it deliberately does **not** require the strike to be made of that element — fighting your own weapon weakens whatever you channel through it. The item side is read the way [weapon_binding](./weapon_binding.md) describes "the element of an item" (the main-hand stack).
 
 ## Example
 

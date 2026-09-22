@@ -33,6 +33,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/item_binding/
 | `actions` | `List<EntityAction>` | `[]` | The ordered actions executed after vanilla consumption finishes |
 | `quality_group` | `Tag<item_quality>` | none | The quality group in which the item is allowed to be used |
 | `conditions` | `EntityCondition[]` | `[]` | Binding use conditions; each entry may be an inline condition, or a `{condition, description}` object carrying a translation-key `description`. Described conditions are marked in the tooltip with a green `✓` or a red `✗` |
+| `element` | `HolderOrTag<element>[]` | `[]` | What this item **is made of**: an entry names one element and a `#tag` names a set of them. This is the first source of "the element of an item" — a declaration wins, and only when none is written does the item fall back to the `aura_type` of the aura it carries; the full reading is on [weapon_binding](./weapon_binding.md). |
+| `attachment_multiplier` | Double | `1.0` | What this item is worth as a ward: while it is carried (both hands and the Curios slots), every strike that leaves an element on the carrier leaves this fraction of it — `0.5` for half, `0` for none. Several carried items multiply, and the default is a no-op. |
 
 ### `items`
 

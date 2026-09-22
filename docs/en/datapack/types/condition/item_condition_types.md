@@ -61,8 +61,8 @@ The [Datapack Visual Editor](https://datapack.mcdev.tech/) shows the field list 
 | `mxt:chance` | `chance` | Passes randomly with the given probability between `0` and `1`. |
 | `mxt:constant` | `value` | Always returns the given boolean value. |
 | `mxt:item_id` | `item` | Matches the stack's item id. |
-| `mxt:owned_by` | — | Passes when the stack's artifact owner is the current holder. |
-| `mxt:energy_range` | `min`, `max` | Checks that the stack's artifact spirit energy lies between `min` and `max`. |
+| `mxt:owned_by` | — | Passes when the stack's artifact owner (`owner_uuid` of `mxt:artifact_state`) is the current holder; a stack with no owner does not pass. |
+| `mxt:energy_range` | `aura`, `min`, `max` | Checks that **one named aura's** stored amount on the stack lies between `min` and `max`, inclusive; `aura` is a concrete aura and is required. |
 | `mxt:item_tag` | `tag` | Matches the stack against a vanilla or data pack item tag. |
 | `mxt:item_matcher` | `items` | Matches any item id, item tag or typed matcher entry listed in one value. |
 | `mxt:amount` | `comparison`, `compare_to` | Compares the stack's count. |
@@ -78,6 +78,7 @@ The [Datapack Visual Editor](https://datapack.mcdev.tech/) shows the field list 
 | `mxt:has_component` | `component` | Checks whether the stack has the given data component. |
 | `mxt:component` | `component`, `nbt` | Matches the serialized value of a data component using partial NBT comparison. |
 | `mxt:spirit_storage_not_full` | — | Matches chargeable items whose stored spirit power is below their capacity. |
+| `mxt:item_element` | `elements` | Passes when the item carries one of the listed elements. It reads "the element of an item": the `element` declared by its `weapon_binding` / `item_binding` / `artifact` (those are unioned), and only when none of them declares anything does it fall back to the `aura_type` of the aura the item carries. An element or an element tag is accepted, and an empty list is refused while loading. See [weapon_binding](../../json/weapon_binding.md). |
 
 ::: info `mxt:item_matcher`
 The `items` field accepts a single value or an array, and the array may freely mix item ids, item tags and typed matcher entries. The typed entries are `mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:herb_tag` (a spirit herb carrying a given element or material tag) and the fieldless `mxt:spirit_storage`, which matches every item that stores aura; see [Other Type Families](/en/datapack/types/other/formation-and-matcher#item-matcher-entry-type). It is the most compact way to accept a set of items that is not already covered by an existing tag.

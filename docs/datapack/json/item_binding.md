@@ -14,6 +14,8 @@ title: item_binding（物品绑定）
 | `actions` | `List<EntityAction>` | `[]` | 食用完成或绑定事件执行的行为数组。 |
 | `quality_group` | `Tag<item_quality>` | 无 | 物品允许使用的品质组。 |
 | `conditions` | `EntityCondition[]` | `[]` | 绑定使用条件；每项可以是内联条件，或带翻译键 `description` 的 `{condition, description}` 对象。带描述的条件会在 Tooltip 中以绿色 `✓` 或红色 `✗` 标记结果。 |
+| `element` | `HolderOrTag<element>[]` | `[]` | 这件物品**是什么元素**：条目是一个元素、`#` 标签是一组元素。这是「物品的元素」的第一顺位来源——定义声明优先，一个都没声明时才回落到物品携带的灵气的 `aura_type`；完整口径见 [weapon_binding](./weapon_binding.md)。 |
+| `attachment_multiplier` | Double | `1.0` | 这件物品**作为护身物**值多少：携带（双手与 Curios 槽）期间，打在携带者身上的打击留下的元素附着乘上它——`0.5` 只留一半、`0` 一点也不留。多件携带物**相乘**，不写就没有影响。 |
 
 绑定表只匹配现有物品，不负责创建物品。`weapon_binding`、`pill_binding` 和 `technique_binding` 的字段互不混用；武器拥有伤害、攻击速度、属性和攻击/使用/Tick 行为。
 

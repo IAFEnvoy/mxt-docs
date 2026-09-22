@@ -14,7 +14,7 @@ title: ability（技能）
 | `costs` | `List<ResourceCost>` | `[]` | 技能执行前扣除的资源。 |
 | `cast_time` | `NumberProvider` | `0` | 施法时间。 |
 | `cooldown` | `NumberProvider` | `0` | 冷却时间。 |
-| `icon` | Icon 引用 | 无 | 主动技能的快捷栏图标，必须**恰好**定义 `texture`（16×16 GUI 贴图）或 `item` 之一：两者都给或都不给都会被拒绝。 |
+| `icon` | Icon 引用 | 无 | 主动技能的轮盘图标，必须**恰好**定义 `texture`（16×16 GUI 贴图）或 `item` 之一：两者都给或都不给都会被拒绝。 |
 | `components` | `List<DataStorage>` | `[]` | 该技能声明的状态类型（冷却、充能、切换、持续…）。类型的类是槽，值存在技能自己那份附件里。 |
 | `modifiers` | `List<AttributeEntry>` | `[]` | 被动原版属性修正；条目包含 `attribute`、`id`、`amount`、`operation`，可选 `value` 公式。 |
 | `damage_condition` | `DamageCondition` | `mxt:always_true` | 伤害触发限制。 |
@@ -110,5 +110,33 @@ Ability 的数值字段均可使用 NumberProvider/表达式。技能类型写�
 }
 ```
 
-技能行为由服务端处理，客户端 Hotbar 只发送使用/取消请求。
+技能行为由服务端处理，客户端轮盘只发送"选中了哪一类的哪个 id"（`WheelActionC2SPayload(kind, id)`），授予、条件、消耗与冷却全部由服务端判定。
+
+把这条规则摊成时序，一次技能发动的先后顺序如下。
+
+```mermaid
+sequenceDiagram
+    participant C as 客户端轮盘
+    participant S as 服务端
+    participant H as mxt:ability_holder
+    participant R as 技能资源
+
+    C->>S: 发送使用请求
+    S->>H: 读这份技能的冷却状态
+    H-->>S: 上次写入的 tick 就是冷却起点
+    S->>S: 求值 condition 与元素亲和门槛
+    S->>R: 按 costs 扣除资源或物品
+    alt 冷却、条件、门槛或消耗不通过
+        S-->>C: 拒绝，不执行行为
+    else 全部通过
+        S->>S: 执行 entity_action 与目标行为
+        S->>H: 写入冷却状态，此刻即冷却开始
+        S-->>C: 施放结果
+    end
+    opt 技能是 mxt:channelled
+        S->>R: 每个 tick_interval 扣 upkeep_costs
+        S->>S: 扣除成功后执行一次行为
+        S-->>C: 释放或维持失败后引导结束
+    end
+```
 

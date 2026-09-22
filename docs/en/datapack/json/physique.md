@@ -48,13 +48,13 @@ A physique is not bound to an element; element-related logic belongs in spirit r
 }
 ```
 
-## Element Fields Are Refused {#element-fields}
+## Element Fields Are Ignored {#element-fields}
 
-"A physique carries no element" is a rule the code **enforces**, not a convention. As soon as one of the following keys appears in a physique definition, **the whole pack is refused while loading, and the error names that field**:
+"A physique carries no element" is a line drawn by the **field table**, not by a load-time check. A physique reads only the keys listed above, so the following keys **neither fail nor do anything** when they appear in a physique definition:
 
 `element`, `elements`, `element_affinity`, `element_tags`, `element_ability_modifier`, `conflicting_elements`, `relations`, `overcomes`, `adapted_to`, `damage_types`, `attachment_decay`, `damage_attachment`, `aura_type`, `cultivation_multiplier`.
 
-The reason is a practical one: by default `RecordCodecBuilder` **silently drops** every key it does not recognise, so a physique that "looks like it has elements but actually carries nothing" would keep running, and its author would only see numbers that are wrong without seeing which line caused it. An error while loading when the registry is wrong (writing `spirit_root` or `element` by mistake) is the only moment that makes the mistake immediately visible.
+The reason is a practical one: `RecordCodecBuilder` **reads only the keys it was told about** and ignores the rest — that is the mod's one reading everywhere (it used to refuse these by name here, and no longer does). A physique that "looks like it has elements but actually carries nothing" therefore keeps running quietly, so **check your key names against the table above** rather than expecting the loader to catch them. Writing the wrong registry (reaching for `spirit_root` or `element` by mistake) is equally silent.
 
 ## The Two Damage Multipliers {#damage-multipliers}
 

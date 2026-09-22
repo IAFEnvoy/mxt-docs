@@ -57,6 +57,31 @@ flowchart TD
     CACHE --> SYNC["每 5 刻同步一份快照给客户端"]
 ```
 
+下面这张图把同一条链路摊开：左边是这次查询要吃进去的几份状态分别从哪来，右边是算完之后两个浓度各自去了哪里。
+
+```mermaid
+flowchart LR
+    POS["查询位置"] --> STOCK["区块库存<br/>可消耗、会再生"]
+    POS --> BLOCKCACHE["方块灵气缓存<br/>子区块聚合值"]
+    BLOCKCACHE --> SCAN["扫描 7×7 子区块列<br/>按 1 / max(1, d²) 加权"]
+    STOCK --> AVAIL["可用度：已消耗比例<br/>再按访问者数平分"]
+    SCAN --> AVAIL
+    STOCK --> MERGE["扣掉本区块聚合<br/>再加回加权视图"]
+    SCAN --> MERGE
+    POS --> TEMPLATE["解析静态模板"]
+    TEMPLATE --> ZONE["按群系选域<br/>或维度绑定整体替换"]
+    ZONE --> AREA["人工区域覆盖<br/>矩形、永久"]
+    AREA --> FORM["最近的阵法灵气域覆盖"]
+    MERGE --> RESULT["组装 AuraResult"]
+    FORM --> RESULT
+    RESULT --> ACTUAL["实际浓度 actual<br/>含库存与方块贡献"]
+    RESULT --> ENV["环境浓度 environment<br/>只按模板重算"]
+    ACTUAL --> SNAP["服务端每 5 刻<br/>给每个玩家发一份快照"]
+    ENV --> SNAP
+    SNAP --> CLIENT["客户端插值约 0.25 秒"]
+    CLIENT --> RENDER["雾、资源条与 HUD<br/>公式上下文"]
+```
+
 几个容易读错的地方：
 
 - **选域是整体替换，不是叠加**。群系域命中就用它，否则看维度绑定；两者都没有就是空域。人工区域覆盖前两者，阵法灵气域再覆盖人工区域——最终只有一个模板生效。

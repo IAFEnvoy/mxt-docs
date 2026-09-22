@@ -43,6 +43,7 @@ The table below lists the 34 datapack registries the mod registers, in registry 
 |----------|-----------|---------|
 | [`ability`](./ability.md) | `mxt/ability` | Active, passive and triggered abilities. |
 | [`alchemy_recipe`](./alchemy_recipe.md) | `recipe` | Vanilla recipe type (`mxt:alchemy`), not a datapack registry. |
+| [`artifact`](./artifact.md) | `mxt/artifact` | Artifacts: which existing items a definition claims, how much of each aura they store, and the abilities they carry (passive, active, flight and storage). |
 | [`aura`](./aura.md) | `mxt/aura` | The aura identity of one stored value: what it is, its realm chain entry, regeneration, conversions and availability. |
 | [`aura_zone`](./aura_zone.md) | `mxt/aura_zone` | Environment aura templates. |
 | [`block_aura`](./block_aura.md) | `mxt/block_aura` | Aura provided by blocks. |
@@ -57,7 +58,6 @@ The table below lists the 34 datapack registries the mod registers, in registry 
 | [`forging_blueprint`](./forging_blueprint.md) | `mxt/forging_blueprint` | Forging targets and quality settlement. |
 | [`forging_method`](./forging_method.md) | `mxt/forging_method` | A single forging strike method. |
 | [`formation`](./formation.md) | `mxt/formation` | Formation lifecycle and aura overrides. |
-| [`item_archetype`](./item_archetype.md) | `mxt/item_archetype` | Artifact archetypes and abilities. |
 | [`item_aura`](./item_aura.md) | `mxt/item_aura` | Cultivation fuel provided by held items. |
 | [`item_binding`](./item_binding.md) | `mxt/item_binding` | Bindings from existing items to action arrays. |
 | [`item_quality`](./item_quality.md) | `mxt/item_quality` | Shared quality and quality conditions. |
@@ -91,6 +91,7 @@ The following fields use `MapCodec`s from Java built-in registries. A datapack m
 | Data Type | Dispatch Field | Purpose |
 |-----------|----------------|---------|
 | `Ability` | `ability.type` | The top-level field is named `ability`; the `type` inside that nested object selects the ability lifecycle and trigger style. |
+| `ArtifactAbility` | `artifact.abilities[].type` | Artifact abilities: granting abilities, carrying the holder in flight, and built-in storage. |
 | `CurseType` | `type` | How a curse persists and expires. |
 | `EntityAction` | `type` | Entity actions. |
 | `BiEntityAction` | `type` | Bi-entity actions. |
@@ -104,6 +105,8 @@ The following fields use `MapCodec`s from Java built-in registries. A datapack m
 | `ResourceValueProvider` | `type` | Resource value sources read by resource bars and extensions, including environment and actual aura concentration. |
 | `ResourceBarRenderer` | `type` | Resource bar renderers. |
 | `ResourceBarVisibility` | `type` | Resource bar visibility conditions. |
+| `TimelineEntry` | `type` | One beat of a tribulation timeline: run an action, idle for a duration, or wait for a condition to hold. |
+| `DataStorage` | `type` | A state kind a definition declares: cooldown, charges, toggle, timer and so on. What is stored is the type's own business, and the type's class is the slot. |
 
 Action and condition arrays are shorthand: every element is executed in order, and an array of conditions means that all of them must be satisfied.
 

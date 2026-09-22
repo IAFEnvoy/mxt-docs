@@ -9,6 +9,7 @@ title: 动态注册表
 | 注册表 | 文件目录 | 用途 |
 | --- | --- | --- |
 | `resource` | `mxt/resource` | 修为、灵力、体力等实体资源及内联资源条。 |
+| `artifact` | `mxt/artifact` | 法器：认领哪些现有物品、每种灵气存多少、提供哪些能力（被动／主动／飞行／储物）。 |
 | `aura` | `mxt/aura` | 单个数值的灵气定义：它是什么（元素标记、灵力射线量）、境界链入口、恢复、换算与可用性。 |
 | `realm_stage` | `mxt/realm_stage` | 线性境界链和突破。 |
 | `element` | `mxt/element` | 元素关系（`overcomes`/`adapted_to`，每条关系自带伤害倍率）、它认领的伤害类型（`damage_types`）、附着与衰减参数与显示色；灵气用自身的 `aura_type` 指向一个元素，统一伤害管线按双方灵根的元素关系结算克制与适应，元素附着由 `element_reaction` 结算。 |
@@ -24,7 +25,6 @@ title: 动态注册表
 | `technique` | `mxt/technique` | 功法定义（可学习、按水平授予能力与修炼修正）。 |
 | `skill_stage` | `mxt/skill_stage` | 技能水平链的单级定义。 |
 | `cultivate_action` | `mxt/cultivate_action` | 一次"运功"法门：吸收哪些环境灵气、每刻做什么、收费与收获、冷却。**已标记为将来可能移除。** |
-| `item_archetype` | `mxt/item_archetype` | 法器原型和能力。 |
 | `spirit_herb` | `mxt/spirit_herb` | 已有物品的灵植元数据。 |
 | `alchemy_recipe` | `recipe`（配方类型 `mxt:alchemy`） | 炼丹配方。 |
 | `spirit_crafting` | `recipe`（配方类型 `mxt:spirit_shaped` / `mxt:spirit_shapeless`） | 灵气合成配方，只在灵气工作台（`mxt:spirit_crafting_table`）里跑。 |
@@ -54,6 +54,7 @@ title: 动态注册表
 | 数据类型 | 分派字段 | 作用 |
 | --- | --- | --- |
 | `Ability` | `ability.type` | 顶层字段名为 `ability`，嵌套对象中的 `type` 选择技能生命周期和触发方式。 |
+| `ArtifactAbility` | `artifact.abilities[].type` | 法器能力：授予技能、载人飞行、自带储物。 |
 | `CurseType` | `type` | 诅咒的持续和过期方式。 |
 | `EntityAction` | `type` | 实体行为。 |
 | `BiEntityAction` | `type` | 双实体行为。 |
@@ -104,7 +105,7 @@ title: 动态注册表
 - `creature_profile` / `contract_type`：生物档案和契约规则，框架不提供具体生物数值。
 - `realm_instance`：秘境模板，按需为每次进入开出实例维度。
 - `spirit_herb`：绑定现有物品的灵植数据。
-- `item_archetype`：法器和飞行能力定义。
+- `artifact`：把现有物品认领为法器，并按 `abilities` 声明被动／主动技能、飞行与自带储物。
 - `talisman`：符箓定义，目前只声明铭刻后授予的 `ability`；“已经铭刻了哪些符箓”由物品 `mxt:talisman` 的组件保存，见[数据包格式](/datapack/json/talisman)。
 
 > 称号（`title`）、徽章（`badge`）与宗门（`sect`）曾是预留注册表，现已彻底移除，详见[数据包格式](/datapack/json/index#动态注册表)。

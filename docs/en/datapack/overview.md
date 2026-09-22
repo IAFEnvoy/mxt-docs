@@ -52,6 +52,23 @@ Registry titles use their own fixed key, `mxt.registry.<registry path>` — `mxt
 ## Loading and Overriding
 
 - The data pack registries are loaded by the native NeoForge data pack registry system **while the world loads**. They are validated at that point, and a read-only snapshot is sent to the client on join through the vanilla synchronisation mechanism.
+
+Expanded, that loading rule is one path from a file on disk to what the player sees.
+
+```mermaid
+flowchart TD
+    A["Datapack definition files<br/>one JSON file per entry"] --> B["34 datapack registries<br/>native NeoForge registries"]
+    B --> C["Read and validated at world load<br/>JSON, holders and codecs"]
+    C --> D["Decoding fails<br/>the world will not load"]
+    C --> E["mxt:disabled tag<br/>listed entries are not queried at runtime"]
+    E --> F["Vanilla synchronisation<br/>read-only snapshot on join"]
+    E --> G["Server-side resolution<br/>deduction, breakthroughs, forging"]
+    F --> H["Client HUD, fog and textures<br/>display only"]
+    G --> I["What the player sees"]
+    H --> I
+    C -.-> J["/reload does not re-read them<br/>load the world again after an edit"]
+```
+
 - File conflicts follow Minecraft data pack priority: a higher priority data pack overrides the same path from a lower priority data pack.
 - When a vanilla tag uses `replace: false`, values are appended in data pack merge order. Apart from quality ordering tags, gameplay does not depend on tag value order.
 - Data packs are read-only. There is no generic `schema_version`, `enabled` or `tags` field in a definition.
@@ -85,6 +102,16 @@ data/mxt/tags/mxt/<registry>/disabled.json
 The tag ID is `mxt:disabled`. Entries listed in it are not actively used by the matching service, but they are still kept in the registry, so other definitions can safely hold a reference to them. Editing this tag is subject to the same rule as every other data pack file: it is applied when the world loads.
 
 Elements are covered by the same tag: a disabled element stops holding relations (`overcomes`/`adapted_to` are no longer settled), stops being coloured, cannot be bound by a spirit root and takes no part in any element matching. That is a different switch from the spirit-root and physique toggle: `mxt:disabled` is a data pack's seal over a whole definition, invisible to every consumer, while each **held** spirit root and physique can be switched off without being lost (see [Spirit Root](./json/spirit_root.md)) — that path only affects the one entry, and `mxt:has_spirit_root` / `mxt:has_physique` stay true.
+
+### The pass-through tag
+
+One tag this mod ships lives on a **vanilla registry** rather than on its own, so its path looks different — note `tags/damage_type`, not `tags/mxt/...`:
+
+```text
+data/mxt/tags/damage_type/no_bonus.json
+```
+
+A damage type listed in `mxt:no_bonus` takes no part in damage bonus settlement: no skill-stage or affinity multiplier, no physique multiplier, no `overcomes`/`adapted_to` relation, and no element buildup either. The number is handed to vanilla as it arrived, and vanilla's own mitigation (armour, enchantments, resistance, absorption, invulnerability ticks) still applies. By default the tag holds only the void, `minecraft:out_of_world`; a pack can append to it at the same path (`replace: false`) or replace it outright (`replace: true`). See [The damage system](../technical/damage.md).
 
 ::: info
 
@@ -180,7 +207,7 @@ The mod registers **34** data pack registries, all of them declared in `MxtDatap
 | Resources and cultivation | `resource`, `aura`, `element`, `element_reaction`, `realm_stage`, `spirit_root`, `physique`, `technique`, `skill_stage`, `cultivate_action` |
 | Abilities and rules | `ability`, `curse`, `formation`, `tribulation`, `trigger`, `talisman` |
 | Aura and world | `aura_zone`, `block_aura`, `item_aura`, `realm_instance` |
-| Items and quality | `item_binding`, `weapon_binding`, `pill_binding`, `technique_binding`, `item_archetype`, `item_quality` |
+| Items and quality | `item_binding`, `weapon_binding`, `pill_binding`, `technique_binding`, `artifact`, `item_quality` |
 | Economy and content | `currency`, `spirit_herb`, `forging_method`, `forging_blueprint`, `tool_binding`, `blueprint_binding`, `creature_profile`, `contract_type` |
 
 `mxt:aura` is the registry that used to be called `mxt:cultivation`; it holds the aura identity and cultivation behaviour of one stored value, while the value itself lives in `resource`. `title`, `badge` and `sect` no longer exist. Alchemy recipes use the vanilla recipe system (`mxt:alchemy`) rather than a data pack registry.

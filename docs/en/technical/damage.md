@@ -23,12 +23,17 @@ The package prefix is `com.iafenvoy.mxt`; every file is under `src/main/java/com
 ```mermaid
 flowchart TD
     A["mxt:damage / mxt:damage_target / mxt:explode<br/>a formation attack module / an action in a tribulation timeline"] --> DEAL
-    DEAL["DamageCalculationService#deal<br/>server only; returns 0 on a client"] --> STRIKE["DamageElements#strike(level, damageType, attacker)<br/>what this strike is made of"]
-    STRIKE --> OUT["outgoing: base value × damage_multiplier × element_modifier<br/>× the attacker's damage_dealt_multiplier × the attacker's overcomes"]
+    DEAL["DamageCalculationService#deal<br/>server only; returns 0 on a client"] --> TAG{"Is the damage type in mxt:no_bonus?"}
+    TAG -->|yes| RAW["hurtServer with the number as handed in<br/>no shaping, no reduction, no element"]
+    TAG -->|no| STRIKE["DamageElements#strike(level, damageType, attacker)<br/>what this strike is made of"]
+    STRIKE --> OUT["outgoing: base value × damage_multiplier × element_modifier<br/>× the attacker's damage_dealt_multiplier × the attacker's overcomes<br/>the last two are 1.0 when nobody is credited"]
     OUT --> SRC["source: damage type and kill credit"]
     SRC --> HURT["Entity#hurtServer<br/>vanilla runs immunity and resistances first, then fires the event"]
+    RAW --> HURT
     HURT --> EV["LivingIncomingDamageEvent"]
-    EV --> BRIDGE["DamageEventBridge#onIncomingDamage"]
+    EV --> TAG2{"Is the damage type in mxt:no_bonus?"}
+    TAG2 -->|yes| RAW2["passed through untouched<br/>not even an element is left behind"]
+    TAG2 -->|no| BRIDGE["DamageEventBridge#onIncomingDamage"]
     BRIDGE --> IN["incoming: × the target's adapted_to<br/>× the target's damage_taken_multiplier"]
     BRIDGE --> REACT["ElementReactionService#applyFromStrike<br/>element buildup and reactions"]
 ```
@@ -50,19 +55,36 @@ The cost is that the two must not overlap: `DamageEventBridge` therefore lives o
 public static double outgoing(@Nullable Entity attacker, Entity target, double amount,
                               @Nullable FormulaContext context, Set<Holder<Element>> elements) {
     if (!Double.isFinite(amount) || amount <= 0.0D) return 0.0D;
+    double pair = attacker == null ? 1.0D : physiqueMultiplier(attacker, true) * overcomeMultiplier(elements, target);
     double result = amount * masteryMultiplier(context) * elementMultiplier(context)
-            * physiqueMultiplier(attacker, true) * overcomeMultiplier(elements, target);
+            * selfConflictMultiplier(attacker) * pair;
     return Double.isFinite(result) && result > 0.0D ? result : 0.0D;
 }
 ```
 
-The order of operations is fixed: **the base value from the pack or a formula → × `damage_multiplier` → × `element_modifier` → × the attacker's `damage_dealt_multiplier` → × the attacker's `overcomes`**. The target's `adapted_to` and `damage_taken_multiplier` only enter afterwards, in layer two.
+The order of operations is fixed: **the base value from the pack or a formula → × `damage_multiplier` → × `element_modifier` → × the self-conflict factor (`conflict_multiplier`) → × the attacker's `damage_dealt_multiplier` → × the attacker's `overcomes`**. The last two are the `pair` above: **with nobody credited it is `1.0` outright** (see below). The target's `adapted_to` and `damage_taken_multiplier` only enter afterwards, in layer two.
+
+The diagram below lays that fixed order out end to end and marks where the pack's own multiplications stop and the pipeline's begin:
+
+```mermaid
+flowchart LR
+    BASE["Base value<br/>from the pack or a formula"] --> SPLIT["The boundary<br/>the pipeline multiplies these"]
+    SPLIT --> MULT["× damage_multiplier<br/>the skill stage of this casting"]
+    MULT --> ELEM["× element_modifier<br/>this casting, from the roots<br/>do not write it yourself"]
+    ELEM --> CONFLICT["× conflict_multiplier<br/>when a root conflicts with the held item's element"]
+    CONFLICT --> DEALT["× damage_dealt_multiplier<br/>the attacker's active physiques"]
+    DEALT --> OVER["× overcomes<br/>attacking and defending pairs"]
+    OVER --> ADAPT["× adapted_to<br/>the defender's side only"]
+    ADAPT --> TAKEN["× damage_taken_multiplier<br/>the target's active physiques"]
+    TAKEN --> DONE["The result of layer two<br/>what the hit is finally worth"]
+```
 
 - **`damage_multiplier` belongs to the casting.** `AbilityService#withAbilityScaling` writes it into the formula context, and its value comes from `SkillStageService#damageMultiplier`: it walks the holder's learned techniques, keeps the ones whose current stage actually unlocks this ability, and takes the **largest** multiplier among them — several techniques do not stack their multipliers, because only one strike is being dealt. A `skill_stage` defaults `damage_multiplier` to `1.0`, and a negative or non-finite value is rejected while loading.
 - **`element_modifier` is the spirit-root half, and it belongs to the casting as well.** The same `withAbilityScaling` folds "the `element_ability_modifier` of the matching roots" into one value through `element_affinity_mode` (average or best) and writes it into the context, and `elementMultiplier(context)` multiplies it straight in. It is **not only** a variable for formulas to read — whether content writes `"damage": 12` or `"damage": "12 * element_modifier"`, the latter now multiplies twice, so **do not write it by hand again**. When the ability carries no `element_affinity`, or the damage does not come from a casting (a formation tick, a curse, a vanilla attack), the context has no such value and it reads `1.0`; a root that writes this multiplier as `0` means "this element of mine deals nothing", and this layer still multiplies by `0` (the same reading the casting gate uses).
 - **`damage_dealt_multiplier` / `damage_taken_multiplier` belong to the person.** They come from active `physique` definitions: layer one reads the attacker's "dealt" multiplier and layer two reads the target's "taken" one, and several active physiques **multiply** (each one is an independent source). They are evaluated in the **holder's own** formula context rather than the other side's — how much this body takes cannot depend on who is asking. A literal number is validated as finite and non-negative while loading, and a negative or non-finite value produced by a formula counts as "no contribution" (the same rule, for the same class of formula, as passive attributes); `0` is legal and means immunity, or that nothing can be dealt.
+- **`conflict_multiplier` belongs to the element being wielded** (added 2026-09-22): when an active spirit root of the attacker lists **the element of their main-hand item** in `conflicting_elements`, that element's own `conflict_multiplier` (default `1.0`) is multiplied in. The item's element is read the way [weapon_binding](/en/datapack/json/weapon_binding) describes it — the `element` a definition declares, or the `aura_type` of the aura the stack carries. It is applied **once per element** however many roots conflict with it (two conflicting roots would otherwise square it), and it deliberately does **not** require the strike to be made of that element: fighting your own weapon weakens whatever you channel through it, which is the point of the rule. A pack that never writes the field is never affected by it.
 - **The element factor belongs to both sides.** `overcomeMultiplier` runs a **double loop over the attacking and defending element sets, multiplying every pair**, and each pair goes through `Element#overcomeMultiplier`, which multiplies every matching relation in that element's `overcomes`. An empty set on either side (no spirit roots, no elements), or a target that is not a `LivingEntity`, reads as `1.0` — "there is no relation to apply".
-- **Backlash and self-damage therefore have no element edge at all.** When `mxt:damage` lands on the caster themself the attacker is `null` (`DamageAction#attacker` returns `null` as soon as `caster == entity`), the element set is empty, no relation is read and the "dealt" multiplier has nothing to be read from either (there is no attacker) — but `damage_multiplier` and `element_modifier` still apply: the stronger the technique and the better the root fits, the heavier the backlash, because that is the worth of the casting, not a property of the strike.
+- **Backlash and self-damage read no element edge, but they keep "what this casting is worth".** When `mxt:damage` lands on the caster themself the attacker is `null` (`DamageAction#attacker` returns `null` as soon as `caster == entity`), so both of the last two factors in `outgoing` read `1.0`: no relation is applied and the "dealt" multiplier has nothing to be read from either (there is no attacker). That holds even when the strike carries an element of its own through a declared `damage_type` / `element` — a relation is a relation between two entities, and one entity is not a pair; this is the reading corrected on 2026-09-22, before which such a self-hit multiplied its own roots' relations into the damage. `damage_multiplier` and `element_modifier` still apply: the stronger the technique and the better the root fits, the heavier the backlash, because that is the worth of the casting, not a property of the strike. Layer two still runs as well, because adaptation and `damage_taken_multiplier` are properties of the body that takes the hit.
 - **Nothing is clamped.** Anything non-finite or ≤ 0 counts as "no damage"; otherwise the number is returned as computed. Numeric discipline is the pack's job (a multiplier must be finite and non-negative, but `0.0` is legal and means "no damage").
 
 ## Layer two: reduction
@@ -90,7 +112,8 @@ An element is **read only from the damage type**, and that is the foundation of 
 
 - **Claims** come from an element's `damage_types` field, either a concrete type or a tag (a tag expands to every matching type in the registry). When several elements claim one type, **all of them are kept** and every claim multiplies — the same rule several spirit roots already follow — and a warning is logged, because that is usually a pack mistake.
 - **The index lives as long as the registry instance.** A datapack reload replaces that instance, which rebuilds the index; a few instances are cached and the cache is rebuilt wholesale once it overflows. Elements disabled by the `mxt:disabled` tag are skipped while it is built, so disabling an element takes a reload to show up in the reverse index.
-- **Fallback order**: a claimed damage type uses its claimants; an unclaimed one falls back to the **attacker's spirit-root elements**; with no attacker either (a fall, a cactus, unattributed environmental damage) the set is empty, both layers read `1.0`, and the `mxt:element` condition returns `false`. That is how "a strike nobody can classify has no element" is implemented — rather than inventing a default element.
+- **Fallback order**: a claimed damage type uses its claimants; an unclaimed one falls back to the **attacker's spirit-root elements**; with no attacker either (a fall, a cactus, unattributed environmental damage) the set is empty, both layers read `1.0`, and the `mxt:element` condition returns `false`. That is how "a strike nobody can classify has no element" is implemented — rather than inventing a default element. Layer one also has a rule that is **independent of the element set**: with nobody credited, `overcomes` stays out even when a declared type gives the strike an element (previous section).
+- **The origin also decides whether anything is left behind** (2026-09-22). `DamageElements` hands out the elements and their origin together (`Strike(elements, origin)`), and there are exactly two origins: `TYPE` (a damage type claimed them) and `ROOTS` (they fell back to the attacker's spirit roots). `DamageEventBridge` reduces with either, but only hands the `TYPE` reading to `ElementReactionService#applyFromStrike` — the fire in a body decides how hard a hit lands and does not set anyone alight. That is what keeps "a root shapes the damage, a weapon leaves the mark" apart, and why a strike has to declare what it is made of before it can start a reaction.
 - **`resolveType` turns a declaration into a type.** `mxt:damage` / `mxt:damage_target` use a declared `damage_type` verbatim; with only `element` they take the first type that element claims; with both they check that the element **really** claims that type — a mismatch logs one line per distinct complaint but **never fails the load**.
 - **Why the check cannot happen at load time**: datapack registries load in parallel, so a cross-registry value is not necessarily bound yet, and the same pack would pass or fail depending on which page finished first. So the check runs on first use instead, reports each distinct complaint once, and lets the run continue.
 - **With no server, the answer is an empty set rather than an exception**: a client-side script asking what a hit is made of must not be able to bring the client down.
@@ -136,18 +159,50 @@ The element is still **only read from the damage type**, so `element` is not a s
 Three things that are not part of this pipeline, worth saying out loud:
 
 - **The damage type → element mapping is declared entirely by data packs.** `element.damage_types` is the only place that says a type means an element, and the mod hard-codes no mapping at all. A claim wins; the attacker's spirit roots are the fallback when nobody claims the type.
-- **Artifacts (`item_archetype`) contribute no attack or defence numbers of their own** — they reach combat through the abilities they grant and the attributes they carry.
+- **Artifacts (`artifact`) contribute no attack or defence numbers of their own** — they reach combat through the abilities they grant and the attributes they carry.
 - **Damage the framework never shaped still passes layer two**: adaptation is a property of the entity rather than of this mod's attacks.
 
+## The pass-through tag: `mxt:no_bonus`
+
+Some damage should never be touched by any of this, so the mod keeps a tag on the vanilla `damage_type` registry:
+
+```text
+data/mxt/tags/damage_type/no_bonus.json
+```
+
+```json
+{
+  "replace": false,
+  "values": [
+    "minecraft:out_of_world"
+  ]
+}
+```
+
+A damage type listed there **skips both layers**: no `damage_multiplier`, no `element_modifier`, no `overcomes`, no `adapted_to`, no physique multiplier — and **no element is left on the target either** (`ElementReactionService` does not take part at all). The number is handed to vanilla exactly as it arrived, and **vanilla's own mitigation still applies** (armour, enchantments, resistance, absorption, invulnerability ticks). The tag says "this hit is not the mod's to scale", not "this hit is immune".
+
+A few things to know:
+
+- **It is decided by damage type, so every source is treated alike**: this mod's actions, another mod's hit and vanilla environmental damage all pass through if their type is in the tag. The three execution points are `deal` (layer one), `DamageEventBridge` (layer two and element buildup) and the damage calculator of `mxt:explode`, all sharing one predicate.
+- **The default holds only the void, `minecraft:out_of_world`**: the 4 damage per tick for falling out of the world is an execution by position, with no "who is stronger" to speak of, and any scaling or reduction would make being killed by the void depend on a technique or a physique.
+- **A pack can add to it**: the same tag path with `"replace": false` appends to the defaults, and `"replace": true` replaces them outright (which also takes the void back out).
+- **It changes neither credit nor kill statistics** — it only keeps the hit out of the bonus arithmetic.
+
 ::: tip Trying it in game
-The test module ships `/mxt_test damage`, which drives both layers against throwaway entities with known element edges and reports whether the amounts it measured are the ones it expected.
+The test module ships `/mxt_test damage`, which drives both layers against throwaway entities with known element edges and reports whether the amounts it measured are the ones it expected. Since 2026-09-22 it also runs two more legs: "damage with nobody credited reads no relation but keeps the casting's bonus", and "a type in `mxt:no_bonus` passes through" (the latter also asserts that the shipped default tag was actually loaded).
 :::
 
 ## Element buildup and reactions
 
 In the same event, the element set used for reduction is handed straight to `ElementReactionService#applyFromStrike`: it builds up each element on the target by that element's own `damage_attachment`, then tries to fire an element reaction (reactions have their own chain limit so they cannot cascade forever). **The source is read once and used twice** so that "the element used to reduce" and "the element used to accumulate" cannot be two different answers.
 
-This lives here for the same reason the reduction does: a lava bath and another mod's fire spell build up fire on a body exactly like our own fireball.
+Three rules were added to that step on 2026-09-22:
+
+- **Only a declared element accumulates.** The origin comes from the same reading (`DamageElements.Strike`'s `origin`), and only `Origin.TYPE` (a claimed damage type) is handed to the buildup — `Origin.ROOTS` (the attacker's spirit roots) takes part in reduction alone. The fire in a body does not set anyone alight; weapons and techniques do.
+- **What the victim carries decides how much gets through.** The amount is first multiplied by `DamageCalculationService#attachmentMultiplier(target)`: the `attachment_multiplier` declared by the items the target **carries** (both hands and the Curios slots), multiplied together, where `0.5` lets half through and `0` lets none. This is the item-side answer to resisting an elemental reaction — it slows the **buildup**, so a reaction answers later or never; what the reaction **does** (its damage, for instance) is not its business and stays with the reaction's `action` and layer two.
+- **How much also depends on which damage type the strike was.** The amount is not the element's alone: a claimed type (or tag) may carry its own `damage_attachment` (see [element](/en/datapack/json/element), "A claimed type is a group"). The pipeline resolves it in the **same reading that classifies the strike** (`Strike` carries the elements, the origin and the amounts), so "a lava bath builds up slower than a fireball" is one line in a pack.
+
+This lives here for the same reason the reduction does: a lava bath and another mod's fire spell build up fire on a body exactly like our own fireball, as long as their damage types are claimed.
 
 ## Costs and limits
 

@@ -22,7 +22,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/resource/qi.j
 | `default_value` | `NumberProvider` | **required** | The current value when the attachment is first created. |
 | `min` | `NumberProvider` | `0` | Lower bound of the value. |
 | `max` | `NumberProvider` | **required** | Upper bound of the value. |
-| `icon` | [Icon Reference](../types/shared_data_types.md#icon-reference) | none | Optional hotbar icon for the spirit power entries. |
+| `icon` | [Icon Reference](../types/shared_data_types.md#icon-reference) | none | Optional wheel icon for the spirit power entries. |
 | `particle_color` | `RGBColor` | `#FFFFFF` | Particle colour used by spirit power rays. May be written as `#RRGGBB` or as an integer in `0..16777215`. |
 | `bars` | `List<ResourceBar>` | `[]` | Inline resource bars; when empty, the value is not displayed. |
 

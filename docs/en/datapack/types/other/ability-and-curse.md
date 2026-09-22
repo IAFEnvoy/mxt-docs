@@ -11,7 +11,7 @@ The nested `ability` object of an ability definition uses this registry. The ID 
 | `type` | Fields | Description |
 |--------|--------|-------------|
 | `mxt:empty` | none | No lifecycle of its own |
-| `mxt:active` | `slot` | Fired explicitly from a hotbar slot |
+| `mxt:active` | `slot` | Castable from the wheel; where it sits is the player's own twelve-cell layout |
 | `mxt:triggered` | `triggers`, `chance` | Fired when one of its triggers matches |
 | `mxt:modifier` | none | Passive modifier ability, applied while granted and re-checked against `condition` every tick |
 | `mxt:aura` | `interval`, `radius` | Repeats around the actor on an interval |
@@ -21,7 +21,7 @@ The nested `ability` object of an ability definition uses this registry. The ID 
 
 | `type` | Field | Type | Default | Description |
 |--------|-------|------|---------|-------------|
-| `mxt:active` | `slot` | String | `primary` | Hotbar slot name; must not be blank |
+| `mxt:active` | `slot` | String | `primary` | No longer read: the wheel's twelve cells are the player's own layout. Must not be blank. |
 | `mxt:triggered` | `triggers` | List of `Trigger` | `[]` | Trigger matchers that fire this ability |
 | `mxt:triggered` | `chance` | `NumberProvider` | `1` | Chance that a matching trigger actually fires |
 | `mxt:aura` | `interval` | `NumberProvider` | `20` | Ticks between aura applications |

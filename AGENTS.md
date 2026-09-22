@@ -24,7 +24,7 @@
 5. **状态要诚实。** 「完成 / 制作中 / 预留」只能由模组代码事实支撑：没实现的东西明说没实现（例：炼丹配方格式已定稿，但炼丹台还没开始做），设计稿里的东西不能写成"可用"。
 6. **不发明字段。** 字段、命令、配置名一律照模组仓库的代码与 `docs/数据包格式.md` 核对后再写；拿不准就标"以当前 Codec 为准"。
 7. **配置项按游戏内界面写。** 只写「服务端配置「标签页 → 条目」」或「客户端配置「标签页 → 条目」」，名字取自模组语言文件；**不写** `config/xxx.json` 这类文件路径，也不写原始键。`pnpm run check:config` 会逐字比对。
-8. **不换 Mermaid 方案。** 它由本站自己的三个文件接起（见 README），曾经装过的第三方插件会把 dev 打崩。
+8. **不换 Mermaid 方案。** 它由本站自己的文件接起（见 README），曾经装过的第三方插件会把 dev 打崩。放大视图同样是自己的组件（`ZoomViewer.vue`），别再引第三方看图插件。
 
 ## 2. 命令
 
@@ -36,6 +36,7 @@
 | 中英对齐 | `pnpm run check:i18n`（`-- --strict`） | 列出只有中文或只有英文的页面。 |
 | 站内链接 | `pnpm run check:links`（`-- --strict`） | 校验链接与 `#锚点`。 |
 | 配置名 | `pnpm run check:config` | 需要读模组仓库的语言文件，见下。 |
+| Mermaid 图 | `pnpm run check:mermaid` | 改了任何 ```mermaid 围栏就跑：图在浏览器里画，构建不会替你发现画错的图。 |
 | 一次性迁移 | `pnpm run migrate` | 会**重写**它自己生成过的页面；只在你确实要重来时跑。 |
 
 `check:config` 与 `migrate` 需要模组仓库（本站不含它）：默认自动发现，找不到会明确告诉你该设什么，也可以直接指定。
@@ -92,6 +93,7 @@ MXT_EN_DOCS=/path/to/old-docs MXT_ZH_DOCS=/path/to/MiXianTu/docs pnpm run migrat
 pnpm run check:i18n      # 任何页面改动
 pnpm run check:links     # 任何页面改动（新增链接/锚点必跑）
 pnpm run check:config    # 动了命令页、配置名或模组语言文件
+pnpm run check:mermaid   # 动了 ```mermaid 围栏（图在客户端画，构建不会报画错的图）
 pnpm run build           # 收尾；构建后抽查 docs/.vitepress/dist/ 里有没有新内容
 ```
 

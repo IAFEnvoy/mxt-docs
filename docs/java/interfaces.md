@@ -18,7 +18,7 @@ title: 特殊公开接口
 
 ## `UseItemAuraAccess`
 
-让物品**按住右键灌注灵气**的接口，继承 `ItemAuraAccess`：`HoldBinding`/`HoldService` 负责手势与姿势，`SpiritChargeService` 每 tick 从持有者自己的灵气池取出并写入 `insert`。实现它**不代表**要自己描述形状——灵石就实现了它，却把 `pour` 留空，于是走 `item_aura` 定义那条共享读法。它表达的是"这个物品可以被按住灌"，不是"这个物品是特殊的"。不实现它的存储（比如只用来存东西的通用物品）永远不会被武装成手势。
+让物品**按住右键灌注灵气**的接口，继承 `ItemAuraAccess`：`HoldBinding`/`HoldService` 负责手势与姿势，`SpiritChargeService` 每 tick 从持有者自己的灵气池取出并写入 `insert`。实现它**不代表**要自己描述形状——灵石就实现了它，却把 `pour` 留空，于是走 `item_aura` 定义那条共享读法。它表达的是"这个物品可以被按住灌"，不是"这个物品是特殊的"。不实现它的存储（比如只用来存东西的通用物品）永远不会被武装成手势。`HoldBinding` 另外提供一对**带持有者**的默认重载（`claims(LivingEntity, Provider, ItemStack)` 与 `holdTicks(LivingEntity, Provider, ItemStack)`）——不关心是谁拿着的声明不用实现它们；[法器](/datapack/json/artifact)就是靠这一对做到"归别人就不接管这次右键"。
 
 拆成两个接口是因为"存储"与"被灌"不是一回事：存储能被问在任何地方，被灌只发生在一个人对着自己手里那一堆做手势的时候。三个默认方法对应手势的三个时刻：
 
@@ -28,6 +28,56 @@ title: 特殊公开接口
 
 **写入者负责汇报**：任何往存储里写入灵气的一方（长按灌注、`AuraAccess` 方块实体等）在**真实写入之后**调用 `onCharged(SpiritSource, stack)`（`simulate` 不算），由物品自己判断"这是不是满了"以及随之而来的行为（符箓在这里发动并消耗一件本体）。之所以由写入者汇报、而不是让物品在自己的 `add` 里判断，是因为只有写入者知道**这东西在哪、谁付的账**：展示架上的一张符，是被站在别处的人（或一枚灵爆）填满的。`SpiritSource(level, position, actor, consumedByHand)` 同时带着位置与行为者——行为者出账、被记录并为能力作答；位置是这次激发的地点，既以 `block_x`/`block_y`/`block_z` 进公式，也作为**原点**交给位置类行为；`consumedByHand` 说明这次是不是"手上的消耗"（展示架、机器等摆着的存储为 `false`）（见 [灌注与激发](/datapack/json/talisman)）。也正因为汇报是"选择加入"的：写入方遇到只实现存储的物品时，本就没有什么可汇报的。
 
+这一族接口连起来是这样——存取是"能不能被存"，被灌与长按是"额外选择加入的手势"，实现者只需挑自己那一层：
+
+```mermaid
+classDiagram
+    direction LR
+    class ItemMatcher {
+        <<interface>>
+        +entries() List~Entry~
+    }
+    class ItemAuraAccess {
+        <<interface>>
+        +getCapacity(...) int
+        +insert(...) int
+        +extract(...) int
+    }
+    class UseItemAuraAccess {
+        <<interface>>
+        +pour(registries, stack) SpiritPour
+        +canPourInto(holder, stack) boolean
+        +onCharged(source, stack) void
+    }
+    class HoldBinding {
+        <<interface>>
+        +holdTicks() int
+        +holdTicks(holder, registries, stack) int
+        +claims(registries, stack) boolean
+        +claims(holder, registries, stack) boolean
+        +holdAnimation() ItemUseAnimation
+        +holdSound() Holder~SoundEvent~
+    }
+    class SpiritPour
+    class SpiritSource
+    class HoldService
+    class SpiritStoneItem
+    class TalismanItem
+    class TechniqueBinding
+    class SpiritChargeHold
+    class ArtifactHold
+    UseItemAuraAccess --|> ItemAuraAccess
+    HoldBinding --|> ItemMatcher
+    SpiritStoneItem ..|> UseItemAuraAccess
+    TalismanItem ..|> UseItemAuraAccess
+    TechniqueBinding ..|> HoldBinding
+    SpiritChargeHold ..|> HoldBinding
+    ArtifactHold ..|> HoldBinding
+    UseItemAuraAccess ..> SpiritPour : 返回
+    UseItemAuraAccess ..> SpiritSource : 收到
+    HoldService ..> HoldBinding : 驱动手势
+```
+
 ## `TooltipAppender`
 
 物品模块通过 NeoForge `TooltipAppender` 注册 Tooltip。每个模块使用独立 Appender，资源、货币、品质和灵气存储显示互不耦合。
@@ -36,6 +86,6 @@ title: 特殊公开接口
 
 技能、阵法和其他行为的消耗抽象，提供面向 `Player` 的检查和实际消耗方法。新增 Cost 类型应使用固有注册表分派，而不是在 JSON 中写 Java 类名。
 
-## `HotbarEntry`
+## `WheelMenuEntry`
 
-纯客户端条目接口，提供名称、可选图标、强调色和 `onPress`、`onPressTick(Player)`、`onRelease` 回调，以及 `cooldown(Player)` / `canPress(Player)` 两个冷却钩子；`render(...)` 可以整体覆写。
+纯客户端轮盘条目接口：`kind()`（技能 / 灵气）、`id()`、`title()`（轮盘中间显示的名字）、可选 `icon()`、强调色、`tooltip(Player)`（类型 + 具体数值）、`cooldownTicks(Player)`（还剩几 tick，0 = 就绪）/ `usable(Player)` 两个可用性钩子，以及使用回调 `onSelected(WheelSelection)`（它带着这次使用发生在**哪一格的编号**上、以及那一格读自**哪个来源**）。一个来源贡献哪些条目由 `WheelMenuProvider`（唯一实现 `WheelContent`）给出——它的入参是玩家与该来源（`WheelSource`：主盘 / 主手物品 / 副手物品 / 法器），返回值**可以比一页长**（一页 12 格，多出来的由 `WheelMenuContent` 开新页），条目本身既不知道自己落在第几格，也不知道自己属于哪一页。原有的两个快捷栏条目接口 `HotbarEntry` 随快捷栏一起删除，见[轮盘条目](./wheel.md)。

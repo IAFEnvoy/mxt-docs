@@ -132,6 +132,40 @@ flowchart TD
 
 两个细节：它读的是管理器内存里的队伍数据（按 id 索引），所以**能为离线玩家作答**，也因此不需要订阅队伍变更事件、不需要缓存；另外**不要**用 `TeamRank#isAllyOrBetter()` 作判据——它是 `power >= ALLY`，而 `INVITED` 的数值更高，并且自由加入型队伍会给任何陌生人返回 `INVITED`，用它等于「全服皆友」。这正是 `INVITED` 默认关闭的原因。
 
+把前面几节的判定顺序与这里的配置开关串在一起，一次判定从头到尾是这样的：
+
+```mermaid
+flowchart TD
+    ASK["问：这个实体算不算自己人"] --> EV{"FriendEvent.Relation<br/>结论从哪来"}
+    EV -->|"来源写了 TRUE / FALSE"| USE["用它的结论<br/>FALSE 连名单也压过"]
+    EV -->|"FTB Teams（装了才有）"| RANK{"对方在队里是什么等级"}
+    EV -->|"别的模组 / KubeJS"| EXT["示例：同一支计分板队伍<br/>算自己人就写 TRUE"]
+    EV -->|"没人表态：DEFAULT"| BUILTIN["回落到内置判定"]
+    RANK -->|"MEMBER 及以上"| YES["算自己人"]
+    RANK -->|"ALLY"| A1{"服务端配置「兼容 → 盟友算队友」<br/>开着吗"}
+    RANK -->|"INVITED"| A2{"服务端配置「兼容 → 受邀者算队友」<br/>开着吗"}
+    A1 -->|"开（默认）"| YES
+    A1 -->|"关：它不表态"| BUILTIN
+    A2 -->|"开"| YES
+    A2 -->|"关（默认）：它不表态"| BUILTIN
+    EXT -->|"写 TRUE"| YES
+    EXT -->|"写 FALSE"| NO["不算"]
+    EXT -->|"不表态"| BUILTIN
+    BUILTIN --> SELF{"判断者就是目标自己吗"}
+    SELF -->|"是"| YES
+    SELF -->|"不是"| ONLINE{"判断者在线吗"}
+    ONLINE -->|"在线但不是玩家"| NO
+    ONLINE -->|"在线且是玩家"| LIST["读 FriendAttachment<br/>没有附件算空名单"]
+    ONLINE -->|"不在线"| LOOKUP["FriendCache#lookup<br/>有记录就照镜像答<br/>没见过则是 DEFAULT"]
+    LIST -->|"在名单里"| YES
+    LIST -->|"不在名单里"| NO
+    LOOKUP -->|"镜像里是好友"| YES
+    LOOKUP -->|"镜像里不是"| NO
+    LOOKUP -->|"没见过"| UNKNOWN["DEFAULT：无法识别"]
+    UNKNOWN --> D1["FriendService#isFriend：<br/>当成不是好友"]
+    UNKNOWN --> D2["阵法：停火<br/>认不出就不动手"]
+```
+
 ## 在数据包里用
 
 | 条件 | 类型 | 含义 |

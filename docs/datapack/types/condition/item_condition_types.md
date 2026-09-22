@@ -61,8 +61,8 @@ description: 模组注册的所有内置物品条件类型，以及每种类型�
 | `mxt:chance` | `chance` | 以给定概率随机通过，概率介于 `0` 与 `1` 之间。 |
 | `mxt:constant` | `value` | 始终返回给定的布尔值。 |
 | `mxt:item_id` | `item` | 匹配物品堆的物品 id。 |
-| `mxt:owned_by` | — | 当物品堆的法器归属是当前持有者时通过。 |
-| `mxt:energy_range` | `min`, `max` | 检查物品堆的法器灵力是否介于 `min` 与 `max` 之间。 |
+| `mxt:owned_by` | — | 当物品堆的法器归属（`mxt:artifact_state` 的 `owner_uuid`）就是当前持有者时通过；没有归属的物品堆不通过。 |
+| `mxt:energy_range` | `aura`, `min`, `max` | 检查物品堆上**某一种灵气**的已存量是否介于 `min` 与 `max` 之间（含端点）；`aura` 是具体灵气，必填。 |
 | `mxt:item_tag` | `tag` | 用原版或数据包物品标签匹配该物品堆。 |
 | `mxt:item_matcher` | `items` | 用单个值中列出的任意物品 id、物品标签或带类型的匹配器条目进行匹配。 |
 | `mxt:amount` | `comparison`, `compare_to` | 比较物品堆的数量。 |
@@ -78,6 +78,7 @@ description: 模组注册的所有内置物品条件类型，以及每种类型�
 | `mxt:has_component` | `component` | 检查物品堆是否带有给定的数据组件。 |
 | `mxt:component` | `component`, `nbt` | 用部分 NBT 比较匹配某个数据组件的序列化值。 |
 | `mxt:spirit_storage_not_full` | — | 匹配已存储灵力低于其容量的可充能物品。 |
+| `mxt:item_element` | `elements` | 当物品携带所列元素之一时通过。读的是「物品的元素」：`weapon_binding` / `item_binding` / `artifact` 声明的 `element`（可取并集），一个都没声明时才回落到物品携带的灵气的 `aura_type`；元素与元素标签都接受，空列表在加载期被拒。见 [weapon_binding](../../json/weapon_binding.md)。 |
 
 ::: info `mxt:item_matcher`
 `items` 字段接受单个值或数组，数组中可自由混合物品 id、物品标签和带类型的匹配器条目。带类型的条目有 `mxt:item`、`mxt:tag`、`mxt:wildcard`、`mxt:regex`、`mxt:herb_tag`（带有给定元素或材质标签的灵草）以及无字段的 `mxt:spirit_storage`，后者匹配所有能存储灵气的物品；见 [其他类型家族](/datapack/types/other/formation-and-matcher#item-matcher-entry-type)。当一组物品尚未被现有标签覆盖时，这是接受它们最紧凑的写法。

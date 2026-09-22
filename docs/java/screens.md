@@ -4,7 +4,76 @@ title: 客户端界面
 
 # 客户端界面
 
-客户端界面统一放在 `com.iafenvoy.mxt.screen` 下：容器**菜单**在 `screen.menu`、它们的**界面**在 `screen.gui`，纯客户端信息界面在 `screen.information`，物品选择器在 `screen.picker`，HUD 覆盖层（快捷栏、资源条）在 `screen.overlay.hotbar` / `screen.overlay.resourcebar`。新增界面优先复用现成的 `Screen` 基类和原版组件，不要自己造滚动和文本输入。
+客户端界面统一放在 `com.iafenvoy.mxt.screen` 下：容器**菜单**在 `screen.menu`、它们的**界面**在 `screen.gui`，纯客户端信息界面在 `screen.information`，物品选择器在 `screen.picker`，方向性选择（12 扇轮盘）在 `screen.wheel`，HUD 元素在 `screen.hud`（框架）、`screen.resourcebar`（资源条）与 `screen.wheel`（轮盘格）。新增界面优先复用现成的 `Screen` 基类和原版组件，不要自己造滚动和文本输入。
+
+## 可拖动 HUD 框架 `screen.hud`
+
+模块自己画的 HUD 元素要让玩家能拖动并存档，就接上这套框架。框架只做四件事：**登记元素**、**每帧画它们**、**给编辑器提供命中与占位框**、**把位置写进客户端配置**。
+
+**元素不自己算屏幕坐标，也不自己决定画在哪。** 子区域（比如资源条两列）只负责"提供对象"：把这一帧要显示的东西描述成一组 `RenderBlock`（各自的宽高 + 一个画法），由框架唯一的渲染器 `HudRenderer` 竖着堆进元素矩形——**垂直位置只有这一处算法**，块按自己的高度顺序叠，容器尺寸与内容排布因此永远是同一个数字；要留空隙就用 `RenderBlock.spacer`，不要把它加进某一条的高度。整块自绘的元素走另一条口子：`renderBlocks()` 返回空列表，框架改成调 `render()`。
+
+```java
+public final class MyBar extends AbstractHudEntry {
+    public MyBar() {
+        // 布局键：同时是配置里的存储键与重复登记的检查依据，一个元素一个，跨版本别改
+        super("my_bar", WIDTH, HEIGHT);
+    }
+
+    @Override public String displayName() { return Component.translatable("hud.mxt.my_bar").getString(); }
+    @Override public int layoutWidth() { return WIDTH; }
+    @Override public int layoutHeight() { return HEIGHT; }
+    @Override public int defaultX() { return 4; }
+    @Override public int defaultY() { return 4; }
+
+    // 只描述：一块底、一行数值；位置由框架决定
+    @Override
+    public List<RenderBlock> renderBlocks() {
+        return List.of(
+                RenderBlock.fill(WIDTH, 6, 0xFF10131D),
+                RenderBlock.label(Component.literal("42 / 100"), 0xFFFFFFFF));
+    }
+}
+
+// 在客户端初始化（FMLClientSetupEvent）里登记一次；返回的就是这个实例，可以直接留引用
+MyBar bar = HudManager.register(new MyBar());
+```
+
+要点：
+
+- **位置是「窗口比例」存的，不是像素**，坐标原点在窗口**左上角**。`config/mxt/mxt-hud.json` 里 `hud.layout_v2` 的每一项是 `x,y,visible`，`x`/`y` 是 `0..1` 的比例，指向元素矩形的左上角，所以换分辨率、换 GUI 缩放后布局不会漂。像素值只活在内存里，并且每次读取都夹进窗口，元素不可能被拖到看不见的地方。键上的 `_v2` 是位置含义变过一次留下的：旧键不再被读，那批布局退回默认位置。
+- **HUD 布局是独立的一份配置**（`config/mxt/mxt-hud.json`），不在客户端设置里；其余配置也统一收进 `config/mxt/`（`mxt-client.json`、`mxt-server.json`）。
+- **锚点 `HudAnchor`** 决定 `defaultX()`/`defaultY()` 指的是矩形上哪个点，以及**尺寸变化时哪个点不动**。默认是左上角；会往上长的东西（一列资源条）用 `CENTER_BOTTOM`，这样它长高时下边缘钉在原地。
+- **改动即存档**：拖动、方向键微调、显隐切换都会立刻写配置。没有"关界面时统一保存"，所以崩了也不会丢布局；反过来，手动改 JSON 之后要重开客户端才生效（元素只在构造时读一次）。
+- **位置只有一个来源**：存档里有这个布局键就用键里的比例（并且只在窗口尺寸变化时重算），没有就用元素自己给的默认位置（每帧重算，所以跟着窗口走）。`resetToDefault()` 会把键**从存档里删掉**——复位必须跨重启有效，否则看起来就像"布局没保存"。（这里曾经多存了一个布尔标志表示"当前用的是存档位置"，它初值是 `false`、只有拖动才置真，于是文件里的位置永远读不到：每次重启都退回默认。删掉那个标志、只留"键在不在"这一个事实，问题就没了。）
+- **只有 `visible() && moveable()` 的元素**会被当成可拖动项。自己算位置、不该被拖的元素（比如居中的快捷栏）重写 `moveable() { return false; }` 即可，它依然会被框架画；这类元素若连尺寸都由世界状态决定，还要重写 `refreshPlacement()` 并调用基类的 `placeAtDefault()` 把默认位置应用上去——**只算尺寸不落位置的话，锚点会一直停在 `(0,0)`**，元素画在窗口左上角。
+- **尺寸由元素自己说了算**：宽度随内容变化的元素在变化时调用 `setSize(w, h)`。空元素也要给非零尺寸，否则编辑器里看不到。
+- **元素要在客户端初始化时登记**，不要等第一帧渲染：框架的 GUI 层只在世界里绘制，否则玩家在主菜单打开编辑器时会看到一片空白。
+- **编辑界面**由 `HudManager.openEditor()` 打开（按键 `key.mxt.hud_layout`，默认右 Shift，或客户端命令 `/hud open`）。里面左键拖动、方向键 1 像素（按住修饰键 10 像素）微调、`Esc` 放弃当前选中、点空白处取消选中。**还没有缩放**：这一版只做移动，KronHUD 那种拖角缩放与吸附参考线都没移植。
+- 编辑器里元素**照常真实绘制**，编辑器只额外画半透明矩形与名字标签，所以拖的时候看到的就是实际效果。
+- 诊断用客户端命令 `/hud`：打出每个元素的布局键、位置、尺寸、当前块数与可见/可拖状态。"一个元素都没登记"和"登记了但这一帧没有内容"在界面上长得一样，只有它能分开。
+
+当前**已接入的元素**是五个：资源条四个——两列可拖的（`resource_bars.left` / `resource_bars.right`）+ 两条不可拖的固定行（`resource_bars.target` / `resource_bars.boss`）——加上轮盘的「轮盘格」（`wheel.selection`，`screen/wheel/WheelSelectionEntry`：它 `renderBlocks()` 返回空、自己 `render()` 画**永远 4 列、行数随页数向下长的格子**（每格 22px，一页 12 格 = 三行；块宽固定 94、高按内容算，格子号 = 编号读序，**编号此刻代表的那一格换金色边框贴图**），是"整块自己画"那条口子的第一个范例，也是"尺寸随内容变"的第一个范例（`layoutWidth` / `layoutHeight` 每帧算，`refreshPlacement` 里 `setSize` 回报，长出去会被夹回窗口）；默认位置在窗口左边、竖直居中；**画的是整张轮盘的一览**（每一页的每一格）；**不写任何文字标签**）。资源条那四个的做法可以当范例：`ResourceBarOverlay.column(anchor)`／`row(target, layout)` 只回答"哪些条、什么顺序"，条目用 `ResourceBarEntry.blocksWithGaps(...)` 把每条包成块并在条之间插 `spacer`。**位置在数据包那边没有字段**——`resource.bars` 的 `anchor` 只决定落进哪一列，列摆在哪是玩家自己的设置在客户端配置里；两条固定行钉在准心实体上、位置每帧现算、永不入档。资源条自己的 `mxt:resource_bars` GUI 层已经删掉，全部走框架那一层。框架本身的取舍见仓库里的 `research/26_可拖动HUD框架设计.md`，轮盘格这次的改动见 `research/27_轮盘选择系统设计.md` §8 与 `research/31_多轮盘与轮盘来源设计.md` §10.4。
+
+## 轮盘选择系统 `screen.wheel`
+
+按住按键（`key.mxt.wheel`，默认 `R`），屏幕上出现一个 **12 扇**的轮盘：指针**朝哪个方向**就选中哪一扇，选中的扇区变金色并向外扩一点，**这一扇的名字与 tooltip 写在轮盘正中间**。它是技能与灵气**唯一的触发入口**——原来"技能栏 + 灵力栏"两条快捷栏与它们各自的配置界面已经删除（过程见 `research/28_技能与灵气归一化设计.md`）。
+
+**轮盘由"主盘 + 从盘"组成，用一套连续编号串起来**（2026-09-22 新增并按玩家口径重做，见 `research/31_多轮盘与轮盘来源设计.md` §10）：主盘是玩家自己摆的 12 格（编号 `0..11`），从盘（主手物品 / 副手物品 / 法器）按随身装备**自动生成、不存储**，格子从 `12` 起接着排；**一页 12 格**，一个来源占 `ceil(条目数 / 12)` 页（一条都没有就一页都不占），所以"一个从盘不够用就再开一个新的"。翻页是两把键（`key.mxt.wheel_previous` / `key.mxt.wheel_next`，默认小键盘 `4` / `6`，两头环绕），`R` **打开始终回到主盘（第一页）**。**页只是视图，编号才是选择**：轮盘画当前页、HUD 轮盘格画整张轮盘、12 把槽位键作用于当前页，关着时的 `V` 作用于编号此刻代表的那一格（**编号越界时自动落到最后一个有东西的格子，编号本身不改写**）。
+
+框架（几何、扇环渲染、开合状态机、选择语义）在 `screen.wheel`，内容（技能与灵气怎么变成条目、每个来源贡献什么）在 `screen.wheel/content`，编辑界面是 `WheelConfigurationScreen`。接法、布局的存储与校验、编号与分页、触发分派见[轮盘条目](../java/wheel.md)，这里只记要点：
+
+- **框架不决定轮盘上有什么**：`WheelMenuProvider`（唯一实现 `WheelContent`，客户端初始化时登记）回答"这个来源现在贡献哪些条目"（入参是玩家与来源 `WheelSource`；返回值可以比一页长，分页由 `WheelMenuContent` 做），条目契约是 `WheelMenuEntry`（`kind` / `id` / `title` / `icon` / `tooltip` / `cooldown` / `usable` / `onSelected`）。这替换掉了框架最初"模块静态登记 12 个槽位"的做法：内容已经是玩家自己的布局，第二条入口只会和它抢格子。
+- **布局内容存在服务端**：玩家附件 `wheel_layout` 存一份 12 格 `WheelLayout`（每格 `WheelSlot = 类型 + id`，空格是 `EMPTY` 哨兵，**只有主盘进附件**），以及一个 `armed` 字段存"当前选中的格子编号"（`Optional<Integer>`，一个数字）；配置界面关闭时发 `WheelLayoutC2SPayload`，服务端 `WheelService.sanitize` 强制 12 格、逐格校验 id 能否在对应注册表里解析后再写回。编号走 `WheelSelectionC2SPayload`，由 `screen.wheel/content/WheelSelectionSync` 在登录时恢复、编号变化时上送——细节见[轮盘条目](../java/wheel.md#选中项跨会话)。
+- **一个事实只留一份：指针方向 → 扇区号的换算只在 `WheelGeometry` 里**（`sectorStart` / `sectorCentre` / `sectorAt` 由同一组常量推出，`sectorAt(sectorCentre(k)) == k` 恒成立）。绘制、命中、图标摆位全部问它。MineMenu 把这段换算抄了三处，其中一处的角度约定还和另外两处不同。
+- **判扇区只看方向，不看距离**：指针还在内圈里也算数，所以中间那块空地能一直显示"当前指着的扇区叫什么"。
+- **扇区数是 `WheelLayout.SLOTS`（12）**，几何从它取数，"一页 12 格"也取自它（`WheelMenuContent.SECTORS`），所以不会有"12 扇的几何配 10 格的页"这种事。
+- **空格子画成很淡的占位块**，不响应指针、中间也不显示文字；**整张轮盘一格有内容的都没有**时按键提醒一句「轮盘上还没有任何条目」而不是打开。
+- **选择与使用是两个键**：`key.mxt.wheel`（默认 `R`）只**选**——按住打开、指针决定格子，松开（`mode = HOLD`）或再按一次（`TOGGLE`）**只关闭、不触发**；`key.mxt.wheel_use`（默认 `V`）负责**用**——轮盘开着时用掉指针那一格且**不关轮盘**，关着时用掉**编号此刻代表的那一格**（客户端 `WheelSelectionState` 里是 `page` + `number` 两个值；`LoggingIn` 先清空，随后由服务端记住的 `armed` 填回来，见[选中项跨会话](../java/wheel.md#选中项跨会话)），左键等同于它。`WheelSelection.Method` 是 `KEY` / `CLICK`，只表示请求来自键盘还是鼠标。客户端配置只剩 `mode`（按住 / 切换）：`release_to_select` 已随这次改版删除。
+- **触发不关屏**：用掉一格不会关闭轮盘，所以一次按住可以连用几格；轮盘的开关只由轮盘键决定。
+- **按键不能用 `KeyMapping#isDown()` 读**：`Minecraft#setScreen` 一开界面就 `KeyMapping.releaseAll()`，用 `isDown()` 的话轮盘会在出现的那一帧就被判成已松手。第二个理由与使用键有关：按着 `V` 松开 `R` 时 `MouseHandler#grabMouse()` 里的 `KeyMapping.setAll()` 会按物理状态把 `V` 重新置成按下、补出一次假按下，等于多触发一次。控制器因此对轮盘键、使用键和两把切盘键都用 `InputConstants` / GLFW 直接读原始状态，并且一个键只在一处判边沿；`KeyMapping` 只负责让它们出现在按键设置里。代价是判定精度为客户端刻。
+- **它是个 `Screen`，不是 GUI 层**：开界面时原版会自动放开鼠标（指针才能指方向，而且角度与 GUI 缩放无关），关掉时又会把准心收回来。它不暂停游戏，也不画背景——默认背景会把这之前提取的整层 HUD 糊掉。
+- **颜色、半径、动画时长都还是常量**（`WheelMenuScreen` / `WheelGeometry`）：高亮沿用 HUD 编辑器那支金色，窗口太小时扇环整体缩小。
+- **按住轮盘时角色会停下**：原版对任何 `Screen` 都会 `KeyMapping.releaseAll()`，移动键随之松开（松开轮盘键时 `setScreen(null)` 又会 `grabMouse()` 把物理按键状态同步回来，不用重新按）。要"边跑边开"就得改成 GUI 层并自己接管指针。
 
 ## 物品选择界面 `ItemPickerScreen`
 
@@ -73,7 +142,7 @@ if (screen != null) Minecraft.getInstance().setScreen(screen);
 
 翻译键的拼法统一由 `com.iafenvoy.mxt.util.DefinitionText` 决定：类别默认取注册表自己的 path，少数不是的（`mxt:item_quality` 一直按 `quality` 翻译）在它里面的 `CATEGORIES` 声明一次。手里已经有 `Holder` / `ResourceKey` 时直接 `DefinitionText.name(holder)`，只有拿到的是一根光秃秃的 `Identifier` 时才需要把类别当参数传进去（`DefinitionText.name(id, "resource")`）。
 
-分类就是注册表本身，`/picker <分类 id>` 可以只列出某一个（如 `/picker mxt:aura`、`/picker mxt:currency`、`/picker mxt:item_binding`），不写则给出全部已注册分类。
+分类就是注册表本身，`/picker <分类 id>` 可以只列出某一个（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`），不写则给出全部已注册分类。
 
 ## 界面细节
 

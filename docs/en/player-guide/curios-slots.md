@@ -1,27 +1,35 @@
 ---
 title: Curios Slots
-description: "The back_weapon and belt_item Curios slots: sizes, validators, server configuration, rendering and resource-pack offsets."
+description: "The back_weapon, belt_item and charm Curios slots: sizes, validators, server configuration, rendering and resource-pack offsets."
 ---
 
 # Curios Slots
 
-MiXianTu provides player Curios slots in the order **back → belt**: two `back_weapon` slots and two `belt_item` slots. All of them are physical slots — the mod does not create Curios cosmetic slots — and back and belt items are rendered directly from the physical slots.
+MiXianTu provides player Curios slots in the order **back → belt**, plus four charm slots: two `back_weapon` slots, two `belt_item` slots and four `charm` slots. All of them are physical slots — the mod does not create Curios cosmetic slots — and back and belt items are rendered directly from the physical slots. **Items in the charm slots are not rendered on the body.**
 
 | Slot ID | Size | Order | Validators | Accepted items |
 |---|---|:---:|---|---|
 | `back_weapon` | 2 | 0 | `curios:tag`, `mxt:back_weapon_auto` | Items in the tag, plus what the automatic validator allows. |
 | `belt_item` | 2 | 1 | `curios:tag`, `mxt:belt_item_auto` | Items in the tag, plus what the automatic validator allows. |
+| `charm` | 4 | 200 | `curios:tag`, `mxt:charm_artifact_auto` | Items in the tag, plus artifacts declaring `curios_equipable: true`. |
 
-The slots are registered for `minecraft:player`. The bundled `curios:tag` tags already list the vanilla swords (and the bow for the belt slot) together with the mod's own `#mxt:back_equipable` and `#mxt:belt_equipable` extension tags.
+The slots are registered for `minecraft:player`. The bundled `curios:tag` tags already list the vanilla swords (and the bow for the belt slot) together with the mod's own `#mxt:back_equipable` and `#mxt:belt_equipable` extension tags. `charm` is Curios' **built-in** slot: the mod only adds the size and its own validator to it, keeps the slot's own name and icon (`curios.identifier.charm`, `curios:slot/empty_charm_slot`), and puts nothing into the `curios:charm` item tag itself.
 
 ## Automatic Validators
 
-`back_weapon` and `belt_item` keep the `curios:tag` validator and additionally use an automatic validator registered by the mod:
+`back_weapon` and `belt_item` keep the `curios:tag` validator and additionally use an automatic validator registered by the mod; `charm` uses one of its own:
 
 - `mxt:back_weapon_auto`
 - `mxt:belt_item_auto`
+- `mxt:charm_artifact_auto` — allows artifacts whose definition declares `curios_equipable: true`, and nothing else.
 
-Both validators are additional-allow logic: they never override or modify `curios:tag`. Other mods can register their own validators through the Curios API, but datapacks cannot create new validation algorithms.
+All of them are additional-allow logic: they never override or modify `curios:tag`. Other mods can register their own validators through the Curios API, but datapacks cannot create new validation algorithms.
+
+### The Charm Slots
+
+The four `charm` slots are Curios' **built-in** `charm` slot, widened by this mod: `data/mxt/curios/slots/charm.json` adds the size `4` and the `mxt:charm_artifact_auto` validator to it, and leaves the slot's own order and icon alone. Membership is a property of the item's definition — an artifact opts in by writing `curios_equipable: true` — so there is **no server configuration entry** for these slots. To allow something that is not an artifact, put the item in the `curios:charm` item tag; the `curios:tag` validator stays in place. An artifact in a charm slot works like any other Curios item: the abilities its definition grants are synced and revoked with it.
+
+> Curios slot ids are global strings and definitions with the same id merge, so these four slots are the whole modpack's `charm` slot: other mods' charm items share them.
 
 ## Server Configuration
 
@@ -42,12 +50,12 @@ The **Curios Slots** tab of the server configuration controls the automatic vali
 **Belt Slot**:
 
 - **Manual**: only `curios:tag` items are allowed.
-- **Weapons and Artifacts**: additionally allows weapons matched by `weapon_binding` and artifacts already bound to an `item_archetype`.
+- **Weapons and Artifacts**: additionally allows weapons matched by `weapon_binding` and artifacts whose definition declares `curios_equipable: true`. The test reads the definition itself, not whether the stack carries artifact state.
 - **All**: besides the tag items, every item is allowed.
 
 ## Visibility and Rendering
 
-The Curios slot screen buttons control each slot's `getRenders()` state and the slot's overall visible state, and the mod's back and belt rendering honours those states. With **Server Config → Curios Slots → Always Render** on, only this mod's back and belt slots are forced to render; other mods' slots are unaffected.
+The Curios slot screen buttons control each slot's `getRenders()` state and the slot's overall visible state, and the mod's back and belt rendering honours those states. With **Server Config → Curios Slots → Always Render** on, only this mod's back and belt slots are forced to render; other mods' slots are unaffected. The four charm slots have no renderer at all — an artifact is an arbitrary existing item with no model of its own — so there is nothing to show on the body and no offset file for them.
 
 ## Swap Keybind
 

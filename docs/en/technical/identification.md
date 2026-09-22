@@ -132,6 +132,40 @@ The baseline copies FTB Chunks' own reading, then the two outsider tiers are con
 
 Two details: it reads the manager's in-memory team data (indexed by id), so it **can answer for an offline player**, and that is also why it needs no cache and no subscription to team-change events. And do **not** use `TeamRank#isAllyOrBetter()` as the predicate — it is `power >= ALLY`, while `INVITED` has a higher number, and a `free_to_join` team reports *any* stranger as `INVITED`; using it turns everyone into an ally. That is exactly why `INVITED` defaults to off.
 
+Putting the judgement order from the earlier sections together with the switches above, one verdict runs end to end like this:
+
+```mermaid
+flowchart TD
+    ASK["Does this entity count as mine"] --> EV{"FriendEvent.Relation<br/>who claims the question"}
+    EV -->|"a source wrote TRUE / FALSE"| USE["Use that verdict<br/>FALSE overrides the lists too"]
+    EV -->|"FTB Teams (if installed)"| RANK{"What rank is the other side"}
+    EV -->|"another mod / KubeJS"| EXT["Example: same scoreboard team<br/>writes TRUE when it agrees"]
+    EV -->|"nobody claimed it: DEFAULT"| BUILTIN["Let the built-in lists answer"]
+    RANK -->|"MEMBER or better"| YES["One of mine"]
+    RANK -->|"ALLY"| A1{"Server Config →<br/>Compatibility → FTB Allies<br/>on?"}
+    RANK -->|"INVITED"| A2{"Server Config →<br/>Compatibility → FTB Invited<br/>on?"}
+    A1 -->|"on (default)"| YES
+    A1 -->|"off: it stays silent"| BUILTIN
+    A2 -->|"on"| YES
+    A2 -->|"off (default): it stays silent"| BUILTIN
+    EXT -->|"writes TRUE"| YES
+    EXT -->|"writes FALSE"| NO["Not one of mine"]
+    EXT -->|"abstains"| BUILTIN
+    BUILTIN --> SELF{"Is the judge the candidate"}
+    SELF -->|"yes"| YES
+    SELF -->|"no"| ONLINE{"Is the judge online"}
+    ONLINE -->|"online, not a player"| NO
+    ONLINE -->|"online and a player"| LIST["Read the FriendAttachment<br/>absent counts as an empty list"]
+    ONLINE -->|"offline"| LOOKUP["FriendCache#lookup<br/>a record answers the query<br/>never seen means DEFAULT"]
+    LIST -->|"on the list"| YES
+    LIST -->|"not on the list"| NO
+    LOOKUP -->|"a friend in the mirror"| YES
+    LOOKUP -->|"not a friend in the mirror"| NO
+    LOOKUP -->|"never seen"| UNKNOWN["DEFAULT: cannot be identified"]
+    UNKNOWN --> D1["FriendService#isFriend:<br/>treated as not a friend"]
+    UNKNOWN --> D2["Formations: stand down<br/>unidentified means do not act"]
+```
+
 ## Using it from a datapack
 
 | Condition | Type | Meaning |

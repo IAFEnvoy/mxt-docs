@@ -57,6 +57,31 @@ flowchart TD
     CACHE --> SYNC["Sync a snapshot every 5 ticks"]
 ```
 
+The diagram below opens the same chain up sideways: on the left, where the state a query reads comes from; on the right, where the two concentrations end up.
+
+```mermaid
+flowchart LR
+    POS["Query position"] --> STOCK["Chunk stock<br/>consumable and regenerating"]
+    POS --> BLOCKCACHE["Block aura cache<br/>per-section aggregates"]
+    BLOCKCACHE --> SCAN["Scan the 7×7 section columns<br/>weighted by 1 / max(1, d²)"]
+    STOCK --> AVAIL["Availability: consumed share<br/>split between visitors"]
+    SCAN --> AVAIL
+    STOCK --> MERGE["Subtract this chunk's aggregate<br/>and add the weighted view back"]
+    SCAN --> MERGE
+    POS --> TEMPLATE["Resolve the static template"]
+    TEMPLATE --> ZONE["Pick a zone by biome<br/>or a dimension binding replaces it"]
+    ZONE --> AREA["Artificial area overrides<br/>rectangular and persistent"]
+    AREA --> FORM["Nearest formation aura zone overrides"]
+    MERGE --> RESULT["Assemble the AuraResult"]
+    FORM --> RESULT
+    RESULT --> ACTUAL["Actual concentration<br/>stock plus block contributions"]
+    RESULT --> ENV["Environment concentration<br/>template recomputed alone"]
+    ACTUAL --> SNAP["Server computes every 5 ticks<br/>and sends each player a snapshot"]
+    ENV --> SNAP
+    SNAP --> CLIENT["Client interpolates about 0.25 s"]
+    CLIENT --> RENDER["Fog, resource bars and HUD<br/>formula contexts"]
+```
+
 A few easy misreadings:
 
 - **Zone resolution replaces, it never adds.** A biome zone wins if one matches, otherwise a dimension binding; neither means the empty zone. An artificial area overrides both, and a formation aura zone overrides that — exactly one template survives.

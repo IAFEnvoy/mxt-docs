@@ -23,7 +23,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/ability/fireb
 | `costs` | `List<Cost>` | `[]` | Costs paid before the ability executes. An entry is a `Cost`: `mxt:resource` (the plain `{"id": ..., "amount": ...}` shorthand is read as this), `mxt:item`, or `mxt:js` for a script-defined cost. A cost that is not a `resource` cost means the ability can only be used by a player. |
 | `cast_time` | `NumberProvider` | `0` | Cast time. |
 | `cooldown` | `NumberProvider` | `0` | Cooldown. |
-| `icon` | [Icon Reference](../types/shared_data_types.md#icon-reference) | none | Optional hotbar icon for active abilities; it must define exactly one of `texture` (a 16x16 GUI texture) or `item`, because an icon with neither or both is rejected. |
+| `icon` | [Icon Reference](../types/shared_data_types.md#icon-reference) | none | Optional wheel icon for active abilities; it must define exactly one of `texture` (a 16x16 GUI texture) or `item`, because an icon with neither or both is rejected. |
 | `components` | `List<DataStorage>` | `[]` | State kinds the ability declares: `mxt:cooldown`, `mxt:charges`, `mxt:toggle`, `mxt:timer`, `mxt:resource` and `mxt:target_lock`. A kind's class is the slot it fills, the declared fields carry its parameters, and the values live in this ability's own holder inside `mxt:ability_holder`, addressed by the ability's id. See [Data Storage Types](/en/datapack/types/other/ability-and-curse#data-storage-type). |
 | `modifiers` | `List<AttributeEntry>` | `[]` | Passive vanilla attribute modifiers; an entry contains `attribute`, `id`, `amount` and `operation`, plus an optional `value` formula. |
 | `damage_condition` | `DamageCondition` | `mxt:always_true` | Restriction on damage triggers. |
@@ -48,7 +48,7 @@ The remaining types that own fields are:
 
 | Type | Exclusive Fields | Meaning |
 |------|------------------|---------|
-| `mxt:active` | `slot` (default `primary`, must not be blank) | A hotbar ability bound to the named slot. |
+| `mxt:active` | `slot` (default `primary`, must not be blank) | A castable ability. `slot` is **no longer read**: where an entry sits on the wheel is the player's own twelve-cell layout, so writing it neither errors nor does anything. |
 | `mxt:triggered` | `triggers` (default `[]`), `chance` (default `1`) | Runs its behaviour whenever one of its triggers fires, subject to `chance`. |
 | `mxt:modifier` | none | A passive ability: its `modifiers` apply for as long as the ability is granted, and its `condition` is re-evaluated every tick so the modifiers disappear while the condition fails. |
 | `mxt:aura` | `interval` (default `20`), `radius` (default `4`) | A periodic ability applied to the entities inside `radius` every `interval` ticks. |
@@ -84,7 +84,7 @@ A channelled ability that pays upkeep every 20 ticks:
 }
 ```
 
-A top-level ability that should be a channelled ability released from the ability hotbar must use `mxt:channelled` as a child ability of `mxt:composite`: `mxt:active` and `mxt:channelled` are mutually exclusive single `type`s, and only the child abilities of a composite ability become the active channel.
+A top-level ability that should be a channelled ability released from the wheel must use `mxt:channelled` as a child ability of `mxt:composite`: `mxt:active` and `mxt:channelled` are mutually exclusive single `type`s, and only the child abilities of a composite ability become the active channel.
 
 ```json
 {
@@ -94,8 +94,36 @@ A top-level ability that should be a channelled ability released from the abilit
 ```
 
 ::: info Server-authoritative
-Numeric fields of abilities uniformly use `NumberProvider`. An ability must pass its condition and all resource costs before its behaviour is executed. Ability behaviour is handled on the server; the client hotbar only sends use and cancel requests.
+Numeric fields of abilities uniformly use `NumberProvider`. An ability must pass its condition and all resource costs before its behaviour is executed. Ability behaviour is handled on the server; the client wheel only sends which kind and which id was chosen (`WheelActionC2SPayload(kind, id)`), and the server decides the grant, the conditions, the costs and the cooldown.
 
 Abilities can read the entity variables plus the ability and trigger variables (`element_modifier`, `damage`, `target_health`, …); see [Formula Variables](../types/formula_variables.md).
 :::
+
+Expanding that rule into a timeline, one cast runs in this order.
+
+```mermaid
+sequenceDiagram
+    participant C as Client wheel
+    participant S as Server
+    participant H as mxt:ability_holder
+    participant R as Ability resource
+
+    C->>S: send a use request
+    S->>H: read this ability's cooldown state
+    H-->>S: the write tick is where that cooldown started
+    S->>S: evaluate condition and the element affinity gate
+    S->>R: deduct resources or items per costs
+    alt cooldown, condition, gate or costs fail
+        S-->>C: refused, no behaviour runs
+    else all pass
+        S->>S: run entity_action and the target behaviour
+        S->>H: write the cooldown state, which starts now
+        S-->>C: the cast result
+    end
+    opt the ability is mxt:channelled
+        S->>R: deduct upkeep_costs every tick_interval
+        S->>S: run the behaviour once after the deduction succeeds
+        S-->>C: the channel ends on release or upkeep failure
+    end
+```
 

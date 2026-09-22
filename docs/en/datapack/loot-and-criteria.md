@@ -88,7 +88,7 @@ A loot function uses the vanilla `"function"` dispatch key: `{"function": "mxt:g
 | Function | Effect |
 |----------|--------|
 | `mxt:grant_ability` | Grants a persistent ability source to an entity and refreshes its trigger subscriptions |
-| `mxt:set_artifact_owner` | Assigns the dropped artifact to an entity, then runs the archetype's `refine_action` |
+| `mxt:set_artifact_owner` | Assigns the dropped artifact to an entity, then runs the artifact's `claim_action`, which carries what claiming costs as well (it does **not** consult `claim_condition`: that condition only guards the long press, while a loot table names its owner by its own judgement. Both the price and the effect run on this path, and **without** the condition check the long press performs — the `claim_action` you wrote, or its default charge, lands on the entity named as owner) |
 | `mxt:apply_curse` | Applies a curse to an entity, with `loot` as the application source |
 | `mxt:js` | Replaces the generated stack with whatever a server script returns |
 
@@ -114,7 +114,9 @@ A loot function uses the vanilla `"function"` dispatch key: `{"function": "mxt:g
 |-------|------|---------|-------------|
 | `entity` | `EntityTarget` | `this` | The entity that becomes the artifact's owner |
 
-If the stack already belongs to another owner, nothing happens: the drop is left untouched and the refine action is not run.
+If the stack already belongs to another owner, nothing happens: the drop is left untouched and `claim_action` does not run.
+
+When the ownership is written, `claim_action` runs once — the same action the long press runs, price included, since what claiming costs is that action's own default. Both paths go through `ArtifactService.refine`. **This path does not consult `claim_condition`, though**: that condition is the long press's own gate, and the loot table has already named its owner by its own judgement.
 
 ```json
 {

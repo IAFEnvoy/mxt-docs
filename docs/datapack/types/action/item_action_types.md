@@ -74,7 +74,8 @@ description: 模组注册的全部内置物品行为类型，以及每种类型�
 |------|--------|-------------|
 | `mxt:damage_item` | `amount` | 给该物品堆增加耐久损伤，并夹取到其最大损伤值。 |
 | `mxt:consume_item` | `count` | 按给定数量缩减该物品堆。 |
-| `mxt:charge_artifact` | `amount`、`capacity` | 给一件法器物品堆增加灵力，以其 `item_archetype` 声明的容量为衡量基准；声明的 `capacity` 只是物品堆的原型缺失、不再能解析或未声明正的有限值时的回退。 |
+| `mxt:charge_artifact` | `aura`、`amount`、`capacity?` | 给一件法器物品堆的**某一种灵气**增加存量；`aura`（具体灵气）与 `amount` 都必填。上限取该物品堆匹配到的 `artifact` 为这种灵气声明的 `spirit_capacity`；`capacity`（默认 `0`）只是**回退**：物品堆没有任何定义认领、或定义没有声明这种灵气时，用它当上限。 |
+| `mxt:consume_health` | `amount` | 对持有者造成一次原版**秘法伤害**（`damageSources().magic()`）——「以血为代价」的写法。抗性提升与保护附魔照常减免，创造模式这类打不掉的持有者一点血都不掉。**它不预检也不拒绝**：付不付得起由声明它的那张表决定（法器的认主代价就写在 `claim_action` 里，而 `claim_action` **不写时的默认值**正是这条行为、`amount` 为 `4`，所以省略字段的法器认主会默认扣 4 点血）。 |
 | `mxt:cooldown` | `ticks` | 让该物品堆在持有者身上进入原版物品冷却，持续给定的 tick 数。 |
 | `mxt:remove_enchantment` | `enchantment?`、`level?`、`reset_repair_cost?` | 移除或降低该物品堆上的附魔，并可选择重置其修复成本。 |
 | `mxt:add_enchantment` | `enchantments`、`override?` | 给该物品堆添加或升级附魔。 |

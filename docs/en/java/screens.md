@@ -5,7 +5,77 @@ description: "Where the mod's client screens live, and how the item picker ItemP
 
 # Client Screens
 
-The mod's client screens all live under `com.iafenvoy.mxt.screen`: container **menus** in `screen.menu`, their **screens** in `screen.gui`, purely client-side information screens in `screen.information`, the item picker in `screen.picker`, and the HUD overlays (hotbar, resource bars) in `screen.overlay.hotbar` / `screen.overlay.resourcebar`. A new screen should reuse the existing `Screen` base classes and vanilla components first rather than writing its own scrolling and text input.
+The mod's client screens all live under `com.iafenvoy.mxt.screen`: container **menus** in `screen.menu`, their **screens** in `screen.gui`, purely client-side information screens in `screen.information`, the item picker in `screen.picker`, directional selection (the twelve-sector wheel) in `screen.wheel`, and the HUD elements in `screen.hud` (the framework), `screen.resourcebar` (resource bars) and `screen.wheel` (the wheel grid). A new screen should reuse the existing `Screen` base classes and vanilla components first rather than writing its own scrolling and text input.
+
+## The Draggable HUD Framework `screen.hud`
+
+A HUD element that a module draws itself becomes movable and persistent by plugging into this framework. The framework does four things: it **keeps a register of elements**, **draws them every frame**, **gives the editor hit testing and placeholders**, and **writes positions into the client config**.
+
+**An element neither computes screen coordinates nor decides where it is drawn.** The sub-area (the two resource-bar columns, say) only *supplies objects*: it describes what it currently has to show as a list of `RenderBlock`s (a size plus a way to draw each one), and the framework's single renderer `HudRenderer` stacks them inside the element's rectangle - the vertical position has exactly one implementation, so a container's size and its contents can never disagree; ask for a gap with `RenderBlock.spacer` rather than adding it to a block's height. An element that has to draw itself as one piece takes the other door: `renderBlocks()` returns an empty list and the framework calls `render()` instead.
+
+```java
+public final class MyBar extends AbstractHudEntry {
+    public MyBar() {
+        // The layout key is both the storage key in the config and the duplicate-registration check:
+        // one per element, and never renamed across versions.
+        super("my_bar", WIDTH, HEIGHT);
+    }
+
+    @Override public String displayName() { return Component.translatable("hud.mxt.my_bar").getString(); }
+    @Override public int layoutWidth() { return WIDTH; }
+    @Override public int layoutHeight() { return HEIGHT; }
+    @Override public int defaultX() { return 4; }
+    @Override public int defaultY() { return 4; }
+
+    // Description only: a backdrop and a value. Where they land is the framework's business.
+    @Override
+    public List<RenderBlock> renderBlocks() {
+        return List.of(
+                RenderBlock.fill(WIDTH, 6, 0xFF10131D),
+                RenderBlock.label(Component.literal("42 / 100"), 0xFFFFFFFF));
+    }
+}
+
+// Register once from client setup (FMLClientSetupEvent); the instance comes back for keeping a reference.
+MyBar bar = HudManager.register(new MyBar());
+```
+
+Worth knowing:
+
+- **A position is stored as a ratio of the window, not as pixels**, with the origin at the **top-left corner** of the window. Each entry under `hud.layout_v2` in `config/mxt/mxt-hud.json` is `x,y,visible` with `x`/`y` in `0..1`, meaning the top-left corner of the element's rectangle, so a layout does not drift when the resolution or the GUI scale changes. The pixel value lives in memory only and is clamped into the window on every read, so an element can never be dragged out of sight. The `_v2` in the key is left over from a change in what a stored position means: the old key is simply no longer read and those layouts fall back to their defaults.
+- **The HUD layout is a config file of its own** (`config/mxt/mxt-hud.json`), not part of the client settings; the rest of the config lives under `config/mxt/` too (`mxt-client.json`, `mxt-server.json`).
+- **The anchor (`HudAnchor`)** says which point of the rectangle `defaultX()` / `defaultY()` describe, and which point stays still when the element resizes. The default is the top-left corner; something that grows upward (a resource-bar column) uses `CENTER_BOTTOM`, so its bottom edge stays put as it gets taller.
+- **A change is saved immediately.** Dragging, arrow-key nudging and toggling visibility all write the config at once. Nothing is flushed when a screen closes, so a crash cannot lose a layout - and equally, editing the JSON by hand needs a client restart, because an element reads its position once, when it is constructed.
+- **A position has exactly one source**: if the config holds this layout key, that ratio is used (and re-derived only when the window changes size); if it does not, the element's own default position is used, re-read every frame so it follows the window. `resetToDefault()` **deletes the key from the config** - a reset that only lasted until the next launch would read as "the layout was not saved". (An earlier version kept a second boolean meaning "the position in use is the stored one"; it started out `false` and only a drag ever set it, so the value in the file was never applied and every restart fell back to the default. One fact, one field.)
+- **Only elements that answer `visible() && moveable()`** count as movable. An element that computes its own position and should not be dragged (a centred hotbar, say) overrides `moveable() { return false; }` and is still drawn by the framework; if such an element also sizes itself from world state, it must override `refreshPlacement()` and call the base `placeAtDefault()` so the default position is actually applied - **computing a size without placing anything leaves the anchor at `(0,0)`** and draws the element in the top-left corner of the window.
+- **The element owns its size**: one whose width follows its content calls `setSize(w, h)` when that changes. An element with nothing to draw still needs a non-zero size, or the player cannot see it in the editor and therefore cannot place it.
+- **Register from client setup**, not from the first rendered frame: the framework's GUI layer only draws inside a world, so an editor opened from the main menu would otherwise show an empty register.
+- **The editor** is opened by `HudManager.openEditor()` (the `key.mxt.hud_layout` keybind, right `Shift` by default, or the client command `/hud open`). Drag with the left button, nudge with the arrow keys by one pixel (`Shift`: ten), `Escape` drops the selection, and clicking empty space clears it. **There is no scaling yet**: this port only moves elements, so KronHUD's corner-drag resizing and snapping guides are not part of it.
+- Elements **keep drawing for real** while the editor is open; the editor only adds a translucent rectangle and a name label, so what is being dragged is the actual element.
+- The client command `/hud` prints each element's layout key, position, size, block count and visible/movable flags. "Nothing is registered" and "registered but it has nothing to draw this frame" look identical on screen, and this is the only thing that tells them apart.
+
+**Five elements are registered today**: four resource bars - the two movables (`resource_bars.left` / `resource_bars.right`) and two fixed rows (`resource_bars.target` / `resource_bars.boss`) - plus the wheel's grid (`wheel.selection`, `screen/wheel/WheelSelectionEntry`, which returns no blocks and draws its own **four-column grid, one row per three cells of a page**, growing downward: 94 wide, as tall as its contents, cell numbers in reading order, the cell the chosen number stands for drawn with the gold selected frame. It is the first example of the "draws itself" branch, and also the first whose **size follows its contents** (`layoutWidth` / `layoutHeight` are computed per frame and `refreshPlacement` reports the change with `setSize`, so a block that grew past the window is pulled back in); its default place is against the left edge of the window, halfway down; it draws **the whole wheel** - every cell of every page - and writes no label of its own). The resource bars are a good template — `ResourceBarOverlay.column(anchor)` / `row(target, layout)` answer only "which bars, in what order", and an entry turns them into blocks with `ResourceBarEntry.blocksWithGaps(...)`, which also inserts a `spacer` between bars. **No position field exists on the data-pack side**: `anchor` in `resource.bars` only chooses which column a bar belongs to, and where those columns sit is the player's own setting in the client config; the two fixed rows are pinned to the entity under the crosshair, computed every frame and never stored. The resource bars' own `mxt:resource_bars` GUI layer has been deleted - everything goes through the framework's layer. The framework's own trade-offs are recorded in the repo's `research/26_可拖动HUD框架设计.md`, and the changes to the wheel grid in `research/27_轮盘选择系统设计.md` §8 and `research/31_多轮盘与轮盘来源设计.md` §10.4.
+
+## The Wheel Menu `screen.wheel`
+
+Hold the bound key (`key.mxt.wheel`, `R` by default) and a **twelve-sector** wheel appears: the **direction** the pointer is in picks the sector, the pointed-at sector turns gold and grows a little, and **that sector's name and tooltip are drawn in the middle of the wheel**. It is the **only** way an ability or a spirit power is triggered - the two hotbars and their separate editors are gone (`research/28_技能与灵气归一化设计.md`).
+
+**The wheel is a main wheel plus pages read from what is carried, strung together by one continuous cell numbering** (new on 2026-09-22, redone to the player's own wording - see `research/31_多轮盘与轮盘来源设计.md` §10): the main wheel is the twelve cells the player arranges (numbers `0..11`), and the pages behind it (main hand / off hand / artifacts) are generated from the gear and **never stored**, numbered from `12` on. **A page is twelve cells**, so a source takes `ceil(entries / 12)` pages and none at all while it holds nothing - "one is not enough, open another". Turning pages is two keys (`key.mxt.wheel_previous` / `key.mxt.wheel_next`, numpad `4` / `6` by default, wrapping at both ends), and `R` **always opens the main wheel (the first page)**. **A page is a view and the number is the choice**: the ring draws the current page, the HUD grid draws the whole wheel, the twelve slot keys act on the current page, and the use key while the wheel is down acts on whatever cell the number stands for now (a number past the pages that exist falls back to the last cell holding anything, and is never rewritten).
+
+The framework (geometry, ring rendering, open/close state machine, selection semantics) is `screen.wheel`; the contents (how an ability or an aura becomes an entry, what each source contributes) are `screen.wheel/content`, and the editor is `WheelConfigurationScreen`. The contract, the stored layout, the numbering and paging, and the trigger dispatch are on the [Wheel Entries](./wheel.md) page; what belongs here is the framework's own rules:
+
+- **The framework does not decide what is on the wheel.** `WheelMenuProvider` (its only implementation is `WheelContent`, registered from client setup) answers "what does this source contribute right now" (given the player and a `WheelSource`; the answer may be longer than a page, and `WheelMenuContent` pages it), and the entry contract is `WheelMenuEntry` (`kind` / `id` / `title` / `icon` / `tooltip` / `cooldown` / `usable` / `onSelected`). This replaced the framework's first design, a static registry of twelve slots: the contents are the player's own layout now, and a second way in would only compete with it for cells.
+- **The layout lives on the server**: the `wheel_layout` player attachment holds one `WheelLayout` of twelve `WheelSlot`s (a kind plus an id, with an `EMPTY` sentinel for an empty cell, **the main wheel only**) plus an `armed` field holding the chosen **cell number** (`Optional<Integer>`). Closing the editor sends a `WheelLayoutC2SPayload`, and `WheelService.sanitize` forces the size to twelve and checks each id against the registry its kind names before storing it. The number travels on `WheelSelectionC2SPayload`, restored at login and sent when it changes by `screen/wheel/content/WheelSelectionSync` - see [Wheel Entries](./wheel.md#keeping-the-selection) for the details.
+- **One fact, one place: the pointer-direction-to-sector mapping lives only in `WheelGeometry`** (`sectorStart` / `sectorCentre` / `sectorAt` are derived from the same constants, so `sectorAt(sectorCentre(k)) == k` always holds). Drawing, hit testing and icon placement all ask it. MineMenu recomputed that mapping in three places, and one of the three used a different angle convention from the other two.
+- **Direction decides, distance never does.** A pointer still inside the inner hole counts, which is what lets the middle of the wheel name the pointed-at sector the whole time.
+- **The sector count is `WheelLayout.SLOTS` (twelve) and the geometry takes it from there**, so there is no way to end up with twelve sectors of geometry and ten slots of content.
+- **Empty cells are drawn as faint placeholders** that never react to the pointer and never put text in the middle; with **the whole wheel** empty the key says "Nothing is on the wheel yet" instead of opening.
+- **Choosing and using are two keys**: `key.mxt.wheel` (`R` by default) only **chooses** - hold to open, the pointer picks the cell, and letting go (`mode = HOLD`) or pressing again (`TOGGLE`) **only closes, triggering nothing**; `key.mxt.wheel_use` (`V` by default) does the **using** - while the wheel is up it spends the pointed cell and leaves the wheel standing, and while it is down it spends **the cell the number stands for now** (client-side `WheelSelectionState`, which holds `page` plus `number`; `LoggingIn` clears it and the `armed` number the server stored is then put back, see [Keeping the selection](./wheel.md#keeping-the-selection)). A left click is the same. `WheelSelection.Method` is `KEY` / `CLICK` and only says whether the request came from the keyboard or the mouse. The client settings are down to `mode` (hold / toggle): `release_to_select` was deleted with this revision.
+- **Using does not close the wheel**, so one hold can spend several cells; what takes the wheel down is the wheel key alone.
+- **The keys cannot be read through `KeyMapping#isDown()`**: `Minecraft#setScreen` calls `KeyMapping.releaseAll()` as soon as a screen opens, so the release that closes the wheel would be seen on the very frame it appeared. There is a second reason, about the use key: releasing the wheel key while still holding `V` makes `MouseHandler#grabMouse()` call `KeyMapping.setAll()`, which sets `V` down again from the physical key and would report one press twice. The controller therefore reads the wheel key, the use key and both switch keys raw through `InputConstants`/GLFW, with one edge detector per key, and the `KeyMapping`s exist so the keys show up in the controls screen. The cost is one client tick of resolution.
+- **It is a `Screen`, not a GUI layer**: opening a screen is what makes vanilla release the mouse (so the pointer can pick a direction, and the angle is scale invariant), and closing it is what grabs the cursor back. It is not a pause screen, and it draws no background - the default background blurs every stratum extracted before it, which is the whole HUD.
+- **Colours, radii and the opening animation are still constants** in `WheelMenuScreen` / `WheelGeometry`; the highlight reuses the HUD editor's gold and the ring shrinks to fit a small window.
+- **Holding the wheel stops you walking**: vanilla calls `KeyMapping.releaseAll()` for any `Screen`, so the movement keys are released as well (letting go calls `setScreen(null)` → `grabMouse()`, which syncs the physical key state back, so nothing has to be pressed again). Opening a wheel while running would mean a GUI layer that handles the pointer itself.
 
 ## The Item Picker `ItemPickerScreen`
 
@@ -75,7 +145,7 @@ A list rather than a single name, because a row can have several things it is ca
 
 How a translation key is spelled is decided in one place, `com.iafenvoy.mxt.util.DefinitionText`: the category defaults to the registry's own path, and the few that do not (`mxt:item_quality` has always been translated as `quality`) are declared once in its internal `CATEGORIES`. With a `Holder` / `ResourceKey` already in hand, call `DefinitionText.name(holder)` directly; only when all you have is a bare `Identifier` do you pass the category in as an argument (`DefinitionText.name(id, "resource")`).
 
-A category is the registry itself, and `/picker <category id>` can list just one (`/picker mxt:aura`, `/picker mxt:currency`, `/picker mxt:item_binding`); leaving it out offers every registered category.
+A category is the registry itself, and `/picker <category id>` can list just one (`/picker mxt:aura`, `/picker mxt:artifact`, `/picker mxt:currency`, `/picker mxt:item_binding`); leaving it out offers every registered category.
 
 ## Screen details
 

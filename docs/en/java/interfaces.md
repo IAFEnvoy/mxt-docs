@@ -1,11 +1,11 @@
 ---
 title: Interfaces
-description: "The public interfaces a Java addon implements: AuraAccess, ItemAuraAccess, UseItemAuraAccess, TooltipAppender, Cost and HotbarEntry."
+description: "The public interfaces a Java addon implements: AuraAccess, ItemAuraAccess, UseItemAuraAccess, TooltipAppender, Cost and WheelMenuEntry."
 ---
 
 # Interfaces
 
-These are the interfaces a Java addon implements or consumes directly. They are the seams between the framework and your content: aura exchange, item charge, tooltips, costs and the client hotbar.
+These are the interfaces a Java addon implements or consumes directly. They are the seams between the framework and your content: aura exchange, item charge, tooltips, costs and the client wheel.
 
 ## Overview
 
@@ -16,7 +16,7 @@ These are the interfaces a Java addon implements or consumes directly. They are 
 | `UseItemAuraAccess` | The interface that lets an item be poured into by holding it down; extends `ItemAuraAccess`. |
 | `TooltipAppender` | The NeoForge tooltip extension point each item module registers its own appender through. |
 | `Cost` | The abstraction for what an ability, a formation or another action consumes. |
-| `HotbarEntry` | A pure client-side entry rendered by the shared hotbar. |
+| `WheelMenuEntry` | A pure client-side entry rendered by the shared wheel. |
 
 ## `AuraAccess`
 
@@ -47,7 +47,7 @@ Storage is asked **from anywhere**: a display stand reading and writing a talism
 
 ## `UseItemAuraAccess`
 
-The interface that lets an item be **poured into by holding right-click**, and it extends `ItemAuraAccess`: `HoldBinding`/`HoldService` own the gesture and the pose, and `SpiritChargeService` takes aura out of the holder's own pool every tick and writes it through `insert`. Implementing it **does not** mean describing your own shape — the spirit stone implements it and leaves `pour` empty, so it falls back to the shared reading of the `item_aura` definition. What it expresses is "this item can be held down and poured into", not "this item is special". A store that does not implement it (a generic item that only holds things, for instance) is never armed into the gesture.
+The interface that lets an item be **poured into by holding right-click**, and it extends `ItemAuraAccess`: `HoldBinding`/`HoldService` own the gesture and the pose, and `SpiritChargeService` takes aura out of the holder's own pool every tick and writes it through `insert`. Implementing it **does not** mean describing your own shape — the spirit stone implements it and leaves `pour` empty, so it falls back to the shared reading of the `item_aura` definition. What it expresses is "this item can be held down and poured into", not "this item is special". A store that does not implement it (a generic item that only holds things, for instance) is never armed into the gesture. `HoldBinding` also offers a pair of **entity-aware** default overloads (`claims(LivingEntity, Provider, ItemStack)` and `holdTicks(LivingEntity, Provider, ItemStack)`) — a declaration that does not care who is holding the item never implements them; the [artifact](/en/datapack/json/artifact) is what uses them to leave a click alone when somebody else owns it.
 
 It is split into two interfaces because "storage" and "being poured into" are not the same thing: storage can be asked anywhere, while being poured into happens only when somebody performs the gesture on the stack in their own hand. The three default methods correspond to the three moments of the gesture:
 
@@ -56,6 +56,56 @@ It is split into two interfaces because "storage" and "being poured into" are no
 - **`onCharged(SpiritSource source, ItemStack stack)`** (after one **real** move) — "I was filled", and the item itself decides whether that means full and whether to act. The default does nothing.
 
 **The writer is responsible for reporting**: whoever writes aura into a store (a held pour, an `AuraAccess` block entity, and so on) calls `onCharged(SpiritSource, ItemStack)` **after the real write** (`simulate` does not count), and the item decides for itself "is this full" and what follows from it (a talisman fires here and consumes one carrier item). It is the writer that reports rather than the item judging inside its own `add` because only the writer knows **where this thing is and who paid**: a talisman on a display stand was filled by somebody standing elsewhere (or by a spirit burst). `SpiritSource(level, position, actor, consumedByHand)` carries the position and the actor together — the actor pays, is recorded and answers for abilities; the position is the place of this activation, entering formulas as `block_x`/`block_y`/`block_z` and handed to position-type behaviours as the **origin** (see [The Reverse Direction: Pouring](../datapack/json/item_aura.md#the-reverse-direction-pouring)). And precisely because reporting is opt-in: a writer that meets an item implementing storage only has nothing to report in the first place.
+
+The family fits together like this: storage is "can I be stored into", while being poured into and being held down are gestures an item opts into on top of it, and an implementation only picks the layer it needs:
+
+```mermaid
+classDiagram
+    direction LR
+    class ItemMatcher {
+        <<interface>>
+        +entries() List~Entry~
+    }
+    class ItemAuraAccess {
+        <<interface>>
+        +getCapacity(...) int
+        +insert(...) int
+        +extract(...) int
+    }
+    class UseItemAuraAccess {
+        <<interface>>
+        +pour(registries, stack) SpiritPour
+        +canPourInto(holder, stack) boolean
+        +onCharged(source, stack) void
+    }
+    class HoldBinding {
+        <<interface>>
+        +holdTicks() int
+        +holdTicks(holder, registries, stack) int
+        +claims(registries, stack) boolean
+        +claims(holder, registries, stack) boolean
+        +holdAnimation() ItemUseAnimation
+        +holdSound() Holder~SoundEvent~
+    }
+    class SpiritPour
+    class SpiritSource
+    class HoldService
+    class SpiritStoneItem
+    class TalismanItem
+    class TechniqueBinding
+    class SpiritChargeHold
+    class ArtifactHold
+    UseItemAuraAccess --|> ItemAuraAccess
+    HoldBinding --|> ItemMatcher
+    SpiritStoneItem ..|> UseItemAuraAccess
+    TalismanItem ..|> UseItemAuraAccess
+    TechniqueBinding ..|> HoldBinding
+    SpiritChargeHold ..|> HoldBinding
+    ArtifactHold ..|> HoldBinding
+    UseItemAuraAccess ..> SpiritPour : returns
+    UseItemAuraAccess ..> SpiritSource : receives
+    HoldService ..> HoldBinding : drives the gesture
+```
 
 ## `TooltipAppender`
 
@@ -76,21 +126,20 @@ The abstraction for what an ability, a formation or another action consumes. It 
 
 Register a new cost type through `MxtRegistries.COST_TYPE`, as shown in [Registries and Data Tables](./registries.md).
 
-## `HotbarEntry`
+## `WheelMenuEntry`
 
-The pure client-side entry interface. It provides a name, an optional icon, an accent colour and the press, held-tick and release callbacks used by the shared hotbar, plus the `cooldown(Player)` and `canPress(Player)` hooks; `render(...)` can be overridden in full.
+The pure client-side wheel entry interface.
 
 | Member | Description |
 |--------|-------------|
-| `Component name()` | The entry's display name. |
-| `Identifier id()` | A stable option ID used by configurable hotbar layouts; may be `null`. |
-| `Optional<IconReference> icon()` | An optional icon, either an item or a texture. |
-| `int accentColor()` | The accent colour drawn on the entry. |
-| `void onPress(Player player)` | Called when the entry is pressed. |
-| `void onPressTick(Player player)` | Called every client tick while the entry is held. |
-| `void onRelease(Player player)` | Called when the entry is released. |
-| `float cooldown(Player player)` | The remaining cooldown fraction, matching vanilla item cooldown rendering: `0` means ready and `1` means the cooldown has just started. |
-| `boolean canPress(Player player)` | Prevents an entry that is still on cooldown from becoming visually pressed or sending a use request. |
-| `void render(...)` | Draws the entry; override it to change the visuals without changing the shared overlay. |
+| `WheelEntryKind kind()` | `ABILITY` or `AURA`: the tooltip's first line, the editor pool it appears in, and which side of the server dispatch triggers it. |
+| `Identifier id()` | The definition's id. |
+| `Component title()` | The name drawn in the middle of the wheel. |
+| `Optional<IconReference> icon()` | An optional icon, either an item or a texture, drawn inside the sector. |
+| `int accentColor()` | The strip along the bottom of the cell in the editor. |
+| `List<Component> tooltip(Player player)` | Kind, name and the numbers the definition carries, rebuilt on demand. |
+| `long cooldownTicks(Player player)` | The ticks of cooldown left, `0` meaning ready - read from the tick the cooldown ends on, which is what the synced attachment stores. |
+| `boolean usable(Player player)` | Whether using the entry would do anything; it dims the sector and notes "On cooldown 4.3s" in the middle, but never stops the trigger being sent. |
+| `void onSelected(WheelSelection selection)` | Called once the entry is used, with the wheel still open; the `WheelSelection` carries the cell's number and the source it was read from. |
 
-See [Hotbar Entries](./hotbar.md) for a complete implementation example.
+Where an entry sits is not its business: `WheelMenuProvider` (implemented by `WheelContent`) answers what one source contributes - it takes the player and a `WheelSource` (main wheel / main hand / off hand / artifacts), and its answer **may be longer than one page**, which `WheelMenuContent` turns into pages of twelve cells. The two hotbar entry interfaces were deleted with the hotbars - see [Wheel Entries](./wheel.md) for a complete implementation example.

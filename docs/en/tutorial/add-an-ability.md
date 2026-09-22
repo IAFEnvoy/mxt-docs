@@ -1,13 +1,13 @@
 ---
 title: Add an Ability
-description: Define an active and a triggered ability, give them costs, conditions and targets, grant them from realms or items, and cast them from the ability hotbar.
+description: Define an active and a triggered ability, give them costs, conditions and targets, grant them from realms or items, and put them on the wheel.
 ---
 
 # Add an Ability
 
 An `ability` is the unit of gameplay a player spends aura on. It carries its own costs, cooldown, condition, target selection and behaviour, which means a single JSON file can describe a bolt, a buff, a passive bonus or a reaction to being hit.
 
-This tutorial adds two abilities to the example pack: an active bolt cast from the hotbar, and a triggered recovery that answers damage.
+This tutorial adds two abilities to the example pack: an active bolt cast from the wheel, and a triggered recovery that answers damage.
 
 ## What You Are Building
 
@@ -42,12 +42,12 @@ This tutorial adds two abilities to the example pack: an active bolt cast from t
 
 | Field | What it does |
 | --- | --- |
-| `ability.type` | Selects the lifecycle from the built-in `ability_type` registry: `empty`, `active`, `triggered`, `modifier`, `aura`, `channelled`, `composite`, `word`. `mxt:active` is the type that appears on the ability hotbar. |
-| `ability.slot` | The hotbar slot group, `primary` by default, and it must not be blank. |
+| `ability.type` | Selects the lifecycle from the built-in `ability_type` registry: `empty`, `active`, `triggered`, `modifier`, `aura`, `channelled`, `composite`, `word`. `mxt:active` is the type that can be put on the wheel. |
+| `ability.slot` | The hotbar slot group, `primary` by default, and it must not be blank. **It is no longer read** - where an entry sits on the wheel is the player's own twelve-cell layout - so writing it neither errors nor does anything. |
 | `icon` | Optional. A bare string is a 16x16 GUI texture; an object is an item stack template (`{"id": ...}`, optionally `count` and `components`). Without it the entry is drawn with its name. |
 | `costs` | A list of `Cost` objects, paid before the behaviour runs. `mxt:resource` consumes a resource, `mxt:item` consumes items, and the `{"id": ..., "amount": ...}` shorthand means `mxt:resource`. |
-| `cast_time` | Cast duration in ticks; the hotbar draws a casting progress bar while it runs. |
-| `cooldown` | Cooldown in ticks, reported back to the client so the hotbar can grey the slot. |
+| `cast_time` | Cast duration in ticks. |
+| `cooldown` | Cooldown in ticks, reported back to the client so the wheel can draw that sector dark and say "On cooldown 4.3s" - the seconds left, always one decimal. |
 | `condition` | An entity condition that must pass before the ability can be used. Its only job here is to keep Mortals from throwing bolts. For a passive `mxt:modifier` or `mxt:aura` ability the same field keeps working after the cast: it is re-checked every tick and the passive effect is withdrawn while it fails. |
 | `target_selector` | Which entities the bi-entity behaviour applies to. `mxt:self` (the default) selects only the caster; `mxt:area` selects everything within `radius` (capped at 128), and `include_actor` decides whether the caster is part of that set. |
 | `bi_entity_action` | Run for each selected target, and a failing one never stops the rest. `mxt:target_action` forwards an entity action to the target — here 6 damage plus half the caster's experience level. |
@@ -131,13 +131,13 @@ Keep `source` stable and meaningful — the definition ID that granted the abili
 
 :::
 
-## Step 4 — Using the Ability Hotbar
+## Step 4 — Putting the Ability on the Wheel
 
-Active abilities appear on the shared client hotbar:
+Active abilities can be put on the twelve-sector wheel that abilities and spirit power share (a main wheel plus pages read from what you carry):
 
-1. `/mxt ability` opens the **Configure Hotbar** screen for the ability entries. A slot you deliberately leave empty stays empty, and a saved entry whose ability no longer exists is refilled from the current runtime list.
-2. Hold the ability keybind (`LAlt` by default, "Show Ability Hotbar") and press a number key `1`–`9` to cast the entry in that slot. Several keys can be held at once, and the client setting "Open Mode" switches between "Hold to Show" and "Press to Toggle".
-3. Everything is server-authoritative: the client only sends a use or cancel request, and the server decides costs, cooldowns, durations and effects. Cancelling a channelled ability works the same way.
+1. Type `/wheel` in chat (the client command, the same as the "Open Wheel Configuration" key, unbound by default) to open the **wheel editor**: six columns of spirit power on the left, six columns of abilities on the right, and one row of twelve shared cells underneath which are the **main wheel**'s twelve cells (`1` is straight up, counting clockwise). Left-click the bolt in the right pool to pick it up, then click a cell to put it there, and press `Escape` to save and close. A cell you deliberately leave empty stays empty, and a saved cell whose definition no longer exists shows a red `?` and is **never replaced by something else**.
+2. Hold "Wheel Menu" (`R` by default) and point at that cell - that is the **selection**; letting go of `R` only closes the wheel and casts nothing. Press "Use Wheel Selection" (`V` by default) to cast it, and the wheel stays open so you can move to another cell and press it again; with the wheel closed `V` spends **the cell the number you chose stands for right now** (a number past the pages that exist falls back to the last cell holding anything, and is never rewritten), and a left click is the same as `V`. The "Wheel Grid" on the left of the screen is a four-column view of the whole wheel, one row per three cells of a page, and the cell outlined in gold is what `V` would spend.
+3. Everything is server-authoritative: the client only sends which kind and which id was used, and the server decides the grant, the conditions, the costs, the cooldown, the duration and the effects.
 
 ## Step 5 — Verify
 
@@ -152,7 +152,7 @@ Abilities are a data pack registry, so load the world again rather than running 
 
 1. Before entering the chain, `/mxt ability cast example:qi_bolt` fails: the `condition` rejects it.
 2. Break through to Foundation Establishment and check `/mxt attachment status`. The bolt is now held, and `source` shows it came from the realm.
-3. Open the hotbar with `LAlt` and cast it. `10` qi is deducted, the cooldown starts, and nearby entities take damage. Compare the value shown by `/mxt resource example:qi` before and after.
+3. Cast it from the wheel (hold `R`, point at the sector you put it in, then press `V`). `10` qi is deducted, the cooldown starts, and nearby entities take damage. Compare the value shown by `/mxt resource example:qi` before and after.
 4. Set the pool too low with `/mxt resource example:qi set 5` and cast again: the cast is refused because the costs cannot be paid, and nothing is deducted.
 5. Take a hit with `qi_recovery` granted: the heal amount scales with the damage taken, `5` qi is spent, and the 100-tick cooldown prevents it from firing again immediately.
 
@@ -160,8 +160,8 @@ Abilities are a data pack registry, so load the world again rather than running 
 
 | Symptom | Cause |
 | --- | --- |
-| The ability never appears on the hotbar | Only `mxt:active` abilities are listed; a triggered, modifier or channelled ability has no hotbar entry of its own. |
-| A channelled ability cannot be released from the hotbar | `mxt:active` and `mxt:channelled` are mutually exclusive types. Wrap the channelled ability as the child of an `mxt:composite` ability and make the composite the top-level definition. |
+| The ability never appears in the wheel's pool | Only `mxt:active` abilities are listed; a triggered, modifier or channelled ability has no wheel entry of its own. |
+| A channelled ability cannot be released from the wheel | `mxt:active` and `mxt:channelled` are mutually exclusive types. Wrap the channelled ability as the child of an `mxt:composite` ability and make the composite the top-level definition. |
 | Costs are never paid | `ResourceCost` uses `resource`, but an ability's `costs` is a list of `Cost`. Write `{"type": "mxt:resource", "resource": ..., "amount": ...}` or the `{"id": ..., "amount": ...}` shorthand — not `{"resource": ...}` without a `type`. |
 | An ability formula is always `0` | It used a variable its context does not provide, such as `realm_rank` in an entity formula. The name is reported at evaluation time: a development environment logs the whole error, production logs one warning line per distinct message, and both continue with `0`. |
 | `mxt:word` does nothing | It is a terminal, code-whitelisted effect (`self_heal`, `purge_self_curses`) and requires an operator by default. It is not a way to run commands. |
