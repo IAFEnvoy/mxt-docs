@@ -7,6 +7,8 @@ description: "The public interfaces a Java addon implements: AuraAccess, ItemAur
 
 These are the interfaces a Java addon implements or consumes directly. They are the seams between the framework and your content: aura exchange, item charge, tooltips, costs and the client wheel.
 
+`AuraAccess`, `ItemAuraAccess`, `UseItemAuraAccess` and `WheelMenuEntry` moved into **`com.iafenvoy.mxt.api`** on 2026-09-22: that package holds nothing but interfaces and a package note, the implementations stay in their own modules, and the move changed the package name and the imports, nothing else. `TooltipAppender` is a NeoForge extension point, `Cost` lives in `data/cost`, and `ToggableArtifactAbility` stays in `data/artifact/ability` — it is not part of the public API, it is the shape the mod itself registers artifact skills with.
+
 ## Overview
 
 | Interface | Purpose |
@@ -132,7 +134,7 @@ The pure client-side wheel entry interface.
 
 | Member | Description |
 |--------|-------------|
-| `WheelEntryKind kind()` | `ABILITY` or `AURA`: the tooltip's first line, the editor pool it appears in, and which side of the server dispatch triggers it. |
+| `WheelEntryKind kind()` | `ABILITY`, `AURA` or `ARTIFACT`: the tooltip's first line, the editor pool it appears in, and which side of the server dispatch triggers it. |
 | `Identifier id()` | The definition's id. |
 | `Component title()` | The name drawn in the middle of the wheel. |
 | `Optional<IconReference> icon()` | An optional icon, either an item or a texture, drawn inside the sector. |
@@ -142,4 +144,4 @@ The pure client-side wheel entry interface.
 | `boolean usable(Player player)` | Whether using the entry would do anything; it dims the sector and notes "On cooldown 4.3s" in the middle, but never stops the trigger being sent. |
 | `void onSelected(WheelSelection selection)` | Called once the entry is used, with the wheel still open; the `WheelSelection` carries the cell's number and the source it was read from. |
 
-Where an entry sits is not its business: `WheelMenuProvider` (implemented by `WheelContent`) answers what one source contributes - it takes the player and a `WheelSource` (main wheel / main hand / off hand / artifacts), and its answer **may be longer than one page**, which `WheelMenuContent` turns into pages of twelve cells. The two hotbar entry interfaces were deleted with the hotbars - see [Wheel Entries](./wheel.md) for a complete implementation example.
+Where an entry sits is not its business: `WheelMenuProvider` (implemented by `WheelContent`) answers what one source contributes - it takes the player and a `WheelSource` (main wheel / main hand / off hand / artifacts), and its answer **may be longer than one page**, which `WheelMenuContent` turns into pages of twelve cells. An `ARTIFACT` entry is a **skill that needs a key** (`ToggableArtifactAbility` - a switch or a one-shot such as flight and storage), addressed by the **artifact's id plus the capability's key** (`ns:path/key`), so one artifact may offer several. The two hotbar entry interfaces were deleted with the hotbars - see [Wheel Entries](./wheel.md) for a complete implementation example.

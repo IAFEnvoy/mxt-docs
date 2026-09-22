@@ -4,6 +4,8 @@ title: 特殊公开接口
 
 # 特殊公开接口
 
+本页的实现型接口里，`AuraAccess`、`ItemAuraAccess`、`UseItemAuraAccess`、`WheelMenuEntry` 已于 2026-09-22 搬进 **`com.iafenvoy.mxt.api`**：该包只有接口与包注释，实现仍留在各自的模块包里，搬动只改包名与 import。`TooltipAppender` 是 NeoForge 的扩展点、`Cost` 在 `data/cost`；`ToggableArtifactAbility` 留在 `data/artifact/ability`——它不算对外 API（它是本体登记法器技能类型的形状）。
+
 ## `AuraAccess`
 
 展示架、容器等方块实体实现的**灵气存取**接口：按整单位交换某一种灵气（`insert`/`extract` 一次只处理一种，返回操作后**没能移动**的数量；`simulate=true` 只模拟，不修改状态），容量由 `getCapacity(entity)` 给出。
@@ -88,4 +90,4 @@ classDiagram
 
 ## `WheelMenuEntry`
 
-纯客户端轮盘条目接口：`kind()`（技能 / 灵气）、`id()`、`title()`（轮盘中间显示的名字）、可选 `icon()`、强调色、`tooltip(Player)`（类型 + 具体数值）、`cooldownTicks(Player)`（还剩几 tick，0 = 就绪）/ `usable(Player)` 两个可用性钩子，以及使用回调 `onSelected(WheelSelection)`（它带着这次使用发生在**哪一格的编号**上、以及那一格读自**哪个来源**）。一个来源贡献哪些条目由 `WheelMenuProvider`（唯一实现 `WheelContent`）给出——它的入参是玩家与该来源（`WheelSource`：主盘 / 主手物品 / 副手物品 / 法器），返回值**可以比一页长**（一页 12 格，多出来的由 `WheelMenuContent` 开新页），条目本身既不知道自己落在第几格，也不知道自己属于哪一页。原有的两个快捷栏条目接口 `HotbarEntry` 随快捷栏一起删除，见[轮盘条目](./wheel.md)。
+纯客户端轮盘条目接口：`kind()`（技能 / 灵气 / 法器技能）、`id()`、`title()`（轮盘中间显示的名字）、可选 `icon()`、强调色、`tooltip(Player)`（类型 + 具体数值）、`cooldownTicks(Player)`（还剩几 tick，0 = 就绪）/ `usable(Player)` 两个可用性钩子，以及使用回调 `onSelected(WheelSelection)`（它带着这次使用发生在**哪一格的编号**上、以及那一格读自**哪个来源**）。一个来源贡献哪些条目由 `WheelMenuProvider`（唯一实现 `WheelContent`）给出——它的入参是玩家与该来源（`WheelSource`：主盘 / 主手物品 / 副手物品 / 法器），返回值**可以比一页长**（一页 12 格，多出来的由 `WheelMenuContent` 开新页），条目本身既不知道自己落在第几格，也不知道自己属于哪一页。`ARTIFACT` 那种条目是一个**需要按键的法器技能**（`ToggableArtifactAbility`：可能是开关，也可能是一次性，如飞行与储物），身份用的是**法器 id + 能力 key**（`ns:path/key`，因此一件法器可以有好几个技能）。原有的两个快捷栏条目接口 `HotbarEntry` 随快捷栏一起删除，见[轮盘条目](./wheel.md)。

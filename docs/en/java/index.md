@@ -8,7 +8,7 @@ description: "How a Java addon extends MiXianTu: the public runtime services and
 Java extensions should reuse the existing data definitions, actions, conditions, costs and runtime services first. When adding gameplay, decide on the server-side settlement entry point first, and only then add the client display and the network payload.
 
 - [Public API](./api.md)
-- [Interfaces](./interfaces.md)
+- [Interfaces](./interfaces.md) (most of them in `com.iafenvoy.mxt.api`)
 - [Registries and Data Tables](./registries.md)
 - [Network Protocol and Server Authority](./network.md)
 - [Wheel Entries](./wheel.md)
