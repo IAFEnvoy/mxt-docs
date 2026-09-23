@@ -1,6 +1,7 @@
 ---
 title: Skill Stage (skill_stage)
 description: "Defines one level of a skill mastery chain: which skill it belongs to, the next level, and its damage multiplier."
+aside: false
 ---
 
 # Skill Stage (skill_stage)
@@ -19,6 +20,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/skill_stage/s
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `skill_stage.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `skill_stage.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `skill` | `Identifier` | **required** | The mastery chain this level belongs to. Every level of one chain writes the same `skill`; several techniques may share a single chain. |
 | `next_stage` | `Holder<skill_stage>` | none | The next level of the chain; the highest level omits it. |
 | `mastery` | `NumberProvider` | `0` | How much mastery reaching this level takes. A technique whose `mastery_resource` holds at least this much may advance here, once its own `condition` also holds. `0` means the level asks for no mastery. |

@@ -27,23 +27,53 @@ title: 共享数据类型
 | `ItemAction` | 对象或对象数组 | 对物品堆执行行为。 |
 | `EntityCondition` | 对象或对象数组 | 数组表示全部条件都必须满足。 |
 
-### `ResourceCost` 与 `AuraGain`
+### `Cost`
 
-需要**消耗**资源的字段统一是数组，每项为 `ResourceCost`：
+需要**消耗**的字段统一是同一个数组，每项为一种 `Cost`（这个类型以前叫 `ResourceCost`；**JSON 键名没有改**，变的是它现在也接受灵气、物品与脚本条目），共五种写法：
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `id` | `Holder<resource>` | 资源注册表条目。 |
-| `amount` | `NumberProvider` | 必须在运行时得到有限**正数**，否则整笔拒绝。 |
+| 写法 | 说明 |
+| --- | --- |
+| `{"id": "example:qi", "amount": 5}` | 简写，等价于 `mxt:resource`；定义 id 写在 `id` 里。 |
+| `{"type": "mxt:resource", "resource": "example:qi", "amount": "5 + level"}` | 消耗一个数值；数值定义 id 写在 `resource` 里。 |
+| `{"type": "mxt:aura", "aura": "example:fire_qi", "amount": 2}` | 消耗一门灵气；灵气 id 写在 `aura` 里。扣什么由通道决定：付款者支付时扣**这门灵气所度量的那个数值**，从共享灵气池或方块存量支付时扣这门灵气本身。 |
+| `{"type": "mxt:item", "items": ["minecraft:emerald", "#c:gems"], "amount": 2}` | 消耗物品；`items` 是物品/标签匹配列表（物品 id、`#标签`，或带 `type` 的匹配条目，见 [`ItemMatcher`](#itemmatcher)）。 |
+| `{"type": "mxt:js", "id": "my_cost", "params": {}}` | 交给服务端脚本；`id` 是 `MxtCosts.register` 注册的回调 id，`params` 可省略。 |
+
+`amount` 一律是 `NumberProvider`，使用时必须求值为**有限正数**，否则这一项付不出。`mxt:resource` 与 `mxt:aura` 问的是两件不同的事：前者点的是一个**数值**，后者点的是一门**灵气身份**。付款者自己支付时它从**数值账户**出——扣的就是这门灵气所度量的那个数值，与对应的 `mxt:resource` 条目走同一个账户（付款者持有的是数值，不是灵气）；而由共享灵气池或方块存量支付时，扣的就是这门灵气本身。
 
 ```json
 "costs": [
-  {"id": "example:qi", "amount": "5 + level"},
-  {"id": "example:stamina", "amount": 2}
+  {"id": "example:qi", "amount": 5},
+  {"type": "mxt:resource", "resource": "example:stamina", "amount": "5 + level"},
+  {"type": "mxt:aura", "aura": "example:fire_qi", "amount": 2},
+  {"type": "mxt:item", "items": ["minecraft:emerald", "#c:gems"], "amount": 2}
 ]
 ```
 
-`cultivate_action.aura_gains` 用的是 `AuraGain`：字段名同样是 `id` 与 `amount`，但 `id` 是 `Holder<aura>`，`amount` 允许 `0`（有限非负即可）。
+规则：
+
+- **整份数组全有或全无**：任何一项付不出，就什么都不扣——连本来付得出的那几项也不扣。
+- **同一数组里两项指向同一个存储是加载错误**（同一个数值 id 写两次，或同一门灵气写两次）。两项只是经由不同路径到达同一个值**不是**错误：一个 `mxt:resource` 与一个用该数值度量的 `mxt:aura` 会把金额**相加**，因为这是唯一不依赖书写顺序的答案。
+- 付款者是**活着的实体**（玩家、生物、召唤物都算），不一定是玩家。一项能不能付，取决于付款处提供哪些通道：
+
+| 写法 | 从哪里扣 |
+| --- | --- |
+| `mxt:resource` | 付款者自己的数值账户。 |
+| `mxt:aura` | 扣该灵气所度量的那个数值：付款者自己支付时从数值账户出；由场地从**共享灵气池**支付时（`cultivate_action.aura_costs`），先按同区块多人修炼的池子分配份额缩放，再由池子全有或全无地扣；从**方块实体的自有存量**支付时（灵气合成配方的 `aura`），扣这门灵气本身、按整单位向上取整。 |
+| `mxt:item` | 需要玩家背包。付款者不是玩家（或阵法没有阵主）就是**付不出**，不是定义有问题。 |
+| `mxt:js` | 需要玩家，并且在其它通道全部付完之后**最后**运行。脚本消耗不做暂存，所以脚本必须自己对它保持幂等。 |
+
+「从场地（共享灵气池）支付」与「从方块实体自有存量支付」两条通道现在都有真实使用者：前者是 `cultivate_action.aura_costs`（在修炼者所在位置从共享灵气池支付，多人同区块修炼时先按分配份额缩放，再由池子全有或全无地扣），后者是灵气合成配方（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）的 `aura`（从灵气工作台的存量支付，按整单位向上取整）。
+
+缺少某个通道只会被报成「付不出」，永远不会被报成定义坏了。无法解码的条目会让**定义加载失败**，不再有「打一条警告然后把这一项丢掉」的行为。
+
+用这个数组的字段（共 11 个）：`ability.costs`、`mxt:channelled` 的 `upkeep_costs`、`realm_stage.costs`、`cultivate_action.costs` 与 `cultivate_action.aura_costs`、`formation.activation_costs` 与 `formation.maintenance_costs`、`forging_method.costs`、法器技能 `mxt:flight` 与 `mxt:upkeep` 的 `costs`，以及灵气合成配方（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）的 `aura`。最后两项只接受 `mxt:aura` 条目（写其它类型是加载错误），它们旧的 `{"<灵气 id>": NumberProvider}` 映射写法仍然可读（兼容），但序列化时一律写成数组形式。
+
+**下面这些故意不是 `Cost`**，别去「修」它们：`talisman.aura_cost` 仍然是 `{"<灵气 id>": NumberProvider}` 映射，它是「载体要充满多少这门灵气才触发」的**要求**（同时也是灌注容量），不是支付；`alchemy` 配方的 `minimum_aura` 与 `creature_profile.minimum_aura` 是要求，从不被消耗。货币系统与这套形状无关：`currency` 的 `exchanges[].cost` 是「一次兑换要几个货币物品」的整数价格（`1..99`），`item_quality.value_multiplier` 是价值修正，两者都不是 `Cost`。
+
+### `AuraGain`
+
+`cultivate_action.aura_gains` 用的是 `AuraGain`：字段名同样是 `id` 与 `amount`，但 `id` 是 `Holder<aura>`，`amount` 允许 `0`（有限非负即可）。它是另一种类型，与 `Cost` 无关。
 
 给任意数值加值时用的是 **`mxt:add_resource` 行为**而不是数组，它的字段是 `resource` 与 `amount`，`amount` 可以是负数：
 

@@ -1,5 +1,6 @@
 ---
 title: blueprint_binding（图纸绑定）
+aside: false
 ---
 
 # blueprint_binding（图纸绑定） {#blueprint_binding}

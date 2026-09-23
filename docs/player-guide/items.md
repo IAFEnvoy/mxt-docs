@@ -17,9 +17,9 @@ MiXianTu 不为每个玩法预设具体数值，但提供少量通用承载物�
 | `item_binding` | 给现有物品附加行为、条件、灵根或通用显示。 |
 | `weapon_binding` | 配置伤害、攻击速度、属性和攻击/使用/Tick 行为。 |
 | `pill_binding` | 配置丹药消耗和行为。 |
-| `technique_binding` | 将功法定义绑定到书籍、玉简等现有物品。 |
+| `technique_binding` | 描述一门功法**怎么被读**——长按时长、姿势、音效、品质组与条件，以及本体替它生成载体时用哪个物品。**这一叠是不是手册、教的是哪门功法，由堆上的物品组件 `mxt:technique` 决定**，不由本表决定。 |
 
-物品匹配支持单个物品、原版物品标签、通配符、正则和混合数组。
+物品匹配支持单个物品、原版物品标签、通配符、正则和混合数组。`carrier_item` 是例外：它只接受单个物品 id。`technique_binding` 按功法 id 匹配，不再按物品匹配。
 
 ## 灵气物品
 
@@ -46,7 +46,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 基础材料 | `mxt:spirit_iron_ingot`、`mxt:spirit_iron_nugget`、`mxt:spirit_wood`、`mxt:spirit_wood_core`、`mxt:cinnabar`、`mxt:alchemy_dregs`、`mxt:impurity` |
 | 空白载体 | `mxt:spirit_ring`、`mxt:spirit_stone_bag` |
 | 身份与记录 | `mxt:wooden_token`、`mxt:stone_token`、`mxt:spirit_root`、`mxt:cultivation_jade_slip`、`mxt:blank_talisman_paper` |
-| 固定道具 | `mxt:contract_scroll`、`mxt:recall_talisman`、`mxt:beast_taming_bell`、`mxt:realm_reward_box` |
+| 固定道具 | `mxt:contract_scroll`、`mxt:recall_talisman`、`mxt:beast_taming_bell`、`mxt:secret_realm_reward_box` |
 
 ## 统一功能载体
 
@@ -58,7 +58,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 御兽铃 | `mxt:beast_taming_bell` | 无 | 对自己的契约灵宠执行统一召回。 |
 | 灵兽袋 | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | 保存一只已契约生物的完整持久化实体数据；对灵宠使用收纳，空袋右键释放。 |
 | 阵盘 | `mxt:formation_plate` | `mxt:formation_plate` | 保存 `allowed`（允许激活哪些阵法，支持 `#标签`）与 `formation`（当前选中）；对方块使用时调用 `FormationWorldService`。没绑定阵法时会**自动识别**脚下这座阵法。 |
-| 秘境令牌 | `mxt:realm_token` | `mxt:realm_token` | 保存一份 `realm_instance` 定义；右键进入绑定秘境（走定义自己的进入条件、实例上限与在场人数上限），在秘境内右键返回原位置（受定义的退出条件约束）。 |
+| 秘境令牌 | `mxt:secret_realm_token` | `mxt:secret_realm_token` | 保存一份 `secret_realm` 定义；右键进入绑定秘境（走定义自己的进入条件、实例上限与在场人数上限），在秘境内右键返回原位置（受定义的退出条件约束）。 |
 | 裂隙（方块物品） | `mxt:rift` | `mxt:rift` | 摆放裂隙方块；堆叠上带组件时按组件里的目标与颜色摆。整套机制见[裂隙](./rift.md)。 |
 | 灵力容器 | `mxt:spirit_vessel` | `mxt:resource_container` | 保存任意 `resource`；右键释放给持有者，潜行右键从持有者存入，每种资源容量为 1000。 |
 | 木/石令牌 | `mxt:wooden_token`、`mxt:stone_token` | `mxt:token` | 统一承载 `kind`、`value`、`owner`，供秘境和交易等权限系统共用。 |
@@ -73,11 +73,14 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 ```mcfunction
 give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_servant"}]
 give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
-give @s mxt:realm_token[mxt:realm_token={realm:"mxt_test:trial_realm"}]
+give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_realm"}]
 give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
 give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
+give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
 ```
+
+最后一行是**手册**的做法：堆上带 `mxt:technique` 组件时，这一叠才教那门功法；不带组件的玉简什么都不教、Tooltip 里也不显示功法。功法定义（`technique_binding`）只决定**怎么读**，以及本体在创造模式物品栏和 `/picker mxt:technique` 里生成的载体用哪个物品，见[功法绑定](/datapack/json/technique_binding)。
 
 注意 `mxt:resource_container` 的值是**裸 map**，键就是资源 ID，**没有** `values` 外壳；写错外壳会被当作一个无法解析的键**静默忽略**（只留一条 WARN 日志），容器仍是空的。
 

@@ -17,6 +17,6 @@ title: Java 公开 API
 | `CurrencyValueService` | 计算物品货币价值并处理不可用原因。 |
 | `ItemMatcher` | 数据定义的物品匹配语法：`ItemMatcher.Entry` 有 `item`、`tag`、`wildcard`、`regex`、`spirit_storage` 五种，支持单项简写（物品 id 或标签）与混合数组；`find`/`findAll` 按 `priority` 升序取第一个/全部。 |
 | `NumberProvider` | 常量、表达式、注册表类型分派和有限值处理。 |
-| `DefinitionText` | 把数据包定义翻成名字：手里有 `Holder` / `ResourceKey` 时直接 `name(holder)`，类别默认取注册表自己的 path（`mxt:aura` 里的 `mxt:fire` 查 `aura.mxt.fire`）；少数不按注册表 path 翻译的在它内部的 `CATEGORIES` 里登记一次（如 `mxt:item_quality` → `quality`），所以同一个定义在提示框和物品选择器里不会有两种叫法。 |
+| `DefinitionText` | 把数据包定义翻成名字：手里有 `Holder` / `ResourceKey` 时直接 `name(holder)`，类别默认取注册表自己的 path、注册表命名空间恒为 `mxt`（`mxt:aura` 里的 `mxt:fire` 查 `aura.mxt.mxt.fire`）；少数不按注册表 path 取类别的在它内部的 `CATEGORIES` 里登记一次（如 `mxt:item_quality` → `quality`，`example:refined` 查 `quality.mxt.example.refined`），所以同一个定义在提示框和物品选择器里不会有两种叫法。`resource`、`aura` 等 18 个注册表的定义自带 `name` / `description`，读字段本身；字段省略时由 `ContextNameCodec` 在加载期按 id 生成**同一套**键（描述再加 `.description`）。 |
 
 除非接口明确标记为客户端 API，不要在渲染线程调用服务端生命周期注册表查询。

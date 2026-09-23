@@ -1,5 +1,6 @@
 ---
 title: trigger（事件规则）
+aside: false
 ---
 
 # trigger（事件规则） {#trigger}

@@ -93,7 +93,7 @@ Registry: `cultivate_action` — [Cultivate Action](./json/cultivate_action.md).
   "start_condition": {"type": "mxt:aura_range", "aura": {"example:spirit_power": {"min": 90, "max": 100000}}},
   "condition": {"type": "mxt:aura_range", "aura": {"example:spirit_power": {"min": 90, "max": 100000}}},
   "absorb_amount": "1 + level * 0.1",
-  "aura_costs": {"example:spirit_power": 1},
+  "aura_costs": [{"type": "mxt:aura", "aura": "example:spirit_power", "amount": 1}],
   "aura_gains": [{"id": "example:qi", "amount": "2 + level * 0.1"}],
   "tick_interval": 20,
   "tick_action": {"type": "mxt:no_op"}

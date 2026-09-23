@@ -58,7 +58,7 @@ MyBar bar = HudManager.register(new MyBar());
 
 按住按键（`key.mxt.wheel`，默认 `R`），屏幕上出现一个 **12 扇**的轮盘：指针**朝哪个方向**就选中哪一扇，选中的扇区变金色并向外扩一点，**这一扇的名字与 tooltip 写在轮盘正中间**。它是技能、灵气与法器技能**唯一的触发入口**——原来"技能栏 + 灵力栏"两条快捷栏与它们各自的配置界面已经删除（过程见 `research/28_技能与灵气归一化设计.md`）。
 
-**轮盘由"主盘 + 从盘"组成，用一套连续编号串起来**（2026-09-22 新增并按玩家口径重做，见 `research/31_多轮盘与轮盘来源设计.md` §10）：主盘是玩家自己摆的 12 格（编号 `0..11`），从盘（主手物品 / 副手物品 / 法器）按随身装备**自动生成、不存储**（内容是这些装备此刻授予的主动技能，加上它们作为法器声明的**开关**），格子从 `12` 起接着排；**一页 12 格**，一个来源占 `ceil(条目数 / 12)` 页（一条都没有就一页都不占），所以"一个从盘不够用就再开一个新的"。翻页是两把键（`key.mxt.wheel_previous` / `key.mxt.wheel_next`，默认小键盘 `4` / `6`，两头环绕），`R` **打开始终回到主盘（第一页）**。**页只是视图，编号才是选择**：轮盘画当前页、HUD 轮盘格画整张轮盘、12 把槽位键作用于当前页，关着时的 `V` 作用于编号此刻代表的那一格（**编号越界时自动落到最后一个有东西的格子，编号本身不改写**）。
+**轮盘由"主盘 + 从盘"组成，用一套连续编号串起来**（2026-09-22 新增并按玩家口径重做，见 `research/31_多轮盘与轮盘来源设计.md` §10）：主盘是玩家自己摆的 12 格（编号 `0..11`），从盘（主手物品 / 副手物品 / 法器）按随身装备**自动生成、不存储**（内容是这些装备此刻授予的主动技能，加上它们作为法器声明的**开关**），格子从 `12` 起接着排；**一页 12 格**，一个来源占 `ceil(条目数 / 12)` 页（一条都没有就一页都不占），所以"一个从盘不够用就再开一个新的"。翻页是两把键（`key.mxt.wheel_previous` / `key.mxt.wheel_next`，默认键盘左 / 右方向键，**默认两头环绕**，由客户端配置「轮盘选择 → 循环翻页」决定绕回还是停在两端），`R` **打开始终回到主盘（第一页）**。**页只是视图，编号才是选择**：轮盘画当前页、HUD 轮盘格画整张轮盘、12 把槽位键作用于当前页，关着时的 `V` 作用于编号此刻代表的那一格（**编号指向不存在的格子时落到最后一个有东西的格子，编号落在空格子上时落到第一个有内容的格子，编号本身不改写**）。
 
 框架（几何、扇环渲染、开合状态机、选择语义）在 `screen.wheel`，内容（技能、灵气与法器技能怎样变成条目、每个来源贡献什么）在 `screen.wheel/content`，编辑界面是 `WheelConfigurationScreen`；接法、布局的存储与校验、编号与分页、触发分派见[轮盘条目](../java/wheel.md)，这里只记要点：
 
@@ -68,7 +68,7 @@ MyBar bar = HudManager.register(new MyBar());
 - **判扇区只看方向，不看距离**：指针还在内圈里也算数，所以中间那块空地能一直显示"当前指着的扇区叫什么"。
 - **扇区数是 `WheelLayout.SLOTS`（12）**，几何从它取数，"一页 12 格"也取自它（`WheelMenuContent.SECTORS`），所以不会有"12 扇的几何配 10 格的页"这种事。
 - **空格子画成很淡的占位块**，不响应指针、中间也不显示文字；**整张轮盘一格有内容的都没有**时按键提醒一句「轮盘上还没有任何条目」而不是打开。
-- **选择与使用是两个键**：`key.mxt.wheel`（默认 `R`）只**选**——按住打开、指针决定格子，松开（`mode = HOLD`）或再按一次（`TOGGLE`）**只关闭、不触发**；`key.mxt.wheel_use`（默认 `V`）负责**用**——轮盘开着时用掉指针那一格且**不关轮盘**，关着时用掉**编号此刻代表的那一格**（客户端 `WheelSelectionState` 里是 `page` + `number` 两个值；`LoggingIn` 先清空，随后由服务端记住的 `armed` 填回来，见[选中项跨会话](../java/wheel.md#选中项跨会话)），左键等同于它。`WheelSelection.Method` 是 `KEY` / `CLICK`，只表示请求来自键盘还是鼠标。客户端配置只剩 `mode`（按住 / 切换）：`release_to_select` 已随这次改版删除。
+- **选择与使用是两个键**：`key.mxt.wheel`（默认 `R`）只**选**——按住打开、指针决定格子，松开（`mode = HOLD`）或再按一次（`TOGGLE`）**只关闭、不触发**；`key.mxt.wheel_use`（默认 `V`）负责**用**——轮盘开着时用掉指针那一格且**不关轮盘**，关着时用掉**编号此刻代表的那一格**（客户端 `WheelSelectionState` 里是 `page` + `number` 两个值；`LoggingIn` 先清空，随后由服务端记住的 `armed` 填回来，见[选中项跨会话](../java/wheel.md#选中项跨会话)），左键等同于它。`WheelSelection.Method` 是 `KEY` / `CLICK`，只表示请求来自键盘还是鼠标。客户端配置「轮盘选择」现在有三项：`mode`（按住 / 切换）、`scroll_switch`（滚轮翻页，默认开）与 `wrap_pages`（循环翻页，默认开）；`release_to_select` 已随这次改版删除。
 - **触发不关屏**：用掉一格不会关闭轮盘，所以一次按住可以连用几格；轮盘的开关只由轮盘键决定。
 - **按键不能用 `KeyMapping#isDown()` 读**：`Minecraft#setScreen` 一开界面就 `KeyMapping.releaseAll()`，用 `isDown()` 的话轮盘会在出现的那一帧就被判成已松手。第二个理由与使用键有关：按着 `V` 松开 `R` 时 `MouseHandler#grabMouse()` 里的 `KeyMapping.setAll()` 会按物理状态把 `V` 重新置成按下、补出一次假按下，等于多触发一次。控制器因此对轮盘键、使用键和两把切盘键都用 `InputConstants` / GLFW 直接读原始状态，并且一个键只在一处判边沿；`KeyMapping` 只负责让它们出现在按键设置里。代价是判定精度为客户端刻。
 - **它是个 `Screen`，不是 GUI 层**：开界面时原版会自动放开鼠标（指针才能指方向，而且角度与 GUI 缩放无关），关掉时又会把准心收回来。它不暂停游戏，也不画背景——默认背景会把这之前提取的整层 HUD 糊掉。
@@ -141,12 +141,12 @@ if (screen != null) Minecraft.getInstance().setScreen(screen);
 `ItemPickerManager` 只负责「注册表 → 可选项」的映射，现在只是**界面内容**的来源，服务端不再需要它。它产出的每一项是 `PickerItem(stack, names)`：**要画的堆**，加上**这一行能被哪些名字搜到**。堆本身保持原样，**不往物品上写任何东西**（没有自定义名称、没有后缀）——同一件替身物品代表好几个定义时靠搜索区分，不靠名字上的标记。名字交给目录自己给：
 
 - 物品/方块注册表的条目本身就是物品，堆上已经写着它叫什么，于是名字就是「它显示的名字 + 它的注册 id」；
-- 数据驱动定义没有自己的物品，堆上根本看不出它代表谁，于是名字由 `DefinitionText` 从它的 `Holder` / `ResourceKey` 生成翻译键得到——`mxt:fire` 在 `mxt:aura` 里就查 `aura.mxt.fire`——再补上它的 id。定义有自己名字的（品质，名字写在数据包里）就用那个名字；
+- 数据驱动定义没有自己的物品，堆上根本看不出它代表谁，于是名字由 `DefinitionText` 从它的 `Holder` / `ResourceKey` 生成翻译键得到——`mxt:fire` 在 `mxt:aura` 里就查 `aura.mxt.mxt.fire`——再补上它的 id。`resource`、`aura` 等 18 个注册表的定义自带 `name` / `description`，读字段本身；字段省略时由 `ContextNameCodec` 在加载期按 id 生成**同一套**键（描述再加 `.description`）；
 - 标签匹配展开出来的行，名字里既有那个物品自己的名字，也有它所属定义的名字和 id。
 
 用列表而不是单个名字，是因为一行可以有好几种叫法。界面不再需要从「注册表 key + 条目 id」去反推任何东西；只有 `over(...)` 那条路没有目录可问，界面自己补上「展示名 + item id」。
 
-翻译键的拼法统一由 `com.iafenvoy.mxt.util.DefinitionText` 决定：类别默认取注册表自己的 path，少数不是的（`mxt:item_quality` 一直按 `quality` 翻译）在它里面的 `CATEGORIES` 声明一次。手里已经有 `Holder` / `ResourceKey` 时直接 `DefinitionText.name(holder)`，只有拿到的是一根光秃秃的 `Identifier` 时才需要把类别当参数传进去（`DefinitionText.name(id, "resource")`）。
+翻译键的拼法统一由 `com.iafenvoy.mxt.util.DefinitionText` 决定：类别默认取注册表自己的 path、注册表命名空间恒为 `mxt`，少数类别不是注册表 path 的（`mxt:item_quality` 一直按 `quality` 翻译）在它里面的 `CATEGORIES` 声明一次。手里已经有 `Holder` / `ResourceKey` 时直接 `DefinitionText.name(holder)`，只有拿到的是一根光秃秃的 `Identifier` 时才需要把类别当参数传进去（`DefinitionText.name(id, "resource")`）。
 
 分类就是注册表本身，`/picker <分类 id>` 可以只列出某一个（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`），不写则给出全部已注册分类。
 

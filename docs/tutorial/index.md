@@ -34,7 +34,7 @@ data/example/
 │   ├── talisman/flame_sigil.json            The talisman: abilities + aura bill
 │   ├── formation/spirit_gathering_array.json Structure, upkeep, buff module
 │   ├── formation/ward_array.json            Protection + attack modules
-│   ├── realm_instance/trial_realm.json      A pocket world template
+│   ├── secret_realm/trial_realm.json      A pocket world template
 │   ├── tribulation/heavenly_gate.json       The trial a breakthrough starts
 │   ├── forging_method/light_strike.json     One strike: meter shift, cost, cooldown
 │   ├── forging_method/heavy_strike.json

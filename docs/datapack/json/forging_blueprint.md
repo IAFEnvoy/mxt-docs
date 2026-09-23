@@ -1,5 +1,6 @@
 ---
 title: forging_blueprint（锻造图纸）
+aside: false
 ---
 
 # forging_blueprint（锻造图纸） {#forging_blueprint}

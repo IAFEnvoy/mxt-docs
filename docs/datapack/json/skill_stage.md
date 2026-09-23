@@ -1,5 +1,6 @@
 ---
 title: skill_stage（技能水平）
+aside: false
 ---
 
 # skill_stage（技能水平） {#skill_stage}
@@ -10,6 +11,8 @@ title: skill_stage（技能水平）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `skill_stage.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `skill_stage.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `skill` | Identifier | **必填** | 该水平所属的技能链标识。同一条链的每一级都要写同一个 `skill`；不同功法可以共用一条链。 |
 | `next_stage` | `Holder<skill_stage>` | 无 | 链上的下一级；最高一级省略。 |
 | `mastery` | `NumberProvider` | `0` | 到达该级所需的熟练度。功法的 `mastery_resource` 达到该值、且该级的 `condition` 成立时才能晋升到这一级；写 `0` 表示这一级不要求熟练度。 |

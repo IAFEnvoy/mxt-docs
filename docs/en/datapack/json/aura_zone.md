@@ -1,6 +1,7 @@
 ---
 title: Aura Zone (aura_zone)
 description: "Define an aura environment template: per-aura inventory, match conditions, fluctuation, rules, particles, client fog and HUD bars."
+aside: false
 ---
 
 # Aura Zone (aura_zone)

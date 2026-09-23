@@ -1,6 +1,7 @@
 ---
 title: Contract Type (contract_type)
 description: Define the owner and creature conditions, follow and combat behaviour, break behaviour and penalty for a contract between a player and a spirit beast.
+aside: false
 ---
 
 # Contract Type (contract_type)
@@ -19,6 +20,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/contract_type
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `contract_type.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `contract_type.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `owner_condition` | Entity Condition | `mxt:always_true` | The owner condition. |
 | `creature_condition` | Entity Condition | `mxt:always_true` | The spirit beast condition. |
 | `follow_action` | Entity Action | `mxt:no_op` | The follow behaviour. |

@@ -1,6 +1,7 @@
 ---
 title: Formation (formation)
 description: Define a formation built from a structure template or an inline block list, with its radius, costs, lifecycle actions and the function modules it runs.
+aside: false
 ---
 
 # Formation (formation)
@@ -19,11 +20,13 @@ The filename corresponds to its ID. For example, `data/example/mxt/formation/spi
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `formation.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `formation.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `structure_template` | Identifier | see below | The vanilla structure template ID. Its air entries are ignored, so a template says what must be present and never what must be absent. |
 | `structure` | `List<RequiredBlock>` | see below | An inline structure: a list of blocks at offsets from the controller. |
 | `radius` | `NumberProvider` | **required** | The formation's area of effect radius. |
-| `activation_costs` | `List<ResourceCost>` | `[]` | Consumed on activation. |
-| `maintenance_costs` | `List<ResourceCost>` | `[]` | Consumed every maintenance cycle; the formation fails when they cannot be paid. |
+| `activation_costs` | `List<Cost>` | `[]` | Paid once on activation out of the **activator's** own account, all or nothing as one array; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
+| `maintenance_costs` | `List<Cost>` | `[]` | Paid every maintenance cycle: the aura the array's own blocks supply is offset first and the owner pays the rest, and the formation fails when it cannot be paid. `mxt:item` and `mxt:js` entries can never be paid here. |
 | `storage` | `Storage` | none | What the array may keep of the aura its own ground supplies. The `capacity` field is required and maps each aura to its per-aura ceiling. |
 | `actions` | `List<Formation Action>` | `[]` | The function modules of this array. See [Formation modules](#formation-modules) below. |
 | `spare_friends` | Boolean | `false` | The friend-or-foe switch: with it, the per-entity work reaches only the entities the owner does not recognise as friends; without it, it reaches everyone the array covers. |
@@ -51,7 +54,7 @@ A formation declares its shape with **exactly one** of `structure_template` or `
 
 `storage` takes one field, `capacity`, a `Map<Holder<aura>, NumberProvider>` that is **required** when the field is written. A capacity that evaluates to a non-finite or non-positive number means that aura is not stored at all.
 
-Each entry of `activation_costs` and `maintenance_costs` is a `ResourceCost` with an `id` and an `amount`; see [Shared Data Types](../types/shared_data_types.md) for its exact shape. Both cost lists are evaluated with the owner's formula context while the owner is loaded, and with a level context when the owner is offline.
+Each entry of `activation_costs` and `maintenance_costs` is a `Cost`; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost) for the five shapes it may take. `activation_costs` is charged from the activator's own account. `maintenance_costs` is charged from the formation's own store first (the aura its blocks supply) and from the owner's account after that, so `mxt:item` and `mxt:js` entries can never be paid there. Both lists are evaluated with the owner's formula context while the owner is loaded, and with a level context when the owner is offline.
 
 ## Formation modules
 

@@ -1,6 +1,7 @@
 ---
 title: Blueprint Binding (blueprint_binding)
 description: A blueprint binding lists the forging blueprints an existing item offers to the Forge Table.
+aside: false
 ---
 
 # Blueprint Binding (blueprint_binding)

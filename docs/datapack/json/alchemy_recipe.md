@@ -1,6 +1,7 @@
 ---
 title: alchemy_recipe（炼丹配方）
 description: 炼丹配方把材料、灵气、温度和丹炉等级组合成丹药，成功与失败的结果都由配方决定。
+aside: false
 ---
 
 # alchemy_recipe（炼丹配方）

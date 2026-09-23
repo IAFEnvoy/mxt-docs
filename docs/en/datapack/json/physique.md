@@ -1,6 +1,7 @@
 ---
 title: Physique (physique)
 description: Defines a physique that grants vanilla attribute bonuses and abilities independently of any element.
+aside: false
 ---
 
 # Physique (physique)
@@ -19,6 +20,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/physique/blaz
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `physique.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `physique.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `attribute_modifiers` | `List<AttributeEntry>` | `[]` | Vanilla attribute bonuses independent of spirit roots; when `value` is filled in they are recalculated every tick from the entity context. |
 | `granted_abilities` | `HolderOrTag<ability>[]` | `[]` | Granted abilities. |
 | `holder_condition` | `EntityCondition` | `mxt:always_true` | The holder condition checked before granting; conditions such as `mxt:has_spirit_root` and `mxt:has_physique` can be combined to express prerequisite physiques or spirit roots. |

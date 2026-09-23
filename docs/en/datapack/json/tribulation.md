@@ -1,6 +1,7 @@
 ---
 title: Tribulation (tribulation)
 description: Define a tribulation that is gated by a condition, consumes a timeline of entries and runs success or failure behaviour.
+aside: false
 ---
 
 # Tribulation (tribulation)
@@ -19,6 +20,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/tribulation/t
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `tribulation.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `tribulation.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `condition` | Entity Condition | `mxt:always_true` | Evaluated once when the tribulation is started; the attempt is rejected when it fails. It is not an event trigger — what decides whether a tribulation is started at all is the `tribulation` field of a realm stage. |
 | `timeline` | `List<Timeline Entry>` | **required** | The entries the run consumes, in order; at least one. |
 | `difficulty_scale` | `NumberProvider` | `1` | The difficulty multiplier, applied to every wait. |

@@ -1,5 +1,6 @@
 ---
 title: artifact（法器）
+aside: false
 ---
 
 # artifact（法器） {#artifact}
@@ -10,6 +11,8 @@ title: artifact（法器）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `artifact.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `artifact.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `items` | `ItemMatcher` | **必填** | 这份定义认领的物品：物品 id、`#标签` 或二者的混合数组，至少要匹配一件。 |
 | `spirit_capacity` | `Map<aura, NumberProvider>` | `{}` | 每种灵气的存储上限。键必须是**具体灵气**（不接受标签）；空表表示这件法器不存灵气。求值时非有限按 0、向下取整；温养加成 `× (1 + 0.5 × nourishment)` **由管线乘上，公式里不要再乘一遍**。 |
 | `abilities` | `ArtifactAbility[]` | `[]` | 法器能力列表，按 `type` 分派，见下表。 |
@@ -30,9 +33,9 @@ title: artifact（法器）
 | `mxt:empty` | 无 | 什么都不做的占位类型，也是 `mxt:artifact_ability_type` 的默认项；`type` 本身仍是必填字段，省略它这份文件加载不了。 |
 | `mxt:passive` | `abilities`：能力 id、`#标签` 或二者的混合数组 | 持有／装备期间授予这些能力；属性修正在授予期间生效。引用的能力自身不得是主动类型。 |
 | `mxt:active` | 同上 | 授予**可发动**的能力；主动能力可以放进轮盘、从轮盘施放（旧的热键栏与技能菜单已随快捷栏删除）。引用的能力自身必须是主动类型，写错由 `/mxt registries validate` 报出。 |
-| `mxt:flight` | `speed`（必填 `NumberProvider`）、`costs`（`ResourceCost[]`，默认 `[]`） | 载人飞行：`speed` 是飞行载具速度，`costs` 是每 tick 的消耗。**一个定义最多一条。** 它同时是一个**法器技能**（`ToggableArtifactAbility` 的实现者），所以会作为一格出现在轮盘上：按一下起剑、再按一下落剑。 |
+| `mxt:flight` | `speed`（必填 `NumberProvider`）、`costs`（`Cost[]`，默认 `[]`）、`display`（载具怎么画，默认＝"放平 + 剑刃朝前 + 两倍大"） | 载人飞行：`speed` 是飞行载具速度，`costs` 是每 tick 的消耗，由携带的主人支付（写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)）。**一个定义最多一条。** 它同时是一个**法器技能**（`ToggableArtifactAbility` 的实现者），所以会作为一格出现在轮盘上：按一下起剑、再按一下落剑。 |
 | `mxt:storage` | `slots`（必填 `NumberProvider`） | 自带储物槽位，**一个定义最多一条**。格数求值后**按 9 向上取整**（界面是标准箱子：一行九格），并夹在 `6` 行以内、也就是**最多 54 格**——界面打不开的格子就不该存在，所以容量与窗口永远是同一个数。内容写在物品组件 `mxt:artifact_storage` 上，只有主人与服务端能碰。它同时是一个**法器技能**：轮盘上那一格按一下就打开这个箱子（窗口标题是法器名）。 |
-| `mxt:upkeep` | `costs`（`ResourceCost[]`，默认 `[]`）、`interval`（`NumberProvider`，默认 `20`）、`on_fail`（ItemAction，默认 `mxt:no_op`）、`owner_only`（bool，默认 `true`） | **周期性代价**：带着它就按周期扣资源。见下。**一个定义最多一条。** |
+| `mxt:upkeep` | `costs`（`Cost[]`，默认 `[]`）、`interval`（`NumberProvider`，默认 `20`）、`on_fail`（ItemAction，默认 `mxt:no_op`）、`owner_only`（bool，默认 `true`） | **周期性代价**：带着它就按周期扣消耗，由携带的主人支付（写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)）。见下。**一个定义最多一条。** |
 
 `mxt:upkeep` 的细节：
 
@@ -41,6 +44,16 @@ title: artifact（法器）
 - 结算范围是**主手、副手与所有已装备的 Curios 槽**（`ArtifactUpkeepService`，每个服务端 tick 检查一次）。
 - `on_fail` 是付不出时对持有者与该物品堆执行的行为，例如 `{"type": "mxt:damage_item", "amount": 1}`。
 - `owner_only` 为真（默认）时只有主人承担——未认主就等于没人付；为假时谁带着谁付。
+
+**`mxt:flight` 的 `display`（载具怎么画）。** 飞行载具画的是**它承载的那件物品的物品模型**（展示框那套上下文：原始大小、没有位移的卡片），`display` 决定它相对载具原点怎么摆。字段与原版物品模型的 `display` **同名同义**，从物品模型里抄一段过来基本能直接用：
+
+| 字段 | 默认 | 说明 |
+| --- | --- | --- |
+| `translation` | `[0, 0, 0]` | 偏移，**单位是 1/16 格**（与原版一致；注意它和这份文件里其它以**格**为单位的数字不同），叠在载具原点之上，而载具原点就是碰撞箱底面 |
+| `rotation` | `[90, 0, -45]` | **角度**，按原版那套 `rotationXYZ`（先 X、再 Y、再 Z）复合；默认＝把竖着的卡片放平（X 90°）并把贴图里斜着的剑刃转到正前方（面内的 45° 折进 Z） |
+| `scale` | `[2, 2, 2]` | 倍数，`1` 就是资源包里画的原始大小；允许负值（镜像），原版也允许 |
+
+三个向量都必须是**有限数**，NaN／无穷在加载期被拒。落位顺序：先把模型底面放到碰撞箱底面（自动，换任何模型都落在同一平面上），再叠 `translation`，然后才是 `rotation`／`scale`；载具自身的朝向与俯仰在最外层，所以定义里**不用管朝向**——它跟着驾驶者转。座位（脚底高度）不属于 `display`。
 
 以下**八个键不再被读取**：写了不会报错，也不会生效（`RecordCodecBuilder` 会忽略未声明的键）。其中四个已并入 `abilities`——`granted_abilities` 现在写成 `mxt:passive` / `mxt:active` 条目，`flight_speed` / `flight_costs` 写成 `mxt:flight`，`storage_slots` 写成 `mxt:storage`；另外三个改了名——`refine_action` → **`claim_action`**、`refine_condition` → **`claim_condition`**，而 **`refine_health_cost`** 与短暂存在过的 **`claim_cost`** 都并入了 `claim_action`（代价就是它的默认值）。**老包照旧名写不会加载失败，但代价会退回默认的 4 点血，认主效果与条件都会失效**，需要手工改名。
 

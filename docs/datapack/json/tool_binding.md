@@ -1,5 +1,6 @@
 ---
 title: tool_binding（工具绑定）
+aside: false
 ---
 
 # tool_binding（工具绑定） {#tool_binding}

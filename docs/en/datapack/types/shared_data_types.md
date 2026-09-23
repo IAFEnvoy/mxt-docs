@@ -1,6 +1,6 @@
 ---
 title: Shared Data Types
-description: Complex data types reused by many MiXianTu definitions, including resource costs and gains, attribute entries, holder and tag selectors, and item matchers.
+description: Complex data types reused by many MiXianTu definitions, including costs and gains, attribute entries, holder and tag selectors, and item matchers.
 ---
 
 # Shared Data Types
@@ -32,21 +32,49 @@ An item icon is stored as a template rather than a ready-made stack, because a d
 
 ---
 
-## ResourceCost
+## Cost
 
-Every field that **consumes** resources takes an array of resource costs. Each entry names a resource registry entry and the amount to take.
+Every field that **consumes** something takes the same array, and each entry is one `Cost` (this type used to be called `ResourceCost`; **no JSON key was renamed** — what changed is that it also accepts aura, item and script entries), written in one of five shapes:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `Holder<resource>` | The resource registry entry |
-| `amount` | `NumberProvider` | The cost; it must evaluate to a finite positive number at runtime |
+| Shape | Description |
+|-------|-------------|
+| `{"id": "example:qi", "amount": 5}` | The shorthand, identical to `mxt:resource`; the definition id lives in `id`. |
+| `{"type": "mxt:resource", "resource": "example:qi", "amount": "5 + level"}` | Spends a value; the definition id lives in `resource`. |
+| `{"type": "mxt:aura", "aura": "example:fire_qi", "amount": 2}` | Spends an aura; the aura id lives in `aura`. What is charged depends on the channel: the value that aura is measured in when the payer pays, and that aura itself when a shared aura pool or a block's own store pays. |
+| `{"type": "mxt:item", "items": ["minecraft:emerald", "#c:gems"], "amount": 2}` | Spends items; `items` is an item/tag matcher list (a bare item id, a `#tag`, or the typed matcher entries, see [`ItemMatcher`](#itemmatcher)). |
+| `{"type": "mxt:js", "id": "my_cost", "params": {}}` | Delegates to a server script; `id` is the callback registered with `MxtCosts.register` and `params` is optional. |
+
+`amount` is always a `NumberProvider` and has to evaluate to a finite positive number at use time, or that entry cannot be paid. `mxt:resource` and `mxt:aura` ask two different questions: the first names a **value**, the second names an **aura identity**. When the payer pays, it comes out of the **value account** — it takes the value that aura is measured in, the same account a `mxt:resource` entry would use (a payer holds values, not auras); when a shared aura pool or a block's own store pays, it takes that aura itself.
 
 ```json
 "costs": [
-  {"id": "example:qi", "amount": "5 + level"},
-  {"id": "example:stamina", "amount": 2}
+  {"id": "example:qi", "amount": 5},
+  {"type": "mxt:resource", "resource": "example:stamina", "amount": "5 + level"},
+  {"type": "mxt:aura", "aura": "example:fire_qi", "amount": 2},
+  {"type": "mxt:item", "items": ["minecraft:emerald", "#c:gems"], "amount": 2}
 ]
 ```
+
+Rules:
+
+- **A whole array is paid all-or-nothing.** If any single entry cannot be paid, nothing at all is taken — not even the entries that could be paid.
+- **Two entries in the same array that name the same store are a load error** (the same value id twice, or the same aura twice). Two entries that merely reach the same value by different routes are **not** an error: a `mxt:resource` entry and an `mxt:aura` entry whose aura is measured in that same value have their amounts **added together**, because that is the only answer which does not depend on the order they were written in.
+- The payer is a **living entity** (a player, a mob, a summoned creature), not necessarily a player. Whether an entry can be paid depends on which channels the place offers:
+
+| Shape | Where it is taken from |
+|-------|------------------------|
+| `mxt:resource` | The payer's own value account. |
+| `mxt:aura` | That aura's measured value: out of the payer's value account when the payer pays; out of the **shared aura pool** when the ground pays (`cultivate_action.aura_costs`), scaled first by the pool's allocation for the chunk and then charged all-or-nothing; and that aura itself, in whole units rounded up, out of a **block entity's own store** when the Spirit Crafting Table pays (a recipe's `aura`). |
+| `mxt:item` | Needs a player's inventory. A non-player payer (or a formation with no owner) simply cannot pay it — that is a refusal, not an error. |
+| `mxt:js` | Needs a player, and runs **last**, after every other channel has been paid. A script cost is not staged, so scripts have to be idempotent about it. |
+
+The from-the-ground (shared aura pool) channel and the from-a-block-entity's-store channel both have real users now: `cultivate_action.aura_costs` is paid from the shared aura pool at the cultivator's position (first scaled by the pool's allocation when several players cultivate in the same chunk, then charged all-or-nothing), and the `aura` of a spirit crafting recipe (`mxt:spirit_shaped` / `mxt:spirit_shapeless`) is paid from the Spirit Crafting Table's own store in whole units (rounded up).
+
+A missing channel is reported as "cannot pay", never as a broken definition. An entry that cannot be decoded now **fails the load** of the definition instead of being logged and dropped.
+
+The **11** fields that take this array are `ability.costs`, the `upkeep_costs` of `mxt:channelled`, `realm_stage.costs`, `cultivate_action.costs` and `cultivate_action.aura_costs`, `formation.activation_costs` and `formation.maintenance_costs`, `forging_method.costs`, the `costs` of the artifact abilities `mxt:flight` and `mxt:upkeep`, and the `aura` of a spirit crafting recipe (`mxt:spirit_shaped` / `mxt:spirit_shapeless`). Those last two accept **only `mxt:aura` entries** (any other type is a load error), and their older `{"<aura id>": NumberProvider}` map form is still read for compatibility, while serialization always emits the array form.
+
+**These deliberately are not `Cost`, so do not "fix" them**: `talisman.aura_cost` is still a `{"<aura id>": NumberProvider}` map, and it is the **requirement** "how much of this aura the carrier has to be filled with before it fires" (it is also the pour capacity), not a payment; `alchemy`'s `minimum_aura` and `creature_profile.minimum_aura` are requirements that are never consumed. The currency system has nothing to do with this shape: `currency`'s `exchanges[].cost` is an integer price (`1..99`) saying how many currency items an exchange takes, and `item_quality.value_multiplier` is a value modifier; neither is a `Cost`.
 
 ---
 

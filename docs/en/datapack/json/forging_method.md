@@ -1,6 +1,7 @@
 ---
 title: Forging Method (forging_method)
 description: A forging method is one hammering operation at the Forge Table, defined by its meter shift, cost and condition.
+aside: false
 ---
 
 # Forging Method (forging_method)
@@ -20,7 +21,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/forging_metho
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `value_delta` | Integer | **required** | The forging meter shift. It must not be `0`. |
-| `costs` | `List<ResourceCost>` | `[]` | The cost of each strike. |
+| `costs` | `List<Cost>` | `[]` | What one strike costs, paid by the player who strikes, all or nothing as one array; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 | `condition` | `EntityCondition` | `mxt:always_true` | The condition for using this method. |
 | `icon` | [Icon Reference](../types/shared_data_types.md#icon-reference) | none | The icon drawn in the interface. An item icon also supplies the name the method is listed under. |
 | `cooldown` | Integer | `0` | The strike cooldown in ticks, range `0..72000`. Consecutive strikes by the same player on the same Forge Table are rate-limited by the server. |

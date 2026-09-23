@@ -9,7 +9,7 @@ description: 写一份秘境模板：用什么维度生成、边界怎么划、�
 
 ::: warning 先分清两个命令
 
-`/mxt realm` 只管**线性境界链**（`/mxt realm set <境界>`）；秘境实例的运维全在 **`/mxt realm_instance …`**。本篇讲的是后者。
+`/mxt realm` 只管**线性境界链**（`/mxt realm set <境界>`）；秘境实例的运维全在 **`/mxt secret_realm …`**。本篇讲的是后者。
 
 :::
 
@@ -17,12 +17,12 @@ description: 写一份秘境模板：用什么维度生成、边界怎么划、�
 
 | 文件 | 用途 |
 | --- | --- |
-| `data/example/mxt/realm_instance/trial_realm.json` | 一份秘境模板：生成方式、边界、落点、寿命。 |
+| `data/example/mxt/secret_realm/trial_realm.json` | 一份秘境模板：生成方式、边界、落点、寿命。 |
 
 ## 第 1 步 —— 用什么造这个世界
 
 ```json
-// data/example/mxt/realm_instance/trial_realm.json
+// data/example/mxt/secret_realm/trial_realm.json
 {
   "generation": {
     "type": "mxt:flat",
@@ -41,7 +41,7 @@ description: 写一份秘境模板：用什么维度生成、边界怎么划、�
 | `mxt:template` | `template`、`stem` | 从服务器目录里的模板复制现成地形。 |
 | `mxt:existing` | `dimension` | 不建维度，直接用一个真实维度；这种实例永不被卸载或删除。 |
 
-秘境的维度 id 由定义与序号生成：`<定义的命名空间>:realm/<定义的路径>/<序号>`，序号从 0 开始——所以同一份模板可以开出很多份互不干扰的世界。
+秘境的维度 id 由定义与序号生成：`<定义的命名空间>:secret_realm/<定义的路径>/<序号>`，序号从 0 开始——所以同一份模板可以开出很多份互不干扰的世界。
 
 ## 第 2 步 —— 划边界
 
@@ -108,7 +108,7 @@ description: 写一份秘境模板：用什么维度生成、边界怎么划、�
 
 认领式与一次性的区别值得写清楚：
 
-- `owned: true`：主人离线、所有人都离开，世界也只是**休眠**——地形、方块、里面的建筑与库存都在，下次有人进来用同一个种子重新打开。它跨服务器重启保留，但重启后成员表会清空（`/mxt realm_instance list` 里那条 `loaded=false` 就是它）。
+- `owned: true`：主人离线、所有人都离开，世界也只是**休眠**——地形、方块、里面的建筑与库存都在，下次有人进来用同一个种子重新打开。它跨服务器重启保留，但重启后成员表会清空（`/mxt secret_realm list` 里那条 `loaded=false` 就是它）。
 - `owned: false`：最后一人离开即**删除整份实例目录**（含该维度的灵气区域与阵法数据）。适合"打一趟就散"的试炼场。
 
 时限只在主世界时钟上扫描（每 20 tick 一次），到期对所有在线成员执行离开——**不看 `exit_condition`**；离线成员直接从成员表剔除。认领实例到期只是暂停计时并卸载，下次有人进来重新开始算。
@@ -145,17 +145,17 @@ description: 写一份秘境模板：用什么维度生成、边界怎么划、�
 
 ```text
 /mxt registries validate
-/mxt realm_instance enter example:trial_realm
-/mxt realm_instance list
-/mxt realm_instance info example:realm/trial_realm/0
-/mxt realm_instance exit
-/mxt realm_instance destroy example:realm/trial_realm/0
+/mxt secret_realm enter example:trial_realm
+/mxt secret_realm list
+/mxt secret_realm info example:secret_realm/trial_realm/0
+/mxt secret_realm exit
+/mxt secret_realm destroy example:secret_realm/trial_realm/0
 ```
 
 1. 重新打开世界（注册表只在**世界加载时**读取，`/reload` 不会重读），`/mxt registries validate` 应无 Codec 错误。
 2. `enter` 成功时提示"已进入秘境"，失败时是"无法进入秘境："后面跟着失败码。
 3. `list` 每行包含维度键、序号、定义、成员数、上限、主人、是否备好、是否加载——`loaded=false` 就是休眠的认领实例。
-4. 走一圈再 `exit`，然后用 `/mxt realm_instance info <维度>` 看它的状态；对 `owned: true` 的实例再进一次，应该回到同一份地形。
+4. 走一圈再 `exit`，然后用 `/mxt secret_realm info <维度>` 看它的状态；对 `owned: true` 的实例再进一次，应该回到同一份地形。
 5. `destroy` 会**真的删掉地形**（认领过的也删），所以删定义之前先 `destroy`，否则实例记录读不出来、地形会被当作遗留数据清掉。
 
 ## 常见错误
@@ -176,7 +176,7 @@ description: 写一份秘境模板：用什么维度生成、边界怎么划、�
 
 ## 接下来
 
-- [realm_instance（秘境实例）](../datapack/json/realm_instance.md) —— 完整字段表与生成方式。
+- [secret_realm（秘境实例）](../datapack/json/secret_realm.md) —— 完整字段表与生成方式。
 - [aura_zone（灵气区域）](../datapack/json/aura_zone.md) —— 把灵气绑到秘境维度上。
 - [formation（阵法）](../datapack/json/formation.md) —— 在秘境里立一座阵法。
 - [裂隙](../player-guide/rift.md) —— 用裂隙把秘境和主世界连起来。

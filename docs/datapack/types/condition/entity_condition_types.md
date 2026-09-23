@@ -72,7 +72,7 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 | `mxt:has_element` | `elements` | 当实体的**启用**灵根所命名的元素中有一个出现在 `elements` 里时通过。`elements` 是 `HolderOrTag<element>[]`，因此"任意火属灵根"写一条 `#` 标签即可，之后新加的同类灵根无需改动这里；被停用的元素不算。元素类条件的 `elements` 都至少写一项：写空表/空数组会在加载期被拒绝，而不是变成一条"恒真"或"恒假"的条件。 |
 | `mxt:aura_element` | `elements` | 按**元素**而不是按具名灵气测试实体所在位置的灵气。`elements` 把元素映射到一个对象，其中有必填的 `max` 与可选的 `min`（默认 `0`），两者都接受 [数值提供器](../number_provider_types.md)；该位置上所有携带这个元素的**存活**灵气会先求和再比较（被停用的元素不参与），每一项都要通过。给区域再加另一种同元素灵气即可满足要求，不必改动查询。 |
 | `mxt:element_attachment` | `elements` | 读取元素在实体身上的积累量（`mxt:element_attachment` 附件，见 [element_reaction](../../json/element_reaction.md)）。`elements` 把元素映射到同样的 `{min?, max}` 窗口，每一项都要通过。这是积累系统的只读一侧：可以让效果取决于身上攒了多少火，而不需要任何反应触发。被 `mxt:disabled` 停用的元素无论身上还剩多少都答 `false`（那个量已经不再是这个元素的事），写空表会在加载期被拒绝而不是当成"恒真"。 |
-| `mxt:in_realm_instance` | `definition?`、`role?` | 判定实体是否在某份[秘境实例](../../json/realm_instance.md)里。`definition` 接受一条 `mxt:realm_instance` 定义或 `#标签`，省略时不限定是哪一份定义；`role` 取 `any`（默认，在里面即可）、`owner`（自己是主人）或 `guest`（在里面但不是主人）。不在任何实例里时恒为 `false`，因此 `owner` 与 `guest` 都隐含"在里面"。 |
+| `mxt:in_secret_realm` | `definition?`、`role?` | 判定实体是否在某份[秘境实例](../../json/secret_realm.md)里。`definition` 接受一条 `mxt:secret_realm` 定义或 `#标签`，省略时不限定是哪一份定义；`role` 取 `any`（默认，在里面即可）、`owner`（自己是主人）或 `guest`（在里面但不是主人）。不在任何实例里时恒为 `false`，因此 `owner` 与 `guest` 都隐含"在里面"。 |
 | `mxt:resource_compare` | `resource`、`min` | 检查实体某个数值的取值至少为 `min`。 |
 | `mxt:entity_tag` | `tag` | 把实体与实体类型标签匹配。 |
 | `mxt:formation_member` | — | 当实体在当前维度拥有任意已注册的 [阵法](../../json/formation.md) 时通过。 |

@@ -1,6 +1,7 @@
 ---
 title: Item Aura (item_aura)
 description: "Define an existing item as aura fuel that is consumed and released into the current realm's resource bar while cultivating, and that can be poured into by hand."
+aside: false
 ---
 
 # Item Aura (item_aura)

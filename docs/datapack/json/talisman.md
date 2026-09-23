@@ -1,5 +1,6 @@
 ---
 title: talisman（符箓）
+aside: false
 ---
 
 # talisman（符箓） {#talisman}
@@ -14,12 +15,14 @@ title: talisman（符箓）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `talisman.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `talisman.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `abilities` | `HolderOrTag<ability>[]` | `[]` | 该符箓授予的能力，写法与 `technique.granted_abilities` 一致：单个 ID、ID 数组或 `#标签`。 |
 | `aura_cost` | `Map<Holder<aura>, NumberProvider>` | `{}` | 激发该符箓要付的灵气账单，按具体 aura 分键，每项可以写常量或公式。缺省或为空表示这张符不耗灵气。 |
 
 定义里**没有**"是否回应激发"这类开关：一件载体在灌满后是立刻发动还是存着等你动手，是**载体自己（stack 上）的模式**，不是定义的属性——同一批铭刻可以写在一张灌满即发的符上，也可以写在另一张存着不动的符上。模式见下面的「载体模式」与 [通用物品](/player-guide/items)。
 
-`aura_cost` 只收具体 ID，**不收 `#标签`**，和 `abilities` 相反：灵气池本身就是按具体 aura 分池的（见 `aura_zone` 的 `aura`），标签在这里找不到对应的池子。数值写法与其它灵气消耗一致（`cultivate_action.aura_costs`、`formation.storage.capacity`），因此可以写成 `"12"` 或 `"realm_rank * 4"`。
+`aura_cost` 只收具体 ID，**不收 `#标签`**，和 `abilities` 相反：灵气池本身就是按具体 aura 分池的（见 `aura_zone` 的 `aura`），标签在这里找不到对应的池子。它是一份 `{"<灵气 id>": NumberProvider}` **映射**（不是 `Cost` 数组），数值写法与其它灵气消耗一致（`formation.storage.capacity` 的映射值，或 `Cost` 数组里 `mxt:aura` 条目的 `amount`），因此可以写成 `"12"` 或 `"realm_rank * 4"`。
 
 ## 灌注与激发
 
@@ -37,7 +40,7 @@ title: talisman（符箓）
 - **发动的判定**：铭刻的能力逐个走普通的能力使用流程——能力自身的条件、真言、次数、冷却、消耗与两个事件全部照旧，唯一被替换掉的是"该能力已授予你"这一条：**符箓自己就是授权的来源**（这就是带一张符就能放你不会的法术的原因）。因此冷却、次数与消耗在符与法术之间共享，符箓不是绕过它们的后门。
 - **只能承载立即生效的能力**：需要吟唱（`cast_time > 0`）或持续引导（`mxt:channelled`）的能力会被拒绝——唱法与引导的收尾要靠"持有者已授予的能力"列表推进，而载体从不授予任何东西。被拒绝时载体不消耗、灵气不清空，可以换一张符或换一个能力。
 
-显示名称不是字段，和其它定义一样由标识符生成翻译键 `talisman.<命名空间>.<路径>`（`mxt_test:flame_sigil` → `talisman.mxt_test.flame_sigil`）。
+显示名称可以写成可选的 `name` 字段（省略时由标识符生成翻译键 `talisman.mxt.<定义命名空间>.<路径>`，`mxt_test:flame_sigil` → `talisman.mxt.mxt_test.flame_sigil`）。可选的 `description` 同理，省略时是生成键再接 `.description`；它目前只被存储与读取，还没有地方绘制它。
 
 示例：
 

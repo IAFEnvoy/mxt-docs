@@ -37,7 +37,7 @@ Do not invent a `mxt:item`, `mxt:pill` or `mxt:weapon` file. Those registries do
 | `data/example/mxt/item_binding/qi_pill.json`, `root_pellet.json` | Consumption behaviour. |
 | `data/example/mxt/pill_binding/qi_pill.json` | Pill toxicity. |
 | `data/example/mxt/weapon_binding/spirit_sword.json` | Weapon damage, speed and combat actions. |
-| `data/example/mxt/technique_binding/azure_manual.json` | The manual's technique. |
+| `data/example/mxt/technique_binding/azure_manual.json` | How that technique is read, and which item the mod generates as its carrier. |
 
 ## Step 1 — Register the Items
 
@@ -91,20 +91,20 @@ An `item_quality` is a tier an item can carry. Quality order and grouping are de
 ```json
 // data/example/mxt/item_quality/common.json
 {
-  "display_name": "quality.example.common"
+  "name": "quality.mxt.example.common"
 }
 ```
 
 ```json
 // data/example/mxt/item_quality/refined.json
 {
-  "display_name": "quality.example.refined",
+  "name": "quality.mxt.example.refined",
   "value_multiplier": {
-    "description": "quality.example.refined.value",
+    "description": "quality.mxt.example.refined.value",
     "modifier": 1.25
   },
   "alchemy_modifier": {
-    "description": "quality.example.refined.alchemy",
+    "description": "quality.mxt.example.refined.alchemy",
     "modifier": 1.1
   }
 }
@@ -123,7 +123,7 @@ An `item_quality` is a tier an item can carry. Quality order and grouping are de
 
 - The group is referenced from a binding as `#example:group/pill`. The `#` is part of the reference and a binding without it fails to load.
 - The order of `values` is the group's quality order, and the last usable member is the **default** for an item with no explicit quality — so this file lists `refined` first and `common` last, which makes `common` the default.
-- `display_name` is a text component, so a translation key works; `description` on a modifier is added to the item tooltip automatically, while `modifier` is the value used at runtime: `value_multiplier` scales the item's currency unit value, `forging_modifier` divides the extra steps the forging quality is read from, and `alchemy_modifier` divides the brewing duration. Each reads the quality of the stack it settles — for forging and alchemy the **lowest** quality among the session's own materials — and a missing or unusable modifier behaves as `1`.
+- Both `name` and `description` may be omitted: they are then generated from the entry id as `quality.mxt.<namespace>.<path>` (and `…description`), while writing them uses your own key (a bare string is a translation key, an object is a full component). `description` on a modifier appears in the item tooltip only when it is written — omit it and that line is simply not drawn — while `modifier` is the value used at runtime: `value_multiplier` scales the item's currency unit value, `forging_modifier` divides the extra steps the forging quality is read from, and `alchemy_modifier` divides the brewing duration. Each reads the quality of the stack it settles — for forging and alchemy the **lowest** quality among the session's own materials — and a missing or unusable modifier behaves as `1`.
 - An item whose current quality is outside its group cannot be used at all, so keep one group per kind of item rather than one group for everything.
 
 ```json
@@ -245,9 +245,9 @@ Both tables can be used on the same item; they carry different fields and neithe
 
 The `#example:group/weapon` tag from Step 2 defines which qualities this weapon may carry.
 
-## Step 6 — Technique Bindings
+## Step 6 — Techniques and Manuals
 
-A technique is the logic; a technique binding is the book that teaches it.
+A technique is the logic; `technique_binding` describes how one is **read** — hold length, pose, sound, quality group and conditions — and names the item the mod generates as its carrier.
 
 ```json
 // data/example/mxt/technique/azure_breath.json
@@ -269,13 +269,19 @@ A technique is the logic; a technique binding is the book that teaches it.
 ```json
 // data/example/mxt/technique_binding/azure_manual.json
 {
-  "items": "kubejs:azure_manual",
   "technique": "example:azure_breath",
+  "carrier_item": "kubejs:azure_manual",
   "conditions": [{"type": "mxt:has_realm", "aura": "example:qi"}]
 }
 ```
 
-Right-clicking the manual attempts to learn `example:azure_breath`. Every learned technique stays active at the same time, and a matching binding claims the interaction even when learning fails, so a player cannot bypass the technique's own `learn_condition`, exclusivity tags or the learning event.
+**Whether a stack is a manual comes from its data component, not from this file.** The `carrier_item` above only tells the mod which item to generate as this technique's carrier (one in the creative tab, one under `/picker mxt:technique`); what actually teaches the technique is the `mxt:technique` component on the stack, so take the manual out with the item component syntax:
+
+```mcfunction
+give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
+```
+
+Right-clicking the manual attempts to learn `example:azure_breath`. Every learned technique stays active at the same time, and a stack carrying the component claims the interaction even when learning fails, so a player cannot bypass the technique's own `learn_condition`, exclusivity tags or the learning event. Earlier versions bound a technique to an item with an `items` field; that field is gone, and writing it into a new file is silently ignored — the pack loads without an error and the rule simply never applies.
 
 ## Step 7 — Load and Verify
 
@@ -294,7 +300,7 @@ Then in game:
 2. Cultivate until you have entered the chain, then eat a pill: qi rises by `25`, and pill toxicity rises by `10`. `/mxt attachment status` shows the accumulated toxicity.
 3. Eat ten of them and the overdose line runs.
 4. Eat a `kubejs:root_pellet`: the fire spirit root is granted, and `/mxt attachment status` lists it. The `+25%` cultivation multiplier applies from the next cultivation tick.
-5. Right-click `kubejs:azure_manual` and check that the technique is learned and its `+2 max health` appears.
+5. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]`, then right-click it and check that the technique is learned and its `+2 max health` appears. A stack from a plain `/give @s kubejs:azure_manual` (or from the creative search tab) carries **no component**: right-clicking it does nothing and no technique shows in its tooltip.
 6. Hold `kubejs:spirit_sword` and check the attack damage and speed in its tooltip, then hit something to see the extra damage from `attack_action`.
 
 ## Common Mistakes
@@ -308,7 +314,8 @@ Then in game:
 | A pill cannot be eaten | `pill_binding` only matches edible items, so the item needs `.food(...)`. |
 | New items do not appear after `/reload` | Item registration happens at startup; restart the game. |
 | Edited bindings do not change anything | `/reload` does not re-read data pack registries; load the world again. |
-| The manual has no effect but also no error | The technique binding was claimed but learning failed — check `learn_condition`, an already-learned duplicate or an exclusivity conflict. |
+| The manual has no effect but also no error | First check whether the stack carries the `mxt:technique` component — a plain item without it teaches nothing. If it does, check whether learning failed instead: `learn_condition`, an already-learned duplicate or an exclusivity conflict. |
+| The `items` field on the manual does nothing | `technique_binding` has no `items` field any more, and writing one is **silently ignored** (the pack loads without an error). Use `carrier_item` plus the `mxt:technique` component on the stack. |
 
 ## Next
 

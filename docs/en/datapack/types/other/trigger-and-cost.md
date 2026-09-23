@@ -47,27 +47,35 @@ This is the only way a data pack can react to a **custom** signal id: raise it f
 
 ## `cost_type`
 
-A cost can be checked and then consumed from a player.
+A cost is checked first and then paid in one go. The five shapes, the channel rules and the all-or-nothing semantics are on [Shared Data Types · `Cost`](../shared_data_types.md#cost).
 
 | `type` | Fields | Description |
 |--------|--------|-------------|
-| `mxt:resource` | `resource`, `amount` | Consumes a datapack resource from the player's resource attachment |
-| `mxt:item` | `items`, `amount` | Consumes matching items from the player's inventory |
-| `mxt:js` | `id`, `params?` | Checked and paid by a server script callback |
+| `mxt:resource` | `resource`, `amount` | Spends a datapack value out of the payer's own value account |
+| `mxt:aura` | `aura`, `amount` | Spends an aura by identity: charges the value that aura is measured in when the payer pays, and that aura itself when a shared aura pool or a block's store pays |
+| `mxt:item` | `items`, `amount` | Spends matching items out of a player's inventory |
+| `mxt:js` | `id`, `params?` | Checked and paid by a server script callback; needs a player, and runs last after every other channel |
 
 `mxt:resource`:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `resource` | `Holder<resource>` | **required** | The resource to consume |
-| `amount` | `NumberProvider` | **required** | Amount to consume; must evaluate to a finite positive number |
+| `resource` | `Holder<resource>` | **required** | The value to spend |
+| `amount` | `NumberProvider` | **required** | Amount to spend; must evaluate to a finite positive number |
+
+`mxt:aura`:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `aura` | `Holder<aura>` | **required** | The aura identity to spend |
+| `amount` | `NumberProvider` | **required** | Amount to spend; must evaluate to a finite positive number. The payer's value account is charged the value that aura is measured in; a shared aura pool or a block's store is charged that aura itself (see the channel table under Shared Data Types) |
 
 `mxt:item`:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `items` | `ItemMatcher` | **required** | Which items may be consumed; see [ItemMatcher](../shared_data_types.md#itemmatcher) |
-| `amount` | `NumberProvider` | **required** | Number of matching items to consume, rounded up; a non-positive or non-finite result means the cost cannot be paid |
+| `items` | `ItemMatcher` | **required** | Which items may be spent; see [ItemMatcher](../shared_data_types.md#itemmatcher) |
+| `amount` | `NumberProvider` | **required** | Number of matching items to spend, rounded up; a non-positive or non-finite result means the cost cannot be paid |
 
 ```json
 {"type": "mxt:item", "items": "#minecraft:logs", "amount": 8}
@@ -84,7 +92,11 @@ A cost can be checked and then consumed from a player.
 {"type": "mxt:js", "id": "example:quest_token", "params": {"count": 3}}
 ```
 
-A script cost is checked and then paid on the server, and it needs a player: a cost that is not a `resource` cost makes the whole ability require one. The callback receives the payer and the params, not the ability's formula context, because `Cost` is evaluated with a player alone.
+A script cost is checked and then paid on the server, and it needs a player. The callback receives the payer and the params, not the ability's formula context, because a `Cost` is evaluated with the payer alone.
+
+The payer is a **living entity** (a player, a mob, a summoned creature), not necessarily a player: `mxt:item` needs a player's inventory, so a non-player payer (or a formation with no owner) simply cannot pay it — a refusal, not an error; and `mxt:js` needs a player and runs **last, after every other channel has been paid**. A script cost is not staged, so scripts have to be idempotent about it.
+
+A whole array is **all or nothing**: if any one entry cannot be paid, nothing is taken. Two entries in the same array that name the same store (the same value twice, or the same aura twice) make the definition **fail to load**, while a `mxt:resource` entry and a `mxt:aura` entry whose aura is measured in that value have their amounts added together and are not an error. A malformed entry is **no longer dropped silently** either — it fails the load.
 
 A `costs` array also accepts the plain `{"id": ..., "amount": ...}` shorthand, which is read as `mxt:resource`. The shorthand is kept for compatibility; new entries should write the type explicitly.
 

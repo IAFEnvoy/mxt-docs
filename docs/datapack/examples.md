@@ -69,7 +69,7 @@ data/example/tags/mxt/resource/disabled.json
 // data/example/mxt/cultivate_action/meditation.json
 {
   "absorb_amount": "1 + level * 0.1",
-  "aura_costs": {"example:spirit_power": 1},
+  "aura_costs": [{"type": "mxt:aura", "aura": "example:spirit_power", "amount": 1}],
   "tick_interval": 20,
   "tick_action": {"type": "mxt:no_op"}
 }

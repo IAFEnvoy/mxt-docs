@@ -1,5 +1,6 @@
 ---
 title: aura（灵气）
+aside: false
 ---
 
 # aura（灵气） {#aura}
@@ -12,6 +13,8 @@ title: aura（灵气）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `aura.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `aura.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `resource` | `Holder<resource>` | **必填** | 该档案描述的数值。 |
 | `first_realm` | `Holder<realm_stage>` | 无 | 该数值对应境界链的首个境界；只用于确定凡人首次突破后的目标境界。省略则没有境界链，不能修炼。 |
 | `start_exp` | `NumberProvider` | `0` | 凡人首次突破所需修为，同时是凡人阶段的修为上限；达到后不再增加，只能尝试突破。 |

@@ -1,6 +1,7 @@
 ---
 title: Pill Binding (pill_binding)
 description: "Adds pill consumption behaviour and pill toxicity rules to an existing edible item through the mxt:pill_binding datapack registry."
+aside: false
 ---
 
 # Pill Binding (pill_binding)

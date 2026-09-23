@@ -1,5 +1,6 @@
 ---
 title: element（元素）
+aside: false
 ---
 
 # element（元素） {#element}
@@ -10,6 +11,8 @@ title: element（元素）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `element.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `element.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `overcomes` | `ElementRelation[]` | `[]` | 当前元素克制哪些元素，以及每条克制值多少伤害。 |
 | `adapted_to` | `ElementRelation[]` | `[]` | 当前元素适应（抵御）哪些元素，以及每条适应把受到的伤害乘多少。 |
 | `damage_types` | `HolderOrTag<damage_type>[]`，条目也可以是对象 | `[]` | 这个元素认领哪些伤害类型：被认领的伤害类型**就是**这个元素。两种写法等价——裸字符串（或 `#标签`）用元素自己的 `damage_attachment`，`{"damage_type": "minecraft:lava", "damage_attachment": 2.0}` 给这一类打击**自己的附着量**。见下方「认领的类型就是分组」。 |

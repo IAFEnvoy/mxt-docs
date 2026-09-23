@@ -133,15 +133,15 @@ At the top level there is also **`spare_friends`** (default `false`): when true,
 
 | Field | Type | Default | Effect |
 | --- | --- | --- | --- |
-| `activation_costs` | `List<ResourceCost>` | `[]` | Paid once on activation, out of the **activator's** own resources; a failure anywhere consumes nothing. |
-| `maintenance_costs` | `List<ResourceCost>` | `[]` | Paid once per period; this is what decides how long the array lasts. |
+| `activation_costs` | `List<Cost>` | `[]` | Paid once on activation out of the **activator's** own account; a whole array is all or nothing, so one entry that cannot be paid consumes nothing. See [Shared Data Types · `Cost`](../datapack/types/shared_data_types.md#cost). |
+| `maintenance_costs` | `List<Cost>` | `[]` | Paid once per period; this is what decides how long the array lasts. The aura the array's own blocks supply is offset first and the owner pays the rest, and `mxt:item` / `mxt:js` entries can never be paid here. |
 | `storage` | object | none (off) | If present it must carry `capacity`: `Map<aura, NumberProvider>`. |
 
-::: warning The cost lists swallow mistakes silently
+::: warning A malformed cost entry fails the load
 
-Both lists use a tolerant list decoder: **a malformed entry is logged once and dropped** rather than failing the load. So a typo like `{"id": "example:qi", "amont": 200}` results in a **free formation** — it still activates, it just never pays.
+Every entry of these two lists has to decode: a misspelled field name (`{"id": "example:qi", "amont": 200}`) is no longer "log it and drop it, so the array is free" — it makes the whole definition **fail to load**. A malformed cost entry is **not** dropped silently.
 
-`structure` and `actions`, by contrast, are strict lists: a mistake there fails the load outright. **Check the log after editing a formation**, not just whether it activates.
+`structure` and `actions` are strict lists in the same way. **Check the log after editing a formation**, not just whether it activates.
 
 :::
 
@@ -202,7 +202,7 @@ Per-entity actions fire only for entities **actually inside the sphere** and onl
 | The definition fails to load with a `structure_template` / `structure` error | Both were written, or neither; it must be **exactly one**. |
 | Right-clicking the controller reports a structure mismatch | Blocks are compared exactly, so a differing block state (stair facing, open trapdoor) is not a match. |
 | Activation reports an invalid radius | `radius` is not finite, or is ≤ 0. |
-| The array activates but never pays | An entry of `activation_costs` / `maintenance_costs` has a misspelled **field name** — the tolerant decoder logs it and drops it. |
+| The costs seem never to be paid | The upkeep comes out of the ground, the store and the owner's account only, so `mxt:item` and `mxt:js` entries can never be paid there. A misspelled field name now **fails the load** instead of quietly making the array free. |
 | It vanishes right after activating | The structure was broken after activation: it is checked every 20 ticks and dismantled silently on failure. |
 | Protection lets one outsider through | Identification judged that entity `TRUE` (a friend); the top-level `spare_friends` together with **Server Config → Formations → Friend or Foe** decides this. |
 | Nobody inside gets the buff | `target` is `allies` and nobody can be identified as one (`DEFAULT` grants nothing). |

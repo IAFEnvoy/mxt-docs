@@ -1,6 +1,7 @@
 ---
 title: Currency (currency)
 description: "Defines an item-based currency denomination, its value and its one-way exchange options through the mxt:currency datapack registry."
+aside: false
 ---
 
 # Currency (currency)

@@ -1,6 +1,7 @@
 ---
 title: Artifact (artifact)
 description: "An artifact is a set of rules for items that already exist: which items it claims, how much of each aura it stores, and which abilities it carries."
+aside: false
 ---
 
 # Artifact (artifact)
@@ -15,6 +16,8 @@ An artifact is not a new item: it is a set of rules for items that already exist
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `artifact.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `artifact.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `items` | `ItemMatcher` | **required** | The items this definition claims: an item id, a `#tag`, or a mixed array of both, matching at least one item. |
 | `spirit_capacity` | `Map<aura, NumberProvider>` | `{}` | The storage ceiling of each aura. Keys must be **concrete auras** (tags are not accepted); an empty map means this artifact stores no aura. Values are floored, and a non-finite value reads as `0`; the nourishment bonus `× (1 + 0.5 × nourishment)` is **applied by the pipeline**, so a formula must not multiply it in again. |
 | `abilities` | `ArtifactAbility[]` | `[]` | The artifact's ability entries, dispatched by `type`; see the table below. |
@@ -35,9 +38,9 @@ The built-in types of `abilities` (the `mxt:artifact_ability_type` registry, whi
 | `mxt:empty` | none | A do-nothing placeholder type, and the registry's default entry; `type` itself is still required, so omitting it fails to load. |
 | `mxt:passive` | `abilities`: an ability id, a `#tag`, or a mixed array of both | Grants those abilities while the artifact is held or equipped; attribute modifiers apply while they are granted. The abilities referenced here must not be active abilities. |
 | `mxt:active` | the same shape | Grants **castable** abilities; active abilities can be put on the wheel and cast from it. The abilities referenced here must be active abilities — a wrong reference is reported by `/mxt registries validate`. |
-| `mxt:flight` | `speed` (required `NumberProvider`), `costs` (`ResourceCost[]`, default `[]`) | Flight: `speed` is the mount's flying speed and `costs` is what is paid per tick. **At most one such entry per definition.** It is also an **artifact skill** (a `ToggableArtifactAbility`), so it appears as one cell on the wheel: press to take off, press again to land. |
+| `mxt:flight` | `speed` (required `NumberProvider`), `costs` (`Cost[]`, default `[]`), `display` (how the mount is drawn; default = laid flat, blade forward, twice the authored size) | Flight: `speed` is the mount's flying speed and `costs` is what is paid per tick by the carried owner (see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost)). **At most one such entry per definition.** It is also an **artifact skill** (a `ToggableArtifactAbility`), so it appears as one cell on the wheel: press to take off, press again to land. |
 | `mxt:storage` | `slots` (required `NumberProvider`) | Built-in storage slots, **at most one such entry per definition**. The slot count is **rounded up to whole rows of nine** (the screen is a standard chest) and cut at six rows, so **54 slots at most** - slots a screen cannot open should not exist, which keeps the capacity and the window the same number. The contents live in the `mxt:artifact_storage` item component and only the owner and the server can reach them. It is also an **artifact skill**: its wheel cell opens that box (titled after the artifact). |
-| `mxt:upkeep` | `costs` (`ResourceCost[]`, default `[]`), `interval` (`NumberProvider`, default `20`), `on_fail` (ItemAction, default `mxt:no_op`), `owner_only` (bool, default `true`) | **A periodic price**: carrying the artifact drains resources on a clock. See below. **At most one such entry per definition.** |
+| `mxt:upkeep` | `costs` (`Cost[]`, default `[]`), `interval` (`NumberProvider`, default `20`), `on_fail` (ItemAction, default `mxt:no_op`), `owner_only` (bool, default `true`) | **A periodic price**: carrying the artifact drains what `costs` names on a clock, paid by the carried owner (see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost)). See below. **At most one such entry per definition.** |
 
 `mxt:upkeep` in detail:
 
@@ -46,6 +49,16 @@ The built-in types of `abilities` (the `mxt:artifact_ability_type` registry, whi
 - It looks at the **main hand, the off hand and every equipped Curios slot** (`ArtifactUpkeepService`, checked once per server tick).
 - `on_fail` is what runs on the holder and on that item stack when the price cannot be paid, for example `{"type": "mxt:damage_item", "amount": 1}`.
 - `owner_only` true (the default) means only the owner pays — an unclaimed artifact has nobody to charge; false means whoever carries it pays.
+
+**`mxt:flight`'s `display` (how the mount is drawn).** The flying mount is drawn as **the item model of the item it carries** (the item frame context: the authored model at full size, with no offset), and `display` says how it sits relative to the mount's origin. The keys have the same names and the same meaning as a vanilla item model's `display`, so a block copied from one usually works as is:
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `translation` | `[0, 0, 0]` | An offset **in sixteenths of a block** (as in vanilla — note that every other number in this file is in blocks), added on top of the mount's origin, which is the bottom of its collision box |
+| `rotation` | `[90, 0, -45]` | **Degrees**, composed the vanilla way (`rotationXYZ`: X first, then Y, then Z). The default lays the upright card flat (X 90°) and turns the diagonal blade in the sprite to point forwards (the in-plane 45° folded into Z) |
+| `scale` | `[2, 2, 2]` | A multiplier, where `1` is the size the resource pack draws; negative values mirror, as in vanilla |
+
+All three vectors have to be **finite**; NaN and infinity are refused when the definition loads. The order of placement: the model's underside is put on the bottom of the collision box first (automatically, so any model lands on the same plane), then `translation` is added, and only then `rotation` / `scale`. The mount's own yaw and pitch are applied outside all of it, so a definition never has to think about facing. The seat (how high the rider's feet stand) is not part of `display`.
 
 These **eight keys are no longer read**: writing them neither fails nor does anything, because `RecordCodecBuilder` ignores every key it was not told about. Four of them have moved into `abilities` — `granted_abilities` is now written as `mxt:passive` / `mxt:active` entries, `flight_speed` and `flight_costs` as `mxt:flight`, and `storage_slots` as `mxt:storage`. Two were **renamed** — `refine_action` → **`claim_action`** and `refine_condition` → **`claim_condition`**; and both **`refine_health_cost`** and the short-lived **`claim_cost`** were merged into `claim_action`, whose default is the price. **An old pack writing the old names still loads, but the price falls back to the default four points of health and the claim's effects and condition stop working**, so it has to be renamed by hand.
 

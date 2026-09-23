@@ -51,7 +51,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `value_delta` | Integer | **必填** | 锻打条的偏移，**不能为 `0`**。 |
-| `costs` | `List<ResourceCost>` | `[]` | 每次锻打的消耗，从锻打者身上扣（写法见[触发器与消耗类型](../datapack/types/other/trigger-and-cost.md)）。 |
+| `costs` | `List<Cost>` | `[]` | 每次锻打的消耗，从锻打者身上扣，整份数组全有或全无；写法见[共享数据类型 · `Cost`](../datapack/types/shared_data_types.md#cost)，各类型见[触发器与消耗类型](../datapack/types/other/trigger-and-cost.md#cost-type)。 |
 | `condition` | `EntityCondition` | `mxt:always_true` | 允许使用该手法的条件，判定对象是**玩家**（[实体条件](../datapack/types/condition/entity_condition_types.md)）。 |
 | `icon` | 图标引用 | 无 | 列表里画什么，**同时决定这个手法在列表里叫什么名字**。 |
 | `cooldown` | Integer | `0` | 冷却，单位 tick，范围 `0..72000`。 |
@@ -138,7 +138,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 | `target_min` / `target_max` | Integer | **必填** | 目标区间，必须落在条内。 |
 | `result` | Identifier | **必填** | 成功后产出的物品。 |
 
-`input` **顺序无关**：台子上 12 个输入格合计持有每项声明的数量即可，从哪些格子掏的不影响判定。但它是**严格**列表——空列表、超过 15 项、同一物品写两次、无法解析的物品 ID，都会让整份定义加载失败。这和后来要讲的阵法费用表正好相反，那边是容错列表。
+`input` **顺序无关**：台子上 12 个输入格合计持有每项声明的数量即可，从哪些格子掏的不影响判定。但它是**严格**列表——空列表、超过 15 项、同一物品写两次、无法解析的物品 ID，都会让整份定义加载失败。消耗列表现在也是同一套严格解码：写错的消耗条目会让定义加载失败，而不是被静默丢掉。
 
 材料按**物品**匹配（`stack.is(item)`），不看组件。所以"一摞带品质组件的灵铁锭"和普通的同名物品在判定上没有区别——想限制品质，靠的是结算时的品质读取（见第 4 步），不是 `input`。
 
@@ -171,7 +171,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 ```json
 // data/example/mxt/item_quality/flawless.json
 {
-  "display_name": "quality.example.flawless"
+  "name": "quality.mxt.example.flawless"
 }
 ```
 
@@ -243,7 +243,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 2. 把两枚铁锭和一根木棍放进输入格。左列表里出现成品图标（蓝图在列表里就是用**产出物品**命名的）；悬停它，会列出材料清单，够的显示绿色 `✔` 与"已有/需要"，不够的红色 `✖`，下方还会写步数上限。
 3. 选中蓝图，按「使用蓝图」。材料被拿走，会话开始：条上出现绿色目标带、灰色零线、红色当前值。
 4. 在右列表选中一个手法（图标就是 `icon`，悬停显示"数值影响：+2"），按「使用方法」。当前值移动，下面的"当前"一行记录最近六锤；选中手法时条上还会出现一条黄色预测线。
-5. 把当前值打进绿带，并让最后两锤是"轻敲 → 重锤"。会话会自动结算，成品落进输出格，Tooltip 里出现品质行——显示的文字就是 `flawless.json` 里 `display_name` 指向的内容（写翻译键的话，记得在自己的语言文件里给它一条译文）。
+5. 把当前值打进绿带，并让最后两锤是"轻敲 → 重锤"。会话会自动结算，成品落进输出格，Tooltip 里出现品质行——显示的文字就是 `flawless.json` 里 `name` 指向的内容；`name` 省略时按条目 id 自动生成 `quality.mxt.example.flawless`（写翻译键的话，记得在自己的语言文件里给它一条译文）。
 6. 再打一件，这次故意多绕几锤，比较两次的品质。想中途放弃就按「取消」，材料按取消策略退回。
 7. `/mxt registries validate` 应当无错误，`/mxt registries list` 里能看到 `mxt:forging_method`、`mxt:forging_blueprint`、`mxt:tool_binding`、`mxt:blueprint_binding` 的条目数。
 

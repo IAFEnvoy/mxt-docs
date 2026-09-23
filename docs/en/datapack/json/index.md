@@ -63,7 +63,7 @@ The table below lists the 34 datapack registries the mod registers, in registry 
 | [`item_quality`](./item_quality.md) | `mxt/item_quality` | Shared quality and quality conditions. |
 | [`physique`](./physique.md) | `mxt/physique` | Physique bonuses that are independent of elements: vanilla attributes, granted abilities, exclusion tags and rarity, plus the two multipliers for damage dealt and damage taken. |
 | [`pill_binding`](./pill_binding.md) | `mxt/pill_binding` | Pill and pill toxicity rules for existing items. |
-| [`realm_instance`](./realm_instance.md) | `mxt/realm_instance` | Realm templates: instance dimension generation, borders, structures, landing points, claiming and the entry and exit rules. |
+| [`secret_realm`](./secret_realm.md) | `mxt/secret_realm` | Secret realm templates: instance dimension generation, borders, structures, landing points, claiming and the entry and exit rules. |
 | [`realm_stage`](./realm_stage.md) | `mxt/realm_stage` | Linear realm chains and breakthrough. |
 | [`resource`](./resource.md) | `mxt/resource` | Entity resources such as cultivation progress, spirit power and stamina, plus inline resource bars. |
 | [`skill_stage`](./skill_stage.md) | `mxt/skill_stage` | One level of a skill mastery chain. |

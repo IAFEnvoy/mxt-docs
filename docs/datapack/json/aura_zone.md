@@ -1,5 +1,6 @@
 ---
 title: aura_zone（灵气区域）
+aside: false
 ---
 
 # aura_zone（灵气区域） {#aura_zone}

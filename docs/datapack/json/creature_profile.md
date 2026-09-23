@@ -1,5 +1,6 @@
 ---
 title: creature_profile（生物档案）
+aside: false
 ---
 
 # creature_profile（生物档案） {#creature_profile}

@@ -1,59 +1,66 @@
 ---
 title: Technique Binding (technique_binding)
-description: "Binds an existing book, jade slip or other item to a cultivation technique through the mxt:technique_binding datapack registry."
+description: "Describes how one cultivation technique is read — hold length, pose, sound, quality group and conditions — and which item the mod generates as its carrier. What a stack teaches comes from its mxt:technique data component."
+aside: false
 ---
 
 # Technique Binding (technique_binding)
 
-A technique binding maps an existing book, jade slip, or other item to one technique from the `mxt:technique` registry. Like every other binding it only matches already registered items, so the physical item must come from Minecraft, a content mod, or KubeJS. Right-clicking the bound item attempts to learn the technique; every learned technique remains enabled and contributes its passive effects.
-
-## File Location
-
 Technique binding JSON files go in `data/<namespace>/mxt/technique_binding/` within your data pack.
 
-**Purpose**: Bindings from existing items to cultivation technique learning.
-
-The filename corresponds to its ID. For example, `data/example/mxt/technique_binding/fire_manual.json` has the ID `example:fire_manual`.
+**Purpose**: it describes how one technique is **read** — the length, pose and sound of the gesture, the quality group, the conditions that gate an attempt, and the item the mod generates as that technique's carrier. **Whether a stack is a manual at all, and which technique it teaches, is decided by the stack's own `mxt:technique` data component, not by this table.**
 
 ## Fields
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `items` | `ItemMatcher` | **required** | Matches existing books, jade slips and similar items |
-| `technique` | `Holder<technique>` | **required** | The technique that right-clicking attempts to learn |
+| `technique` | `Holder<technique>` | **required** | The technique this definition describes. Declarations are matched by technique id, no longer by item |
+| `carrier_item` | Item ID | `mxt:cultivation_jade_slip` | The item the mod uses when it generates a carrier for this technique. A single item ID — item tags, wildcards and arrays are not accepted |
 | `quality_group` | `Tag<item_quality>` | none | The allowed quality group |
 | `conditions` | `EntityCondition[]` | `[]` | The conditions checked before learning; supports inline conditions or described condition objects |
 | `learn_time` | Integer | `0` | The ticks the item has to be held down; range `0..72000`. `0` learns on the first right-click |
 | `hold_animation` | String | `block` | The pose played while holding. It only means anything together with `learn_time`; see the allowed values below |
 | `hold_sound` | `Holder<sound_event>` | `minecraft:item.book.page_turn` | The sound played while holding. It only means anything together with `learn_time`, and every nearby player hears it |
 
-### `items`
+::: warning The old `items` field is gone
+Earlier versions used an `items` matcher (a single item, a tag or a mixed array) to bind a physical item to a technique. That field **no longer exists**. The codec does not recognise unknown fields, so an `items` field in a new file is **silently ignored**: the pack loads without an error and the rule simply never applies. Use `carrier_item` instead, and put the `mxt:technique` component on the stack as shown below.
+:::
 
-The `items` matcher accepts one item ID, one item tag (such as `"#example:manuals"`), or a mixed array of both; one binding can therefore cover many physical items. Any array entry may also be written as a typed object dispatched by the built-in `item_matcher_entry_type` registry (`mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:herb_tag` and the `mxt:spirit_storage` capability matcher); see [Shared Data Types](../types/shared_data_types.md) for the entry types. When multiple bindings match an item, the matcher selects the definition with the lowest `priority` first, and all four binding types currently use priority `0`.
+## What Makes a Stack a Manual {#manual}
 
-### `quality_group`
+**A stack carrying the `mxt:technique` component is a manual for that technique.** The component holds a technique definition id (a `Holder<technique>`):
 
-`quality_group` must be a native item-quality tag reference prefixed with `#`. Its `values` order defines the group's quality order. When no explicit `mxt:item_quality` component or forge result exists, the last member not disabled by the `mxt:disabled` tag becomes the default quality.
+```mcfunction
+give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
+```
 
-The item cannot be used when its current quality is outside the group, the group has no usable member, a binding condition fails, or the quality's own `condition` fails. See [Item Quality](./item_quality.md).
+The same item *without* that component — a `mxt:cultivation_jade_slip` taken straight out of the creative inventory, for instance — **teaches nothing and shows no technique in its tooltip**. That is the behaviour this version fixes: previously any stack of jade slips counted as a manual for some technique.
 
-### `conditions`
+The component is **stack data**, so items that generate naturally in the world never carry it by themselves. Every route that can write onto a stack works equally well:
 
-`conditions` is optional. Each entry may be an inline `EntityCondition`, or an object with `condition` and an optional translation-key `description`. Described entries are shown in the item tooltip with a green `✓` when true or a red `✗` when false. The check runs before learning.
+- the `components` of a recipe result;
+- a loot function;
+- the item component syntax of `/give`, as above.
 
-### `technique`
+## The Carrier the Mod Generates {#carrier}
 
-`technique` is a required holder reference to the `mxt:technique` registry, so a binding writes a technique ID such as `example:fire_manual`. Its own `learn_condition`, already-learned check, exclusive-tag conflict check, and event cancellation remain authoritative. A matching technique binding claims the item interaction even when learning fails, so the item's normal right-click behavior cannot bypass these checks. See [Cultivation Technique](./technique.md).
+The mod walks the `mxt:technique` registry and **generates one carrier per technique**: it appears in the creative inventory and in the `/picker mxt:technique` category of the item picker. The generated stack uses the item named by `carrier_item` in that technique's declaration, and **absent means the jade slip** `mxt:cultivation_jade_slip`.
 
-A refusal is not silent: the action bar names the technique and the reason, whether the item gate refused (the binding conditions, the quality's condition, or the quality group) or the learning transaction did. The item gate is answered first, so an item that cannot be used at all reports that instead of the learning outcome.
+To use an item of your own as the manual, write `carrier_item: "namespace:item"` and take the generated carrier from either entry point — the stack you get already carries the `mxt:technique` component.
 
-### `learn_time`
+**A technique does not need a declaration at all.** Declarations are matched by technique id, and a technique with no `technique_binding` file is still read, with the defaults: it is learned on the first right-click, with the default pose and sound, no quality group, no conditions and the jade slip as its carrier.
 
-A `learn_time` greater than `0` turns the item into a **hold** read: the item only teaches once the use cycle has run for that many ticks, and releasing early cancels the attempt. The progress bar, the arm pose and the release cancellation all come from the vanilla use cycle, so no extra screen is involved, and the item needs no special class — a vanilla item, a modded item and a KubeJS item all work.
+## Reading: Hold Length and Authority
 
-The component that drives the cycle is written onto the held stack when the click starts and is taken off again by the server immediately after, so **a completed read does not consume the item**, not even when the item is also food. The judgement itself runs server-side, so `learn_time` is the number of server ticks the read has to run.
+A `learn_time` greater than `0` turns the item into a **hold** read: the item only teaches once the use cycle has run for that many ticks, and releasing early cancels the attempt. The progress bar, the arm pose and the release cancellation all come from the vanilla use cycle, so no extra screen is involved.
 
-`hold_animation` and `hold_sound` only do something together with a `learn_time`; declaring either on a binding that asks for no hold is rejected at load. `hold_animation` reuses the vanilla `ItemUseAnimation`, but only the side-effect-free values are accepted:
+The two forms do not interfere: leaving `learn_time` out (or writing `0`) keeps the plain right-click learn, and a positive number turns it into a hold.
+
+**The item needs no special class.** As soon as the stack carries the `mxt:technique` component it gains the hold behaviour its declaration asks for, whether it is a vanilla item, a modded item or a KubeJS item — the component lives on the stack, so the item does not have to belong to any particular class, and it does not even have to be the declared `carrier_item`.
+
+The component that drives the cycle is written onto the held stack when the click starts and is taken off again by the server immediately after, so **a completed read does not consume the item**, not even when the item is also food. The judgement itself runs server-side, so `learn_time` is the number of server ticks the read has to run; the arm pose follows the client's own counter, which is why a badly lagging server can drop the pose a tick or two before the technique arrives.
+
+`hold_animation` and `hold_sound` only do something together with a `learn_time`; declaring either on a declaration that asks for no hold is rejected at load. `hold_animation` reuses the vanilla `ItemUseAnimation`, but only the side-effect-free values are accepted:
 
 | Value | Pose |
 |-------|------|
@@ -63,33 +70,38 @@ The component that drives the cycle is written onto the held stack when the clic
 | `toot_horn` | The vanilla goat horn pose |
 | `none` | No pose, only the progress bar |
 
-The other vanilla poses are refused at load: `spyglass` because vanilla ties that pose to scoping and hand hiding, `eat`, `drink` and `spear` because they declare a custom arm transform, and `bow`, `trident` and `crossbow` because they scale the pose by how far the item is charged. See [Cultivation Technique](./technique.md) for the technique definition itself.
+The other vanilla poses are refused at load: `spyglass` because vanilla ties that pose to scoping and hand hiding, `eat`, `drink` and `spear` because they declare a custom arm transform, and `bow`, `trident` and `crossbow` because they scale the pose by how far the item is charged.
+
+While the read runs, everyone nearby hears it: the reader hears the sound played by the component on their own client, and other players hear a server-side broadcast at range (the reader is left out of it, so nobody hears it twice). The default is a page turn, and the interval follows the vanilla rule — about every fourth tick after the first fifth of the read.
+
+The item cooldown a completed read pays is server config rather than data pack content: **Server Config → Cultivation → Learn Cooldown** is measured in ticks, defaults to `60`, and accepts `0` (off) up to `72000`. Every completed read pays it, whether the technique was learned or refused; releasing the item early is not a read and pays nothing.
 
 ## Example
+
+A technique that uses an item of the content pack as its carrier:
 
 ```json
 // data/example/mxt/technique_binding/fire_manual.json
 {
-  "items": "kubejs:fire_manual",
   "technique": "example:fire_manual",
+  "carrier_item": "kubejs:fire_manual",
   "quality_group": "#example:group/manual",
   "conditions": [{"type": "mxt:realm", "realm": "example:foundation"}]
 }
 ```
 
-The item cooldown a completed read pays is server config rather than datapack content: **Server Config → Cultivation → Learn Cooldown** is measured in ticks, defaults to `60`, and accepts `0` (off) up to `72000`. Every completed read pays it, whether the technique was learned or refused; releasing the item early is not a read and pays nothing.
-
-A manual that has to be held for three seconds, with a brush pose:
+The same technique, held for three seconds with a brush pose:
 
 ```json
 {
-  "items": "mxt_test:azure_water_manual",
   "technique": "mxt_test:azure_water_manual",
+  "carrier_item": "mxt_test:azure_water_manual",
   "learn_time": 60,
   "hold_animation": "brush",
   "conditions": [{"type": "mxt:always_true"}]
 }
 ```
 
-The condition ids used inside `conditions` come from the [Entity Condition Types](../types/condition/entity_condition_types.md) list.
+Either way the manual itself still has to come from a stack that **carries the component**: use the item component syntax of `/give`, or let a recipe result carry `{"mxt:technique": "mxt_test:azure_water_manual"}`.
 
+The condition ids used inside `conditions` come from the [Entity Condition Types](../types/condition/entity_condition_types.md) list. See [Cultivation Technique](./technique.md) for the technique definition itself.

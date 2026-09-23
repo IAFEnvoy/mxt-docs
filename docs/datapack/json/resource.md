@@ -1,5 +1,6 @@
 ---
 title: resource（资源）
+aside: false
 ---
 
 # resource（资源） {#resource}
@@ -12,6 +13,8 @@ title: resource（资源）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `resource.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `resource.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `default_value` | `NumberProvider` | **必填** | 新建附件时的当前值。 |
 | `min` | `NumberProvider` | `0` | 数值下限。 |
 | `max` | `NumberProvider` | **必填** | 数值上限。 |
@@ -19,7 +22,7 @@ title: resource（资源）
 | `particle_color` | `RGBColor` | `#FFFFFF` | 灵力射线使用的粒子颜色。可写入 `#RRGGBB` 或 `0..16777215` 整数。 |
 | `bars` | `List<ResourceBar>` | `[]` | 内联资源条；为空时不显示该数值。 |
 
-数值始终被钳制在 `[min, max]`，越界变更会被拒绝。数值可以作为 `ResourceCost` 被消耗、用 `mxt:resource_compare` 比较、在公式里以 `caster_<名称>` 读取、把**该值所对应的灵气**（`Aura` 定义）通过存取接口（`AuraAccess`/`ItemAuraAccess`）存入物品，并用 `mxt:add_resource` 行为增减。
+数值始终被钳制在 `[min, max]`，越界变更会被拒绝。数值可以作为消耗数组里的 `mxt:resource` 条目被消耗（见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)）、用 `mxt:resource_compare` 比较、在公式里以 `caster_<名称>` 读取、把**该值所对应的灵气**（`Aura` 定义）通过存取接口（`AuraAccess`/`ItemAuraAccess`）存入物品，并用 `mxt:add_resource` 行为增减。
 
 示例：
 
@@ -44,7 +47,7 @@ title: resource（资源）
 
 `bars` 是 `resource` 内联数组，不是独立动态注册表。
 
-`context` 使用固有注册表 `mxt:resource_bar_context` 中的 ID。上下文对象负责从实体或客户端状态提取当前值、最小值、最大值和最近变更时间，并使用传入的资源 ID 生成显示名称。灵气浓度上下文分为 `mxt:environment_concentration`（仅环境）和 `mxt:actual_concentration`（全部来源）；例如配合 `resource.example.qi=灵气` 会分别显示为“环境灵气浓度”和“实际灵气浓度”。内置上下文还包括 `mxt:self_hud`、`mxt:target_overlay` 和 `mxt:boss_overlay`。
+`context` 使用固有注册表 `mxt:resource_bar_context` 中的 ID。上下文对象负责从实体或客户端状态提取当前值、最小值、最大值和最近变更时间，并使用传入的资源 ID 生成显示名称。灵气浓度上下文分为 `mxt:environment_concentration`（仅环境）和 `mxt:actual_concentration`（全部来源）；例如配合 `resource.mxt.example.qi=灵气` 会分别显示为“环境灵气浓度”和“实际灵气浓度”。内置上下文还包括 `mxt:self_hud`、`mxt:target_overlay` 和 `mxt:boss_overlay`。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
@@ -100,5 +103,5 @@ title: resource（资源）
 
 `use_condition`（在 `aura` 定义中）是可选的 `EntityCondition`，用于控制实体能否主动消耗该数值，同时控制其所有资源条的可见性。它不影响修炼、环境吸收、自然恢复或突破。`show_cultivation_info` 默认为 `true`；设为 `false` 时该数值仍可拥有境界链和修为，但不会出现在人物信息面板的“境界”或“修为进度”中。
 
-数值、境界、元素、技能等数据驱动定义不再填写 `translation_key`。显示名称统一由定义文件的标识符自动生成翻译键 `<注册表类别>.<命名空间>.<路径>`，类别默认取注册表自己的 path，例如 `example:qi` 在 `resource` 类别下对应 `resource.example.qi`。路径里的 `/` **原样**保留（`example:foo/bar` 得到 `resource.example.foo/bar`），不会被转成 `.`，所以定义文件名建议不要带子目录。数据包作者只需在语言文件中提供该键的翻译。
+数值、境界、元素、技能等数据驱动定义不再填写 `translation_key`。显示名称统一由定义文件的标识符自动生成翻译键 `<注册表类别>.<注册表命名空间>.<定义命名空间>.<路径>`：注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`（注册表键都写作 `mxt:<路径>`），类别默认取注册表自己的 path，所以 `example:qi` 在 `resource` 类别下对应 `resource.mxt.example.qi`。路径里的 `/` **原样**保留（`example:foo/bar` 得到 `resource.mxt.example.foo/bar`），不会被转成 `.`，所以定义文件名建议不要带子目录。数据包作者只需在语言文件中提供该键的翻译。`resource` 也是可以自带可选 `name` / `description` 的 18 个注册表之一：写了就用你自己的文本，省略才用上面的生成键，`description` 再加 `.description`；目前这两个字段只被存储与读取，还没有地方绘制它们。
 

@@ -1,5 +1,6 @@
 ---
 title: formation（阵法）
+aside: false
 ---
 
 # formation（阵法） {#formation}
@@ -10,11 +11,13 @@ title: formation（阵法）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `formation.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `formation.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `structure_template` | Identifier | **必填** | 原版结构模板 ID。 |
 | `structure` | `List<RequiredBlock>` | 见文档 | 内联结构，与 `structure_template` 二选一。 |
 | `radius` | `NumberProvider` | **必填** | 阵法影响半径。 |
-| `activation_costs` | `List<ResourceCost>` | `[]` | 激活时消耗。 |
-| `maintenance_costs` | `List<ResourceCost>` | `[]` | 每个维护周期消耗；失败时失效。 |
+| `activation_costs` | `List<Cost>` | `[]` | 激活时消耗，从**激活者**自己的账户扣，整份数组**全有或全无**；写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。 |
+| `maintenance_costs` | `List<Cost>` | `[]` | 每个维护周期消耗；**阵法内方块供的灵气先抵扣，缺口再由阵主支付**，失败时失效。`mxt:item` 与 `mxt:js` 在这里永远付不出。 |
 | `storage` | `Storage` | 无（不启用） | 阵法自己的存量：`capacity`（`Map<Holder<aura>, NumberProvider>`，必填）声明每种灵气最多存多少。存下自家地脉供应的盈余，付账顺序变成 地脉 → 存量 → 阵主。通用字段，任何阵法都能写。 |
 | `actions` | `List<Formation Action>` | `[]` | 功能模块列表：`mxt:attack`、`mxt:buff`、`mxt:protection`、`mxt:range_display`、`mxt:none`。灵气覆写 `aura_zone` 与上限加成 `max_bonus` 属于 `mxt:buff` 模块的字段；把守御交给领地插件用 `mxt:protection` 的 `delegate_to_claims`；画范围轮廓用 `mxt:range_display` 的 `particle`。 |
 | `spare_friends` | `boolean` | `false` | 敌我识别开关：逐实体行为给覆盖范围内所有人，还是先过一道敌我判断（好友与认不出身份的不受影响）。它只决定"全部 / 识别"，**不代表阵法是攻击型**——那是 `actions` 的事。 |
@@ -34,8 +37,8 @@ title: formation（阵法）
 | `structure_template`     | Identifier                      | 见下          | 结构模板；controller 即模板原点          |
 | `structure`              | `List<RequiredBlock>`           | 见下          | 内联结构；controller 即偏移原点          |
 | `radius`                 | NumberProvider                  | **必填**      | 球形作用半径                        |
-| `activation_costs`       | `List<ResourceCost>`            | `[]`        | 激活消耗                          |
-| `maintenance_costs`      | `List<ResourceCost>`            | `[]`        | 每 20 tick 的维持消耗；**阵法内方块供的灵气先抵扣**，缺口由阵主支付，付不出即拆除（可被拦截，见下） |
+| `activation_costs`       | `List<Cost>`                    | `[]`        | 激活消耗；从**激活者**自己的账户扣，整份数组全有或全无（写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)） |
+| `maintenance_costs`      | `List<Cost>`                    | `[]`        | 每 20 tick 的维持消耗；**阵法内方块供的灵气先抵扣**，缺口由阵主支付，付不出即拆除（可被拦截，见下）。`mxt:item` 与 `mxt:js` 在这里永远付不出 |
 | `storage`                | `Storage`                       | 无（不启用）      | 阵法自己的**存量**：存下自家地脉供应的盈余，付账顺序变成 地脉 → 存量 → 阵主。**通用字段，任何阵法都能写**；不写就是不启用，见「存量」 |
 | `actions`                | `List<Formation Action>`        | `[]`        | **这座阵法做什么**：功能模块列表，见「阵法功能」     |
 | `spare_friends`          | boolean                         | `false`     | **敌我识别开关**：逐实体行为是给覆盖范围内所有人，还是先过一道敌我判断（好友与认不出身份的都不受影响）。它只决定"全部 / 识别"，**不代表这座阵法是攻击型**——那是 `actions` 的事，见「敌我判断」 |

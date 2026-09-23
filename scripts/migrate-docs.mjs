@@ -278,7 +278,7 @@ const ZH_FILES = {
 }
 
 /** Documents that stay internal to the repository and are not published. */
-const ZH_EXCLUDED = new Set([  '模块实现审计.md',
+const ZH_EXCLUDED = new Set(['模块实现审计.md',
   'FORMAT.md',
   'SKILL.md',
   'item-bindings.md',
@@ -442,7 +442,7 @@ const REGISTRIES = [
   'tribulation',
   'creature_profile',
   'contract_type',
-  'realm_instance',
+  'secret_realm',
   'trigger',
   'talisman',
   'currency'
@@ -537,7 +537,7 @@ const TITLES = {
   'datapack/types/condition/item_condition_types': '物品条件类型',
   'datapack/types/condition/damage_condition_types': '伤害条件类型',
   'datapack/json/alchemy_recipe': 'alchemy_recipe（炼丹配方）',
-  'datapack/json/spirit_crafting': 'spirit_crafting（灵性合成）',
+  'datapack/json/spirit_crafting': 'spirit_crafting（灵气合成）',
   faq: '常见问题',
   'datapack/loot-and-criteria': '战利品与进度条件',
   'tutorial/index': '教程',
@@ -578,7 +578,7 @@ const REGISTRY_TITLES = {
   tribulation: '天劫',
   creature_profile: '生物档案',
   contract_type: '契约类型',
-  realm_instance: '秘境实例',
+  secret_realm: '秘境',
   trigger: '事件规则',
   talisman: '符箓',
   currency: '货币'

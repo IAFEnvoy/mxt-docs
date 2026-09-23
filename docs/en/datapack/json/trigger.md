@@ -1,6 +1,7 @@
 ---
 title: Trigger Rule (trigger)
 description: "Datapack event rules: react to a published signal by running a condition and an action on its actor."
+aside: false
 ---
 
 # Trigger Rule (trigger)

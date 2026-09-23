@@ -27,7 +27,7 @@ title: 技能、状态与诅咒类型
 | `mxt:aura` | `interval` | `NumberProvider` | `20` | 两次灵气施加之间的 tick 数 |
 | `mxt:aura` | `radius` | `NumberProvider` | `4` | 灵气半径 |
 | `mxt:channelled` | `tick_interval` | `NumberProvider` | `1` | 两次维持支付之间的 tick 数 |
-| `mxt:channelled` | `upkeep_costs` | `ResourceCost` 列表 | `[]` | 每个维持 tick 支付的数值 |
+| `mxt:channelled` | `upkeep_costs` | `Cost` 列表 | `[]` | 每个维持 tick 由施法者支付的消耗；整份数组全有或全无，写法见[共享数据类型 · `Cost`](../shared_data_types.md#cost) |
 | `mxt:composite` | `abilities` | `Holder<ability>` 列表 | **必填** | 子技能；无效的可选条目会被忽略 |
 | `mxt:composite` | `all_required` | Boolean | `true` | 为 `false` 时只运行第一个子技能 |
 | `mxt:word` | `effect` | Enum | **必填** | `self_heal` 或 `purge_self_curses` |

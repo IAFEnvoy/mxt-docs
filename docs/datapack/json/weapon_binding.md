@@ -1,5 +1,6 @@
 ---
 title: weapon_binding（武器绑定）
+aside: false
 ---
 
 # weapon_binding（武器绑定） {#weapon_binding}

@@ -1,6 +1,7 @@
 ---
 title: Forging Blueprint (forging_blueprint)
 description: A forging blueprint declares the materials, the allowed methods, the meter target and the quality ladder for one forged result.
+aside: false
 ---
 
 # Forging Blueprint (forging_blueprint)

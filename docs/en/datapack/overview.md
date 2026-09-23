@@ -33,17 +33,21 @@ data/<namespace>/tags/mxt/<registry>/<tag path>.json
 
 ## IDs and Translation Keys
 
-The display name of a data-driven definition is generated automatically from its identifier: `Identifier.toLanguageKey` builds `<category>.<namespace>.<path>` for the registry category.
+The display name of a data-driven definition is generated automatically from its identifier: the key is `<category>.<registry namespace>.<namespace>.<path>`.
 
-The category defaults to the registry's own path, so `mxt:fire` in `mxt:aura` is `aura.mxt.fire`. The single override is `mxt:item_quality`, whose definitions are always translated under `quality` (`quality.example.refined`).
+The category defaults to the registry's own path, and the **registry namespace is always `mxt`** for this mod's own registries (each registry key is written `mxt:<path>`), so `mxt:fire` in `mxt:aura` is `aura.mxt.mxt.fire`, `example:qi` in `mxt:resource` is `resource.mxt.example.qi`, and `mxt_test:flame_sigil` in `mxt:talisman` is `talisman.mxt.mxt_test.flame_sigil`. The single category override is still `mxt:item_quality`, whose definitions are always translated under `quality` (`example:refined` reads as `quality.mxt.example.refined`).
 
-A `/` inside the path stays in the key: `Identifier#toLanguageKey` does not turn it into `.`, so `example:foo/bar` produces `resource.example.foo/bar`. Keep definition files out of subdirectories.
+A `/` inside the path stays in the key: `Identifier#toLanguageKey` does not turn it into `.`, so `example:foo/bar` produces `resource.mxt.example.foo/bar`. Keep definition files out of subdirectories.
+
+The definitions of these 18 registries may also carry an optional `name` and `description` (written like any other component field: a bare string is a translation key, an object is a full component): `resource`, `aura`, `realm_stage`, `element`, `spirit_root`, `physique`, `ability`, `curse`, `technique`, `skill_stage`, `cultivate_action`, `artifact`, `formation`, `tribulation`, `secret_realm`, `contract_type`, `talisman`, `item_quality`. Writing one uses your own text, while omitting it falls back to the generated key above, with `.description` appended for the description. The pair means a pack may either **translate the generated key or write its own text** (and so avoid a name clash); **`description` is stored and read today but nothing draws it yet — except on `item_quality`, whose description is the line under the quality name**. Every other registry has the generated key only.
+
+A `realm_stage` that declares its `minor_stages` as an integer still names them `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`, counting from `0`.
 
 JSON no longer contains a `translation_key` field. Provide the matching translation in `assets/<namespace>/lang/en_us.json` (and `zh_cn.json` if you ship it).
 
 ```json
 {
-  "aura.example.fire": "Fire Aura"
+  "aura.mxt.example.fire": "Fire Aura"
 }
 ```
 
@@ -206,7 +210,7 @@ The mod registers **34** data pack registries, all of them declared in `MxtDatap
 | --- | --- |
 | Resources and cultivation | `resource`, `aura`, `element`, `element_reaction`, `realm_stage`, `spirit_root`, `physique`, `technique`, `skill_stage`, `cultivate_action` |
 | Abilities and rules | `ability`, `curse`, `formation`, `tribulation`, `trigger`, `talisman` |
-| Aura and world | `aura_zone`, `block_aura`, `item_aura`, `realm_instance` |
+| Aura and world | `aura_zone`, `block_aura`, `item_aura`, `secret_realm` |
 | Items and quality | `item_binding`, `weapon_binding`, `pill_binding`, `technique_binding`, `artifact`, `item_quality` |
 | Economy and content | `currency`, `spirit_herb`, `forging_method`, `forging_blueprint`, `tool_binding`, `blueprint_binding`, `creature_profile`, `contract_type` |
 

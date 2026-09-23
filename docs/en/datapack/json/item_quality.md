@@ -1,6 +1,7 @@
 ---
 title: Item Quality (item_quality)
 description: An item quality names a quality tier and carries the value, forging and alchemy modifiers attached to it.
+aside: false
 ---
 
 # Item Quality (item_quality)
@@ -19,15 +20,18 @@ The filename corresponds to its ID. For example, `data/example/mxt/item_quality/
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `display_name` | Text Component | **required** | The quality name or translation key. |
-| `value_multiplier` | `Modifier` | empty description, `1` | The currency value modifier. The object contains `description` and `modifier`. Once configured it is automatically added to the item quality summary; the modifier scales the item's currency unit value. |
-| `forging_modifier` | `Modifier` | empty description, `1` | The forging modifier. The object contains `description` and `modifier`. Once configured it is automatically added to the item quality summary; the modifier divides the extra steps the quality tier is chosen from at the end of a forging session. |
-| `alchemy_modifier` | `Modifier` | empty description, `1` | The alchemy modifier. The object contains `description` and `modifier`. Once configured it is automatically added to the item quality summary; the modifier divides the brewing duration of an alchemy session. |
+| `name` | Text Component | `quality.mxt.<namespace>.<path>` | The quality's name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `quality.mxt.<namespace>.<path>.description` | The quality's description, drawn below the quality name. When omitted it is the default key in the previous column. |
+| `value_multiplier` | `Modifier` | `1` | The currency value modifier. |
+| `forging_modifier` | `Modifier` | `1` | The forging modifier. |
+| `alchemy_modifier` | `Modifier` | `1` | The alchemy modifier. |
 | `condition` | `EntityCondition` | `mxt:always_true` | The condition for using this quality. |
+
+`name` and `description` may both be omitted: omitting one means the key generated from the id above, while writing it uses the text you give (a bare string is a translation key, an object is a full component). `name` is drawn on the quality line of an item tooltip, and `description` on the grey line below it.
 
 ## Modifiers
 
-All three modifier fields are optional objects. The object's `description` is appended to the item quality tooltip automatically — a modifier whose `description` renders empty is skipped — while `modifier` is the number provider actually used at runtime, defaulting to `1`.
+All three modifier fields are optional objects, and both fields inside such an object may be omitted as well: an omitted `modifier` is `1`, and an omitted `description` **draws no line at all** — the modifier still settles, but its wording is entirely up to the data pack and is never generated for you. Omitting a whole modifier object means "no modifier".
 
 All three are `NumberProvider`s evaluated with the formula context of the settlement they take part in, and all three are settled rather than only displayed:
 
@@ -41,17 +45,17 @@ A modifier of exactly `1` changes nothing. A field that is missing, a stack that
 
 ```json
 {
-  "display_name": "quality.example.refined",
   "value_multiplier": {
-    "description": "quality.example.refined.value",
+    "description": "quality.mxt.example.refined.value_multiplier",
     "modifier": 1.25
   },
   "forging_modifier": {
-    "description": "quality.example.refined.forging",
     "modifier": "1 + level * 0.01"
   }
 }
 ```
+
+That file omits `name`, `description` and `forging_modifier.description`.
 
 ## Order and Groups
 
@@ -66,7 +70,9 @@ The order of `values` in `tooltip_order` is preserved by `ItemQualityService.ord
 
 ## Translation
 
-`item_quality` is the one registry translated under a category other than its own path. A definition's display name comes from `<category>.<namespace>.<path>`, and here the category is `quality`, so `example:refined` is looked up as `quality.example.refined`. There is no `translation_key` JSON field; a path containing `/` keeps it in the key, exactly as it does in every other registry.
+`item_quality` is the one registry whose category is not its own path. The category here is `quality`, while the **registry namespace is still `mxt`**, so `example:refined` is looked up as `quality.mxt.example.refined`, and its description as `quality.mxt.example.refined.description`.
+
+Among the registries that carry `name` and `description`, this is also the only one that **already** draws the description (the line under the quality name); the others store and read both fields but have nothing that renders them yet. There is no `translation_key` JSON field; a path containing `/` keeps it in the key, exactly as it does in every other registry.
 
 ## Related Formats
 

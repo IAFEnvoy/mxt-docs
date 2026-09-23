@@ -1,5 +1,6 @@
 ---
 title: block_aura（方块灵气）
+aside: false
 ---
 
 # block_aura（方块灵气） {#block_aura}

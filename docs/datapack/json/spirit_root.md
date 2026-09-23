@@ -1,5 +1,6 @@
 ---
 title: spirit_root（灵根）
+aside: false
 ---
 
 # spirit_root（灵根） {#spirit_root}
@@ -10,6 +11,8 @@ title: spirit_root（灵根）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `spirit_root.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `spirit_root.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `element` | `Holder<element>` | **必填** | 灵根所属元素。 |
 | `cultivation_multiplier` | `NumberProvider` | `1` | 修炼倍率。写成数字时加载期校验有限非负。 |
 | `element_ability_modifier` | `NumberProvider` | `1` | 元素亲和技能倍率：施放 `element_affinity` 含这条灵根元素的技能时，它是[伤害结算](/technical/damage)第一层的因子（多条匹配灵根按 `element_affinity_mode` 取平均或取最好），同时也能在公式里读到 `element_modifier`。写成数字时加载期校验有限非负。 |

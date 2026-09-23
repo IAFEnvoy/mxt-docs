@@ -25,7 +25,7 @@ MiXianTu 的 KubeJS 桥接按领域提供独立对象，不提供承载全部方
 | `MxtConditions` | 注册 `mxt:js` Condition 回调，或测试内置 Condition。 |
 | `MxtValues` | 注册/计算 NumberProvider 与 ResourceValueProvider。 |
 | `MxtCosts` | 预检或支付一个完整的 `Cost`。 |
-| `MxtResources` | 原子支付多个资源 Cost。 |
+| `MxtResources` | 原子支付一整份 `Cost` 数组。 |
 | `MxtAbilities` | 施放已授予实体的技能。 |
 | `MxtCultivation` | 增加修为、尝试境界突破。 |
 | `MxtCurses` | 施加（可带时长）、显式移除与查询诅咒。 |

@@ -1,6 +1,7 @@
 ---
 title: Spirit Crafting Recipes (spirit_crafting)
 description: "The Spirit Crafting Table accepts mxt:spirit_shaped and mxt:spirit_shapeless recipes, which spend aura as well as materials."
+aside: false
 ---
 
 # Spirit Crafting Recipes (spirit_crafting)
@@ -26,7 +27,7 @@ A shaped recipe has the following fields.
 | `pattern` | String[] | **required** | One to three rows, each one to three characters. |
 | `key` | `Map<String, Ingredient>` | **required** | Maps every symbol used in the pattern to its ingredient. Each key must be a single non-space character. |
 | `result` | `ItemStackTemplate` | **required** | The item produced, written in the vanilla item stack template shape. |
-| `aura` | `Map<Holder<aura>, NumberProvider>` | **required** | The aura cost of one craft, per aura. It must not be empty. |
+| `aura` | `List<Cost>`, limited to `mxt:aura` entries | **required** | The aura cost of one craft, paid from the **Spirit Crafting Table's own store** in whole units (rounded up). Only `mxt:aura` entries are accepted (any other type is a load error); the older `{"<aura id>": NumberProvider}` map form is still read for compatibility, but the array form is what gets written. It must not be empty. See [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 
 The pattern is matched against the 3x3 grid at every possible offset, and slots the pattern leaves out have to be empty.
 
@@ -38,7 +39,7 @@ A shapeless recipe has the following fields.
 |-------|------|---------|-------------|
 | `ingredients` | `Ingredient[]` | **required** | One to nine ingredients, matched in any order. |
 | `result` | `ItemStackTemplate` | **required** | The item produced, written in the vanilla item stack template shape. |
-| `aura` | `Map<Holder<aura>, NumberProvider>` | **required** | The aura cost of one craft, per aura. It must not be empty. |
+| `aura` | `List<Cost>`, limited to `mxt:aura` entries | **required** | The aura cost of one craft, paid from the **Spirit Crafting Table's own store** in whole units (rounded up). Only `mxt:aura` entries are accepted (any other type is a load error); the older `{"<aura id>": NumberProvider}` map form is still read for compatibility, but the array form is what gets written. It must not be empty. See [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 
 The ingredients have to match the non-empty slots of the grid exactly, so a shapeless recipe may not leave unrelated items in the grid.
 
@@ -46,9 +47,9 @@ The ingredients have to match the non-empty slots of the grid exactly, so a shap
 
 Shaped recipes are checked before shapeless ones, so a shapeless recipe is only used when no shaped recipe matches.
 
-The aura a recipe declares is an amount per aura, given as a number provider; the value is evaluated when the recipe matches and rounded up. While a matching recipe is present the table accepts that recipe's aura and keeps it for that recipe only, so changing the grid or the matched recipe discards what it had stored. The cost is deducted when the result is taken out, and the input items stay in the grid.
+The aura a recipe declares is a `Cost` array limited to `mxt:aura` entries, with each `amount` given as a number provider; the value is evaluated when the recipe matches and rounded up. While a matching recipe is present the table accepts that recipe's aura and keeps it for that recipe only, so changing the grid or the matched recipe discards what it had stored. The cost is paid when the result is taken out, by the shared cost transaction, out of the **Spirit Crafting Table's own store**, and the input items stay in the grid.
 
-The keys of `aura` are `mxt:aura` entries, not stored values: what is spent is an aura, identified by its definition, and each definition names the value it is counted in through its own `resource` field.
+The entries of `aura` name `mxt:aura` identities, not stored values: what is spent is an aura, identified by its definition, and each definition names the value it is counted in through its own `resource` field. Here the table's own store pays, so it is that aura itself that is charged, not the value it is measured in.
 
 ## Example
 
@@ -67,9 +68,9 @@ A shaped recipe:
   "result": {
     "id": "minecraft:magma_block"
   },
-  "aura": {
-    "mxt:common": 20
-  }
+  "aura": [
+    {"type": "mxt:aura", "aura": "mxt:common", "amount": 20}
+  ]
 }
 ```
 
@@ -85,11 +86,11 @@ A shapeless recipe, listing one ingredient per item:
   "result": {
     "id": "minecraft:sea_lantern"
   },
-  "aura": {
-    "mxt:common": 8
-  }
+  "aura": [
+    {"type": "mxt:aura", "aura": "mxt:common", "amount": 8}
+  ]
 }
 ```
 
-The aura a recipe spends belongs to an aura defined by the [`mxt:aura` registry](./aura.md), whose `resource` field names the stored value that is actually debited. Recipes are not a registry, so unlike the data tables they do reload with `/reload`.
+The aura a recipe spends belongs to an aura defined by the [`mxt:aura` registry](./aura.md), whose `resource` field names the value that aura is measured in. Recipes are not a registry, so unlike the data tables they do reload with `/reload`.
 

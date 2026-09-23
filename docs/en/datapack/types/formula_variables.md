@@ -98,6 +98,7 @@ Formulas evaluated for one value — `resource.max`, `resource.bars`, and the fi
 | `level` | Same value as `realm`, kept as a shorthand for realm formulas |
 | `absorbed_aura` | Accumulated cultivation progress of this resource; `0` when the chain does not match |
 | `cultivation_progress` | Same value as `absorbed_aura` |
+| `minor_stage` | 0-based index of the sub-stage this progress sits in, cut evenly out of the current realm's `breakthrough_exp`; `NaN` when that realm names no sub-stages, or when there is no realm yet |
 
 A value's `max` and its aura definition's `regen` can therefore write:
 
@@ -155,20 +156,20 @@ An ability with a `triggered` ability type is evaluated when its trigger fires, 
 | `distance` | Formation `entity_tick_action` | Distance in blocks between the formation centre and the entity |
 | `aura_tribulation_modifier` | Tribulation timeline | Local aura influence, taken from the `tribulation_modify` rule of the aura zone and sampled once when each timeline entry begins |
 
-### Realm Instance Values
+### Secret Realm Values
 
-Any formula evaluated for a member of a [realm instance](../json/realm_instance.md) can read the instance itself — most usefully the definition's own `enter_condition`, `exit_condition`, `enter_action` and `exit_action`:
+Any formula evaluated for a member of a [secret realm](../json/secret_realm.md) can read the instance itself — most usefully the definition's own `enter_condition`, `exit_condition`, `enter_action` and `exit_action`:
 
 | Variable | Description |
 |----------|-------------|
-| `realm_instance_members` | How many members are inside the instance right now |
-| `realm_instance_limit` | The instance's member cap, taken from `max_members`; `-1` when it is unlimited |
-| `realm_instance_elapsed` | Ticks since the current visit began |
-| `realm_instance_duration` | The configured `duration_ticks` |
-| `realm_instance_index` | The index of this instance, counted from `0` |
-| `realm_instance_is_owner` | `1` when the reading entity owns the instance, otherwise `0` |
+| `secret_realm_members` | How many members are inside the instance right now |
+| `secret_realm_limit` | The instance's member cap, taken from `max_members`; `-1` when it is unlimited |
+| `secret_realm_elapsed` | Ticks since the current visit began |
+| `secret_realm_duration` | The configured `duration_ticks` |
+| `secret_realm_index` | The index of this instance, counted from `0` |
+| `secret_realm_is_owner` | `1` when the reading entity owns the instance, otherwise `0` |
 
-The names carry the `realm_instance_` prefix because `realm`, `realm_rank` and `level` already mean a cultivation stage. Outside any realm instance they cannot be provided at all, so they are reported as an error instead of silently reading as `0`.
+The names carry the `secret_realm_` prefix because `realm`, `realm_rank` and `level` already mean a cultivation stage. Outside any secret realm they cannot be provided at all, so they are reported as an error instead of silently reading as `0`.
 
 ## Where Each Variable Is Available
 
@@ -179,7 +180,7 @@ Which variables a formula can read is decided by the objects the caller puts int
 | Ability cast time, cooldown, charges, channel interval, conditions, target selection | caster | Entity family; `element_modifier` when the ability declares `element_affinity` (the damage system applies that value to the cast's own damage, so read it here only for non-damage numbers); `damage_multiplier` when a mastery chain granting the ability is known; the payload of the trigger that started the ability |
 | Ability `target_condition`, `bi_entity_action` | caster + target | Entity and target families; the same payload |
 | `aura` ability interval and radius | caster | Entity family |
-| Ability resource cost (`ResourceCost.amount`) | caster + the spent resource | Entity family + resource family of that resource |
+| Resource entry of an ability's `costs` | caster + the spent value | Entity family + resource family of that value |
 | Ability item cost | caster | Entity family |
 | Resource `default_value`, `min`, `max`, `regen`, use condition, burst amount | caster, plus the resource where the definition is evaluated for one resource | Entity family; resource family where a resource is bound |
 | Resource conversions, realm-stage thresholds, breakthrough threshold | caster + the resource | Entity family + resource family |
@@ -187,7 +188,7 @@ Which variables a formula can read is decided by the objects the caller puts int
 | Realm-stage and technique passive attribute modifiers | caster | Entity family |
 | Curse duration, tick interval, conditions, actions | caster (or the context of whatever applied the curse) | Entity family, plus the payload of the ability that applied it |
 | Item, weapon, pill and technique bindings, item quality, pill toxicity | the user or holder entity | Entity family, plus `target_health` / `target_is_living` on a weapon attack |
-| Forging, formations, contracts, creature profiles, realm instances, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for `entity_tick_action`; + the realm instance family inside an instance) |
+| Forging, formations, contracts, creature profiles, secret realms, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for `entity_tick_action`; + the secret realm family inside an instance) |
 | Tribulation timeline entry duration and conditions | caster | Entity family + `aura_tribulation_modifier` |
 | Formulas evaluated from a `Level` instead of an entity: formation `tick_action` and `deactivate_action`, formation aura bonus, spirit crafting table costs, KubeJS block actions and conditions | nothing | `zero`, `random` only |
 | Client-side previews that use an empty context: item and weapon tooltips, item-aura capacity, currency value checks | nothing | `zero`, `random` only |

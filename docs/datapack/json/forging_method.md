@@ -1,5 +1,6 @@
 ---
 title: forging_method（锻造手法）
+aside: false
 ---
 
 # forging_method（锻造手法） {#forging_method}
@@ -11,7 +12,7 @@ title: forging_method（锻造手法）
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `value_delta` | Integer | **必填** | 锻打条偏移，不能为 `0`。 |
-| `costs` | `List<ResourceCost>` | `[]` | 每次锻打消耗。 |
+| `costs` | `List<Cost>` | `[]` | 每次锻打的消耗，从锻打者身上扣，整份数组**全有或全无**；写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。 |
 | `condition` | `EntityCondition` | `mxt:always_true` | 使用该方式的条件。 |
 | `icon` | **图标引用** | 无 | 界面里显示的图标；用物品时还会提供该方法在列表中的名称。 |
 | `cooldown` | Integer | `0` | 锻打冷却，单位 tick，范围 `0..72000`。同一玩家对同一锻造台的连续锻打会被服务端限流。 |

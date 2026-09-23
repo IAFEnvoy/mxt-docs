@@ -27,7 +27,7 @@ The nested `ability` object of an ability definition uses this registry. The ID 
 | `mxt:aura` | `interval` | `NumberProvider` | `20` | Ticks between aura applications |
 | `mxt:aura` | `radius` | `NumberProvider` | `4` | Aura radius |
 | `mxt:channelled` | `tick_interval` | `NumberProvider` | `1` | Ticks between upkeep payments |
-| `mxt:channelled` | `upkeep_costs` | List of `ResourceCost` | `[]` | Resources paid on every upkeep tick |
+| `mxt:channelled` | `upkeep_costs` | List of `Cost` | `[]` | Paid by the caster on every upkeep tick, all or nothing as one array; see [Shared Data Types · `Cost`](../shared_data_types.md#cost) |
 | `mxt:composite` | `abilities` | List of `Holder<ability>` | **required** | Child abilities; invalid optional entries are ignored |
 | `mxt:composite` | `all_required` | Boolean | `true` | When `false`, only the first child runs |
 | `mxt:word` | `effect` | Enum | **required** | `self_heal` or `purge_self_curses` |

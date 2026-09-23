@@ -1,11 +1,12 @@
 ---
 title: Ability (ability)
 description: Defines an active, passive or triggered ability with its costs, cooldown, conditions and behaviour.
+aside: false
 ---
 
 # Ability (ability)
 
-An `ability` defines an active, passive or triggered ability, including its resource costs, cooldown, availability condition and the behaviour it executes.
+An `ability` defines an active, passive or triggered ability, including its costs, cooldown, availability condition and the behaviour it executes.
 
 ## File Location
 
@@ -19,8 +20,10 @@ The filename corresponds to its ID. For example, `data/example/mxt/ability/fireb
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `ability.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `ability.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `ability` | `AbilityType` object | **required** | Built-in ability type object; the object must contain a `type` dispatch key. |
-| `costs` | `List<Cost>` | `[]` | Costs paid before the ability executes. An entry is a `Cost`: `mxt:resource` (the plain `{"id": ..., "amount": ...}` shorthand is read as this), `mxt:item`, or `mxt:js` for a script-defined cost. A cost that is not a `resource` cost means the ability can only be used by a player. |
+| `costs` | `List<Cost>` | `[]` | Costs paid before the ability executes, all or nothing as one array. `mxt:item` and `mxt:js` entries need a player, so an ability carrying one can only be used by a player; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 | `cast_time` | `NumberProvider` | `0` | Cast time. |
 | `cooldown` | `NumberProvider` | `0` | Cooldown. |
 | `icon` | [Icon Reference](../types/shared_data_types.md#icon-reference) | none | Optional wheel icon for active abilities; it must define exactly one of `texture` (a 16x16 GUI texture) or `item`, because an icon with neither or both is rejected. |
@@ -94,9 +97,9 @@ A top-level ability that should be a channelled ability released from the wheel 
 ```
 
 ::: info Server-authoritative
-Numeric fields of abilities uniformly use `NumberProvider`. An ability must pass its condition and all resource costs before its behaviour is executed. Ability behaviour is handled on the server; the client wheel only sends which kind and which id was chosen (`WheelActionC2SPayload(kind, id)`), and the server decides the grant, the conditions, the costs and the cooldown.
+Numeric fields of abilities uniformly use `NumberProvider`. An ability must pass its condition and all its costs before its behaviour is executed. Ability behaviour is handled on the server; the client wheel only sends which kind and which id was chosen (`WheelActionC2SPayload(kind, id)`), and the server decides the grant, the conditions, the costs and the cooldown.
 
-Abilities can read the entity variables plus the ability and trigger variables (`element_modifier`, `damage`, `target_health`, …); see [Formula Variables](../types/formula_variables.md).
+Abilities can read the entity variables plus the ability and trigger variables (`element_modifier`, `damage`, `target_health`, …); the `amount` of a `mxt:resource` entry in `costs` is additionally evaluated with the spent value's own formula context (the resource family, so `realm_rank` and `absorbed_aura` are available there); see [Formula Variables](../types/formula_variables.md).
 :::
 
 Expanding that rule into a timeline, one cast runs in this order.

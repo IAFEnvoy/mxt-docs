@@ -1,6 +1,7 @@
 ---
 title: Cultivate Action (cultivate_action)
 description: Defines a named cultivation activity with its environment requirements, costs and per-tick settlement.
+aside: false
 ---
 
 # Cultivate Action (cultivate_action)
@@ -25,13 +26,15 @@ The filename corresponds to its ID. For example, `data/example/mxt/cultivate_act
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `cultivate_action.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `cultivate_action.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `default` | Boolean | `false` | Whether this is the default behaviour when no cultivation behaviour has been selected; when nothing is marked, the first behaviour in the registry is used. |
 | `start_condition` | `EntityCondition` | `mxt:always_true` | Condition for starting cultivation, checked once when cultivation starts. |
 | `condition` | `EntityCondition` | `mxt:always_true` | Condition for continuing cultivation, checked before every settlement; cultivation is aborted while the condition is false. |
 | `tick_interval` | Integer | `20` | Absorption settlement interval, range `1..72000`. |
-| `costs` | `List<ResourceCost>` | `[]` | Resources consumed by each cultivation tick. |
+| `costs` | `List<Cost>` | `[]` | Paid by the cultivating entity on each cultivation tick, all or nothing as one array; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 | `absorb_amount` | `NumberProvider` | `1` | Multiplier for the natural recovery of the current realm resource during cultivation; the resource bar is filled first and the overflow enters cultivation progress. |
-| `aura_costs` | `Map<Holder<aura>, NumberProvider>` | `{}` | Environment aura consumed by each cultivation tick; each aura is allocated independently, and a shortage of one entry only reduces that entry's contribution. |
+| `aura_costs` | `List<Cost>`, limited to `mxt:aura` entries | `[]` | Paid each cultivation tick from the **shared aura pool** at the cultivator's position; when several players cultivate in the same chunk the amount is scaled first by the pool's allocation and the pool is then charged **all or nothing**. Only `mxt:aura` entries are accepted (any other type is a load error); the older `{"<aura id>": NumberProvider}` map form is still read for compatibility, but the array form is what gets written. An `amount` of `0` is no longer ignored: like every other cost it has to evaluate to a finite positive number, or the entry cannot be paid. See [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 | `aura_gains` | `List<AuraGain>` | `[]` | Additional aura gained. Each entry is `{id, amount}`, whose `id` is a `Holder<aura>`. |
 | `cooldown` | Integer | `0` | Cooldown in ticks after stopping, range `0..72000`. |
 | `tick_action` | `EntityAction` | `mxt:no_op` | Behaviour executed on every cultivation tick. |
@@ -50,7 +53,7 @@ Its numeric fields are evaluated with the resource and cultivation variables of 
   "tick_interval": 20,
   "costs": [{"id": "example:stamina", "amount": 1}],
   "absorb_amount": 1.5,
-  "aura_costs": {"mxt:common": 2},
+  "aura_costs": [{"type": "mxt:aura", "aura": "mxt:common", "amount": 2}],
   "aura_gains": [{"id": "mxt:common", "amount": "1 + realm_rank * 0.1"}],
   "cooldown": 100,
   "tick_action": {"type": "mxt:no_op"}

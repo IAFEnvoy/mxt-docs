@@ -1,5 +1,6 @@
 ---
 title: item_aura（物品灵气）
+aside: false
 ---
 
 # item_aura（物品灵气） {#item_aura}

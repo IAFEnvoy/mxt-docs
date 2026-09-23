@@ -182,6 +182,7 @@ realm_stage chain             progress + conditions + costs → next realm
 把三个文件放在一起读：
 
 - `breakthrough_exp` 是**离开**该阶段所需的修为，`max_experience` 是你身处其中时的修为上限。两者不能交叉：常量 `breakthrough_exp` 大于常量 `max_experience` 会在加载期被拒绝。
+- 可选的 `minor_stages` 是子境界：写数组就是名字本身（字符串当翻译键、对象当完整组件），写一个整数 N 就是「这么多重」——名字按条目 id 自动生成为 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`，下标从 `0` 起。它只影响显示与公式：信息面板在境界名后写出当前这一重，公式里多一个从 `0` 起的 `minor_stage`。切分是把本阶段的 `breakthrough_exp` 均分，不改变阈值、消耗或任何结算。
 - `costs` 在突破成功时支付；`breakthrough.conditions` 与修为一起检查。两者都属于你正要离开的那个阶段——只有最开始的一步例外，那时阈值来自 aura 的 `start_exp`，条件来自目标阶段的 `breakthrough`。
 - `auto_breakthrough` 默认为 `false`：玩家到达阈值后要自己等。想让修炼模式自行尝试突破就设为 `true`。
 - `passive_modifiers` 是在该阶段被持有期间授予的原版属性修正。`value` 是可选的公式，声明了它的条目每 tick 重新计算。
@@ -203,7 +204,7 @@ realm_stage chain             progress + conditions + costs → next realm
   "default": true,
   "tick_interval": 20,
   "absorb_amount": 1.5,
-  "aura_costs": {"example:qi": 1},
+  "aura_costs": [{"type": "mxt:aura", "aura": "example:qi", "amount": 1}],
   "cooldown": 100
 }
 ```
@@ -213,10 +214,10 @@ realm_stage chain             progress + conditions + costs → next realm
 | `default` | 玩家没有选择其他行为时使用。没有任何默认行为时，使用注册表中的第一个行为。默认 `false`。 |
 | `tick_interval` | 结算间隔，单位 tick，范围 `1..72000`；`20` 表示每秒一次。默认 `20`。 |
 | `absorb_amount` | 当前境界数值自然恢复的倍率；先填满资源条，溢出量成为修为。默认 `1`。 |
-| `aura_costs` | 每 tick 按灵气分别消耗的环境灵气。每项独立分配，某一项不足只会降低该项的贡献。 |
+| `aura_costs` | 每 tick 从修炼者所在位置的**共享灵气池**扣除的灵气消耗，只写 `mxt:aura` 条目（`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`）。多人同区块修炼时，各人的量先按池子分配份额缩放，再由池子**全有或全无**地扣。 |
 | `cooldown` | 停止后再次开始修炼前的冷却 tick。默认 `0`。 |
 
-`start_condition` 与 `condition` 决定修炼能否开始与继续；两者默认恒为真，并且都能读取环境。没有“灵气种类”字段：只应在正确地点运行的行为会直接要求那个地点，例如用 `mxt:aura_range`（某一门灵气的浓度区间，每一项都必填 `max`）或 `mxt:dimension`。剩下的字段是 `costs`（每 tick 的资源消耗）、`aura_gains`（每 tick 额外增加的灵气）和 `tick_action`（每次修炼 tick 运行的实体行为）。
+`start_condition` 与 `condition` 决定修炼能否开始与继续；两者默认恒为真，并且都能读取环境。没有“灵气种类”字段：只应在正确地点运行的行为会直接要求那个地点，例如用 `mxt:aura_range`（某一门灵气的浓度区间，每一项都必填 `max`）或 `mxt:dimension`。剩下的字段是 `costs`（每 tick 从修炼者身上扣的消耗，`Cost` 数组、全有或全无）、`aura_gains`（每 tick 额外增加的灵气）和 `tick_action`（每次修炼 tick 运行的实体行为）。
 
 ## 第 5 步 —— 一个最小的灵气区域
 
@@ -249,22 +250,24 @@ realm_stage chain             progress + conditions + costs → next realm
 
 ## 第 6 步 —— 名称
 
-显示名称由定义 ID 自动生成，所以你永远不需要把翻译键写进 JSON——`item_quality` 是唯一自带 `display_name` 的注册表。把这些键加到你自己的语言文件里：
+显示名称默认由定义 ID 自动生成，所以你不需要把翻译键写进 JSON —— 除非你想自己写名字：`resource`、`aura`、`realm_stage`、`element`、`cultivate_action` 等 18 个注册表的定义都可以写可选的 `name` / `description`（两者都可省略，省略时按 id 生成键）。把这些键加到你自己的语言文件里：
 
 ```json
 // assets/example/lang/en_us.json
 {
-  "resource.example.qi": "Spirit Qi",
-  "aura.example.qi": "Spirit Qi",
-  "realm_stage.example.qi_condensation": "Qi Condensation",
-  "realm_stage.example.foundation": "Foundation Establishment",
-  "realm_stage.example.core_formation": "Core Formation",
-  "element.example.common": "Common Aura",
-  "cultivate_action.example.meditation": "Meditation"
+  "resource.mxt.example.qi": "Spirit Qi",
+  "aura.mxt.example.qi": "Spirit Qi",
+  "realm_stage.mxt.example.qi_condensation": "Qi Condensation",
+  "realm_stage.mxt.example.foundation": "Foundation Establishment",
+  "realm_stage.mxt.example.core_formation": "Core Formation",
+  "element.mxt.example.common": "Common Aura",
+  "cultivate_action.mxt.example.meditation": "Meditation"
 }
 ```
 
-规则始终是 `<category>.<namespace>.<path>`，其中 category 是注册表自己的 path，所以 `resource` 里的 `example:qi` 是 `resource.example.qi`，同一个 ID 在 `aura` 里则是 `aura.example.qi`。含有 `/` 的 path 会保留斜杠：`example:realm/qi` 是 `realm_stage.example.realm/qi`。没有键的定义依然可用；游戏只会显示原始键名。
+规则始终是 `<category>.<registry namespace>.<namespace>.<path>`，其中 category 是注册表自己的 path，而**注册表命名空间恒为 `mxt`**，所以 `resource` 里的 `example:qi` 是 `resource.mxt.example.qi`，同一个 ID 在 `aura` 里则是 `aura.mxt.example.qi`。含有 `/` 的 path 会保留斜杠：`example:realm/qi` 是 `realm_stage.mxt.example.realm/qi`。没有键的定义依然可用；游戏只会显示原始键名。
+
+定义自带文本字段时用的是**同一个键**：`item_quality` 的 `name` / `description` 省略时拿到 `quality.mxt.<命名空间>.<路径>`（描述再加 `.description`，例如 `mxt_test:poor` 是 `quality.mxt.mxt_test.poor`），`realm_stage` 用整数写法声明子境界时拿到 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`。除了 `item_quality` 的 `description`（品质名下面那一行），这些字段目前只被存储与读取，还没有地方绘制它们。
 
 ## 第 7 步 —— 加载与校验
 
@@ -299,7 +302,7 @@ realm_stage chain             progress + conditions + costs → next realm
 | --- | --- |
 | 谁都无法离开凡人 | aura 上缺少 `first_realm`，没有可以突破到的阶段。 |
 | 修炼从不开始 | 行为的 `start_condition` 或 `condition` 不满足——为你想要的地点写一个 `mxt:aura_range` 或群系条件，因为没有可匹配的“灵气种类”词汇。 |
-| 资源条从不增长 | `aura_costs` 要求的环境灵气超过区块的储量，或者 `use_condition` 为假。 |
+| 资源条从不增长 | 共享灵气池付不出 `aura_costs`（池子本身不够，或那份被同区块的其他修炼者分掉），或者 `use_condition` 为假。 |
 | 世界拒绝加载 | 有定义解码失败：某个必填 Holder 指向不存在的 ID，或某个字段形状不对。整次加载都会失败，而不只是那个文件。 |
 | `breakthrough_exp` 大于 `max_experience` | 该阶段无法离开；两者都是常量时，Codec 会在加载期拒绝。 |
 | 境界条件从不通过 | `mxt:realm` 比较的是**当前**阶段；你本意是“本级或更后”时，用 `"comparison": "at_least"`。 |

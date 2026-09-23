@@ -106,7 +106,7 @@ The remaining built-in families share the same dispatch rules but are small enou
 
 ## Shared Data Types
 
-Complex values that appear in many definitions are documented once in [Shared Data Types](./shared_data_types.md): `ResourceCost`, `ResourceGain`, `AttributeEntry`, the generic holder/tag/matcher syntax, and the `ItemMatcher` entries.
+Complex values that appear in many definitions are documented once in [Shared Data Types](./shared_data_types.md): `Cost`, `ResourceGain`, `AttributeEntry`, the generic holder/tag/matcher syntax, and the `ItemMatcher` entries.
 
 ## Registering Custom Types
 

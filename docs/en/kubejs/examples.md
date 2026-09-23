@@ -130,31 +130,34 @@ const actualAura = MxtValues.evaluateResource(player, 'mxt:spirit_power', {
 })
 ```
 
-## Paying Several Resources Atomically
+## Paying Several Costs Atomically
 
 ```js
 const result = MxtResources.consume(player, [
   { id: 'mxt:spirit_power', amount: 10 },
-  { id: 'mxt:fire_aura', amount: 'level + 2' }
+  { type: 'mxt:aura', aura: 'mxt:fire_aura', amount: 'level + 2' }
 ])
 
 if (result.committed()) {
   console.info(`Deducted: ${result.amounts()}`)
 } else {
-  console.warn(`Insufficient resource: ${result.failedResource()}`)
+  console.warn(`Could not pay: ${result.failedResource()}`)
 }
 ```
 
-When any one of the resources is insufficient, none of them is deducted. Each entry of a `MxtResources.consume` array is a resource cost, so its fields are `id` and `amount`. The single `Cost` API also accepts the typed form with a `resource` field:
+When any one of the entries cannot be paid, none of them is deducted. `MxtResources.consume` and the single `Cost` API take the **same unified array**, so all five shapes are accepted in both, and an entry that cannot be decoded fails the call instead of being dropped:
 
 ```js
-// Consume a resource. Resource cost in MxtResources.consume, and the id shorthand of the cost API.
+// Spend a value. The id shorthand of mxt:resource; it works in both APIs.
 { id: 'mxt:spirit_power', amount: 10 }
 
-// Consume a resource, typed form accepted by the single Cost API.
+// Spend a value, typed form.
 { type: 'mxt:resource', resource: 'mxt:spirit_power', amount: 10 }
 
-// Consume items. items accepts an item ID, an item tag, or an ItemMatcher object.
+// Spend an aura. It charges the value that aura is measured in.
+{ type: 'mxt:aura', aura: 'mxt:fire_aura', amount: 2 }
+
+// Spend items. items accepts an item ID, an item tag, or an ItemMatcher object.
 { type: 'mxt:item', items: ['minecraft:emerald', '#c:mystic_gems'], amount: 2 }
 ```
 

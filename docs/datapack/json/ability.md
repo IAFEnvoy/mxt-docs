@@ -1,5 +1,6 @@
 ---
 title: ability（技能）
+aside: false
 ---
 
 # ability（技能） {#ability}
@@ -10,8 +11,10 @@ title: ability（技能）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `ability.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `ability.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `ability` | `AbilityType` 对象 | **必填** | 固有技能类型对象；对象内部必须有 `type` 分派键。 |
-| `costs` | `List<ResourceCost>` | `[]` | 技能执行前扣除的资源。 |
+| `costs` | `List<Cost>` | `[]` | 技能执行前扣除的消耗，整份数组**全有或全无**；写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。 |
 | `cast_time` | `NumberProvider` | `0` | 施法时间。 |
 | `cooldown` | `NumberProvider` | `0` | 冷却时间。 |
 | `icon` | Icon 引用 | 无 | 主动技能的轮盘图标，必须**恰好**定义 `texture`（16×16 GUI 贴图）或 `item` 之一：两者都给或都不给都会被拒绝。 |
@@ -41,7 +44,7 @@ title: ability（技能）
 }
 ```
 
-技能的数值字段统一使用 `NumberProvider`；技能必须先通过条件和所有资源消耗，才执行行为。
+技能的数值字段统一使用 `NumberProvider`；技能必须先通过条件和所有资源消耗，才执行行为。`costs` 里 `mxt:resource` 条目的 `amount` 在施法者上下文之外还带上**该数值自己的公式上下文**（资源族变量，如 `realm_rank`、`absorbed_aura`），见[公式变量](../types/formula_variables.md)。
 
 ## `components` 与统一状态存储
 

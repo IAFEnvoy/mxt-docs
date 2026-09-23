@@ -1,5 +1,6 @@
 ---
 title: currency（货币）
+aside: false
 ---
 
 # currency（货币） {#currency}

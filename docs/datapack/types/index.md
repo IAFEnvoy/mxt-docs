@@ -106,7 +106,7 @@ MiXianTu 的数值提供器注册表是它自己的，键为 `mxt:number_provide
 
 ## 共享数据类型
 
-在许多定义中都会出现的复杂值统一记录在[共享数据类型](./shared_data_types.md)中：`ResourceCost`、`ResourceGain`、`AttributeEntry`、通用的 holder/tag/matcher 语法以及 `ItemMatcher` 条目。
+在许多定义中都会出现的复杂值统一记录在[共享数据类型](./shared_data_types.md)中：`Cost`、`ResourceGain`、`AttributeEntry`、通用的 holder/tag/matcher 语法以及 `ItemMatcher` 条目。
 
 ## 注册自定义类型
 

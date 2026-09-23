@@ -1,6 +1,7 @@
 ---
 title: Block Aura (block_aura)
 description: Define which blocks provide aura to their chunk, and how much capacity, regeneration and colour each aura gets from them.
+aside: false
 ---
 
 # Block Aura (block_aura)

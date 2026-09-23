@@ -1,6 +1,7 @@
 ---
 title: Spirit Root (spirit_root)
 description: Defines a spirit root that is strongly bound to a single element and grants cultivation bonuses and abilities.
+aside: false
 ---
 
 # Spirit Root (spirit_root)
@@ -19,6 +20,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/spirit_root/f
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `spirit_root.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `spirit_root.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `element` | `Holder<element>` | **required** | The element the spirit root belongs to. |
 | `cultivation_multiplier` | `NumberProvider` | `1` | Cultivation multiplier. Written as a number it is validated as finite and non-negative while loading. |
 | `element_ability_modifier` | `NumberProvider` | `1` | Element affinity ability multiplier: when an ability whose `element_affinity` names this root's element is cast, it is a factor of layer one of [damage settlement](../../technical/damage.md) (several matching roots are averaged or best-picked by `element_affinity_mode`), and it is also readable in formulas as `element_modifier`. Written as a number it is validated as finite and non-negative while loading. |

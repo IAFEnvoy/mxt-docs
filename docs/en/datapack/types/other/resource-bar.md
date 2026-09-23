@@ -28,7 +28,7 @@ A context extracts the value, minimum, maximum and last-changed tick for a bar, 
 }
 ```
 
-The concentration contexts report no values until the client has received aura data, and they are named after the resource, so `resource.example.qi=Spirit Qi` is displayed as environmental or actual aura concentration for that resource.
+The concentration contexts report no values until the client has received aura data, and they are named after the resource, so `resource.mxt.example.qi=Spirit Qi` is displayed as environmental or actual aura concentration for that resource.
 
 ---
 

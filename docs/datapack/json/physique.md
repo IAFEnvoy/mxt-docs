@@ -1,5 +1,6 @@
 ---
 title: physique（体质）
+aside: false
 ---
 
 # physique（体质） {#physique}
@@ -10,6 +11,8 @@ title: physique（体质）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `physique.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `physique.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `attribute_modifiers` | `List<AttributeEntry>` | `[]` | 独立于灵根的原版属性加成；填写 `value` 后每 tick 按实体上下文重新计算。 |
 | `granted_abilities` | `HolderOrTag<ability>[]` | `[]` | 授予的能力。 |
 | `holder_condition` | `EntityCondition` | `mxt:always_true` | 授予前的持有条件；可组合 `mxt:has_spirit_root`、`mxt:has_physique` 等条件表达先决体质或灵根。 |

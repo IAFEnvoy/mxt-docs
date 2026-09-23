@@ -1,5 +1,6 @@
 ---
 title: curse（诅咒）
+aside: false
 ---
 
 # curse（诅咒） {#curse}
@@ -10,6 +11,8 @@ title: curse（诅咒）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `curse.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `curse.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `type` | `CurseType` | **必填** | `mxt:timed`、`mxt:permanent`、`mxt:triggered` 或 `mxt:empty`。 |
 | `duration_ticks` | `NumberProvider` | `0` | 定时诅咒持续时间；单位 tick。 |
 | `tick_interval` | `NumberProvider` | `20` | 周期行为间隔。 |

@@ -1,6 +1,7 @@
 ---
 title: Creature Profile (creature_profile)
 description: "Define a creature's realm stage, intelligence, inner core, loot table, contract tags, preferred aura elements and minimum aura requirements."
+aside: false
 ---
 
 # Creature Profile (creature_profile)

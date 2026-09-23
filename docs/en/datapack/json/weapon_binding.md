@@ -1,6 +1,7 @@
 ---
 title: Weapon Binding (weapon_binding)
 description: "Adds weapon attack damage, attack speed, attributes and combat actions to an existing item through the mxt:weapon_binding datapack registry."
+aside: false
 ---
 
 # Weapon Binding (weapon_binding)

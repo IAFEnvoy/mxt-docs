@@ -43,7 +43,7 @@ Blank carriers, identity items and fixed props are ordinary items as well. Block
 | Identity and record | Cultivation Jade Slip | `mxt:cultivation_jade_slip` |
 | Identity and record | Blank Talisman | `mxt:blank_talisman` |
 | Fixed prop | Recall Talisman | `mxt:recall_talisman` |
-| Fixed prop | Realm Reward Box | `mxt:realm_reward_box` |
+| Fixed prop | Secret Realm Reward Box | `mxt:secret_realm_reward_box` |
 
 ## Generic Functional Items
 
@@ -55,7 +55,7 @@ The items below are backed by a unified server-side implementation shipped with 
 | Beast Taming Bell | `mxt:beast_taming_bell` | none | Performs a unified recall of your own contracted spirit beast. |
 | Spirit Beast Bag | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | Stores the complete persistent entity data of one contracted creature. Use it on a spirit beast to store it, and right-click an empty bag to release it. |
 | Formation Plate | `mxt:formation_plate` | `mxt:formation_plate` | Stores `allowed` (which formations may be run, `#tags` included) and the selected `formation`. Using it on a block calls `FormationWorldService`; a plate with no bound formation identifies the structure built in front of it. |
-| Realm Token | `mxt:realm_token` | `mxt:realm_token` | Stores a `realm_instance` definition. Right-click to enter the bound secret realm — the definition's own entry condition, instance cap and member cap all apply — and right-click inside the realm to return to the origin position, subject to its exit condition. |
+| Secret Realm Token | `mxt:secret_realm_token` | `mxt:secret_realm_token` | Stores a `secret_realm` definition. Right-click to enter the bound secret realm — the definition's own entry condition, instance cap and member cap all apply — and right-click inside the secret realm to return to the origin position, subject to its exit condition. |
 | Rift (block item) | `mxt:rift` | `mxt:rift` | Places rift blocks; a stack carrying the component places a rift with that destination and colour. The whole mechanic is on the [Rifts](./rift.md) page. |
 | Spirit Vessel | `mxt:spirit_vessel` | `mxt:resource_container` | Stores any `resource`. Right-click releases it to the holder, sneak-right-click stores from the holder; each resource has a capacity of 1000. |
 | Wooden Token / Stone Token | `mxt:wooden_token`, `mxt:stone_token` | `mxt:token` | Carry `kind`, `value` and `owner` together for the secret realm and trade permission systems. |
@@ -65,7 +65,7 @@ The items below are backed by a unified server-side implementation shipped with 
 
 The value of `mxt:resource_container` is a bare map whose keys are resource IDs; there is no `values` wrapper, and a wrongly wrapped value is silently read as one unreadable key — the container stays empty and only a warning is logged.
 
-When a Contract Scroll, Formation Plate or Realm Token has no binding definition, it fails safely and shows a message. The state of Spirit Beast Bags, Spirit Vessels and tokens is kept in ItemStack data components, and the server is the only authority.
+When a Contract Scroll, Formation Plate or Secret Realm Token has no binding definition, it fails safely and shows a message. The state of Spirit Beast Bags, Spirit Vessels and tokens is kept in ItemStack data components, and the server is the only authority.
 
 ## See Also
 
@@ -79,11 +79,14 @@ Component values can be written directly with the item component syntax or from 
 ```mcfunction
 give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_servant"}]
 give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
-give @s mxt:realm_token[mxt:realm_token={realm:"mxt_test:trial_realm"}]
+give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_realm"}]
 give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
 give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
+give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
 ```
+
+The last line is how a **manual** is made: a stack teaches a technique only while it carries the `mxt:technique` component, and a jade slip without that component teaches nothing and shows no technique in its tooltip. The declaration (`technique_binding`) only decides how the technique is **read** and which item the mod generates as its carrier in the creative tab and under `/picker mxt:technique`; see [Technique Binding](../datapack/json/technique_binding.md).
 
 ## Blocks and Workstations
 
@@ -108,9 +111,9 @@ MiXianTu does not create logical datapack items. Physical items must be register
 | `item_binding` | Attaches behaviour, conditions, spirit roots or generic display to an existing item. |
 | `weapon_binding` | Configures damage, attack speed, attributes and attack, use and tick behaviour. |
 | `pill_binding` | Configures pill consumption and behaviour. |
-| `technique_binding` | Binds a cultivation technique definition to an existing book, jade slip or other item. |
+| `technique_binding` | Describes how one technique is **read** — the hold length, pose, sound, quality group and conditions, plus the item the mod generates as its carrier. Whether a stack is a manual, and which technique it teaches, comes from the stack's own `mxt:technique` data component rather than from this table. |
 
-Item matching accepts a single item, a vanilla item tag, wildcards, regular expressions and mixed arrays. See [Item Binding](../datapack/json/item_binding.md) for the shared matching, condition and quality rules, and [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) for the fields of each binding type.
+Item matching accepts a single item, a vanilla item tag, wildcards, regular expressions and mixed arrays. `carrier_item` is the exception: it takes one item ID only. `technique_binding` is matched by technique id, no longer by item. See [Item Binding](../datapack/json/item_binding.md) for the shared matching, condition and quality rules, and [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) for the fields of each binding type.
 
 ## Item Aura
 

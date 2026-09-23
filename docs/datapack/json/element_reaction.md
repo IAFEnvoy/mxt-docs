@@ -1,5 +1,6 @@
 ---
 title: element_reaction（元素反应）
+aside: false
 ---
 
 # element_reaction（元素反应） {#element_reaction}

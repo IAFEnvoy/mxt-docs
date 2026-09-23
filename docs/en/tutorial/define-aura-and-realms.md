@@ -182,6 +182,7 @@ Each `realm_stage` file is one stage. A stage names exactly one aura, and `next_
 Reading the three files together:
 
 - `breakthrough_exp` is the progress required to **leave** this stage, and `max_experience` is the progress cap while you are in it. They must not cross: a constant `breakthrough_exp` greater than a constant `max_experience` is rejected at load time.
+- The optional `minor_stages` holds the sub-stages: an array is the names themselves (a bare string is a translation key, an object is a full component), while an integer N means "N layers" — the names are then generated from the entry id as `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`, counting from `0`. It only affects display and formulas: the information panel prints the current one after the realm name, and formulas gain a 0-based `minor_stage`. The cut is an even split of this stage's `breakthrough_exp`, and it changes no threshold, cost or settlement.
 - `costs` are paid on a successful breakthrough; `breakthrough.conditions` are checked alongside the progress. Both belong to the stage you are leaving — except for the very first step, where the threshold comes from the aura's `start_exp` and the conditions come from the target's `breakthrough`.
 - `auto_breakthrough` defaults to `false`: the player reaches the threshold and waits. Set it to `true` if you want cultivation mode to attempt the breakthrough on its own.
 - `passive_modifiers` are vanilla attribute modifiers granted while the stage is held. `value` is an optional formula, and an entry that declares it is recalculated every tick.
@@ -203,7 +204,7 @@ A `cultivate_action` is a named activity. The player selects one, and it settles
   "default": true,
   "tick_interval": 20,
   "absorb_amount": 1.5,
-  "aura_costs": {"example:qi": 1},
+  "aura_costs": [{"type": "mxt:aura", "aura": "example:qi", "amount": 1}],
   "cooldown": 100
 }
 ```
@@ -213,10 +214,10 @@ A `cultivate_action` is a named activity. The player selects one, and it settles
 | `default` | Used when the player has not selected another behaviour. Without any default, the first registered behaviour is used. Defaults to `false`. |
 | `tick_interval` | Settlement interval in ticks, `1..72000`; `20` means once per second. Defaults to `20`. |
 | `absorb_amount` | Multiplier for the natural recovery of the current realm's value; the bar fills first and the overflow becomes cultivation progress. Defaults to `1`. |
-| `aura_costs` | Environment aura consumed per tick, per aura. Each entry is allocated on its own, so a shortage of one only reduces that entry. |
+| `aura_costs` | The aura spent each tick, paid from the **shared aura pool** at the cultivator's position, and written with `mxt:aura` entries only (`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`). When several players cultivate in the same chunk each one's amount is scaled by the pool's allocation first, and the pool is then charged **all or nothing**. |
 | `cooldown` | Ticks before cultivation can start again after it stops. Defaults to `0`. |
 
-`start_condition` and `condition` decide whether cultivation may start and continue; both default to always true, and both can read the environment. There is no "aura kind" field: an action that should only run in the right place asks for that place directly, for example with `mxt:aura_range` (a concentration range for one aura, where `max` is required on every entry) or `mxt:dimension`. `costs` (resource costs per tick), `aura_gains` (extra aura added per tick) and `tick_action` (an entity action run each tick) are the remaining fields.
+`start_condition` and `condition` decide whether cultivation may start and continue; both default to always true, and both can read the environment. There is no "aura kind" field: an action that should only run in the right place asks for that place directly, for example with `mxt:aura_range` (a concentration range for one aura, where `max` is required on every entry) or `mxt:dimension`. `costs` (paid by the cultivating entity each tick, one `Cost` array and all or nothing), `aura_gains` (extra aura added per tick) and `tick_action` (an entity action run each tick) are the remaining fields.
 
 ## Step 5 — A Minimal Aura Zone
 
@@ -249,22 +250,24 @@ The aura environment has enough depth to deserve its own page — that is [Build
 
 ## Step 6 — Names
 
-Display names are generated from the definition ID, so you never write a translation key into the JSON — `item_quality` is the one registry that carries its own `display_name`. Add the keys to your own language file:
+Display names are generated from the definition ID by default, so you do not have to write a translation key into the JSON — unless you want your own text: the definitions of 18 registries, including `resource`, `aura`, `realm_stage`, `element` and `cultivate_action`, may carry an optional `name` / `description`, both filled in from the id when omitted. Add the keys to your own language file:
 
 ```json
 // assets/example/lang/en_us.json
 {
-  "resource.example.qi": "Spirit Qi",
-  "aura.example.qi": "Spirit Qi",
-  "realm_stage.example.qi_condensation": "Qi Condensation",
-  "realm_stage.example.foundation": "Foundation Establishment",
-  "realm_stage.example.core_formation": "Core Formation",
-  "element.example.common": "Common Aura",
-  "cultivate_action.example.meditation": "Meditation"
+  "resource.mxt.example.qi": "Spirit Qi",
+  "aura.mxt.example.qi": "Spirit Qi",
+  "realm_stage.mxt.example.qi_condensation": "Qi Condensation",
+  "realm_stage.mxt.example.foundation": "Foundation Establishment",
+  "realm_stage.mxt.example.core_formation": "Core Formation",
+  "element.mxt.example.common": "Common Aura",
+  "cultivate_action.mxt.example.meditation": "Meditation"
 }
 ```
 
-The pattern is always `<category>.<namespace>.<path>`, where the category is the registry's own path, so `example:qi` in `resource` is `resource.example.qi` and the same id in `aura` is `aura.example.qi`. A path containing `/` keeps the slash: `example:realm/qi` is `realm_stage.example.realm/qi`. A definition without a key still works; the game simply shows the raw key.
+The pattern is always `<category>.<registry namespace>.<namespace>.<path>`, where the category is the registry's own path and the **registry namespace is always `mxt`**, so `example:qi` in `resource` is `resource.mxt.example.qi` and the same id in `aura` is `aura.mxt.example.qi`. A path containing `/` keeps the slash: `example:realm/qi` is `realm_stage.mxt.example.realm/qi`. A definition without a key still works; the game simply shows the raw key.
+
+A definition whose text field is omitted uses the **same key**: `item_quality`'s `name` / `description` read as `quality.mxt.<namespace>.<path>` (the description adds `.description`, so `mxt_test:poor` is `quality.mxt.mxt_test.poor`), and a `realm_stage` counting its layers in an integer reads `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`. Apart from `item_quality`'s `description` (the line under the quality name), those fields are stored and read today but nothing draws them yet.
 
 ## Step 7 — Load and Verify
 
@@ -299,7 +302,7 @@ Then, in game:
 | --- | --- |
 | Nobody can ever leave Mortal | `first_realm` is missing on the aura, so there is no stage to break through to. |
 | Cultivation never starts | The action's `start_condition` or `condition` is not satisfied — write a `mxt:aura_range` or a biome condition for the place you want, because there is no aura-kind vocabulary to match against. |
-| The bar never grows | `aura_costs` asks for more environment aura than the chunk holds, or `use_condition` is false. |
+| The bar never grows | The shared aura pool cannot pay `aura_costs` (it does not hold enough, or other cultivators in the chunk take their share), or `use_condition` is false. |
 | The world refuses to load | A definition failed to decode: a required holder points at an ID that does not exist, or a field has the wrong shape. The whole load fails, not just the file. |
 | `breakthrough_exp` greater than `max_experience` | The stage cannot be left; the codec rejects this at load time when both are constants. |
 | The realm condition never passes | `mxt:realm` compares against the *current* stage; use `"comparison": "at_least"` when you meant "this or later". |

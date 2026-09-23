@@ -1,5 +1,6 @@
 ---
 title: tribulation（天劫）
+aside: false
 ---
 
 # tribulation（天劫） {#tribulation}
@@ -10,6 +11,8 @@ title: tribulation（天劫）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `tribulation.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `tribulation.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `condition` | `EntityCondition` | `mxt:always_true` | 启动条件：天劫被启动时求值**一次**的附加门槛，不通过则本次不启动。它不是事件触发器——决定"要不要开一场天劫"的是引用它的地方（`realm_stage` 的 `tribulation`），这里只决定那次启动是否被接受。 |
 | `timeline` | `List<TimelineEntry>` | **必填** | 天劫要消费的时间线，至少一个节拍。 |
 | `difficulty_scale` | `NumberProvider` | `1` | 难度倍率，每个等待时长都乘上它。 |

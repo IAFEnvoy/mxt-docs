@@ -1,5 +1,6 @@
 ---
 title: item_binding（物品绑定）
+aside: false
 ---
 
 # item_binding（物品绑定） {#item_binding}
@@ -17,7 +18,7 @@ title: item_binding（物品绑定）
 | `element` | `HolderOrTag<element>[]` | `[]` | 这件物品**是什么元素**：条目是一个元素、`#` 标签是一组元素。这是「物品的元素」的第一顺位来源——定义声明优先，一个都没声明时才回落到物品携带的灵气的 `aura_type`；完整口径见 [weapon_binding](./weapon_binding.md)。 |
 | `attachment_multiplier` | Double | `1.0` | 这件物品**作为护身物**值多少：携带（双手与 Curios 槽）期间，打在携带者身上的打击留下的元素附着乘上它——`0.5` 只留一半、`0` 一点也不留。多件携带物**相乘**，不写就没有影响。 |
 
-绑定表只匹配现有物品，不负责创建物品。`weapon_binding`、`pill_binding` 和 `technique_binding` 的字段互不混用；武器拥有伤害、攻击速度、属性和攻击/使用/Tick 行为。
+绑定表只匹配现有物品，不负责创建物品；**功法手册不在其列**——它是物品堆上的 `mxt:technique` 组件，见 [`technique_binding`](./technique_binding.md)。`weapon_binding`、`pill_binding` 的字段与它互不混用；武器拥有伤害、攻击速度、属性和攻击/使用/Tick 行为。
 
 ```json
 {

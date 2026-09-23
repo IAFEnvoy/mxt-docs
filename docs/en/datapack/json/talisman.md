@@ -1,6 +1,7 @@
 ---
 title: Talisman (talisman)
 description: "Defines one inscribed talisman: the abilities invoking it grants and the aura bill the carrier has to be filled with."
+aside: false
 ---
 
 # Talisman (talisman)
@@ -19,16 +20,18 @@ The filename corresponds to its ID. For example, `data/example/mxt/talisman/flam
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `talisman.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `talisman.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `abilities` | `HolderOrTag<ability>[]` | `[]` | The abilities this talisman grants when it is invoked, written the same way as a technique's `granted_abilities`: a single ID, a list of IDs, or a `#tag`. |
 | `aura_cost` | `Map<Holder<aura>, NumberProvider>` | `{}` | The aura bill one invocation of this talisman pays, keyed by concrete aura. Each entry may be a constant or a formula. An absent or empty map means this talisman costs no aura. |
 
 `abilities` is the only effect field: every skill-like effect in the mod already lands on an `ability`, so a talisman needs no effect vocabulary of its own.
 
-`aura_cost` accepts concrete aura IDs only, **not** `#tags` — the opposite of `abilities`. Aura pools are keyed by concrete aura, so a tag has no pool to name. The amounts are written like any other aura cost (such as `cultivate_action.aura_costs` or `formation.storage.capacity`), so `"12"` and `"realm_rank * 4"` are both valid JSON.
+`aura_cost` accepts concrete aura IDs only, **not** `#tags` — the opposite of `abilities`. Aura pools are keyed by concrete aura, so a tag has no pool to name. It is a `{"<aura id>": NumberProvider}` **map** (not a `Cost` array), and its amounts are written like any other aura cost (the map values of `formation.storage.capacity`, or the `amount` of an `mxt:aura` entry in a `Cost` array), so `"12"` and `"realm_rank * 4"` are both valid JSON.
 
 ### Display name
 
-Like every other definition, a talisman has no display-name field. Its name is resolved from its ID as `<category>.<namespace>.<path>`, where the category is the registry's own path, so `example:flame_sigil` in `mxt:talisman` is looked up as `talisman.example.flame_sigil`.
+A talisman may write its own optional `name`; omit it and the name is resolved from the ID as `talisman.mxt.<namespace>.<path>` (so `mxt_test:flame_sigil` is looked up as `talisman.mxt.mxt_test.flame_sigil`). The optional `description` works the same way, with `.description` appended to that generated key when it is omitted; it is stored and read today, but nothing draws it yet.
 
 ## The `mxt:talisman` component
 

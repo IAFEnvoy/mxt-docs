@@ -1,6 +1,7 @@
 ---
 title: Curse (curse)
 description: Defines a referenceable curse that can be applied, stacked, ticked, expired and cleansed.
+aside: false
 ---
 
 # Curse (curse)
@@ -19,6 +20,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/curse/burning
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `curse.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `curse.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `type` | `CurseType` | **required** | `mxt:timed`, `mxt:permanent`, `mxt:triggered` or `mxt:empty`. |
 | `duration_ticks` | `NumberProvider` | `0` | Duration of a timed curse; the unit is ticks. |
 | `tick_interval` | `NumberProvider` | `20` | Interval of the periodic behaviour. |

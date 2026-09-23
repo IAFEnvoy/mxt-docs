@@ -1,6 +1,7 @@
 ---
 title: Item Binding (item_binding)
 description: "Maps existing items to an ordered list of generic actions through the mxt:item_binding datapack registry."
+aside: false
 ---
 
 # Item Binding (item_binding)
@@ -12,10 +13,9 @@ KubeJS / mod item registry
         -> mxt:item_binding -> actions
         -> mxt:weapon_binding
         -> mxt:pill_binding
-        -> mxt:technique_binding -> cultivation technique
 ```
 
-`mxt:item_binding` is the generic entry point of the four bindings. The other three carry fields of their own, and no field is shared between them.
+`mxt:item_binding` is the generic entry point of the three bindings. The other two carry fields of their own, and no field is shared between them. Technique manuals are not bound to items at all: the stack itself carries the `mxt:technique` component (see [technique_binding](./technique_binding.md)).
 
 ## File Location
 
@@ -75,7 +75,7 @@ The matcher only references already registered items. See [Shared Data Types](..
 
 An item cannot be used when its current quality is outside the group, the group has no usable member, a binding condition fails, or the quality's own `condition` fails. See [Item Quality](./item_quality.md).
 
-A quality definition's display name is translated under the `quality` category rather than the registry path, so `example:refined` in `mxt:item_quality` is looked up as `quality.example.refined`.
+A quality carries `name` / `description` fields of its own, and both are generated from the id when omitted: `example:refined` in `mxt:item_quality` reads as `quality.mxt.example.refined`, its description as `quality.mxt.example.refined.description`. Quality is also translated under the `quality` category rather than the registry path.
 
 ### `conditions`
 

@@ -1,5 +1,6 @@
 ---
 title: technique（功法）
+aside: false
 ---
 
 # technique（功法） {#technique}
@@ -10,6 +11,8 @@ title: technique（功法）
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `name` | Text Component | `technique.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `technique.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `grade` | String | `common` | 功法等级标识，显示在功法面板的行悬浮提示里（`品阶：<原文>`）。它是自由文本：语言文件里存在 `mxt.technique_grade.<grade>` 时用那条翻译，否则原样显示，因此内容可以给自己的等级命名并自行翻译。 |
 | `icon` | **图标引用** | 无 | 功法在界面（如功法面板）中显示的图标。 |
 | `learn_condition` | `EntityCondition` | `mxt:always_true` | 学习条件。 |

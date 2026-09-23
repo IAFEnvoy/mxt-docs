@@ -163,7 +163,7 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 | --- | --- |
 | `client_hud.stored_aura` | 区块库存，是一个会随修炼升降的真实数值。 |
 | `client_hud.sensed_concentration` | 当前位置的环境模板，包含波动与噪声。 |
-| 带 `"context": "mxt:environment_concentration"` / `"mxt:actual_concentration"` 的资源条 | 同样两个数字，但按资源命名，因此 `resource.example.qi` 会变成环境灵气浓度或实际灵气浓度。 |
+| 带 `"context": "mxt:environment_concentration"` / `"mxt:actual_concentration"` 的资源条 | 同样两个数字，但按资源命名，因此 `resource.mxt.example.qi` 会变成环境灵气浓度或实际灵气浓度。 |
 | 雾效 | `client_render`，按浓度缩放。 |
 | 粒子 | 模板上可选的 `particle` 对象，每 5 tick 刷新一次。 |
 

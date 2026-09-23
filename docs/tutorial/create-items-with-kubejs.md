@@ -37,7 +37,7 @@ actions, conditions, quality, aura, tooltips
 | `data/example/mxt/item_binding/qi_pill.json`、`root_pellet.json` | 消耗行为。 |
 | `data/example/mxt/pill_binding/qi_pill.json` | 丹药毒性。 |
 | `data/example/mxt/weapon_binding/spirit_sword.json` | 武器伤害、速度和战斗行为。 |
-| `data/example/mxt/technique_binding/azure_manual.json` | 手册对应的功法。 |
+| `data/example/mxt/technique_binding/azure_manual.json` | 这门功法怎么被读，以及本体生成的载体用哪件物品。 |
 
 ## 第 1 步 —— 注册物品
 
@@ -91,20 +91,20 @@ ServerEvents.recipes(event => {
 ```json
 // data/example/mxt/item_quality/common.json
 {
-  "display_name": "quality.example.common"
+  "name": "quality.mxt.example.common"
 }
 ```
 
 ```json
 // data/example/mxt/item_quality/refined.json
 {
-  "display_name": "quality.example.refined",
+  "name": "quality.mxt.example.refined",
   "value_multiplier": {
-    "description": "quality.example.refined.value",
+    "description": "quality.mxt.example.refined.value",
     "modifier": 1.25
   },
   "alchemy_modifier": {
-    "description": "quality.example.refined.alchemy",
+    "description": "quality.mxt.example.refined.alchemy",
     "modifier": 1.1
   }
 }
@@ -123,7 +123,7 @@ ServerEvents.recipes(event => {
 
 - 绑定通过 `#example:group/pill` 引用这个组。`#` 是引用的一部分，缺了它的绑定会加载失败。
 - `values` 的顺序就是这个组的品质顺序，其中最后一个可用成员是没有显式品质的物品的**默认值**——所以这个文件把 `refined` 写在前面、`common` 写在后面，`common` 因此成为默认值。
-- `display_name` 是文本组件，所以翻译键也能用；修正项上的 `description` 会自动追加到物品 Tooltip，而 `modifier` 是运行时使用的数值：`value_multiplier` 缩放物品的货币单位价值，`forging_modifier` 用来除锻造品质读取的额外步骤数，`alchemy_modifier` 用来除酿造时长。三者都读取它所结算的那堆物品的品质——锻造和炼丹取该次会话自身材料中**最低**的品质——修正项缺失或不可用时按 `1` 处理。
+- `name` 与 `description` 都可以省略：省略时按条目 id 自动生成 `quality.mxt.<命名空间>.<路径>`（描述再加 `.description`），写了就用你给的键（字符串当翻译键、对象当完整组件）。修正项上的 `description` 只有写了才会出现在物品 Tooltip 里（省略就不画那一行），而 `modifier` 是运行时使用的数值：`value_multiplier` 缩放物品的货币单位价值，`forging_modifier` 用来除锻造品质读取的额外步骤数，`alchemy_modifier` 用来除酿造时长。三者都读取它所结算的那堆物品的品质——锻造和炼丹取该次会话自身材料中**最低**的品质——修正项缺失或不可用时按 `1` 处理。
 - 当前品质不在自己组内的物品完全无法使用，所以请按物品种类各留一个组，而不要所有东西共用一个组。
 
 ```json
@@ -245,9 +245,9 @@ ServerEvents.recipes(event => {
 
 第 2 步里的 `#example:group/weapon` 标签定义这把武器可以携带哪些品质。
 
-## 第 6 步 —— 功法绑定
+## 第 6 步 —— 功法与手册
 
-功法是逻辑；功法绑定是传授它的那本书。
+功法是逻辑；`technique_binding` 描述这门功法**怎么被读**——长按时长、姿势、音效、品质组与条件，并顺便声明本体为它生成的载体用哪件物品。
 
 ```json
 // data/example/mxt/technique/azure_breath.json
@@ -269,13 +269,19 @@ ServerEvents.recipes(event => {
 ```json
 // data/example/mxt/technique_binding/azure_manual.json
 {
-  "items": "kubejs:azure_manual",
   "technique": "example:azure_breath",
+  "carrier_item": "kubejs:azure_manual",
   "conditions": [{"type": "mxt:has_realm", "aura": "example:qi"}]
 }
 ```
 
-右键手册会尝试学习 `example:azure_breath`。所有已学会的功法会同时保持生效，而匹配的绑定即使在学习失败时也会占用这次交互，所以玩家无法绕过功法自己的 `learn_condition`、互斥标签或学习事件。
+**这一叠是不是手册，看的是堆上的组件，不是这张表。** 上面的 `carrier_item` 只是让本体替这门功法生成载体（创造模式物品栏与 `/picker mxt:technique` 各一份），真正教功法的是堆上的 `mxt:technique` 组件，所以手册要用物品组件语法取出来：
+
+```mcfunction
+give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
+```
+
+右键手册会尝试学习 `example:azure_breath`。所有已学会的功法会同时保持生效，而在堆上带组件时即使学习失败也会占用这次交互，所以玩家无法绕过功法自己的 `learn_condition`、互斥标签或学习事件。旧版本用 `items` 字段把物品绑到功法上，这个字段已经不存在了——写在新文件里会被静默忽略、加载不报错，那条规则只是不再生效。
 
 ## 第 7 步 —— 加载与验证
 
@@ -294,7 +300,7 @@ ServerEvents.recipes(event => {
 2. 修炼到进入境界链，然后吃一枚丹药：灵气上升 `25`，丹药毒性上升 `10`。`/mxt attachment status` 显示累积的毒性。
 3. 吃十枚，过量那一行就会执行。
 4. 吃一枚 `kubejs:root_pellet`：火灵根被赋予，`/mxt attachment status` 会列出它。`+25%` 的修炼倍率从下一个修炼 tick 开始生效。
-5. 右键 `kubejs:azure_manual`，确认功法已学会、其 `+2 最大生命值` 已出现。
+5. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]`，然后右键它，确认功法已学会、其 `+2 最大生命值` 已出现。直接 `/give @s kubejs:azure_manual`（或从创造模式物品栏拿 `kubejs:azure_manual`）拿到的那一叠**不带组件**，右键不会有任何反应，Tooltip 里也不会出现功法。
 6. 手持 `kubejs:spirit_sword`，在它的 Tooltip 里查看攻击伤害和速度，然后打一下什么东西，看看 `attack_action` 带来的额外伤害。
 
 ## 常见错误
@@ -308,7 +314,8 @@ ServerEvents.recipes(event => {
 | 丹药吃不了 | `pill_binding` 只匹配可食用物品，所以物品需要有 `.food(...)`。 |
 | 新物品在 `/reload` 后不出现 | 物品注册发生在启动阶段；请重启游戏。 |
 | 改过的绑定没有任何变化 | `/reload` 不会重新读取数据包注册表；请重新加载世界。 |
-| 手册没有效果也没有报错 | 功法绑定已被占用，但学习失败——检查 `learn_condition`、是否已经学过同一门功法，或互斥冲突。 |
+| 手册没有效果也没有报错 | 先确认那一叠上有没有 `mxt:technique` 组件——没有组件的普通物品什么都不教。有组件时再看学习是否失败：`learn_condition`、是否已经学过同一门功法，或互斥冲突。 |
+| 手册的 `items` 字段没起作用 | `technique_binding` 已经没有 `items` 字段了，写了会被**静默忽略**（加载不报错）。改用 `carrier_item` 加堆上的 `mxt:technique` 组件。 |
 
 ## 下一步
 

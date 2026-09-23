@@ -160,12 +160,12 @@ StartupEvents.registry('item', event => {
 ```json
 // kubejs/data/example/mxt/technique_binding/fire_manual.json
 {
-  "items": "kubejs:fire_manual",
   "technique": "example:fire_manual",
+  "carrier_item": "kubejs:fire_manual",
   "quality_group": "#example:group/manual"
 }
 ```
 
-四种绑定均只引用已经由 KubeJS、原版或其他模组注册的物品；`quality_group` 是可选的原版 `item_quality` 标签引用。当前各绑定的运行时接入状态和缺口以项目仓库内的「模块实现审计」为准。
+前三张绑定表只引用已经由 KubeJS、原版或其他模组注册的物品，`quality_group` 是可选的原版 `item_quality` 标签引用。「手册」那一份不一样：它是前两张表的**定义**，`kubejs:fire_manual` 只通过 `carrier_item` 声明成本体生成的载体，真正教功法的还是**堆上的 `mxt:technique` 组件**——写组件的方式见[功法绑定](../datapack/json/technique_binding.md)。当前各绑定的运行时接入状态和缺口以项目仓库内的「模块实现审计」为准。
 
 KubeJS 注册物品表后需要重启游戏；MXT 的绑定数据表属于原版数据包注册表，读取发生在世界加载时，因此修改后需要重新加载世界（单机退回标题界面再进入，服务器重启），`/reload` 不会重新读取它们。绑定的物品 ID 不存在时，数据包加载会失败，避免产生无法解析的物品规则。

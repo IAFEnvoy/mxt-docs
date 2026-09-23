@@ -51,7 +51,7 @@ A method is "what pressing the button does": which way the meter moves, what it 
 | Field | Type | Default | Effect |
 | --- | --- | --- | --- |
 | `value_delta` | Integer | **required** | The meter shift. It must not be `0`. |
-| `costs` | `List<ResourceCost>` | `[]` | What one strike costs, paid by the player who strikes (see [Trigger and Cost Types](../datapack/types/other/trigger-and-cost.md)). |
+| `costs` | `List<Cost>` | `[]` | What one strike costs, paid by the player who strikes, all or nothing as one array; the five shapes are on [Shared Data Types · `Cost`](../datapack/types/shared_data_types.md#cost) and the types on [Trigger and Cost Types](../datapack/types/other/trigger-and-cost.md#cost-type). |
 | `condition` | `EntityCondition` | `mxt:always_true` | When the method may be used. It is tested against the **player** (see [Entity Conditions](../datapack/types/condition/entity_condition_types.md)). |
 | `icon` | icon reference | none | What the list draws, and **what the method is called in that list**. |
 | `cooldown` | Integer | `0` | Cooldown in ticks, range `0..72000`. |
@@ -138,7 +138,7 @@ The `example:smith_hammer` in `mxt:tool_binding="example:smith_hammer"` is an en
 | `target_min` / `target_max` | Integer | **required** | The target range, inside the meter bounds. |
 | `result` | Identifier | **required** | What a success produces. |
 
-`input` is **order-independent**: the twelve input slots only have to hold at least the declared amount of every entry, and which slot it comes from changes nothing. It is also a **strict** list — an empty list, more than 15 entries, the same item twice, or an item id that does not resolve all make the whole definition fail to load. That is the opposite of the tolerant cost lists you will meet in the formation tutorial.
+`input` is **order-independent**: the twelve input slots only have to hold at least the declared amount of every entry, and which slot it comes from changes nothing. It is also a **strict** list — an empty list, more than 15 entries, the same item twice, or an item id that does not resolve all make the whole definition fail to load. Cost lists decode just as strictly now: a malformed cost entry fails the load instead of being dropped silently.
 
 Materials are matched by **item** (`stack.is(item)`) and not by their components. A stack carrying a quality component is therefore indistinguishable from a plain one here. To care about quality, you want the quality read at settlement (Step 4), not `input`.
 
@@ -171,7 +171,7 @@ Add the finish pattern and the quality ladder to the same blueprint:
 ```json
 // data/example/mxt/item_quality/flawless.json
 {
-  "display_name": "quality.example.flawless"
+  "name": "quality.mxt.example.flawless"
 }
 ```
 
@@ -243,7 +243,7 @@ The **cancel** button does **not** go through this settlement. It goes through a
 2. Put two iron ingots and a stick into the input slots. The left list now shows the result item's icon — a blueprint is **named after what it produces** in that list. Hover it: the material list appears, with a green `✔` and a have/need count for everything you hold, a red `✖` otherwise, and the step limit underneath.
 3. Pick the blueprint and press "use blueprint". The materials are taken and the session starts: the meter gains a green target band, a grey zero mark and a red current value.
 4. Pick a method in the right list (the icon is its `icon`; hovering shows "value change: +2") and press "use method". The value moves and the "current" row underneath records the last six strikes; with a method picked, a yellow predicted mark also appears on the meter.
-5. Push the value into the green band with the last two strikes being light-then-heavy. The session settles itself, the piece lands in the output slot, and its tooltip gains a quality line — the text it shows is whatever `display_name` in `flawless.json` points at (if you write a translation key, remember to give it an entry in your own language file).
+5. Push the value into the green band with the last two strikes being light-then-heavy. The session settles itself, the piece lands in the output slot, and its tooltip gains a quality line — the text it shows is whatever `name` in `flawless.json` points at; omit `name` and it is generated from the entry id as `quality.mxt.example.flawless` (if you write a translation key, remember to give it an entry in your own language file).
 6. Forge a second one, deliberately taking a few extra strikes, and compare the two qualities. Press "cancel" in the middle of a session to see the materials come back through the cancellation policy.
 7. `/mxt registries validate` should report no errors, and `/mxt registries list` should show the entry counts of `mxt:forging_method`, `mxt:forging_blueprint`, `mxt:tool_binding` and `mxt:blueprint_binding`.
 

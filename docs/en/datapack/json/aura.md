@@ -1,6 +1,7 @@
 ---
 title: Aura (aura)
 description: "Gives a stored value its aura identity and cultivation behaviour: the aura it carries, realm chain entry, regeneration, conversions and the use gate."
+aside: false
 ---
 
 # Aura (aura)
@@ -21,6 +22,8 @@ The filename corresponds to its ID, which is independent of the value it describ
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `aura.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `aura.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `resource` | `Holder<resource>` | **required** | The stored value this aura describes. |
 | `first_realm` | `Holder<realm_stage>` | none | The first realm of the realm chain this aura belongs to; it is only used to determine the target realm of a mortal's first breakthrough. Without it the value has no chain and cannot be cultivated. |
 | `start_exp` | `NumberProvider` | `0` | The cultivation progress required for a mortal's first breakthrough, and at the same time the cultivation progress cap of the mortal stage; once reached it no longer increases and only a breakthrough can be attempted. |
@@ -78,6 +81,8 @@ The chain belongs to the aura definition: every `realm_stage` names the aura it 
 :::
 
 ::: info Display Names
-Data-driven definitions do not fill in a `translation_key` — that field does not exist. A definition's display name is generated from its identifier as `<category>.<namespace>.<path>`, where the category is the registry's own path, so `mxt:common` in `mxt:aura` is `aura.mxt.common`. The one override is `mxt:item_quality`, which is translated under `quality`. A `/` in the path is **kept as written** rather than turned into `.`, so avoid subdirectories in definition filenames. Registry titles use `mxt.registry.<registry path>`, for example `mxt.registry.aura`.
+Data-driven definitions do not fill in a `translation_key` — that field does not exist. A definition's display name is generated from its identifier as `<category>.<registry namespace>.<namespace>.<path>`, where the category is the registry's own path and the **registry namespace is always `mxt`** for this mod's own registries, so `mxt:common` in `mxt:aura` is `aura.mxt.mxt.common`. The single category override is `mxt:item_quality`, which is translated under `quality` (`example:refined` reads as `quality.mxt.example.refined`). A `/` in the path is **kept as written** rather than turned into `.`, so avoid subdirectories in definition filenames.
+
+`aura` is one of the 18 registries that may also carry an optional `name` / `description` (a bare string is a translation key, an object is a full component). Writing one uses your own text; omitting it falls back to the generated key above, with `.description` appended for the description. Both fields are stored and read today, but nothing draws them yet. Registry titles use `mxt.registry.<registry path>`, for example `mxt.registry.aura`.
 :::
 

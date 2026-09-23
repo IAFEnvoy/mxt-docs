@@ -68,7 +68,7 @@ data/mxt/tags/damage_type/no_bonus.json
 | --- | --- |
 | 资源与修炼 | `resource`、`aura`、`element`、`element_reaction`、`realm_stage`、`spirit_root`、`physique`、`technique`、`skill_stage`、`cultivate_action` |
 | 技能与规则 | `ability`、`curse`、`formation`、`tribulation`、`trigger`、`talisman` |
-| 灵气与世界 | `aura_zone`、`block_aura`、`item_aura`、`realm_instance` |
+| 灵气与世界 | `aura_zone`、`block_aura`、`item_aura`、`secret_realm` |
 | 物品与品质 | `item_binding`、`weapon_binding`、`pill_binding`、`technique_binding`、`tool_binding`、`blueprint_binding`、`artifact`、`item_quality` |
 | 经济与内容 | `currency`、`spirit_herb`、`forging_method`、`forging_blueprint`、`creature_profile`、`contract_type` |
 
@@ -106,7 +106,9 @@ flowchart TD
 - 文件冲突遵循 Minecraft 数据包优先级：高优先级数据包覆盖低优先级数据包的同一路径。
 - 原版标签使用 `replace: false` 时，值按数据包合并顺序追加；除品质排序标签外，玩法不依赖标签值顺序。
 - 数据包只读，定义中没有通用的 `schema_version`、`enabled` 或 `tags` 字段。
-- 数据驱动定义的显示名称由标识符自动生成翻译键 `<类别>.<命名空间>.<路径>`，类别默认取注册表自己的 path（`aura` 里的 `mxt:fire` 查 `aura.mxt.fire`）；唯一例外是 `item_quality`，它一直按 `quality` 翻译（`quality.example.refined`）。路径里的 `/` **原样**进入键中，不会转成 `.`（`example:foo/bar` 得到的键是 `resource.example.foo/bar`），所以定义文件名不要带子目录。JSON 不填写 `translation_key`，请在 `assets/<命名空间>/lang/zh_cn.json` 和 `en_us.json` 中提供对应翻译。
+- 数据驱动定义的显示名称由标识符自动生成翻译键 `<类别>.<注册表命名空间>.<定义命名空间>.<路径>`。类别默认取注册表自己的 path；**注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`**（这些注册表的键都写作 `mxt:<路径>`），所以 `aura` 里的 `mxt:fire` 查 `aura.mxt.mxt.fire`，`resource` 里的 `example:qi` 查 `resource.mxt.example.qi`，`talisman` 里的 `mxt_test:flame_sigil` 查 `talisman.mxt.mxt_test.flame_sigil`。唯一例外是 `item_quality`，它的类别一直是 `quality`（`example:refined` 查 `quality.mxt.example.refined`）。路径里的 `/` **原样**进入键中，不会转成 `.`（`example:foo/bar` 得到的键是 `resource.mxt.example.foo/bar`），所以定义文件名不要带子目录。JSON 不填写 `translation_key`，请在 `assets/<命名空间>/lang/zh_cn.json` 和 `en_us.json` 中提供对应翻译。
+- 下面这 18 个注册表的定义还可以自带可选的 `name` 与 `description`（写法与其它组件字段相同：裸字符串当翻译键、对象当完整组件）：`resource`、`aura`、`realm_stage`、`element`、`spirit_root`、`physique`、`ability`、`curse`、`technique`、`skill_stage`、`cultivate_action`、`artifact`、`formation`、`tribulation`、`secret_realm`、`contract_type`、`talisman`、`item_quality`。写了就用你自己的文本，省略才用上一条的生成键——`description` 省略时是生成键再接 `.description`。这对字段的意义是数据包可以**翻译生成键、也可以自己写文本**（从而避开名字冲突）；**`description` 目前只被存储与读取，除 `item_quality`（品质描述那一行）以外还没有任何界面或提示框绘制它**。其余注册表仍然只有生成键。
+- `realm_stage` 用整数写法声明 `minor_stages` 时，子阶段名同样带注册表命名空间：`realm_stage.mxt.<定义命名空间>.<路径>.minor_stage.<下标>`（下标从 `0` 起）。
 - 每个数据包注册表的界面标题另有固定键 `mxt.registry.<注册表 path>`（如 `mxt.registry.aura`、`mxt.registry.item_quality`），由本模组自己的语言文件提供；数据包只需要为自己的定义提供上面那个键。
 - 必填的单个 Holder 引用不存在时，整个数据包加载失败；可选 Holder 和容错列表引用按对应 Codec 处理。
 - 这些注册表不保留旧快照，因此解码失败的定义会直接导致世界无法加载：修好该文件后才能再次进入。

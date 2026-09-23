@@ -163,7 +163,7 @@ The client does not draw a fuel bar, and never consumes items on its own.
 | --- | --- |
 | `client_hud.stored_aura` | The chunk inventory, as a real value that goes up and down with cultivation. |
 | `client_hud.sensed_concentration` | The environment template at the current position, including fluctuation and noise. |
-| Resource bars with `"context": "mxt:environment_concentration"` / `"mxt:actual_concentration"` | The same two numbers, but labelled after the resource, so `resource.example.qi` becomes environmental or actual aura concentration. |
+| Resource bars with `"context": "mxt:environment_concentration"` / `"mxt:actual_concentration"` | The same two numbers, but labelled after the resource, so `resource.mxt.example.qi` becomes environmental or actual aura concentration. |
 | Fog | `client_render`, scaled by concentration. |
 | Particles | The optional `particle` object on the template, refreshed every 5 ticks. |
 

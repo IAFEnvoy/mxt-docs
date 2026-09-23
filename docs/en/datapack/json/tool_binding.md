@@ -1,6 +1,7 @@
 ---
 title: Tool Binding (tool_binding)
 description: A tool binding lists the forging methods an existing tool item unlocks at the Forge Table.
+aside: false
 ---
 
 # Tool Binding (tool_binding)

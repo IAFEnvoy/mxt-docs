@@ -1,6 +1,7 @@
 ---
 title: Element (element)
 description: Defines an element together with its overcoming and adapted relations, what each relation is worth, and the colour used for aura cost text.
+aside: false
 ---
 
 # Element (element)
@@ -19,6 +20,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/element/fire.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `name` | Text Component | `element.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `element.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `overcomes` | `ElementRelation[]` | `[]` | The elements this element overcomes, and what each of those edges is worth on the attacking side. |
 | `adapted_to` | `ElementRelation[]` | `[]` | The elements this element is adapted to, and what each of those edges is worth on the defending side. |
 | `damage_types` | `HolderOrTag<damage_type>[]`, entries may also be objects | `[]` | The damage types this element claims: a claimed damage type **means** this element. The two shapes are equivalent — a bare string (or `#tag`) uses the element's own `damage_attachment`, while `{"damage_type": "minecraft:lava", "damage_attachment": 2.0}` gives that kind of hit **its own amount**. See "A claimed type is a group" below. |

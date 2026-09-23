@@ -1,6 +1,7 @@
 ---
 title: Alchemy Recipe (alchemy_recipe)
 description: An alchemy recipe combines materials, aura, temperature and furnace tier to produce pills, with both outcomes decided by the recipe.
+aside: false
 ---
 
 # Alchemy Recipe (alchemy_recipe)

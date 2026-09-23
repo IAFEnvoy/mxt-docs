@@ -1,5 +1,6 @@
 ---
 title: spirit_herb（灵植）
+aside: false
 ---
 
 # spirit_herb（灵植） {#spirit_herb}

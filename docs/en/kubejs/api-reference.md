@@ -26,7 +26,7 @@ The identifiers below — `id`, `resource`, `ability`, `curse`, `zone` and so on
 | `MxtConditions` | Register `mxt:js` condition callbacks, or test a built-in condition. |
 | `MxtValues` | Register or evaluate number providers and resource value providers. |
 | `MxtCosts` | Check or pay a single complete `Cost`. |
-| `MxtResources` | Pay several resource costs atomically. |
+| `MxtResources` | Pay a whole `Cost` array atomically. |
 | `MxtAbilities` | Cast, grant, revoke and query the abilities an entity holds. |
 | `MxtCultivation` | Add cultivation progress and attempt a realm breakthrough. |
 | `MxtCurses` | Apply (with an optional duration), release, remove and query curses. |

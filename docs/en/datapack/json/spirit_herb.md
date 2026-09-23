@@ -1,6 +1,7 @@
 ---
 title: Spirit Herb (spirit_herb)
 description: A spirit herb attaches quality and herb metadata to existing items without creating a new item.
+aside: false
 ---
 
 # Spirit Herb (spirit_herb)

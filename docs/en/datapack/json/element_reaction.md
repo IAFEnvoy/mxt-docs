@@ -1,6 +1,7 @@
 ---
 title: Element Reaction (element_reaction)
 description: "Defines what happens once enough of an element has accumulated on a body: the demand, what it consumes, and the action it runs."
+aside: false
 ---
 
 # Element Reaction (element_reaction)

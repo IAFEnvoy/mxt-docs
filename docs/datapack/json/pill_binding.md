@@ -1,5 +1,6 @@
 ---
 title: pill_binding（丹药绑定）
+aside: false
 ---
 
 # pill_binding（丹药绑定） {#pill_binding}

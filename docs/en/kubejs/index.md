@@ -23,7 +23,7 @@ The KubeJS bridge is optional. It exposes one global object per domain instead o
 | `MxtConditions` | Register `mxt:js` condition callbacks, or test a built-in condition. |
 | `MxtValues` | Register or evaluate number providers and resource value providers. |
 | `MxtCosts` | Check or pay a single complete cost. |
-| `MxtResources` | Pay several resource costs atomically. |
+| `MxtResources` | Pay a whole `Cost` array atomically. |
 | `MxtAbilities` | Cast, grant, revoke and query the abilities an entity holds. |
 | `MxtCultivation` | Add cultivation progress and attempt a realm breakthrough. |
 | `MxtCurses` | Apply (with an optional duration), release, remove and query curses. |
@@ -130,13 +130,13 @@ Bind a cultivation technique to its carrier item:
 ```json
 // kubejs/data/example/mxt/technique_binding/fire_manual.json
 {
-  "items": "kubejs:fire_manual",
   "technique": "example:fire_manual",
+  "carrier_item": "kubejs:fire_manual",
   "quality_group": "#example:group/manual"
 }
 ```
 
-All four binding tables only reference items that KubeJS, vanilla or another mod has already registered, and `quality_group` is an optional vanilla `item_quality` tag reference. When the bound item ID does not exist, data pack loading fails, so that no unresolvable item rule is created.
+The first three tables only reference items that KubeJS, vanilla or another mod has already registered, and `quality_group` is an optional vanilla `item_quality` tag reference. The technique table is not matched against an item: `carrier_item` only names the item the mod generates as that technique's carrier, and a stack teaches a technique only while it carries the `mxt:technique` component. When the bound item ID does not exist, data pack loading fails, so that no unresolvable item rule is created.
 
 ## Reloading
 
