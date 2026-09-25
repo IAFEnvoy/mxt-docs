@@ -80,7 +80,18 @@ Each entry of a `choice` list is a weighted wrapper around a nested action:
 | `mxt:remove_enchantment` | `enchantment?`, `level?`, `reset_repair_cost?` | Removes or lowers enchantments on the stack and optionally resets its repair cost. |
 | `mxt:add_enchantment` | `enchantments`, `override?` | Adds or upgrades enchantments on the stack. |
 | `mxt:merge_components` | `components` | Merges a vanilla data component patch into the stack. |
+| `mxt:add_ability` | `abilities` | Merges abilities into the stack's `mxt:item_abilities` data component: **an entry that is already written is not written twice**, and existing entries are all kept. It is that component's **dedicated producer** (`mxt:merge_components` remains the generic patch), and like every other item action it works on "the stack this action was handed" (claiming, pouring, right-clicking, artifact generation, …). |
 
 ::: info Nested Values
 `mxt:if_else` takes an [item condition](../condition/item_condition_types.md). `mxt:add_enchantment` accepts `enchantments` as a map from an enchantment id to a level, and `override` decides whether an existing level may be replaced. `mxt:remove_enchantment` takes an enchantment or a list of them, limits the removal with `level`, and `mxt:merge_components` takes a vanilla data component patch.
 :::
+
+## Giving One Pile of Items Its Own Abilities
+
+Besides the definition's own `abilities`, an item can carry abilities through the `mxt:item_abilities` data component (`{"abilities": ["example:foo"]}`): what the runtime reads is the **union of what the definition declares and what the component writes**, so two piles of items claimed by one artifact definition can carry different abilities. The component stores **ability ids only** and takes no tags (tags are expanded on the definition's side, in its `abilities`). Writing it now has a dedicated action:
+
+```json
+"claim_action": { "type": "mxt:add_ability", "abilities": ["example:sword_focus"] }
+```
+
+`abilities` (**required**, a list of ability ids) is merged entry by entry; one that is already written is not written twice, and the entries already in the component are all kept. Before this the only route was the generic `mxt:merge_components` patch; now there is a dedicated producer as well.

@@ -171,7 +171,7 @@ flowchart TD
 | Condition | Type | Meaning |
 | --- | --- | --- |
 | `mxt:friend` | Bi-entity condition | The `actor` counts the `target` as its own |
-| `mxt:formation_ally` | Entity condition | The entity is a friend of the **current formation's** owner; outside a formation, or when the formation recorded no owner, it is always `false`. An owner who is merely offline is not that case — the judgement still asks the event by id. |
+| `mxt:formation_ally` | Entity condition | The entity is a friend of **any** owner of the **current formation** (ownership is a set of UUIDs, and any one of them recognising it counts); outside a formation, or when the formation recorded no owner, it is always `false`. An owner who is merely offline is not that case — the judgement still asks every one of them by id. |
 
 `mxt:friend` goes wherever a bi-entity condition slot exists, most typically a skill's `target_condition`:
 
@@ -179,7 +179,7 @@ flowchart TD
 "target_condition": { "type": "mxt:not", "condition": { "type": "mxt:friend" } }
 ```
 
-`mxt:formation_ally` goes into a formation's per-entity actions (those condition slots are entity conditions, with no second entity to pair against, so the formation supplies the owner's half). One array hurting enemies and healing friends:
+`mxt:formation_ally` goes into a formation's per-entity actions (those condition slots are entity conditions, with no second entity to pair against, so the formation supplies the owner's half — asking **every owner on the list** in turn). One array hurting enemies and healing friends:
 
 ```json
 "entity_tick_action": {
@@ -223,7 +223,7 @@ The scripted side is `MxtEvents.friendRelation`: `getJudgeId()` is always presen
 | --- | --- | --- |
 | `FormationRelations#affects` | Does the array's per-entity work apply to this entity? | Stand down (do not act) |
 | `FormationRelations#canDismantle` | May a friend take the array down (server setting, off by default)? | Refused |
-| `FormationProtection#exempt` | The ward's exemption list (owner first, then friends) | Not exempt |
+| `FormationProtection#exempt` | The ward's exemption list (the ownership list first, then friends) | Not exempt |
 | `FormationProtection#foreignClaimRefuses` | Raising a ward on someone else's claim: does the landowner accept them? | Refused |
 | `FormationActionRunner#targets` (`target: allies`) | Does this entity get the buff? | It does not |
 | `FormationAllyEntityCondition` (`mxt:formation_ally`) | The datapack-condition version of the same question | False |

@@ -66,7 +66,7 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 | `mxt:has_curse` | `curse?`、`tags?`、`stacks?`、`remaining_ticks?` | 检查实体是否持有一条满足**全部**给定筛选条件的 [诅咒](../../json/curse.md)：某个定义、列出的全部标签、层数范围与剩余 tick 范围。范围是 `{min?, max?}` 窗口；永不过期的诅咒按无限计，因此它能回答 `min`，却永远不会满足 `max`。完全不写筛选条件时，问的是是否持有任意诅咒。 |
 | `mxt:has_spirit_root` | `spirit_root` | 检查实体当前是否持有给定的 [灵根](../../json/spirit_root.md)；`spirit_root` 接受条目、`#` 标签或它们的数组，所以"任意火属灵根"写一条标签即可。被停用的灵根不算持有。 |
 | `mxt:has_physique` | `physique` | 检查实体当前是否持有给定的 [体质](../../json/physique.md)。 |
-| `mxt:realm` | `realm`、`comparison?` | 把实体的 [境界阶段](../../json/realm_stage.md) 与 `realm` 比较，`comparison` 可用 `exact`（默认）、`at_least` 或 `at_most`。 |
+| `mxt:realm` | `realm`、`comparison?`、`min_minor_stage?` | 把实体的 [境界阶段](../../json/realm_stage.md) 与 `realm` 比较，`comparison` 可用 `exact`（默认）、`at_least` 或 `at_most`。可选的 `min_minor_stage`（`0` 起，与公式变量 `minor_stage` 同一套编号）再要求身体在**该境界**上达到过的最高层数不小于它——读的是只增不减的层数记录，所以"炼气期层数达到过 500"这类门槛在突破离开之后**仍然成立**；想表达"此刻就在这一层的窗口里"就配 `comparison: "exact"`。 |
 | `mxt:has_realm` | `aura` | 对已针对给定 [灵气](../../json/aura.md) 进入境界链的实体通过。 |
 | `mxt:aura_range` | `aura` | 把服务端解析出的实体所在位置的灵气浓度与逐灵气的需求相比较。`aura` 把灵气 ID 映射到一个对象，其中有必填的 `max` 与可选的 `min`（默认 `0`）；两者都接受 [数值提供器](../number_provider_types.md)。 |
 | `mxt:has_element` | `elements` | 当实体的**启用**灵根所命名的元素中有一个出现在 `elements` 里时通过。`elements` 是 `HolderOrTag<element>[]`，因此"任意火属灵根"写一条 `#` 标签即可，之后新加的同类灵根无需改动这里；被停用的元素不算。元素类条件的 `elements` 都至少写一项：写空表/空数组会在加载期被拒绝，而不是变成一条"恒真"或"恒假"的条件。 |
@@ -75,9 +75,9 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 | `mxt:in_secret_realm` | `definition?`、`role?` | 判定实体是否在某份[秘境实例](../../json/secret_realm.md)里。`definition` 接受一条 `mxt:secret_realm` 定义或 `#标签`，省略时不限定是哪一份定义；`role` 取 `any`（默认，在里面即可）、`owner`（自己是主人）或 `guest`（在里面但不是主人）。不在任何实例里时恒为 `false`，因此 `owner` 与 `guest` 都隐含"在里面"。 |
 | `mxt:resource_compare` | `resource`、`min` | 检查实体某个数值的取值至少为 `min`。 |
 | `mxt:entity_tag` | `tag` | 把实体与实体类型标签匹配。 |
-| `mxt:formation_member` | — | 当实体在当前维度拥有任意已注册的 [阵法](../../json/formation.md) 时通过。 |
-| `mxt:formation_owner` | — | 当实体是当前正在求值的阵法的阵主时通过；在阵法上下文之外恒为 `false`。 |
-| `mxt:formation_ally` | — | 当当前正在求值的阵法阵主把该实体视为友军时通过。 |
+| `mxt:formation_member` | — | 当实体在当前维度拥有任意已注册的 [阵法](../../json/formation.md) 时通过（**归属名单**上有它就算）。 |
+| `mxt:formation_owner` | — | 当实体是当前正在求值的阵法的阵主**之一**时通过（归属是一组 UUID，名单上任何一位都算）；在阵法上下文之外恒为 `false`。 |
+| `mxt:formation_ally` | — | 当当前正在求值的阵法的**某一位**阵主把该实体视为友军时通过（任一位认得它就算）。 |
 | `mxt:air` | `comparison`、`compare_to` | 比较实体剩余的氧气值。 |
 | `mxt:dimension` | `dimension`、`inverted?` | 检查实体所在维度；`inverted` 为 `true` 时取相反结果。 |
 | `mxt:entity_type` | `entity_type` | 检查实体的类型。 |

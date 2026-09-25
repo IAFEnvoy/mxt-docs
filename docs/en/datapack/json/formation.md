@@ -22,14 +22,15 @@ The filename corresponds to its ID. For example, `data/example/mxt/formation/spi
 |-------|------|---------|-------------|
 | `name` | Text Component | `formation.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
 | `description` | Text Component | `formation.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
-| `structure_template` | Identifier | see below | The vanilla structure template ID. Its air entries are ignored, so a template says what must be present and never what must be absent. |
+| `structure_template` | Identifier | see below | The vanilla structure template ID. Its air entries are ignored, so a template says what must be present and never what must be absent. It is one of the two structure fields: with `structure_check: "structure"` **exactly one** of them has to be written. |
+| `structure_check` | `structure` / `always` | `structure` | Whether the structure is checked when the array is raised. `always` means **this array can be raised anywhere**, and then neither `structure_template` nor `structure` may be written (writing one is a load error, not something ignored). |
 | `structure` | `List<RequiredBlock>` | see below | An inline structure: a list of blocks at offsets from the controller. |
 | `radius` | `NumberProvider` | **required** | The formation's area of effect radius. |
 | `activation_costs` | `List<Cost>` | `[]` | Paid once on activation out of the **activator's** own account, all or nothing as one array; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 | `maintenance_costs` | `List<Cost>` | `[]` | Paid every maintenance cycle: the aura the array's own blocks supply is offset first and the owner pays the rest, and the formation fails when it cannot be paid. `mxt:item` and `mxt:js` entries can never be paid here. |
 | `storage` | `Storage` | none | What the array may keep of the aura its own ground supplies. The `capacity` field is required and maps each aura to its per-aura ceiling. |
 | `actions` | `List<Formation Action>` | `[]` | The function modules of this array. See [Formation modules](#formation-modules) below. |
-| `spare_friends` | Boolean | `false` | The friend-or-foe switch: with it, the per-entity work reaches only the entities the owner does not recognise as friends; without it, it reaches everyone the array covers. |
+| `spare_friends` | Boolean | `false` | The friend-or-foe switch: with it, the per-entity work reaches only the entities **no** owner recognises as a friend; without it, it reaches everyone the array covers. |
 | `activate_action` | Block Action | `mxt:no_op` | The activation block behaviour. |
 | `tick_action` | Block Action | `mxt:no_op` | The formation periodic block behaviour. |
 | `deactivate_action` | Block Action | `mxt:no_op` | The block behaviour on removal. |
@@ -39,7 +40,10 @@ The filename corresponds to its ID. For example, `data/example/mxt/formation/spi
 
 ### Structure
 
-A formation declares its shape with **exactly one** of `structure_template` or `structure`; supplying both, or neither, fails the load.
+`structure_check` decides whether a structure is checked at all when the array is raised:
+
+- **`structure` (the default)**: `structure_template` and `structure` take **exactly one** — supplying both, or neither, fails the load.
+- **`always`**: the array **can be raised anywhere**, and neither structure field may be written; writing one is a **load error** rather than being ignored. This is how an array that is not built out of a structure (one a script or a command raises, say) says so.
 
 ```json
 "structure": [
@@ -49,6 +53,14 @@ A formation declares its shape with **exactly one** of `structure_template` or `
 ```
 
 `offset` is relative to the controller. `state` takes a bare block ID (its default state), or vanilla's `{ "Name": "...", "Properties": { ... } }` object when a specific state is needed.
+
+### Owners
+
+Ownership is a **set** (since 2026-09-25): the player who raises the array is written into the list when the plate activates it, and **every player on that list counts as an owner**. `mxt:formation_owner` passes for **any** of them, `mxt:formation_member` passes for an entity on the ownership list of any registered formation in the current level, and the dismantle permission and the modules' "owner / allies" targets read the whole set too.
+
+A shared array is managed with `/mxt formation owners <pos> [add|remove <player>]`; adding and removing need the `gamemaster` permission, and `/mxt formation list` prints the whole list comma-separated. **Allies are asked of every listed owner, and a friend of any owner counts** as a friend of the array.
+
+The payer is the **first** listed owner (with a single owner, the one who raised it), so an array with maintenance costs is taken down once that owner is offline and no payer can be resolved - unless a script cancels `UpkeepFailed`, or the array's own `storage` can still cover the period.
 
 ### Storage
 
@@ -85,8 +97,8 @@ Rules:
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `damage` | `NumberProvider` | `0` | The damage dealt to every affected entity each period. |
-| `damage_type` | damage_type | none | The damage type. Without it, the strike uses vanilla's "the owner hit it" reading. |
-| `attribute_to_owner` | Boolean | `true` | Credits the owner as the attacker. This decides kill credit, mob aggro and every condition that reads the attacker; `false` makes it an unowned, environmental hit. |
+| `damage_type` | damage_type | none | The damage type. Without it, the strike uses vanilla's "the owner hit it" reading, with the **first** listed owner as that owner. |
+| `attribute_to_owner` | Boolean | `true` | Credits the **first** listed owner (the one who raised the array) as the attacker. This decides kill credit, mob aggro and every condition that reads the attacker; `false` makes it an unowned, environmental hit. |
 | `effects` | `List<ApplyEffect>` | `[]` | The status effects applied each period. The fields are exactly those of `mxt:apply_effect`: `effect`, `duration_ticks` and `amplifier`. |
 | `target_condition` | Entity Condition | `mxt:always_true` | An extra filter on the **target entity** (undead only, players only, …), evaluated after the friend-or-foe decision. |
 
@@ -97,7 +109,7 @@ Every per-entity strike goes through the [damage system](../../technical/damage.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `abilities` | `List<ability>` | `[]` | Granted to the entities in range. The source is derived from the formation ID, so a grant is revoked when the entity leaves the radius, the array is removed, or the entity is no longer selected. |
-| `target` | `all` / `allies` / `owner` | `all` | Who receives the benefit. `allies` goes through the friend check and gives nothing to an unidentifiable entity. |
+| `target` | `all` / `allies` / `owner` | `all` | Who receives the benefit. `allies` goes through the friend check — which asks every listed owner, a friend of any of them counting — and gives nothing to an unidentifiable entity. |
 | `aura_zone` | `Holder<aura_zone>` | none | A high-priority runtime aura override for the formation's position. |
 | `max_bonus` | `Map<Holder<aura>, NumberProvider>` | `{}` | The aura maximum bonus for the aura the override provides; overlapping formations take the highest value. |
 
@@ -117,7 +129,7 @@ Attribute modifiers are not a module field here: an `ability` carries its own `m
 | `entity_interact` | Boolean | `true` | Right-clicking entities (villagers, horses, armour stands, …). |
 | `attack_entity` | Boolean | `true` | **Melee** attacks on entities. |
 | `item_use` | Boolean | `true` | Using an item (buckets, potions, drawing a bow, …). |
-| `spare_friends` | Boolean | `true` | Exempts the owner's friends. |
+| `spare_friends` | Boolean | `true` | Exempts every owner's friends. |
 | `delegate_to_claims` | Boolean | `false` | Hands the protection to a claim plugin such as FTB Chunks: while a claim plugin is protecting the area, none of the flags above are enforced. |
 
 Every flag defaults to `true`, so declaring the module is the whole statement; write `false` for the one thing you want to allow. A flag answers for **either end** of the action: the actor is inside the radius, or the block or entity being acted on is inside it. `item_use` has no target, so it only looks at the actor. Explosions and mob griefing have no actor, so they only look at the position.

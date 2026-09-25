@@ -63,7 +63,7 @@ The whole `/mxt rift` subtree needs the `gamemaster` permission. It reports and 
 
 | Subcommand | Behaviour |
 | --- | --- |
-| `info <pos>` | Prints where this rift leads, its colour (set by hand or following the target dimension), and its **link count, triangle count and how many blocks it is connected to** — one look tells you how it will be drawn and why it has not linked to a neighbour. |
+| `info <pos>` | Prints where this rift leads, its colour (set by hand or following the target dimension), and its **link count, triangle count and how many blocks it is connected to**, plus whether it is **isolated** (no second rift anywhere in the surrounding 3×3×3) — one look tells you how it will be drawn and why it has not linked to a neighbour. |
 | `target <pos> <dimension>` | Changes which dimension it leads to (tab completion lists every server dimension). |
 | `color <pos> <RRGGBB\|auto>` | Sets the colour override, written `RRGGBB` (`#` accepted) or `auto`. |
 | `place <pos> <dimension>` | Places a rift leading to that dimension at a replaceable position directly. |

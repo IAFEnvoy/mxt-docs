@@ -29,7 +29,6 @@ So this tutorial covers the chain that genuinely runs today: **define → hand o
 // data/example/mxt/ability/spark.json
 {
   "type": "mxt:active",
-  "slot": "primary",
   "cooldown": 60,
   "entity_action": {
     "type": "mxt:apply_effect",

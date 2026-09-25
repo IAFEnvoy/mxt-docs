@@ -30,6 +30,17 @@ The texture branch is tried first, and it is a plain `Identifier`, so **any bare
 
 An item icon is stored as a template rather than a ready-made stack, because a datapack registry is parsed before item components are bound. The client materialises it when it draws, so an icon that needs components still shows them.
 
+### `SpriteIcon`
+
+**A resource bar's artwork is a different kind of icon** (`SpriteIcon`, since 2026-09-25): `sprite_location` on `mxt:boss_bar` and `background_sprite` / `fill_sprite` on `mxt:textured_bar` take it, because a whole resource bar cannot be drawn out of a single 16x16. It is **not** the icon reference above (`ability.icon` / `resource.icon` is one 16x16 texture or one item, drawn in a single cell, with no `region`, no `width` / `height` and no `{"sprite": ...}`), and a `SpriteIcon` cannot be written as an item either — the two names look alike but mean different things, so do not mix them up. Two forms:
+
+| Form | Type | Description |
+|------|------|-------------|
+| A JSON string | Identifier | Keeps the field's original meaning: `sprite_location` is a **texture path** (default `mxt:textures/gui/resource_bar.png`, a 25-cell sheet) and `background_sprite` / `fill_sprite` are **GUI atlas sprites**. |
+| A JSON object | `SpriteIcon` | `{"sprite": ...}` is a GUI atlas sprite; `{"texture": ...}` is a texture and may carry a `region` (`u` / `v` / `texture_width` / `texture_height`, defaulting to origin `0,0` and a whole `256x256` image). Both forms may carry `width` / `height`, the **target** size it is drawn at, which **has to be written as a pair** (omitted means the bar's own width and height) — except on `fill_sprite`, see below. |
+
+`sprite_location` on `mxt:boss_bar` accepts **textures only** (it cuts background, fill and icon cells out of the sheet, which a sprite has no concept of), while both fields of `mxt:textured_bar` accept either form. A sprite cannot declare a `region` — the atlas already knows where it is. `width` / `height` is a **target size** (how large to draw it, not a crop) and belongs to the background side only: `background_sprite` and `mxt:boss_bar`'s sheet may carry it, while **`fill_sprite` may not declare `width` / `height`** — the fill is cut by the bar's own progress, so a fixed size would freeze the bar at one width. All of these are **load-time errors** and are refused outright: a sprite in `mxt:boss_bar`'s `sprite_location`, a `region` on a sprite, `width` / `height` on `fill_sprite`, and a `width` or `height` written without its partner. A bare string behaves **exactly as it always did**.
+
 ---
 
 ## Cost

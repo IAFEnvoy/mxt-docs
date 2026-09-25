@@ -80,7 +80,18 @@ description: 模组注册的全部内置物品行为类型，以及每种类型�
 | `mxt:remove_enchantment` | `enchantment?`、`level?`、`reset_repair_cost?` | 移除或降低该物品堆上的附魔，并可选择重置其修复成本。 |
 | `mxt:add_enchantment` | `enchantments`、`override?` | 给该物品堆添加或升级附魔。 |
 | `mxt:merge_components` | `components` | 把一份原版数据组件补丁合并进该物品堆。 |
+| `mxt:add_ability` | `abilities` | 把技能并进该物品堆的 `mxt:item_abilities` 数据组件：**已经写过的一条不会写第二遍**，组件里原有的条目一律保留。它是这个组件的**专用生产者**（`mxt:merge_components` 仍然是通用补丁那条路），与别的物品行为一样作用于"这次动作拿到的那件物品堆"（认主、注灵、右键、法器生成……都行）。 |
 
 ::: info 嵌套值
 `mxt:if_else` 接受一个[物品条件](../condition/item_condition_types.md)。`mxt:add_enchantment` 的 `enchantments` 接受一个从附魔 id 到等级的映射，`override` 决定是否可以替换已有的等级。`mxt:remove_enchantment` 接受一个附魔或一组附魔，用 `level` 限制移除的程度，`mxt:merge_components` 接受一份原版数据组件补丁。
 :::
+
+## 给一堆物品单独挂技能
+
+除了定义里的 `abilities`，一件物品还能靠数据组件 `mxt:item_abilities`（`{"abilities": ["example:foo"]}`）自带技能：运行时读的是**定义声明的与组件写的并集**，所以同一件法器定义认领的两堆物品可以带不一样的技能。组件里只存**技能 id**，不收标签（标签在定义那一侧的 `abilities` 里展开）。写它现在有专用行为：
+
+```json
+"claim_action": { "type": "mxt:add_ability", "abilities": ["example:sword_focus"] }
+```
+
+`abilities`（**必填**，技能 id 的列表）逐条并进组件；已经写过的一条不会写第二遍，原有条目一律保留。以前只有通用补丁 `mxt:merge_components` 一条路，现在多了一条专用生产者。

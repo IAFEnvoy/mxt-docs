@@ -77,7 +77,7 @@ description: 从结构、半径与费用写起，加一个增益模块和一条�
 
 ::: tip `target: allies` 与敌我识别
 
-`allies` 走的是 `FriendService`：阵主认作自己人的实体才吃这份增益，**认不出的实体（`DEFAULT`）不给**——把陌生人也算成友军是这里要避免的失败。配置侧还有一层开关：`spare_friends` 与「阵法 → 敌我识别」。细节见[敌我识别系统](../technical/identification.md)。
+`allies` 走的是 `FriendService`：**任一位阵主**认作自己人的实体才吃这份增益（归属是一组 UUID，好友判定会逐个问名单上的每一位），**认不出的实体（`DEFAULT`）不给**——把陌生人也算成友军是这里要避免的失败。配置侧还有一层开关：`spare_friends` 与「阵法 → 敌我识别」。细节见[敌我识别系统](../technical/identification.md)。
 
 :::
 
@@ -115,13 +115,15 @@ description: 从结构、半径与费用写起，加一个增益模块和一条�
 | --- | --- | --- |
 | `damage` | `0` | 每次结算的伤害量。 |
 | `damage_type` | 无 | 这一击的伤害类型；不写就退回原版的玩家/生物攻击来源。 |
-| `attribute_to_owner` | `true` | 是否把阵主记为加害者（击杀与仇恨归他）。 |
+| `attribute_to_owner` | `true` | 是否把**第一位阵主**（归属名单首位，即当初立阵的那位）记为加害者（击杀与仇恨归他）。 |
 | `target_condition` | 恒真 | 逐实体条件；**先过条件，再过伤害**。 |
 | `effects` | `[]` | 顺带施加的效果；`damage` 为 0 时效果照样发。 |
 
 **`mxt:protection`** 是按方块/实体事件拦人的守御模块：`block_break`、`block_place`、`block_interact`、`explosions`、`mob_griefing`、`entity_interact`、`attack_entity`、`item_use` 全部默认 `true`（想让它只管破坏就把其余的关掉），`delegate_to_claims` 默认 `false`（交给领地插件判）。
 
-顶层还有一个 **`spare_friends`**（默认 `false`）：它为真时，运行时把阵主的好友与阵主本人一起放过。注意它和模块里同名的 `spare_friends` 是两个字段——顶层那个决定"整座阵法要不要跳过好友"，模块里那个决定"守御拦不拦好友"。而敌我识别本身还受服务端配置「阵法 → 敌我识别」控制：关掉它，顶层开关就失效（`DEFAULT` 仍然停火）。
+顶层还有一个 **`spare_friends`**（默认 `false`）：它为真时，运行时把**每一位阵主**的好友与阵主本人一起放过。注意它和模块里同名的 `spare_friends` 是两个字段——顶层那个决定"整座阵法要不要跳过好友"，模块里那个决定"守御拦不拦好友"。而敌我识别本身还受服务端配置「阵法 → 敌我识别」控制：关掉它，顶层开关就失效（`DEFAULT` 仍然停火）。
+
+**归属是一组 UUID**（2026-09-25 起）：一座阵法可以有多位阵主，名单上的每一位都算阵主。激活时写入的是立阵的那位；之后用 `/mxt formation owners <pos> add|remove <player>` 增删（需要 gamemaster 权限），`/mxt formation list` 会把整组逗号分隔列出来。
 
 ## 第 4 步 —— 费用、存量与激活
 
@@ -189,7 +191,7 @@ description: 从结构、半径与费用写起，加一个增益模块和一条�
 ```
 
 1. 摆好结构，`/mxt formation bind …` 把阵法写进阵盘（提示"已将 %s 绑定到手持阵盘"）。
-2. 右键阵心激活。`/mxt formation list` 会列出 ID、阵心坐标、半径、阵主与**已付费的维持次数**。
+2. 右键阵心激活。`/mxt formation list` 会列出 ID、阵心坐标、半径、阵主名单与**已付费的维持次数**。
 3. 站进半径里：`/mxt formation info` 报告覆盖你的阵法（重叠时全部列出）。
 4. 观察灵气：如果 `aura_zone` 指向了某个域，站进阵内再查一次灵气，应该看到域切换带来的变化。
 5. 挖掉结构里的一块方块：不会立刻有提示，但下一个周期校验失败后阵法**静默拆除**——`list` 里消失，`info` 也不再报告它。

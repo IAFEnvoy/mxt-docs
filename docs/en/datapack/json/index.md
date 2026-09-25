@@ -70,7 +70,7 @@ The table below lists the 35 datapack registries the mod registers, in registry 
 | [`skill_stage`](./skill_stage.md) | `mxt/skill_stage` | One level of a skill mastery chain. |
 | [`spirit_crafting`](./spirit_crafting.md) | `recipe` | Spirit crafting recipes, which only run in the Spirit Crafting Table (`mxt:spirit_crafting_table`); vanilla recipe types (`mxt:spirit_shaped`, `mxt:spirit_shapeless`), not a datapack registry. |
 | [`spirit_herb`](./spirit_herb.md) | `mxt/spirit_herb` | Spirit herb metadata for existing items. |
-| [`spirit_root`](./spirit_root.md) | `mxt/spirit_root` | A spirit root bound to a single element: the cultivation multiplier, the element affinity ability multiplier (a factor of layer one of the damage pipeline), granted abilities, rarity and same-body exclusivity. |
+| [`spirit_root`](./spirit_root.md) | `mxt/spirit_root` | A spirit root bound to one or more elements: the cultivation multiplier, the element affinity ability multiplier (a factor of layer one of the damage pipeline), granted abilities, rarity and same-body exclusivity. |
 | [`talisman`](./talisman.md) | `mxt/talisman` | Talisman definitions: the abilities one inscribed talisman carries. |
 | [`technique`](./technique.md) | `mxt/technique` | Cultivation technique definitions: learnable, granting abilities and cultivation modifiers by level. |
 | [`technique_binding`](./technique_binding.md) | `mxt/technique_binding` | Bindings from existing items to cultivation technique learning. |

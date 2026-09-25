@@ -23,7 +23,7 @@ aside: false
 | `damage_condition` | `DamageCondition` | `mxt:always_true` | 伤害触发限制。 |
 | `condition` | `EntityCondition` | `mxt:always_true` | 技能可用条件；对 `modifier`（被动属性）与 `aura` 类型还会**每 tick 重算一遍**，因此可以拿来把被动"挂条件"（不满足时它贡献的属性会被撤下）。 |
 | `entity_action` | `EntityAction` | `mxt:no_op` | 对施法者执行的行为。 |
-| `target_selector` | `AbilityTargetSelector` | `mxt:self` | `bi_entity_action` 作用于哪些实体：`mxt:self` 只有施法者，`mxt:area` 取 `radius`（必填，上限 128）与 `include_actor`（默认 `false`），`mxt:js` 交给服务端脚本。 |
+| `target_selector` | `AbilityTargetSelector` | `mxt:self` | `bi_entity_action` 作用于哪些实体：`mxt:self` 只有施法者；`mxt:area` 取 `radius`（必填，上限 128）与 `include_actor`（默认 `false`）；`mxt:ray` 是沿视线的圆柱（`length` 必填、`radius` 默认 `0.5`）、`mxt:cone` 是沿视线的圆锥（`length` 与半角 `angle` 必填），两者同样支持 `include_actor`；三种区域型选择器还都能写 `limit`（默认 `0`＝不限）与 `order`（`nearest` / `farthest` / `random`，默认 `nearest`）来"只取最近的三个"。`mxt:js` 交给服务端脚本。字段见[技能目标选择器类型](/datapack/types/other/ability-and-curse#ability-target-selector-type)。 |
 | `target_condition` | `BiEntityCondition` | `mxt:always_true` | 目标关系条件。 |
 | `bi_entity_action` | `BiEntityAction` | `mxt:no_op` | 对施法者和目标执行的行为。 |
 | `element_affinity` | `HolderOrTag<element>[]` | `[]` | 技能的元素亲和标记；非空时既是**施放门槛**（没有任何匹配灵根就不放行），也是 `element_modifier` 的来源——[伤害管线](/technical/damage)第一层会把它直接乘进这次施放打出的伤害（匹配灵根的 `element_ability_modifier`，按 `element_affinity_mode` 合并），所以伤害公式里**不要**再手写 `* element_modifier`。 |
@@ -90,11 +90,11 @@ aside: false
 
 | 类型 | 专属字段 | 说明 |
 | --- | --- | --- |
-| `mxt:active` | `slot`（默认 `primary`，**不再被读取**） | 可从轮盘施放；具体落在哪一格由玩家自己的 12 格布局决定。 |
+| `mxt:active` | 无 | 可从轮盘施放；**它没有 `slot` 字段**（2026-09-25 删除）：技能落在轮盘哪一格由**玩家自己的 12 格布局**决定，从来不是技能定义的一部分。旧包里写了 `"slot": "..."` 会在**加载期报错并点名 `slot`**（这是"这个类型永远不读的已知键"，不是静默忽略），删掉这一行即可。 |
 | `mxt:triggered` | `triggers`（默认 `[]`）、`chance`（默认 `1`） | 当它的某个事件规则匹配时触发，并按 `chance` 掷一次。`triggers` 的每一项是一个 `trigger_type` 条目，除内置信号外还可以是脚本发布的 `mxt:js` 自定义信号。 |
 | `mxt:modifier` | 无 | 被动属性：不执行 `entity_action`，只在被授予期间把 `modifiers` 贡献给持有者的属性，并且**每 tick 重新过一遍 `condition`**（不满足时贡献会被撤下）。 |
 | `mxt:aura` | `interval`（默认 `20`）、`radius`（默认 `4`） | 范围脉冲：每隔 `interval` 刻对 `radius` 范围内的实体施加一次，同样每轮重算 `condition`。 |
-| `mxt:word` | `effect`（必填）、`requires_operator`（默认 `true`）、`amount`（默认 `0`） | 终端载荷：`effect` 是代码白名单里的 `self_heal` 与 `purge_self_curses`，数据包提供不了任意命令；它不会再执行目标行为。 |
+| `mxt:word` | `effect`（必填）、`requires_operator`（默认 `true`）、`amount`（默认 `0`） | 终端载荷：`effect` 是一份**代码白名单**，只有 `self_heal` 与 `purge_self_curses` 两个值（`amount` 只对前者有意义），数据包**加不了第三个**——言灵不是"任意命令字符串"；要别的效果请用普通技能类型加 `entity_action`（如 `mxt:heal`）。它不会再执行目标行为。 |
 | `mxt:empty` | 无 | 什么都不做，也是这张表的默认项。 |
 
 ```json

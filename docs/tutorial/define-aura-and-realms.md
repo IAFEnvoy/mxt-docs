@@ -182,7 +182,7 @@ realm_stage chain             progress + conditions + costs → next realm
 把三个文件放在一起读：
 
 - `breakthrough_exp` 是**离开**该阶段所需的修为，`max_experience` 是你身处其中时的修为上限。两者不能交叉：常量 `breakthrough_exp` 大于常量 `max_experience` 会在加载期被拒绝。
-- 可选的 `minor_stages` 是子境界：写数组就是名字本身（字符串当翻译键、对象当完整组件），写一个整数 N 就是「这么多重」——名字按条目 id 自动生成为 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`，下标从 `0` 起。它只影响显示与公式：信息面板在境界名后写出当前这一重，公式里多一个从 `0` 起的 `minor_stage`。切分是把本阶段的 `breakthrough_exp` 均分，不改变阈值、消耗或任何结算。
+- 可选的 `minor_stages` 是子境界：写数组就是名字本身（字符串当翻译键、对象当完整组件），写一个整数 N 就是「这么多重」——名字按条目 id 自动生成为 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`，下标从 `0` 起。它影响三处：信息面板在境界名后写出当前这一重、公式里多一个从 `0` 起的 `minor_stage`、以及 `minor_stage_abilities` 用这个下标按层解锁能力（累计，解锁过就永久保留）。切分是把本阶段的 `breakthrough_exp` 均分，不改变阈值、消耗或任何结算。
 - `costs` 在突破成功时支付；`breakthrough.conditions` 与修为一起检查。两者都属于你正要离开的那个阶段——只有最开始的一步例外，那时阈值来自 aura 的 `start_exp`，条件来自目标阶段的 `breakthrough`。
 - `auto_breakthrough` 默认为 `false`：玩家到达阈值后要自己等。想让修炼模式自行尝试突破就设为 `true`。
 - `passive_modifiers` 是在该阶段被持有期间授予的原版属性修正。`value` 是可选的公式，声明了它的条目每 tick 重新计算。

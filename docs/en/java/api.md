@@ -235,14 +235,15 @@ Package `com.iafenvoy.mxt.runtime.cultivation`. A pure static utility class; all
 | `pendingConditionsForChain(LivingEntity, Holder<Aura>)` | Which conditions are still missing | |
 | `setRealm(CultivationAttachment spirit, Identifier target)` | Sets the realm directly (for administrators) | Returns whether it actually changed; **it has no entity parameter and therefore no server check** |
 
-Result types: `BreakthroughResult(advanced, failure, failedResource, costs)`, `BreakthroughStatus(reached, conditionsMet, automatic, minimumExperience, maximumExperience)`, `enum Failure {DISABLED, WRONG_AURA, NO_NEXT_REALM, INSUFFICIENT_PROGRESS, MAX_PROGRESS, CONDITIONS, INSUFFICIENT_RESOURCE, INVALID_FORMULA, CANCELLED, SERVER_ONLY}`.
+Result types: `BreakthroughResult(advanced, failure, failedResource, costs)`, `BreakthroughStatus(reached, conditionsMet, automatic, minimumExperience, maximumExperience)`, `enum Failure {DISABLED, WRONG_AURA, NO_NEXT_REALM, INSUFFICIENT_PROGRESS, CONDITIONS, INSUFFICIENT_RESOURCE, INVALID_FORMULA, CANCELLED, SERVER_ONLY}`.
 
 Key points:
 
 - **The boundary is inconsistent**: only `attempt` blocks the client; `addProgress*` / `setRealm` / `minorStage` do not check, and calling them on the client really writes the attachment.
 - Conditions declared by the content are evaluated **before the cost is paid**, so unmet conditions do not waste resources.
 - `INVALID_FORMULA` doubles as the normalised exit for "every cost failure that is not insufficient resources"; `failedResource` is only non-empty when resources were short during the payment stage.
-- `Failure.DISABLED` is produced only by the script bridge (`MxtKubeJsApi.tryBreakthrough`, when the aura id does not resolve) — `attempt` itself never produces it. `Failure.MAX_PROGRESS` has **no producing path at all** today (a reserved value whose message key waits unused in the language files), so never write it into your own branching logic as something that happens.
+- `Failure.DISABLED` is produced only by the script bridge (`MxtKubeJsApi.tryBreakthrough`, when the aura id does not resolve) — `attempt` itself never produces it.
+- `Failure.MAX_PROGRESS` was **removed** on 2026-09-25 (it was provably unreachable): the progress ceiling can never be the reason a breakthrough is refused — `threshold()` requires a stage's `max_experience ≥ breakthrough_exp`, so progress being pinned at `max_experience` already satisfies `progress ≥ breakthrough_exp`, and the attempt can then only fail on conditions, cost or cancellation. An inline `Failure` branch that still writes it fails to compile.
 
 ## Abilities {#ability}
 
@@ -359,7 +360,7 @@ Package `com.iafenvoy.mxt.runtime.formation`. The **only decision point** for "d
 Key points:
 
 - **The decision looks at both ends of the action**: the actor's position **or** the target's position inside the radius makes this ward apply; with no target it can still refuse on the actor's position.
-- **The exemption order**: an empty actor is not exempt; a ward **with no owner exempts nobody**; an actor that is the owner → exempt; only when the ward declares `spare_friends` **and** **Server Config → Formations → Friend or Foe** is on does it ask `FriendService.identify(...) == TRUE`; an entity no friend source recognises is always stopped.
+- **The exemption order**: an empty actor is not exempt; a ward **with no owner exempts nobody**; an actor **on the ownership list** → exempt (every listed owner counts); only when the ward declares `spare_friends` **and** **Server Config → Formations → Friend or Foe** is on does it ask `FriendService.identify(...) == TRUE` (asked of every owner in turn); an entity no friend source recognises is always stopped.
 - When delegation holds, this ward **does not apply at all** (skipped, not downgraded), and two independent paths trigger it: the module declaring `delegate_to_claims` itself, or `claim_linkage == claims_precedence` with the controller's chunk already claimed.
 - Claims are only asked about **the chunk the controller is in**, so a ward spanning a border is not governed by two rule sets at once.
 - **Do not write another ward decision inside an event subscriber**.

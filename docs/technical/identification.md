@@ -171,7 +171,7 @@ flowchart TD
 | 条件 | 类型 | 含义 |
 | --- | --- | --- |
 | `mxt:friend` | 双实体条件 | `actor` 把 `target` 当自己人 |
-| `mxt:formation_ally` | 实体条件 | 该实体是**当前阵法**阵主的好友；阵法之外、或阵法没有记录阵主时恒为 `false`。阵主只是离线不属于后者——判断仍会按 UUID 问事件。 |
+| `mxt:formation_ally` | 实体条件 | 该实体是**当前阵法某一位**阵主的好友（归属是一组 UUID，任一位认得它就算）；阵法之外、或阵法没有记录阵主时恒为 `false`。阵主只是离线不属于后者——判断仍会按 UUID 问每一位。 |
 
 `mxt:friend` 用在有双实体条件槽的地方，最典型的是技能的 `target_condition`：
 
@@ -179,7 +179,7 @@ flowchart TD
 "target_condition": { "type": "mxt:not", "condition": { "type": "mxt:friend" } }
 ```
 
-`mxt:formation_ally` 用在阵法的逐实体行为里（那些行为的条件槽是实体条件，没有第二个实体可以和该实体配对，所以由阵法补上阵主这一半）。例如同一座阵法伤敌而治疗友军：
+`mxt:formation_ally` 用在阵法的逐实体行为里（那些行为的条件槽是实体条件，没有第二个实体可以和该实体配对，所以由阵法补上阵主那一半，并且**逐个问名单上的每一位**）。例如同一座阵法伤敌而治疗友军：
 
 ```json
 "entity_tick_action": {
@@ -223,7 +223,7 @@ public static boolean mayHarm(Entity attacker, Entity victim) {
 | --- | --- | --- |
 | `FormationRelations#affects` | 阵法的逐实体效果是否作用于它 | 不动手（停火） |
 | `FormationRelations#canDismantle` | 好友能否拆掉阵法（服务端配置默认关闭） | 拒绝 |
-| `FormationProtection#exempt` | 防护阵法的豁免名单（先本人，再好友） | 不放行 |
+| `FormationProtection#exempt` | 防护阵法的豁免名单（先在归属名单上找，再问好友） | 不放行 |
 | `FormationProtection#foreignClaimRefuses` | 在别人领地上立阵时，领地主人是否认他 | 拒绝 |
 | `FormationActionRunner#targets`（`target: allies`） | 增益是否给这个实体 | 不给 |
 | `FormationAllyEntityCondition`（`mxt:formation_ally`） | 数据包条件版的同一个问题 | 假 |

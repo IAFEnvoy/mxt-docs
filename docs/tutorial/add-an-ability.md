@@ -48,7 +48,7 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 | `cast_time` | 施法时长，单位 tick。 |
 | `cooldown` | 冷却时间，单位 tick，会回报给客户端，让轮盘把那一扇画暗并在中间写「冷却中 4.3s」（剩余秒数，永远一位小数）。 |
 | `condition` | 技能可用前必须满足的实体条件。它在这里的唯一职责是不让凡人丢出灵力弹。对 `mxt:modifier` 或 `mxt:aura` 这类被动技能，同一字段在施放之后仍然生效：每 tick 重算一次，不满足时被动效果被撤下。 |
-| `target_selector` | 双实体行为作用于哪些实体。`mxt:self`（默认）只选施法者；`mxt:area` 选中 `radius` 范围内的一切（上限 128），`include_actor` 决定施法者是否在该集合内。 |
+| `target_selector` | 双实体行为作用于哪些实体。`mxt:self`（默认）只选施法者；`mxt:area` 选中 `radius` 范围内的一切（上限 128），`include_actor` 决定施法者是否在该集合内；也可以换成 `mxt:ray`（沿视线的圆柱）或 `mxt:cone`（沿视线的圆锥，`angle` 是半角），三者都能用 `limit` 与 `order` 只取最近 / 最远 / 随机的几个。 |
 | `bi_entity_action` | 对每个选中的目标执行，某一个失败不会阻止其余目标。`mxt:target_action` 把一个实体行为转交给目标——这里是 6 点伤害加上施法者经验等级的一半。 |
 | `entity_action` | 对施法者执行。默认为 `mxt:no_op`；用于自我增益、粒子爆发或灵气变化。 |
 

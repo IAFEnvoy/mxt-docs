@@ -77,7 +77,7 @@ There are five module types in total: `mxt:none` (a placeholder), `mxt:attack`, 
 
 ::: tip `target: allies` and foe identification
 
-`allies` goes through `FriendService`: only entities the owner counts as their own get the buff, and an entity **nobody can identify (`DEFAULT`) does not** — handing a stranger the owner's bonus is the failure this avoids. Config adds a second layer: `spare_friends` and **Server Config → Formations → Friend or Foe**. See [Foe Identification](../technical/identification.md).
+`allies` goes through `FriendService`: only entities **any owner** counts as their own get the buff (ownership is a set of UUIDs, and the friend judgement asks every one of them in turn), and an entity **nobody can identify (`DEFAULT`) does not** — handing a stranger the owner's bonus is the failure this avoids. Config adds a second layer: `spare_friends` and **Server Config → Formations → Friend or Foe**. See [Foe Identification](../technical/identification.md).
 
 :::
 
@@ -115,13 +115,15 @@ There are five module types in total: `mxt:none` (a placeholder), `mxt:attack`, 
 | --- | --- | --- |
 | `damage` | `0` | Damage per settlement. |
 | `damage_type` | none | The damage type of the strike; without it the vanilla player/mob attack source is used. |
-| `attribute_to_owner` | `true` | Whether the owner is credited (kill credit and aggro follow them). |
+| `attribute_to_owner` | `true` | Whether the **first** owner (the one at the head of the ownership list, who raised the array) is credited (kill credit and aggro follow them). |
 | `target_condition` | always true | A per-entity condition; **the condition runs first, the damage second**. |
 | `effects` | `[]` | Effects applied alongside; they still fire when `damage` is 0. |
 
 **`mxt:protection`** answers block and entity events: `block_break`, `block_place`, `block_interact`, `explosions`, `mob_griefing`, `entity_interact`, `attack_entity` and `item_use` all default to `true` (turn the rest off to guard breaking only), and `delegate_to_claims` defaults to `false` (hand the decision to a claim plugin).
 
-At the top level there is also **`spare_friends`** (default `false`): when true, the runtime lets the owner and their friends through. Note that it is a different field from the same-named one inside the module — the top-level one decides whether the whole array skips friends, the module one decides whether protection stops them. Identification itself is also gated by **Server Config → Formations → Friend or Foe**: with that off, the top-level switch does nothing (and `DEFAULT` still stands the array down).
+At the top level there is also **`spare_friends`** (default `false`): when true, the runtime lets **every owner** and their friends through. Note that it is a different field from the same-named one inside the module — the top-level one decides whether the whole array skips friends, the module one decides whether protection stops them. Identification itself is also gated by **Server Config → Formations → Friend or Foe**: with that off, the top-level switch does nothing (and `DEFAULT` still stands the array down).
+
+**Ownership is a set of UUIDs** (since 2026-09-25): an array can have several owners and every one of them counts. Activating it writes the player who raised it; after that, add or remove owners with `/mxt formation owners <pos> add|remove <player>` (needs the `gamemaster` permission), and `/mxt formation list` prints the whole list comma-separated.
 
 ## Step 4 — Costs, Storage and Activation
 
@@ -189,7 +191,7 @@ Per-entity actions fire only for entities **actually inside the sphere** and onl
 ```
 
 1. Lay out the structure and run `/mxt formation bind …` to write it into the plate.
-2. Right-click the controller to activate. `/mxt formation list` then lists the id, controller position, radius, owner and the **number of upkeep periods already paid**.
+2. Right-click the controller to activate. `/mxt formation list` then lists the id, controller position, radius, ownership list and the **number of upkeep periods already paid**.
 3. Stand inside: `/mxt formation info` reports the arrays covering you (all of them when they overlap).
 4. Watch the aura: if `aura_zone` points at a zone, query the aura inside the array and outside it and compare.
 5. Break one block of the structure: nothing is announced, but once the next period's check fails the array is **dismantled silently** — it disappears from `list` and `info` stops reporting it.

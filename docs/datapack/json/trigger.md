@@ -16,8 +16,12 @@ aside: false
 | `trigger` | `Trigger` | **必填** | 该规则响应的信号，写法与技能触发器一致：内置信号写 `{"type": "mxt:block_break"}`，脚本匹配器（`mxt:js`）可检查整个信号。 |
 | `condition` | `EntityCondition` | `mxt:always_true` | 针对信号主体求值，使用事件提供的公式上下文；写数组表示全部满足。 |
 | `action` | `EntityAction` | `mxt:no_op` | 条件成立后对该主体执行；写数组按顺序执行。 |
+| `chance` | `NumberProvider` | `1` | 每次信号匹配后掷一次的概率：`≤0` 永不执行、`≥1` 必定执行，中间值按实体随机数掷。算不出数（非有限值）时按 `1` 处理，也就是保持这个字段出现之前的行为。 |
+| `cooldown` | `NumberProvider` | `0` | 执行之后要等多少 tick 才能再次执行，**按规则 id 分别记在主体身上**（存档保留、死亡不清）。`0` 表示不限流。 |
 
-规则需要动作主体：没有主体的信号只会送达订阅，不会触发规则（条件与行为都属于某一个实体）。
+规则需要动作主体：没有主体的信号只会送达订阅，不会触发规则（条件与行为都属于某一个实体）。`chance` 与 `cooldown` 也按主体求值：**同一条规则被两个实体持有，各自掷各自的概率、各记各的冷却**。
+
+`chance` / `cooldown` 是 2026-09-25 新增的：此前"每 tick 的信号会每 tick 触发同一条动作"，只能靠 `mxt:chance` 条件加 `mxt:storage_cooldown` + `mxt:modify_storage` 两个动作自己搭。那套写法**仍然可用**（它按 `mxt:cooldown` 存储记，读得回来），规则自带的这两个字段是同一件事的直写形式：`cooldown` 不要求规则声明任何 `components`，也不需要作者自己写 `mxt:modify_storage`。
 
 条件与行为拿到的父上下文就是事件上下文，因此发布方写入的公式值可以读取：响应 `mxt:hurt` 的规则可以用 `damage` 决定数值，脚本用 `MxtTriggers.publish` 发布的自定义信号同理。
 

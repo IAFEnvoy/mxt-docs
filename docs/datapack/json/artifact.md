@@ -44,6 +44,7 @@ aside: false
 - 前两条是**各自的注册表条目**：`mxt_test:artifact_guard` 是 `mxt:modifier`（被动），`mxt_test:firebolt` 是 `mxt:active`（按一下）。被动还是主动由**技能自己的 `type`** 决定，法器定义不再声明"我授予的是被动还是主动"。
 - 第三条 `mxt_test:bound_mount` 是一条 `mxt:mount`（**载具数据，不按键**），第四条是一个**技能标签**，在授予时展开成它列出的那些技能——一包多件法器共用同一组被动时，改标签比逐件改定义省事；同名技能写两遍（直接写 + 经标签）会去重。
 - 这几条技能自己的字段（飞行速度与每 tick 费用、储物格数、维持周期）都在**技能自己那份文件**里：`mxt:mount` 取 `speed` / `seats` / `sit` / 几何与技能的 `costs`，`mxt:storage` 取 `slots`，`mxt:upkeep` 取 `interval` / `on_fail` / `owner_only` 并同样用技能的 `costs`。这些技能**需要一件承载它的物品**：被技能书之类没有物品的来源授予时语法合法，但使用时会被拒绝并报"没有承载物"。
+- 除了定义里的 `abilities`，**一堆具体的物品**还能靠数据组件 `mxt:item_abilities`（`{"abilities": ["example:foo"]}`）自带技能：运行时读的是**定义声明的与组件写的并集**，所以同一份定义认领的两堆物品可以带不一样的技能。组件里只存**技能 id**、不收标签；专用生产者是物品行为 [`mxt:add_ability`](../types/action/item_action_types.md)（通用补丁 `mxt:merge_components` 仍然可用）。
 
 **旧写法已经不能加载**：`mxt:passive` / `mxt:active` / `mxt:flight` / `mxt:storage` / `mxt:upkeep` 作为 `ArtifactAbility` 写在 `abilities` 里——那张固有分派表整张删除；**把技能整个内联写在 `abilities` 里**（`{ "key": "flight", "type": "mxt:flight", ... }`）——内联技能已取消，`abilities` 只收 id 与 `#标签`。照旧写法写的包会让**世界加载失败**（`abilities` 里一旦出现对象就不再是合法条目）。搬家只有一步：把那段内联对象原样剪成一个新文件 `data/<命名空间>/mxt/ability/<路径>.json`（**删掉 `key`，其余字段一字不改**），再在法器里写它的 id；老包里的 `mxt:passive` / `mxt:active` 条目直接换成它引用的技能 id 即可。
 
@@ -158,4 +159,4 @@ stateDiagram-v2
 - 接口还要求实现把失败原因说清楚：`Result(changed, failure, failedResource)`，`Failure` 的 15 个取值与 `AbilityService.Failure` **同名同义**（`NOT_OWNED` / `ALREADY_SET` / `UNAVAILABLE` / `NO_CARRIER` / `CANNOT_MOUNT` 是按压独有的五个，其余十个两边共有），付不出资源时 `failedResource` 带上是哪一门。轮盘按名字查 `actionbar.mxt.ability.failure.*` **一份表**，把原因报在动作栏与日志里——`UNAVAILABLE` 只剩兜底，条件不满足 / 灵根不符 / 次数用完这些原因不会再说成「现在用不了」。这一格叫什么用的是**技能自己的 `name`**，接口不再另给一个名字。
 - 将来新增"需要按键"的技能，就是新增一个实现 `Toggable` 的 `mxt:ability_type` 条目，不用再动轮盘。
 
-**还没做的部分**：精炼台仍未接入（`refine` 只有战利品函数、长按认主与脚本能用）。飞行与储物都已有玩家入口：轮盘上那两格（`mxt:flight_control` 那一格由功法授予，`mxt:storage` 由法器授予）。
+**还没做的部分**：精炼台仍未接入（`refine` 只有战利品函数、长按认主与脚本能用）。它背后那个配方类型 `mxt:refining` 已于 2026-09-25 **删除**（一个从未有过执行者的死配方，产物恒为空），所以别再去数据包里找它——法器的产出走蓝图锻造。飞行与储物都已有玩家入口：轮盘上那两格（`mxt:flight_control` 那一格由功法授予，`mxt:storage` 由法器授予）。

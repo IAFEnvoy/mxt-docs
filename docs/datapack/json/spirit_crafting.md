@@ -6,7 +6,7 @@ aside: false
 
 # spirit_crafting（灵气合成）
 
-灵气工作台（方块 `mxt:spirit_crafting_table`）沿用原版工作台的布局，但只接受本模组注册的两种配方类型：`mxt:spirit_shaped` 与 `mxt:spirit_shapeless`。除常规材料之外，每个配方还声明一份灵气消耗。
+灵气工作台（方块 `mxt:spirit_crafting_table`）沿用原版工作台的布局，但只接受**灵气合成**的两种配方类型：`mxt:spirit_shaped` 与 `mxt:spirit_shapeless`。除常规材料之外，每个配方还声明一份灵气消耗。
 
 ## 文件位置
 

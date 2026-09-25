@@ -38,8 +38,8 @@ The `renderer` field of a resource bar selects one of these draw modes. Unless a
 
 | `type` | Fields | Description |
 |--------|--------|-------------|
-| `mxt:boss_bar` | `sprite_location`, `bar_index`, `icon_index`, `inverted` | Origins-style 71x8 bar with an icon |
-| `mxt:textured_bar` | `background_sprite`, `fill_sprite`, `width`, `height`, `fill_color`, `show_value` | Two independent textures |
+| `mxt:boss_bar` | `sprite_location` (a `SpriteIcon`, textures only), `bar_index`, `icon_index`, `inverted` | Origins-style 71x8 bar with an icon |
+| `mxt:textured_bar` | `background_sprite`, `fill_sprite` (both `SpriteIcon`; the fill takes no size), `width`, `height`, `fill_color`, `show_value` | Two independent textures |
 | `mxt:segmented_bar` | `segments`, `gap`, `full_color`, `empty_color` | Discrete segments |
 | `mxt:radial_bar` | `radius`, `thickness`, `start_angle`, `end_angle`, `fill_color` | Radial bar |
 | `mxt:text_only` | `format`, `color`, `show_maximum` | Text only |
@@ -47,12 +47,12 @@ The `renderer` field of a resource bar selects one of these draw modes. Unless a
 
 | `type` | Field | Type | Default | Description |
 |--------|-------|------|---------|-------------|
-| `mxt:boss_bar` | `sprite_location` | Identifier | `mxt:textures/gui/resource_bar.png` | Sprite sheet |
+| `mxt:boss_bar` | `sprite_location` | `SpriteIcon` (**textures only**) | `mxt:textures/gui/resource_bar.png` | Sprite sheet, treated as `256x256` by default; `region.texture_width` / `texture_height` change that, and a target `width` / `height` is allowed |
 | `mxt:boss_bar` | `bar_index` | Integer | `0` | Bar index in the sheet, `0..24` |
 | `mxt:boss_bar` | `icon_index` | Integer | `bar_index` | Icon index in the sheet, `0..24` |
 | `mxt:boss_bar` | `inverted` | Boolean | `false` | Reverses the fill direction |
-| `mxt:textured_bar` | `background_sprite` | Identifier | **required** | Background texture |
-| `mxt:textured_bar` | `fill_sprite` | Identifier | **required** | Fill texture |
+| `mxt:textured_bar` | `background_sprite` | `SpriteIcon` | **required** | Background: a texture or a GUI atlas sprite; may carry a target `width` / `height` |
+| `mxt:textured_bar` | `fill_sprite` | `SpriteIcon` | **required** | Fill: a texture or a GUI atlas sprite; **may not declare `width` / `height`** (a load-time error) |
 | `mxt:textured_bar` | `width` | Integer | **required** | Width, `1..1024` |
 | `mxt:textured_bar` | `height` | Integer | **required** | Height, `1..1024` |
 | `mxt:textured_bar` | `fill_color` | RGB color | `#FFFFFF` | Fill tint |
@@ -71,6 +71,10 @@ The `renderer` field of a resource bar selects one of these draw modes. Unless a
 | `mxt:text_only` | `show_maximum` | Boolean | `false` | Whether the maximum is shown next to the value |
 
 A segmented bar is `segments * 8 + (segments - 1) * gap` pixels wide, and a radial bar occupies `radius * 2 + thickness` pixels in both directions. Colors accept `#RRGGBB` or an integer from `0` to `16777215`. Rendering runs on the client and only ever displays server-synchronized resource values.
+
+Since 2026-09-25, `sprite_location` on `mxt:boss_bar` and both artwork fields of `mxt:textured_bar` take a **`SpriteIcon`** rather than a bare Identifier: a bare string keeps the field's original meaning, while the object form names either a GUI atlas sprite (`{"sprite": ...}`) or a texture (`{"texture": ..., "region": {...}, "width": ..., "height": ...}`, where `region` cuts a piece out of the texture and `width` / `height` give the **target** size it is drawn at and **must be written as a pair**). `mxt:boss_bar` cuts background, fill and icon cells out of its sheet, so it accepts **textures only**; a sprite cannot declare a `region`; and a size belongs to the background side only — `background_sprite` (and `mxt:boss_bar`'s sheet) may carry `width` / `height`, while **a size on `fill_sprite` is a load-time error**: the fill is cut by the bar's own progress, so a fixed size would freeze the bar at one width. The forms and every load-time constraint are on [Shared Data Types · `SpriteIcon`](../shared_data_types.md#spriteicon).
+
+A `SpriteIcon` is **not** the same value as the **icon reference** `ability.icon` / `resource.icon` uses: that one is a 16x16 texture or an item drawn in a single cell, with no `region`, no `width` / `height` and no `{"sprite": ...}`, and a `SpriteIcon` cannot be written as an item either — a `SpriteIcon` draws a resource bar's own background and fill. Do not mix them up.
 
 ```json
 {"type": "mxt:segmented_bar", "segments": 10, "gap": 2, "full_color": "#66CCFF"}

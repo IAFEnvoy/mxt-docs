@@ -31,8 +31,12 @@ The filename corresponds to its ID. For example, `data/example/mxt/trigger/qi_fr
 | `trigger` | `Trigger` | **required** | Which signal this rule reacts to, written like an ability trigger: `{"type": "mxt:block_break"}` for a built-in signal, or a scripted matcher that inspects the whole signal. |
 | `condition` | `EntityCondition` | `mxt:always_true` | Evaluated against the signal's actor with the event's formula context. One condition or an array, which requires all of them. |
 | `action` | `EntityAction` | `mxt:no_op` | Runs for the actor once the condition holds. One action or an array, which runs in order. |
+| `chance` | `NumberProvider` | `1` | The probability rolled once per matching signal: `≤0` never runs, `≥1` always runs, and anything in between is rolled with the entity's random. When it does not resolve to a number (a non-finite value) it counts as `1`, which keeps the behaviour from before the field existed. |
+| `cooldown` | `NumberProvider` | `0` | How many ticks to wait after running before this rule may run again, **recorded on the actor per rule id** (it is saved, and dying does not clear it). `0` means no throttling. |
 
-A rule needs an actor. Signals published without one reach subscriptions but never a rule, because both the condition and the action belong to one entity.
+A rule needs an actor. Signals published without one reach subscriptions but never a rule, because both the condition and the action belong to one entity. `chance` and `cooldown` are per actor too: **the same rule held by two entities rolls its own chance and keeps its own cooldown for each of them**.
+
+`chance` / `cooldown` are new on 2026-09-25: before them, "a signal that fires every tick triggers the same action every tick" could only be built by hand out of an `mxt:chance` condition plus the `mxt:storage_cooldown` condition and the `mxt:modify_storage` action. That workaround **still works** (it records into the `mxt:cooldown` store and reads back), and these two fields are the direct spelling of the same thing: `cooldown` needs no `components` declared on the rule and no `mxt:modify_storage` written by the author.
 
 The condition and the action receive the event context as their parent context, so the formula values the publisher put into it are readable: a rule reacting to `mxt:hurt` can size its effect with `damage`, and a script that publishes a custom signal with `MxtTriggers` can read its own payload the same way.
 

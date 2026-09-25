@@ -5,7 +5,7 @@ description: 查询、授予、移除与开关灵根；灵根是修炼身份中�
 
 # `MxtSpiritRoots`：灵根
 
-灵根是身体修炼身份的**元素那一半**：持有它就绑定了元素、改变该元素灵气的修炼速度，并缩放亲和这个元素的技能。元素无关的那一半是 [MxtPhysiques](/kubejs/api/physiques)。授予与移除都走权威服务，因此 `conflicting_elements` 冲突判定与"授予了哪些技能"照常处理。
+灵根是身体修炼身份的**元素那一半**：持有它就绑定了**一个或多个**元素（`elements` 是列表）、改变这些元素灵气的修炼速度，并缩放亲和其中任一元素的技能。元素无关的那一半是 [MxtPhysiques](/kubejs/api/physiques)。授予与移除都走权威服务，因此 `conflicting_elements` 冲突判定与"授予了哪些技能"照常处理。
 
 ## 方法
 

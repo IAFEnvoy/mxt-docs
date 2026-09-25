@@ -23,26 +23,29 @@ The filename corresponds to its ID. For example, `data/example/mxt/tribulation/t
 | `name` | Text Component | `tribulation.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
 | `description` | Text Component | `tribulation.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `condition` | Entity Condition | `mxt:always_true` | Evaluated once when the tribulation is started; the attempt is rejected when it fails. It is not an event trigger — what decides whether a tribulation is started at all is the `tribulation` field of a realm stage. |
-| `timeline` | `List<Timeline Entry>` | **required** | The entries the run consumes, in order; at least one. |
+| `timeline` | `List<Timeline Entry>` | **required** | The timeline the run copies and then walks with a cursor; at least one entry. |
 | `difficulty_scale` | `NumberProvider` | `1` | The difficulty multiplier, applied to every wait. |
 | `windup` | `NumberProvider` | `0` | The anticipation before the timeline starts: how many ticks the run counts itself in first, resolved through the same rule as every wait and settled when the run starts. `0` means no wind-up. |
 | `darken_sky` | `bool` | `true` | Whether the sky darkens for nearby players while this tribulation lasts, the player undergoing it included. Purely a client-side reading of the synced definition. |
-| `success_action` | Entity Action | `mxt:no_op` | Runs once the timeline is exhausted. |
+| `success_action` | Entity Action | `mxt:no_op` | Runs once the cursor walks off the end of the timeline. |
 | `fail_action` | Entity Action | `mxt:no_op` | Runs when an entry cannot continue. |
 
 ## `Timeline Entry`
 
-The timeline is a **consumer queue**: starting a tribulation copies the whole list into the entity's attachment as a queue, and the consumer then works on the entry at its head, popping it once it is done — so what is stored is exactly the part of the run that is left, and there is no index to keep in step with a list. The run ends with `success_action` when the queue is empty, or with `fail_action` when an entry reports that it cannot continue. Because the entries are copies, `/reload` cannot change a run that is already under way; `difficulty_scale` and the two endings are still read from the definition.
+The timeline is a **stored cursor**: starting a tribulation copies the whole list into the entity's attachment, and the consumer then works on the entry the cursor points at, advancing one entry each time it finishes. **The cursor is saved** (since 2026-09-25; before that the run consumed a queue), because `mxt:branch` can move it to any entry. The run ends with `success_action` once the cursor walks off the end, or with `fail_action` when an entry reports `FAILED`. Because the entries are copies, `/reload` cannot change a run that is already under way; `difficulty_scale` and the two endings are still read from the definition.
 
 | `type` | Field | Description |
 |--------|-------|-------------|
 | `mxt:action` | `action` (Entity Action, required) | Runs one behaviour and finishes on the same tick. |
 | `mxt:idle` | `duration` (`NumberProvider`, required) | Waits that many ticks doing nothing. |
-| `mxt:wait_for` | `condition` (Entity Condition, required) | Evaluated every tick; finishes once it holds. |
+| `mxt:wait_for` | `condition` (Entity Condition, required), `timeout` (`NumberProvider`, optional), `on_timeout` (`fail` / `finish`, default `fail`) | Evaluated every tick; finishes once it holds. With a `timeout` it is a **deadline**, and when it runs out the run fails or moves on according to `on_timeout`. |
+| `mxt:branch` | `condition` (Entity Condition, required), `if_true` / `if_false` (integer indices, optional) | **Moves the cursor** according to the condition and finishes on the same tick; a branch that is not written simply advances one entry. |
 
-`mxt:action` is an instant entry: neighbouring `mxt:action` entries are consumed on the same tick, so everything that happens in one tick does not have to be split across entries. Every wait is resolved as `duration × difficulty_scale × max(0, 1 + aura_tribulation_modifier)` and settled **once, when its entry begins**: a random duration is drawn once, and an aura change cannot stretch a wait that is already running.
+`mxt:action` is an instant entry: neighbouring `mxt:action` entries are consumed on the same tick, so everything that happens in one tick does not have to be split across entries. Every wait is resolved as `duration × difficulty_scale × max(0, 1 + aura_tribulation_modifier)` and settled **once, when its entry begins**: a random duration is drawn once, and an aura change cannot stretch a wait that is already running. A `mxt:wait_for` `timeout` is the **exception**: it is a deadline rather than the length of a beat, so it is resolved from `timeout` alone, **without `difficulty_scale` and without the aura modifier** — difficulty should not decide how long a player has to meet a condition. A `timeout` that does not resolve to a positive number makes the whole start fail.
 
-Each entry is asked once, before the run starts, whether it can run at all; an `mxt:idle` whose duration cannot be resolved makes the whole start fail, so a broken definition does not surface only after the player has paid for the breakthrough. `mxt:wait_for` has no timeout: a condition that never holds parks the run on that entry, so make sure it is reachable.
+`mxt:branch`'s indices count from the **first entry of the timeline the run copied** (`0`-based), and an index out of range is refused **at start**, so a branch pointing at the wrong entry cannot surface after the player has already paid for the breakthrough. Backward jumps are allowed too: nothing stops a "go back and take another round while the health is low" loop, so the condition has to be able to settle on its own.
+
+Each entry is asked once, before the run starts, whether it can run at all; an `mxt:idle` whose duration cannot be resolved, a `mxt:wait_for` whose `timeout` cannot be resolved, and a `mxt:branch` aimed out of range all make the whole start fail, so a broken definition does not surface only after the player has paid for the breakthrough. A `mxt:wait_for` **without a `timeout`** still behaves as before: a condition that never holds parks the run on that entry (it neither advances nor fails), so make sure it is reachable.
 
 `windup` is the run counting itself in: the first beat begins only after that many ticks have passed. It is resolved through the same rule as every wait (`windup × difficulty_scale × max(0, 1 + aura_tribulation_modifier)`; `0`, or anything that does not resolve to a positive number, means no wind-up) and settled **once, when the run starts**, then only counted down — so the countdown a player watches is the number of ticks that will really pass. Nothing is consumed and no state is written during it, but the tribulation is already under way: a second start is still refused, `status` reports the ticks of wind-up that are left, and `darken_sky` already applies. What is left is saved and synced with the attachment, so leaving the world and coming back resumes the countdown instead of restarting it.
 
@@ -67,6 +70,19 @@ While a run is under way the sky darkens for everyone nearby, the player undergo
   ],
   "success_action": { "type": "mxt:add_resource", "resource": "example:true_essence", "amount": 10 },
   "fail_action": { "type": "mxt:apply_effect", "effect": "minecraft:weakness", "duration_ticks": 200 }
+}
+```
+
+A staged tribulation: wait with a deadline for the player to be exposed to the sky, then split into two branches by health, where the `if_true: 3` of the `mxt:branch` jumps straight to the 4th entry (`0`-based) and skips the 3rd.
+
+```json
+{
+  "timeline": [
+    { "type": "mxt:wait_for", "condition": { "type": "mxt:exposed_to_sky" }, "timeout": 600, "on_timeout": "fail" },
+    { "type": "mxt:branch", "condition": { "type": "mxt:health", "comparison": "<", "compare_to": 10 }, "if_true": 3 },
+    { "type": "mxt:action", "action": { "type": "mxt:spawn_lightning", "damage": 4 } },
+    { "type": "mxt:action", "action": { "type": "mxt:spawn_lightning", "damage": 12 } }
+  ]
 }
 ```
 

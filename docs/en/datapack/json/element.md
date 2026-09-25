@@ -47,7 +47,7 @@ Both relations are read by the [damage system](../../technical/damage.md), in op
 A holder with several spirit roots multiplies every edge that matches: two roots that both overcome the target take both bonuses, and the numbers you wrote are the whole of the result.
 
 ::: info Relations and Colours
-Element relations may contain cycles, so do not rely on tag value order. Element relations are data-driven and tags classify elements but do not encode precedence. A spirit root binds exactly one element through its `element` field, and an aura names one through `aura_type`. Either side having no spirit root at all reads as "no relation applies", so an ordinary mob takes damage unchanged.
+Element relations may contain cycles, so do not rely on tag value order. Element relations are data-driven and tags classify elements but do not encode precedence. A spirit root binds one or more elements through its `elements` field (relations hold per element, so a root holding fire and water takes part in both directions), and an aura names one through `aura_type`. Either side having no spirit root at all reads as "no relation applies", so an ordinary mob takes damage unchanged.
 :::
 
 ## Reading the Element of a Strike

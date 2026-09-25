@@ -28,12 +28,13 @@ The filename corresponds to its ID. For example, `data/example/mxt/realm_stage/f
 | `next_realm` | `Holder<realm_stage>` | none | The next realm of the linear chain; at most one. |
 | `breakthrough_exp` | `NumberProvider` | `0` | The minimum cultivation progress count needed to break through from the current realm to the next one. |
 | `max_experience` | `NumberProvider` | `Double.MAX_VALUE` | The maximum cultivation progress count that may be held in the current realm before advancing to the next one; once reached, no further cultivation progress is accepted. It must not be smaller than `breakthrough_exp`. |
-| `minor_stages` | `List<Component>` or `int` | `[]` | Names of the sub-stages. An array is those names (a bare string is a translation key, an object is a full component); an integer is how many layers there are, and the names are then generated as `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>` (the index starts at `0`, the count is capped at `1024`). They do two things only: the information panel prints the current one after the realm name, and the `minor_stage` formula variable reports its index. The cut is even — this stage's `breakthrough_exp` is split into as many segments as there are entries, and the progress falls into one of them (the index starts at `0`). |
+| `minor_stages` | `List<Component>` or `int` | `[]` | Names of the sub-stages. An array is those names (a bare string is a translation key, an object is a full component); an integer is how many layers there are, and the names are then generated as `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>` (the index starts at `0`, the count is capped at `1024`). They are read in three places: the information panel prints the current one after the realm name, the `minor_stage` formula variable reports its index, and `minor_stage_abilities` uses that index as its threshold. The cut is even — this stage's `breakthrough_exp` is split into as many segments as there are entries, and the progress falls into one of them (the index starts at `0`). |
 | `breakthrough` | `CultivateConditions` | empty object | The breakthrough conditions checked after the minimum cultivation progress is reached. |
 | `auto_breakthrough` | `Boolean` | `false` | Whether a breakthrough is attempted automatically while cultivation mode is running; when disabled, a breakthrough can only be triggered through a command, KubeJS or another server-side call. |
 | `passive_modifiers` | `List<AttributeEntry>` | `[]` | Vanilla attribute modifiers granted by the current realm; an entry contains `attribute`, the vanilla modifier `id`/`amount`/`operation` and an optional `value` formula. |
 | `costs` | `List<Cost>` | `[]` | Breakthrough costs, paid by the entity that breaks through, all or nothing as one array; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 | `ability_requirements` | `HolderOrTag<ability>[]` | `[]` | Abilities that must be owned before breaking through. |
+| `minor_stage_abilities` | `{stage, ability}[]` | `[]` | **Unlocks abilities by sub-stage**: an entry looks like `{ "stage": 2, "ability": ["example:qi_sense"] }`, where `stage` is the **0-based index** of `minor_stages` (the same numbering the `minor_stage` formula variable uses) and `ability` is a `HolderOrTag<ability>` list (it may be omitted, meaning that layer unlocks nothing). It is **cumulative** (active from `stage` onwards) and **an unlock is permanent**: breaking through to the next realm, or progress resetting to zero, never takes it back. Validated while loading: `stage` must be non-negative, must fall inside this stage's declared `minor_stages`, and one `stage` must not be written twice. |
 | `tribulation` | `Holder<tribulation>` | none | Optional tribulation. |
 | `breakthrough_particle` | `ParticleEffect` | none | Optional breakthrough particle; nothing is sent when it is omitted. |
 | `success_action` | `EntityAction` | `mxt:no_op` | Behaviour on a successful breakthrough. |
@@ -51,6 +52,10 @@ The filename corresponds to its ID. For example, `data/example/mxt/realm_stage/f
   "breakthrough_exp": "1000 + level * 250",
   "max_experience": "2000 + level * 500",
   "minor_stages": 9,
+  "minor_stage_abilities": [
+    {"stage": 2, "ability": ["example:qi_sense"]},
+    {"stage": 5, "ability": ["example:spirit_flight"]}
+  ],
   "auto_breakthrough": false,
   "breakthrough": {
     "conditions": [
@@ -76,7 +81,22 @@ That file declares nine layers as an integer, so the names are generated as `rea
 ```
 
 ::: info Minor stages
-Minor stages settle nothing by themselves; they only answer "which layer is this". The stage's `breakthrough_exp` is evaluated and split into as many even segments as there are names, and the progress decides which one it is (`0` is the first: with nine names and a requirement of `900`, `0`–`100` is the first and `minor_stage` reads `0`). Progress past `breakthrough_exp` (whose cap is `max_experience`) stays on the last one, and `minor_stage` reads `NaN` when `breakthrough_exp` evaluates to `0` or less, when the stage names no minor stages, or while the entity has no realm at all — a mortal still reads `realm` as `0`, so the two do not agree. The segment width moves with the `breakthrough_exp` formula, so a formula only settles it at runtime.
+Minor stages change no threshold by themselves; they only answer "which layer is this". The stage's `breakthrough_exp` is evaluated and split into as many even segments as there are names, and the progress decides which one it is (`0` is the first: with nine names and a requirement of `900`, `0`–`100` is the first and `minor_stage` reads `0`). Progress past `breakthrough_exp` (whose cap is `max_experience`) stays on the last one, and `minor_stage` reads `NaN` when `breakthrough_exp` evaluates to `0` or less, when the stage names no minor stages, or while the entity has no realm at all — a mortal still reads `realm` as `0`, so the two do not agree. The segment width moves with the `breakthrough_exp` formula, so a formula only settles it at runtime.
+:::
+
+::: info Unlocking by minor stage
+`minor_stage_abilities` and the condition-side threshold (`min_minor_stage` on the `mxt:realm` entity condition) read the same record: **the highest minor stage the body has ever reached in each realm stage**, kept in the `spirit_identity` attachment and **only ever growing**. That record is what makes an unlock permanent, and it is why `min_minor_stage` still holds after the realm has been left. It is refreshed whenever cultivation progress lands and after a breakthrough commits (`/realm set` refreshes it too), so it never lags behind what was actually reached; a realm the body never entered has no record at all, and no `min_minor_stage` is satisfied by it.
+
+```json
+{
+  "type": "mxt:realm",
+  "realm": "example:qi_refining",
+  "comparison": "at_least",
+  "min_minor_stage": 5
+}
+```
+
+`mxt:realm` splits the work three ways: `realm` plus `comparison` decide the realm itself (`exact` / `at_least` / `at_most`), and the optional `min_minor_stage` (`0`-based) requires the highest minor stage reached **in that realm** to be at least that. So `{"realm": "example:qi_refining", "min_minor_stage": 500}` reads as "has reached layer 500 of qi refining" (monotonic — still true after breaking through), while `comparison: "exact"` together with `min_minor_stage` reads as "is in that realm and at that layer or beyond right now".
 :::
 
 ::: info Realm chains

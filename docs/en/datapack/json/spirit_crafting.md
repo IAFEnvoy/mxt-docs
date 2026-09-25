@@ -6,7 +6,7 @@ aside: false
 
 # Spirit Crafting Recipes (spirit_crafting)
 
-The Spirit Crafting Table reuses the vanilla crafting table layout but accepts only two recipe types registered by the mod, `mxt:spirit_shaped` and `mxt:spirit_shapeless`. On top of the usual ingredients, each recipe declares an aura cost.
+The Spirit Crafting Table reuses the vanilla crafting table layout but accepts only the two **spirit crafting** recipe types, `mxt:spirit_shaped` and `mxt:spirit_shapeless`. On top of the usual ingredients, each recipe declares an aura cost.
 
 ## File Location
 

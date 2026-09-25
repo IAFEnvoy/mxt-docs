@@ -6,11 +6,11 @@ title: 轮盘条目
 
 技能与灵气共用 **12 扇轮盘**，它是两者的**唯一触发入口**（法器能力就是技能，见 [技能与法器能力合并](#toggable)）；原来"技能栏 + 灵力栏"两条客户端 Hotbar 与它们各自的配置界面已经删除。框架在 `com.iafenvoy.mxt.screen.wheel`，内容在 `com.iafenvoy.mxt.screen.wheel.content`。轮盘由**主盘 + 从盘**组成，用**一套连续编号**串起来：主盘是玩家自己摆的 12 格（编号 `0..11`），从盘（主手物品 / 副手物品 / 法器 / 契约灵兽）由随身装备与手里的御兽铃**自动生成**、格子从 `12` 起接着排，用键盘左 / 右方向键翻页、`R` 打开永远回到主盘（见 [主盘、从盘与编号](#主盘与从盘的编号)）；**「契约灵兽」那一页上的行为命令**也走同一套选择与触发，御兽铃右键空处会直接把它打开。
 
-**框架不决定轮盘上有什么。** `WheelMenuProvider` 回答"这个来源现在贡献哪些条目"（`entries(player, source)`，`source` 是 `WheelSource`；返回值**可以比一页长**，分页由 `WheelMenuContent` 做），唯一实现是 `WheelContent`（在客户端初始化时 `WheelContent.register()`）。`WheelMenuEntry` 是条目契约：
+**框架不决定轮盘上有什么。** `WheelMenuProvider` 回答"这个来源现在贡献哪些条目"（`entries(player, source)`，`source` 是 `WheelSource`；返回值**可以比一页长**，分页由 `WheelMenuContent` 做）。**提供者是按来源 id 登记的**：`WheelMenuContent.register(source, provider)`，内建的五个来源都由 `WheelContent` 在客户端初始化时一起登记（`WheelContent.register()`），所以内容模组加的是**自己那一页**，不会顶掉内建页（旧的"只有一个槽位、后注册者覆盖"已经取消）。`WheelMenuEntry` 是条目契约：
 
 | 成员 | 说明 |
 |---|---|
-| `WheelEntryKind kind()` | `ABILITY` / `AURA` / `BEHAVIOR`，决定 tooltip 首行、配置界面里的池，以及触发时服务端往哪边分派。`BEHAVIOR` 是契约灵兽的行为（跟随 / 游荡 / 驻守 / 召回），id 是代码里的 `ContractBehavior` id 而不是注册表条目。 |
+| `WheelEntryKind kind()` | 条目属于哪一类（内建 id `mxt:ability` / `mxt:aura` / `mxt:behavior`），决定 tooltip 首行、配置界面里的池，以及触发时服务端往哪边分派。`mxt:behavior` 是契约灵兽的行为（跟随 / 游荡 / 驻守 / 召回），id 是代码里的 `ContractBehavior` id 而不是注册表条目。 |
 | `Identifier id()` | 条目身份就是**那条技能自己的注册表 id**（`ns:path`，例如 `mxt_test:bound_flight`），见[需要按键的技能](#toggable)。 |
 | `Component title()` | **画在轮盘正中间**的名字。 |
 | `Optional<IconReference> icon()` | 扇区里画的图标，贴图或物品都行；可以不画（没有图标的条目就画名字）。 |
@@ -21,7 +21,7 @@ title: 轮盘条目
 
 ```java
 public record AbilityWheelEntry(Identifier id, Ability definition) implements WheelMenuEntry {
-    @Override public WheelEntryKind kind() { return WheelEntryKind.ABILITY; }
+    @Override public WheelEntryKind kind() { return WheelEntryKinds.ABILITY; }
     @Override public Component title() { return DefinitionText.name(this.id, "ability"); }
     @Override public Optional<IconReference> icon() { return this.definition.icon(); }
     @Override public void onSelected(WheelSelection selection) { WheelTrigger.send(this, selection.source()); }
@@ -30,22 +30,26 @@ public record AbilityWheelEntry(Identifier id, Ability definition) implements Wh
 
 ## 主盘与从盘的编号
 
-轮盘由**主盘 + 从盘**组成，用**一套连续编号**串起来。来源是 `runtime/wheel/WheelSource`（枚举，枚举顺序即编号顺序）：
+轮盘由**主盘 + 从盘**组成，用**一套连续编号**串起来。来源是 `api/WheelSource`（**接口，不再是枚举**）；内建的五个在 `runtime/wheel/WheelSourceTypes` 里**先注册**，**页面顺序就是注册顺序**，也就是编号顺序：
 
-| `WheelSource` | 名字 | 内容从哪来 | 存不存 |
+| 来源 id | 名字 | 内容从哪来 | 存不存 |
 |---|---|---|---|
-| `CONFIGURED` | 主盘 | 附件 `wheel_layout` 里玩家自己摆的 12 格 | 存 |
-| `MAIN_HAND` | 主手物品 | 主手物品现在**授予**的主动技能，加上它这件法器声明的**技能** | 不存，现读 |
-| `OFF_HAND` | 副手物品 | 副手物品现在授予的主动技能，加上它这件法器声明的技能 | 不存，现读 |
-| `CURIOS` | 法器 | Curios 已装备物现在授予的主动技能，加上这些法器声明的技能 | 不存，现读 |
-| `CONTRACT` | 契约灵兽 | 手里**御兽铃**对准的那只灵宠认的行为（铃上的组件 `mxt:contract_bell` 记着它） | 不存，现读 |
+| `mxt:configured` | 主盘 | 附件 `wheel_layout` 里玩家自己摆的 12 格 | 存 |
+| `mxt:main_hand` | 主手物品 | 主手物品现在**授予**的主动技能，加上它这件法器声明的**技能** | 不存，现读 |
+| `mxt:off_hand` | 副手物品 | 副手物品现在授予的主动技能，加上它这件法器声明的技能 | 不存，现读 |
+| `mxt:curios` | 法器 | Curios 已装备物现在授予的主动技能，加上这些法器声明的技能 | 不存，现读 |
+| `mxt:contract` | 契约灵兽 | 手里**御兽铃**对准的那只灵宠认的行为（铃上的组件 `mxt:contract_bell` 记着它） | 不存，现读 |
+
+内容模组实现 `WheelSource` 后调用 `WheelSourceTypes#register` 登记自己的页（**同一 id 先注册者生效**，注册只在模组初始化时做、之后只在游戏线程上读）；显示名仍然走同一批语言键 `wheel.mxt.source.*`（内容模组也可以自己给 `Component`）。`WheelSource` 要回答的是 `id()`、`displayName()`、`configured()`（这一页是不是玩家自己那份布局）、`grantSources(entity)`（这一页由哪些授予来源组成，不读授予账的页给空表）、`equipment(entity)`（这一页从哪几件物品上读承载物）、`offers(entity, kind, id)`（这个来源现在认不认这一项）。
+
+**页顺序不能自己挑**：它就是注册顺序。
 
 - **格子按整张轮盘连续编号**：主盘 12 格是 `0..11`，从盘的格子从 `12` 起接着排。
 - **一页 12 格**：每个来源占 `ceil(条目数 / 12)` 页，**一条都没有就一页都不占**（主盘永远占一页）。所以"一个从盘不够用就再开一个新的"——15 个技能占两页，第 2 页 3 格 + 9 个空格，**没有条目会被丢掉**。
 - 页会随装备出现和消失，**后面的编号因此会前后移动**：编号是"第几格"这个位置，不是某个条目的身份。这正是要的效果——拿掉物品时编号不动，物品回来时同一个编号指回同一个技能。
 - 页列表只在客户端（`screen/wheel/WheelMenuContent#pages`，每页一个 `WheelPage`）；服务端不知道有几页。
 
-从盘读的是**技能授予账**（`AbilityAttachment` 的 `SourceLedger`），而它本来就按来源计数（装备槽记 `mxt:equipment/<槽位>/<物品>`，Curios 记 `mxt:curios_equipment`）；来源 id 的写法收在 `runtime/ability/AbilitySources`，授予侧与轮盘侧共用一份。读取与判定都在 `runtime/wheel/WheelSources`：`abilities(entity, source)` 给出一个来源现在的**全部技能**条目（只列需要按键的、按 id 排序、**不截断**：分页是客户端的事），`equipment(entity, source)` 给出这一页该读哪几件装备的栈（主盘给双手 + Curios，见 [需要按键的技能](#toggable)），`offers(entity, source, kind, id)` 回答"这个来源现在认不认这一项"。**从盘没有任何存储**：把物品换掉、摘掉法器，那几页当场就没了。
+从盘读的是**技能授予账**（`AbilityAttachment` 的 `SourceLedger`），而它本来就按来源计数（装备槽记 `mxt:equipment/<槽位>/<物品>`，Curios 记 `mxt:curios_equipment`）；来源 id 的写法收在 `runtime/ability/AbilitySources`，授予侧与轮盘侧共用一份。读取与判定的算术都在 `runtime/wheel/WheelSources`：`abilities(entity, source)` 给出一个来源现在的**全部技能**条目（只列需要按键的、按 id 排序、**不截断**：分页是客户端的事）；"这一页该读哪几件装备的栈"由来源自己的 `equipment(entity)` 回答（主盘给双手 + Curios，见 [需要按键的技能](#toggable)），"这个来源现在认不认这一项"由来源自己的 `offers(entity, kind, id)` 回答（`WheelSources#offers` 只替它挡掉空 kind 与"这一 kind 根本不持条目"两种输入）。**从盘没有任何存储**：把物品换掉、摘掉法器，那几页当场就没了。
 
 `R` 打开时判空的是**"整张轮盘一格有内容的都没有"**：主盘空但手里那把剑有技能时轮盘照样开，否则从盘永远够不着。
 
@@ -69,9 +73,9 @@ public record AbilityWheelEntry(Identifier id, Ability definition) implements Wh
 
 ## 12 格从哪来
 
-1. **玩家自己的布局**：玩家附件 `WheelLayoutAttachment`（`wheel_layout`）存一份 12 格 `WheelLayout`，每格是 `WheelSlot`（`WheelEntryKind` + id），空格用 `WheelSlot.EMPTY` 哨兵；同一个附件还有 `armed` 字段，存**当前选中的格子编号**（一个 `int`，见 [选中项跨会话](#选中项跨会话)）。附件同步给本人。**只有主盘进这个附件**，从盘不存。
+1. **玩家自己的布局**：玩家附件 `WheelLayoutAttachment`（`wheel_layout`）存一份 12 格 `WheelLayout`，每格是 `WheelSlot`（`WheelEntryKind` + id，**种类本身也是按 id 存的**），空格用 `WheelSlot.EMPTY` 哨兵；同一个附件还有 `armed` 字段，存**当前选中的格子编号**（一个 `int`，见 [选中项跨会话](#选中项跨会话)）。附件同步给本人。**只有主盘进这个附件**，从盘不存。
 2. **配置界面**（`WheelConfigurationScreen`）编辑这份布局：左 6 列灵气池、右 6 列"技能"池各自滚动（右池 = `WheelContent#pool`，即玩家持有的技能 + 双手与 Curios 上法器声明的技能），下面一排 12 格共用；`Esc` 保存并关闭。关闭时发 `WheelLayoutC2SPayload`（**整份布局**，不是逐格改动），并把编号**重新上送一次**（页列表刚被换掉）。**只有主盘在这里编辑**：从盘的内容由随身装备决定，界面不预览也不改它们（标题栏那一行会写明）。打开它对服务端没有任何要求——客户端命令 `/wheel`，或按键 `key.mxt.wheel_configuration`（默认未绑定）——所以它没有 S2C payload，也不占服务端一次往返。
-3. **服务端校验后落库**：`WheelService.sanitize` 把大小强制成 12，逐格检查 id 能否在该类型的注册表里解析，解析不了就归一化成空格，然后写回附件。只写请求者自己的附件。
+3. **服务端校验后落库**：`WheelService.sanitize` 把大小强制成 12，逐格问这一格那个 kind 的 `exists(access, id)`，答否就归一化成空格，然后写回附件。只写请求者自己的附件。**格子里的种类按 id 读，而且读得宽容**：老布局里写着 `"artifact"` 的格子读成 `mxt:ability`（旧 `ARTIFACT` 与技能合并的结果），只写 `ability` 这样裸名字的补上 `mxt:` 命名空间，认不出的 id 读成空格子——所以玩家的存档不需要迁移。
 4. **没保存过时**：客户端拿到的是 **12 个空格**——**不预填任何东西**（原来的"前 6 个灵气进 0–5 格、前 6 个技能进 6–11 格"默认填充已删除）。放什么完全由玩家决定；代价是**整张轮盘都空**时按 `R` 不会打开（没东西可选），新档第一次要先 `/wheel` 放条目。
 5. **解析成条目**：`WheelContent.entries(player, source)` 把一个来源的条目逐个在当前可用池里找（主盘在当前灵气与已授予技能里找，从盘就是它现读出来的那张表）；找不到（授予被撤销、定义被删、灵气不再满足条件）就是**空格子**，但保存的布局**不动**——授予回来它就回来。这与旧 Hotbar"找不到就补位"相反：补位会让玩家的肌肉记忆悄悄漂移。
 
@@ -113,16 +117,18 @@ public record AbilityWheelEntry(Identifier id, Ability definition) implements Wh
 
 ## 触发
 
-只有一条通道：`WheelActionC2SPayload(source, kind, id)`——**哪个来源**、哪一类、哪个 id（由客户端在按下的那一刻从**当时那一格**解析出来）。服务端 `WheelService.trigger` 先要求**这个来源现在仍然认这一项**（`WheelSources#offers`：主盘读存档布局、从盘读现在的授予账与那一页的装备栈），不认就整个请求作废，然后才按 `kind` 分派：
+只有一条通道：`WheelActionC2SPayload(source, kind, id, enabled)`——**哪个来源**、哪一类、哪个 id（由客户端在按下的那一刻从**当时那一格**解析出来），外加一个可选的 `enabled`。`source` 与 `kind` 现在都是 `Identifier`，服务端用 `WheelSourceTypes.byId` / `WheelEntryKinds.byId` 解析：**认不出的 id 只是按"这一项已经失效了"拒掉（动作栏照旧报 `actionbar.mxt.wheel.stale_entry`），不会让整包失败**——内容模组因此不必自带协议版本就能加页或加种类。服务端 `WheelService.trigger` 先要求**这个来源现在仍然认这一项**（来源自己的 `offers(...)`：主盘读存档布局、从盘读现在的授予账与那一页的装备栈），不认就整个请求作废，然后**把这一次按压交给 `kind.trigger(player, source, id)`**——内建三种的实现仍然留在 `WheelService` 里（`press` / `burst` / `order`），由 `mxt:ability` / `mxt:aura` / `mxt:behavior` 三个内建 kind 各自转发进去，于是内容模组注册的 kind 由**它自己的代码**受理，这里不必再加分支。带方向的那一种走 `kind.directed(player, source, id, wanted)`（默认答 `false`，只有开关那一类实现它；请求里 `enabled` 有值时走的就是这条路，它按 id 单独寻址、没有格子）：
 
-- `ABILITY` → `runtime/ability/AbilityActivationService`（**服务端唯一的按压入口**）：`mxt:active` 在那里转成一次施放（内部再校验授予、条件、消耗、冷却与施法时间），`mxt:flight_control` / `mxt:storage` 各自做自己的事（起落剑、开箱）。拒绝时带回来的**是真实的那一条原因**——`Togglable.Failure` 的 16 个取值与 `AbilityService.Failure` **同名**（条件不满足 / 灵根与元素不符 / 某门资源不足 / 次数用完 / 还在冷却 / 数值配置有误 / 没有承载物 / 手上没有能飞的载具 / 现在骑不上去……），付不出资源时还带上是哪一门；轮盘按名字查 `actionbar.mxt.ability.failure.*` **一份表**，同时报在动作栏与日志里（按压走「使用失败：<原因>」，非按压技能的施放走「施放失败：<原因>」，解析不出技能与来源已经不认这一项都报「轮盘上的这一项已经失效了」）；
-- `BEHAVIOR` → `runtime/creature/ContractBehaviorService`（**服务端唯一的下令入口**）：它当场从铃回查那只灵宠，再按"已绑定 → 主人 → 实现了 `ContractOperations` → 这条命令在它的 `behaviors()` 里 → 生物的 `onBehaviorSelected` → 写入记录（召回则走 `ContractService.requestRecall`）"的顺序处理，任何一步不成立都按契约失败文案报出来；成功时动作栏报「已令 <灵宠>：<命令>」。
-- `AURA` → `SpiritBurstService.fireOnce`（校验元素、使用条件、冷却与余量后发一发 `SpiritBurstEntity`）。
+- `ABILITY`（`mxt:ability`）→ `runtime/ability/AbilityActivationService`（**服务端唯一的按压入口**）：`mxt:active` 在那里转成一次施放（内部再校验授予、条件、消耗、冷却与施法时间），`mxt:flight_control` / `mxt:storage` 各自做自己的事（起落剑、开箱）。拒绝时带回来的**是真实的那一条原因**——`Togglable.Failure` 的 16 个取值与 `AbilityService.Failure` **同名**（条件不满足 / 灵根与元素不符 / 某门资源不足 / 次数用完 / 还在冷却 / 数值配置有误 / 没有承载物 / 手上没有能飞的载具 / 现在骑不上去……），付不出资源时还带上是哪一门；轮盘按名字查 `actionbar.mxt.ability.failure.*` **一份表**，同时报在动作栏与日志里（按压走「使用失败：<原因>」，非按压技能的施放走「施放失败：<原因>」，解析不出技能与来源已经不认这一项都报「轮盘上的这一项已经失效了」）；
+- `BEHAVIOR`（`mxt:behavior`）→ `runtime/creature/ContractBehaviorService`（**服务端唯一的下令入口**）：它当场从铃回查那只灵宠，再按"已绑定 → 主人 → 实现了 `ContractOperations` → 这条命令在它的 `behaviors()` 里 → 生物的 `onBehaviorSelected` → 写入记录（召回则走 `ContractService.requestRecall`）"的顺序处理，任何一步不成立都按契约失败文案报出来；成功时动作栏报「已令 <灵宠>：<命令>」。
+- `AURA`（`mxt:aura`）→ `SpiritBurstService.fireOnce`（校验元素、使用条件、冷却与余量后发一发 `SpiritBurstEntity`）。
 
-**`WheelEntryKind` 现在四个值**：`EMPTY` / `ABILITY` / `AURA` / `BEHAVIOR`。旧的 `ARTIFACT` 已取消，而老布局里写着 `"artifact"` 的格子会被 `WheelEntryKind` 的 codec **读成 `ABILITY`**——所以玩家的存档不需要迁移。行为格子只出现在 `CONTRACT` 那一页（它不进主盘的可编辑池），所以配置界面保存出来的布局里不会有 `BEHAVIOR`；手改出来的那种格子解析不到内容，只是画成空格子。
+**`WheelEntryKind` 现在也是一个接口**（在 `api/`），内建四种在 `runtime/wheel/WheelEntryKinds` 里先注册：`mxt:empty`（不持条目的那一类，空格子就靠它拼出来）、`mxt:ability`、`mxt:aura`、`mxt:behavior`。内容模组实现 `WheelEntryKind` 后调用 `WheelEntryKinds#register` 登记自己的种类（**同一 id 先注册者生效**）；它要回答 `id()`、`displayName()`、`holdsEntry()`、`exists(access, id)`（一个 id 现在还算不算数）、`trigger(player, source, id)`，另有默认答 `false` 的 `directed(player, source, id, wanted)`（只有开关那样"有状态"的种类实现它）。旧的 `ARTIFACT` 已取消，而老布局里写着 `"artifact"` 的格子会被 codec **读成 `mxt:ability`**——所以玩家的存档不需要迁移。行为格子只出现在 `mxt:contract` 那一页（它不进主盘的可编辑池），所以配置界面保存出来的布局里不会有 `mxt:behavior`；手改出来的那种格子解析不到内容，只是画成空格子。
+
+**两条明确的边界**：页顺序**不能自己挑**，就是注册顺序（内建五个先注册，所以主盘永远是第一页）；内容模组注册的 kind，它的条目**还不会**出现在配置界面那两个池子（左 6 列灵气池、右 6 列技能池）里。
 
 **主盘也走这道检查**：布局本来就是客户端交上来的，所以它不是防作弊，而是让"这一项确实来自你说的那个来源"对所有来源都成立——配置界面刚清掉一格、玩家手里还按着 `V` 时，那次请求会被拒。**编号不参与触发**：它只回答"打哪一格"。
 
 **没有"取消"这个动作**：用一次触发一次，所以没有松开手势可以拿来取消待施法或停发；松开轮盘键只是关掉轮盘。引导型技能（`mxt:channelled`）也不再能由玩家主动中断。
 
-数据包那边：`mxt:active` 的 `slot` 字段现在**不再被读取**（轮盘的位置由玩家的 12 格布局决定），写了也不会报错，只是没有作用。
+数据包那边：`mxt:active` **没有 `slot` 字段**（2026-09-25 删除）——轮盘的位置由玩家自己的 12 格布局决定，从来不是技能定义的一部分；旧包里写了 `"slot": "..."` 会在**加载期报错并点名 `slot`**（这类"永远不读的已知键"按类型拒收，不是静默忽略），删掉那一行即可。

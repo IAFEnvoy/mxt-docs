@@ -5,7 +5,7 @@ description: Query, grant, remove and switch spirit roots on and off; the elemen
 
 # `MxtSpiritRoots`: Spirit Roots
 
-A spirit root is the **element half** of a body's cultivation identity: holding one binds that body to an element, changes the cultivation speed of that element's aura, and scales the abilities attuned to that element. The element-independent half is [MxtPhysiques](/en/kubejs/api/physiques). Granting and removal go through the authoritative service, so `conflicting_elements` conflicts and the abilities a root grants are handled as usual.
+A spirit root is the **element half** of a body's cultivation identity: holding one binds that body to **one or more** elements (`elements` is a list), changes the cultivation speed of those elements' aura, and scales the abilities attuned to any of them. The element-independent half is [MxtPhysiques](/en/kubejs/api/physiques). Granting and removal go through the authoritative service, so `conflicting_elements` conflicts and the abilities a root grants are handled as usual.
 
 ## Methods
 

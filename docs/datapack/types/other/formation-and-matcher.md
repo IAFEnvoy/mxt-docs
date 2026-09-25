@@ -60,11 +60,14 @@ title: 阵法、时间线与匹配器类型
 | --- | --- | --- |
 | `mxt:action` | `action`（**必填**） | 执行一个实体行为，并在同一 tick 结束。 |
 | `mxt:idle` | `duration`（**必填**） | 空等这么多个 tick。 |
-| `mxt:wait_for` | `condition`（**必填**） | 每 tick 求值一次；条件成立后结束。 |
+| `mxt:wait_for` | `condition`（**必填**）、`timeout?`（ticks）、`on_timeout?`（`fail` 默认 / `finish`） | 每 tick 求值一次；条件成立后结束。写了 `timeout` 就是限期等待，到点按 `on_timeout` 失败或直接过。 |
+| `mxt:branch` | `condition`（**必填**）、`if_true?` / `if_false?`（下标） | 按条件把运行游标移到另一拍，并在同一 tick 结束；不写的分支照常前进一拍。 |
 
-`action` 是一个[实体行为](../action/entity_action_types.md)，因此任何行为都可以成为一个节拍。`duration` 是一个 `NumberProvider`，按 `duration × difficulty_scale × max(0, 1 + aura_tribulation_modifier)` 解析，并且每 tick 重新解析一次。`condition` 是一个[实体条件](../condition/entity_condition_types.md)，它接受列表作为隐式 AND，与其他地方的条件字段完全一样。
+`action` 是一个[实体行为](../action/entity_action_types.md)，因此任何行为都可以成为一个节拍。`duration` 是一个 `NumberProvider`，按 `duration × difficulty_scale × max(0, 1 + aura_tribulation_modifier)` 解析。`condition` 是一个[实体条件](../condition/entity_condition_types.md)，它接受列表作为隐式 AND，与其他地方的条件字段完全一样。`if_true` / `if_false` 是**绝对下标**，从运行**复制进来的那条时间线的第一拍**算起（`0` 起），可以回跳；越界会在**启动时**被拒绝，像解不出时长的 `mxt:idle` 一样。
 
-`mxt:wait_for` 没有超时，因此永远不成立的条件会把整次运行停在该条目上。每个条目在运行开始前都会被问一次它究竟能不能运行，这也是时长无法解析的 `mxt:idle` 会直接拒绝启动、而不是进行到一半才失败的原因。
+`mxt:wait_for` 的 `timeout` 是**限期**而不是这一拍的时长，所以只按 `timeout` 结算、**不乘 `difficulty_scale`、也不看环境灵气**；不写 `timeout` 时行为不变：条件永不成立就把整次运行停在该条目上。每个条目在运行开始前都会被问一次它究竟能不能运行，这也是时长 / `timeout` 无法解析的节拍与越界的 `mxt:branch` 会直接拒绝启动、而不是进行到一半才失败的原因。
+
+运行游标是**存下来的**（2026-09-25 起，此前是"消费即出队"的队列），因为 `mxt:branch` 要能把它移到任意一拍。
 
 ---
 

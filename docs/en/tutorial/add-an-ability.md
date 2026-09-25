@@ -48,7 +48,7 @@ This tutorial adds two abilities to the example pack: an active bolt cast from t
 | `cast_time` | Cast duration in ticks. |
 | `cooldown` | Cooldown in ticks, reported back to the client so the wheel can draw that sector dark and say "On cooldown 4.3s" - the seconds left, always one decimal. |
 | `condition` | An entity condition that must pass before the ability can be used. Its only job here is to keep Mortals from throwing bolts. For a passive `mxt:modifier` or `mxt:aura` ability the same field keeps working after the cast: it is re-checked every tick and the passive effect is withdrawn while it fails. |
-| `target_selector` | Which entities the bi-entity behaviour applies to. `mxt:self` (the default) selects only the caster; `mxt:area` selects everything within `radius` (capped at 128), and `include_actor` decides whether the caster is part of that set. |
+| `target_selector` | Which entities the bi-entity behaviour applies to. `mxt:self` (the default) selects only the caster; `mxt:area` selects everything within `radius` (capped at 128), and `include_actor` decides whether the caster is part of that set; `mxt:ray` (a cylinder along the look) and `mxt:cone` (a cone along the look, with `angle` as the half-angle) are the other two, and all three accept `limit` and `order` to keep only the nearest, farthest or a random few. |
 | `bi_entity_action` | Run for each selected target, and a failing one never stops the rest. `mxt:target_action` forwards an entity action to the target — here 6 damage plus half the caster's experience level. |
 | `entity_action` | Runs on the caster. It defaults to `mxt:no_op`; use it for a self-buff, a particle burst or an aura change. |
 

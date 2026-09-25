@@ -60,11 +60,14 @@ The `timeline` array of a [tribulation](../../json/tribulation.md) holds these e
 |--------|--------|-------------|
 | `mxt:action` | `action` (**required**) | Runs one entity action and finishes on the same tick. |
 | `mxt:idle` | `duration` (**required**) | Waits that many ticks doing nothing. |
-| `mxt:wait_for` | `condition` (**required**) | Evaluated every tick; finishes once the condition holds. |
+| `mxt:wait_for` | `condition` (**required**), `timeout?` (ticks), `on_timeout?` (`fail` by default, or `finish`) | Evaluated every tick; finishes once the condition holds. With a `timeout` it is a deadline, and when it runs out the run fails or moves on according to `on_timeout`. |
+| `mxt:branch` | `condition` (**required**), `if_true?` / `if_false?` (indices) | Moves the run's cursor to another entry according to the condition and finishes on the same tick; a branch that is not written simply advances one entry. |
 
-`action` is an [Entity Action](../action/entity_action_types.md), so any behaviour can be a beat. `duration` is a `NumberProvider`, resolved as `duration × difficulty_scale × max(0, 1 + aura_tribulation_modifier)` and re-resolved every tick. `condition` is an [Entity Condition](../condition/entity_condition_types.md), and it accepts a list as an implicit AND, exactly like the condition fields elsewhere.
+`action` is an [Entity Action](../action/entity_action_types.md), so any behaviour can be a beat. `duration` is a `NumberProvider`, resolved as `duration × difficulty_scale × max(0, 1 + aura_tribulation_modifier)`. `condition` is an [Entity Condition](../condition/entity_condition_types.md), and it accepts a list as an implicit AND, exactly like the condition fields elsewhere. `if_true` / `if_false` are **absolute indices** counted from the **first entry of the timeline the run copied** (`0`-based) and may jump backwards; an index out of range is refused **at start**, exactly like an `mxt:idle` whose duration cannot be resolved.
 
-`mxt:wait_for` has no timeout, so a condition that never holds parks the run on that entry. Each entry is asked once before the run starts whether it can run at all, which is why an `mxt:idle` with an unresolvable duration refuses the start instead of failing halfway.
+A `mxt:wait_for` `timeout` is a **deadline** rather than the length of a beat, so it is resolved from `timeout` alone, **without `difficulty_scale` and without the aura modifier**; without a `timeout` the behaviour is unchanged, and a condition that never holds parks the whole run on that entry. Each entry is asked once before the run starts whether it can run at all, which is why a beat whose duration or `timeout` cannot be resolved, and a `mxt:branch` aimed out of range, refuse the start instead of failing halfway.
+
+The run's cursor is **saved** (since 2026-09-25; before that the run consumed a queue), because `mxt:branch` has to be able to move it to any entry.
 
 ---
 

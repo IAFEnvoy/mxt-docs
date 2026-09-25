@@ -235,14 +235,15 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 | `pendingConditionsForChain(LivingEntity, Holder<Aura>)` | 还差哪些条件 | |
 | `setRealm(CultivationAttachment spirit, Identifier target)` | 直接设置境界（管理员用） | 返回是否真的改了；**它没有实体参数，因此没有服务端检查** |
 
-结果类型：`BreakthroughResult(advanced, failure, failedResource, costs)`、`BreakthroughStatus(reached, conditionsMet, automatic, minimumExperience, maximumExperience)`、`enum Failure {DISABLED, WRONG_AURA, NO_NEXT_REALM, INSUFFICIENT_PROGRESS, MAX_PROGRESS, CONDITIONS, INSUFFICIENT_RESOURCE, INVALID_FORMULA, CANCELLED, SERVER_ONLY}`。
+结果类型：`BreakthroughResult(advanced, failure, failedResource, costs)`、`BreakthroughStatus(reached, conditionsMet, automatic, minimumExperience, maximumExperience)`、`enum Failure {DISABLED, WRONG_AURA, NO_NEXT_REALM, INSUFFICIENT_PROGRESS, CONDITIONS, INSUFFICIENT_RESOURCE, INVALID_FORMULA, CANCELLED, SERVER_ONLY}`。
 
 要点：
 
 - **边界不一致**：只有 `attempt` 挡客户端；`addProgress*` / `setRealm` / `minorStage` 都不检查，在客户端调会真的写附件。
 - 内容自己声明的条件在**扣费之前**评估，所以条件不满足不会白花资源。
 - `INVALID_FORMULA` 同时兼任"一切非资源不足的扣费失败"的归一化出口；`failedResource` 只在扣费阶段资源不足时非空。
-- `Failure.DISABLED` 只有脚本桥会产出（`MxtKubeJsApi.tryBreakthrough` 在灵气 id 解析不到时），`attempt` 自己不产出它；`Failure.MAX_PROGRESS` 目前**没有任何产生路径**（保留值，lang 里备着提示但暂时用不上）——别把它写进你自己的判分支逻辑里当作会发生的情况。
+- `Failure.DISABLED` 只有脚本桥会产出（`MxtKubeJsApi.tryBreakthrough` 在灵气 id 解析不到时），`attempt` 自己不产出它。
+- `Failure.MAX_PROGRESS` 已于 2026-09-25 **删除**（它是一条走不到的分支）：进度上限不可能成为拒绝突破的理由——`threshold()` 要求某一段的 `max_experience ≥ breakthrough_exp`，所以进度被顶在 `max_experience` 时必然已经满足 `progress ≥ breakthrough_exp`，此时只会因条件、代价或取消而失败。内联的 `Failure` 分支若写了它，编译期就会报错。
 
 ## 技能 {#ability}
 
@@ -359,7 +360,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 要点：
 
 - **判定同时看动作两端**：行为者位置**或**目标位置在半径内，这个护持就适用；目标为空时仍可凭行为者位置拒绝。
-- **豁免顺序**：行为者为空不豁免；护持**没有主人时谁都不豁免**；行为者就是主人 → 豁免；只有护持声明了 `spare_friends` **且**服务端配置「阵法 → 敌我识别」开着，才会去问 `FriendService.identify(...) == TRUE`；任何好友源都认不出的实体一律被拦。
+- **豁免顺序**：行为者为空不豁免；护持**没有主人时谁都不豁免**；行为者**在归属名单上** → 豁免（名单上的每一位都算阵主）；只有护持声明了 `spare_friends` **且**服务端配置「阵法 → 敌我识别」开着，才会去问 `FriendService.identify(...) == TRUE`（逐位阵主都问一遍）；任何好友源都认不出的实体一律被拦。
 - 让位成立时这个护持**完全不管**（跳过，不是降级），触发它的有两条独立路径：模块自己声明 `delegate_to_claims`，或者 `claim_linkage == claims_precedence` 且控制点区块已被认领。
 - 领地只按**控制点所在的那个区块**问，这样横跨边界的护持不会被两套规则同时管。
 - **别在事件订阅者里再写一套护持判定**。

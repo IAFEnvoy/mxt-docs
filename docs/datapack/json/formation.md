@@ -13,7 +13,8 @@ aside: false
 | --- | --- | --- | --- |
 | `name` | Text Component | `formation.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
 | `description` | Text Component | `formation.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
-| `structure_template` | Identifier | **必填** | 原版结构模板 ID。 |
+| `structure_template` | Identifier | 见文档 | 原版结构模板 ID，与 `structure` 二选一（`structure_check: "structure"` 时必须**恰好**写一个）。 |
+| `structure_check` | `structure` / `always` | `structure` | 立阵时是否校验结构。`always` 表示**这座阵法哪里都能立**，此时不允许再写 `structure_template` 或 `structure`（写了是加载错误，不是被忽略）。 |
 | `structure` | `List<RequiredBlock>` | 见文档 | 内联结构，与 `structure_template` 二选一。 |
 | `radius` | `NumberProvider` | **必填** | 阵法影响半径。 |
 | `activation_costs` | `List<Cost>` | `[]` | 激活时消耗，从**激活者**自己的账户扣，整份数组**全有或全无**；写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。 |
@@ -34,8 +35,9 @@ aside: false
 
 | 字段                       | 类型                              | 默认          | 说明                            |
 |--------------------------|---------------------------------|-------------|-------------------------------|
-| `structure_template`     | Identifier                      | 见下          | 结构模板；controller 即模板原点          |
-| `structure`              | `List<RequiredBlock>`           | 见下          | 内联结构；controller 即偏移原点          |
+| `structure_template`     | Identifier                      | 见下          | 结构模板；controller 即模板原点。与 `structure` 二选一（`structure_check: "structure"` 时必须**恰好**写一个） |
+| `structure_check`        | `structure` / `always`          | `structure` | 立阵时是否校验结构。`always` 表示**这座阵法哪里都能立**，此时不允许再写 `structure_template` 或 `structure`（写了是加载错误，不是被忽略） |
+| `structure`              | `List<RequiredBlock>`           | 见下          | 内联结构；controller 即偏移原点           |
 | `radius`                 | NumberProvider                  | **必填**      | 球形作用半径                        |
 | `activation_costs`       | `List<Cost>`                    | `[]`        | 激活消耗；从**激活者**自己的账户扣，整份数组全有或全无（写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)） |
 | `maintenance_costs`      | `List<Cost>`                    | `[]`        | 每 20 tick 的维持消耗；**阵法内方块供的灵气先抵扣**，缺口由阵主支付，付不出即拆除（可被拦截，见下）。`mxt:item` 与 `mxt:js` 在这里永远付不出 |
@@ -82,7 +84,7 @@ aside: false
 |----------------------|-------------------------|----------|----------------------------------------------------------|
 | `damage`             | NumberProvider          | `0`      | 每周期对每个受影响实体的伤害                                           |
 | `damage_type`        | damage_type             | 无        | 伤害类型；不写就走原版「阵主打了他」的语义                                    |
-| `attribute_to_owner` | boolean                 | `true`   | 把阵主记成加害者。**这决定击杀归属、怪物仇恨、以及所有读取攻击者的条件**；设成 `false` 才是无主的"环境伤害" |
+| `attribute_to_owner` | boolean                 | `true`   | 把**第一位阵主**（名单首位，即当初立阵的那位）记成加害者。**这决定击杀归属、怪物仇恨、以及所有读取攻击者的条件**；设成 `false` 才是无主的"环境伤害" |
 | `effects`            | `List<ApplyEffect>`     | `[]`     | 每周期施加的状态效果，字段与 `mxt:apply_effect` 完全一致（`effect` / `duration_ticks` / `amplifier`） |
 | `target_condition`   | Entity Condition        | 恒真       | 对**目标实体**的额外筛选（只打亡灵、只打玩家之类），在敌我判断之后求值                    |
 
@@ -102,8 +104,8 @@ aside: false
 | `aura_zone`  | aura_zone                       | 无     | 高优先级运行时灵气覆写（见「灵气覆写」）                                        |
 | `max_bonus`  | `Map<aura, NumberProvider>` | `{}`  | 范围内区块的灵气上限加成（重叠取最高）                                         |
 
-三档 `target` 是同一条规则的不同宽度：`all` 不筛；`allies` 要求好友判定给出 `true`，而**阵主在好友判定里算自己的好友**，
-所以 `allies` 包含阵主；`owner` 只认 UUID，是同样效果的更窄写法。
+三档 `target` 是同一条规则的不同宽度：`all` 不筛；`allies` 要求好友判定给出 `true`——好友判定会问**每一位**阵主，任一位认得你就算，
+而**阵主在好友判定里算自己的好友**，所以 `allies` 包含整份名单；`owner` 只认 UUID 名单，是同样效果的更窄写法。
 
 **属性加成不在这里找字段。** `ability` 自带 `modifiers`，授予一个能力就等于授予它的属性修饰符；基座不再开第二个入口，
 否则同一件事会有两套规则，包括"修饰符活过了授予它的那座阵法"这类最容易出错的部分。
@@ -232,7 +234,10 @@ aside: false
 
 ## 结构：二选一
 
-`structure_template` 与 `structure` **必须且只能给一个**，两个都给或都不给都会让定义加载失败。
+`structure_check` 决定立阵时**要不要**校验结构：
+
+- **`structure`（默认）**：`structure_template` 与 `structure` **必须且只能给一个**，两个都给或都不给都会让定义加载失败。
+- **`always`**：这座阵法**哪里都能立**，此时**不允许**再写 `structure_template` 或 `structure`——写了是**加载错误**，不是被忽略。用来表达"不靠结构、只靠别的手段立起来"的阵法（例如由脚本或命令直接放下）。
 
 **优先用 `structure`。** 阵法要表达的通常是「阵基 + 几根阵旗」这种少量固定位置，内联写法已经够用，而且它在数据包加载时就把期望值解析完并固定下来——每次校验只是每个方块一次 `getBlockState`。`structure_template` 只在布局真的复杂到无法逐格列出时才值得用。
 
@@ -269,20 +274,22 @@ aside: false
 | `formation_radius`                   | 公式显式值 | 阵法半径                                      |
 | `distance`                           | 公式显式值 | 该实体到阵心的距离                                 |
 | `formation_x` / `formation_y` / `formation_z` | 公式显式值 | 阵心坐标，可直接喂给 `mxt:teleport`                  |
-| 阵法携带者                                | 上下文数据 | 记录"是哪座阵法、阵主是谁、阵心在哪"，由 `mxt:formation_owner` 与 `mxt:formation_ally` 消费 |
+| 阵法携带者                                | 上下文数据 | 记录"是哪座阵法、阵主名单、阵心在哪"，由 `mxt:formation_owner` 与 `mxt:formation_ally` 消费 |
 
 `tick_action` / `deactivate_action` 的上下文是 **`Level`**，只有 `zero` / `random` 两个变量 ——
 **不要在它们里面写依赖实体状态的公式**。
 
 ## 阵法所有者
 
-- **`mxt:formation_owner`** —— 该实体是**当前正在评估的这座**阵法的所有者。阵法之外恒为 `false`。
-- **`mxt:formation_member`** —— 该实体拥有本维度**任意**一座在册阵法。与上一条是不同的问题，不要混用。
+- **`mxt:formation_owner`** —— 该实体是**当前正在评估的这座**阵法的所有者**之一**。阵法之外恒为 `false`。
+- **`mxt:formation_member`** —— 该实体拥有本维度**任意**一座在册阵法（归属名单上有它就算）。与上一条是不同的问题，不要混用。
 
-放置者在阵盘激活时记录。**有维持消耗的阵法在阵主离线时会被拆除**（取不到付费者）——除非有脚本取消 `UpkeepFailed`
+**归属是一个集合**（2026-09-25 起）：一座阵法记的是一组 UUID，**名单上的每一位都算阵主**——`mxt:formation_owner`、拆除权限、功能模块的"给阵主 / 给队友"都按这一组判定，好友系统也会**逐个问名单上的每一位**（任一位认得你就算队友，见下）。放置者在阵盘激活时写入名单；几个人共养一座阵法时用 `/mxt formation owners <pos> [add|remove <player>]` 增删阵主（增删需要 gamemaster 权限，见[命令](/player-guide/commands/formation)），`/mxt formation list` 会把整组逗号分隔列出来。
+
+付费者取名单上的**第一位**（单一归属时就是唯一的阵主，也是当初立阵的那位），所以 **有维持消耗的阵法在第一位阵主离线、取不到付费者时会被拆除**——除非有脚本取消 `UpkeepFailed`
 让它撑过去，或者它的 `storage` 存量还付得起这一期（见「存量」）。
 
-`mxt:formation_owner` **只排除阵主本人**。队友保护是它旁边的另一个判定（见下），不会改动它的语义——数据包因此可以分别表达
+`mxt:formation_owner` **只排除阵主本人**（名单上的任何一位都算）。队友保护是它旁边的另一个判定（见下），不会改动它的语义——数据包因此可以分别表达
 「只排除阵主」和「排除所有友方」。
 
 ## 敌我判断（队友保护）
@@ -297,9 +304,10 @@ aside: false
 
 - **谁算队友**由好友系统回答：先发 `FriendEvent.Relation`（其他模组可以表态，且事件带的是阵主 **UUID**，所以数据在服务端的来源——
   例如装了 FTB Teams 时的队伍成员与盟友——**在阵主离线时也能作答**），没人表态时才查阵主自己的好友名单。
+  名单上有几位阵主就**逐个问几位**：**任一位**认得你就算队友（有一位说不是、其余没人表态，仍然算不是）。
   **阵主本人也算**——好友判定里"自己算自己的好友"，所以声明了开关的阵法也不会伤到立阵的人，不必再写
   `mxt:formation_owner` 条件。
-- **阵主无法解析时（离线、未加载）仍然先按 id 问一遍**：事件带的是阵主 UUID，所以装了 FTB Teams 之类的来源照样能答；内置好友系统也有离线镜像缓存，阵主只要登录过一次就仍有答案可用。只有**没人能识别**这个实体时（没有阵主记录，或既没有实体、镜像里也没见过这个玩家、又没有来源认识这对关系）声明了开关的阵法才**停火**：对所有实体都不生效，而不是"对所有人生效"。
+- **阵主无法解析时（离线、未加载）仍然先按 id 问一遍**（名单上每一位都问）：事件带的是阵主 UUID，所以装了 FTB Teams 之类的来源照样能答；内置好友系统也有离线镜像缓存，阵主只要登录过一次就仍有答案可用。只有**名单上没有任何一位**能识别这个实体时（没有阵主记录，或既没有实体、镜像里也没见过这个玩家、又没有来源认识这对关系）声明了开关的阵法才**停火**：对所有实体都不生效，而不是"对所有人生效"。
   名单挂在玩家实体上，"打所有人"恰好会打到这个开关本来要保护的人，而"挑一批人放过"只能靠猜 —— 认不出敌我就不开火。
   停火同样意味着它授予的能力会被释放（被豁免的实体不进在场集合，见下一条）。想做"阵主不在也照打"的阵法，
   有两条路：不写 `spare_friends`、改用 `mxt:formation_ally` 自己写判断（它在阵法之外/没有阵主时恒为 `false`，于是走"打"的分支），
@@ -309,8 +317,8 @@ aside: false
 - 服务端配置「阵法 → 敌我识别」（默认**开启**）是总开关：关掉之后 `spare_friends` 形同不存在，
   阵法一律对所有人生效（包括阵主自己）。默认开启不会改变任何现有数据包——`spare_friends` 默认为 `false`，只有显式声明的阵法受影响。
 
-数据包也可以自己判断，不必依赖自动过滤。`mxt:formation_ally` 是**实体条件**，在阵法上下文里回答"该实体是不是阵主的好友"
-（阵法之外、或阵法没有记录阵主时恒为 `false`；阵主只是离线则仍会按 UUID 问事件，和其它判断走同一条流水线）。
+数据包也可以自己判断，不必依赖自动过滤。`mxt:formation_ally` 是**实体条件**，在阵法上下文里回答"该实体是不是阵主的好友"——
+**任一位**阵主认得它就算（名单上没人能回答时恒为 `false`；阵主只是离线则仍会按 UUID 问事件，和其它判断走同一条流水线）。
 逐条行为各判一次，就能表达单一开关表达不了的东西 —— 例如同一座阵法伤敌而治疗友军：
 
 ```json

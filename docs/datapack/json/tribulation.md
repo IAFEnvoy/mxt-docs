@@ -23,17 +23,20 @@ aside: false
 
 ## `TimelineEntry`
 
-`timeline` 是**消费者队列**：天劫启动时整条时间线被复制进实体的附件，之后由消费者的每 tick 调用消费**队首那一拍**——跑完就出队，所以附件里存的就是"还没消费的节拍"，不存在需要跟列表对齐的游标索引；队列走空即执行 `success_action`，某一拍报错即执行 `fail_action`。节拍是复制进去的，所以 `/reload` 不会改动一场已经在进行的天劫；`difficulty_scale`、成败行为仍从定义读取。
+`timeline` 是**运行游标**：天劫启动时整条时间线被复制进实体的附件，之后由消费者的每 tick 调用消费**游标所在那一拍**——跑完就前进一拍。**游标是存下来的**（2026-09-25 起，此前是"消费即出队"的队列），因为 `mxt:branch` 可以把它移到任意一拍；游标走到末尾即执行 `success_action`，某一拍报 `FAILED` 即执行 `fail_action`。节拍是复制进去的，所以 `/reload` 不会改动一场已经在进行的天劫；`difficulty_scale`、成败行为仍从定义读取。
 
 | `type` | 字段 | 说明 |
 | --- | --- | --- |
 | `mxt:action` | `action`（`EntityAction`，必填） | 执行一次行为，并在同一个 tick 结束。 |
 | `mxt:idle` | `duration`（`NumberProvider`，必填） | 空等若干 tick，什么都不做。 |
-| `mxt:wait_for` | `condition`（`EntityCondition`，必填） | 每 tick 求值一次，条件成立才结束。 |
+| `mxt:wait_for` | `condition`（`EntityCondition`，必填）、`timeout`（`NumberProvider`，可选）、`on_timeout`（`fail` / `finish`，默认 `fail`） | 每 tick 求值一次，条件成立才结束；写了 `timeout` 就是**限期等待**，到点按 `on_timeout` 失败或直接过。 |
+| `mxt:branch` | `condition`（`EntityCondition`，必填）、`if_true` / `if_false`（整数下标，可选） | 按条件**改游标**，并在同一个 tick 结束；不写的分支照常前进一拍。 |
 
-`mxt:action` 是瞬间节拍：时间线上相邻的几个 `mxt:action` 会在同一个 tick 内依次执行完，写完一整个 tick 里发生的事不需要拆成多拍。等待时长按 `duration × difficulty_scale × max(0, 1 + aura_tribulation_modifier)` 换算，并在该节拍**开始时结算一次**、之后不再重算：随机时长只掷一次，环境灵气中途变化也不会拉长或缩短一个已经开始的等待。
+`mxt:action` 是瞬间节拍：时间线上相邻的几个 `mxt:action` 会在同一个 tick 内依次执行完，写完一整个 tick 里发生的事不需要拆成多拍。等待时长按 `duration × difficulty_scale × max(0, 1 + aura_tribulation_modifier)` 换算，并在该节拍**开始时结算一次**、之后不再重算：随机时长只掷一次，环境灵气中途变化也不会拉长或缩短一个已经开始的等待。`mxt:wait_for` 的 `timeout` 是**例外**：它是限期而不是"这一拍的时长"，所以只按 `timeout` 结算，**不乘 `difficulty_scale`、也不看环境灵气**——难度不该决定玩家有多少时间达标。`timeout` 结算不出正数时整个启动被拒绝。
 
-启动前每个节拍都会被问一次"现在能不能跑"，`mxt:idle` 的时长解不出来时整个启动被拒绝——坏定义不该在玩家已经付掉突破代价之后才出问题。`mxt:wait_for` 没有超时字段：条件永不成立，天劫就停在这一拍（不推进、不失败），因此作者要保证条件可达。
+`mxt:branch` 的下标从**运行复制进来的那条时间线的第一拍**算起（`0` 起），越界的下标在**启动时**被拒绝，所以一个跳错位置的分支不会在玩家已经付掉突破代价之后才出问题；回跳也允许，做一个"血量低就回去再挨一轮"的循环没有限制（条件要靠自己收得住）。
+
+启动前每个节拍都会被问一次"现在能不能跑"，`mxt:idle` 的时长解不出来、`mxt:wait_for` 的 `timeout` 解不出来、`mxt:branch` 的目标越界，整个启动都会被拒绝——坏定义不该在玩家已经付掉突破代价之后才出问题。`mxt:wait_for` **不写 `timeout` 时**仍然是：条件永不成立，天劫就停在这一拍（不推进、不失败），因此作者要保证条件可达。
 
 `windup` 是**启动前摇**：天劫被接受之后先空转这么多 tick，第一拍才开始。它和等待时长走同一条换算规则（`windup × difficulty_scale × max(0, 1 + aura_tribulation_modifier)`；写 `0`、或算不出正数，就等于没有前摇），并在**启动那一刻结算一次**：之后每 tick 只减一，所以玩家看到的倒计时就是真正会走完的 tick 数，中途灵气变化不会把它拉长。前摇期间不消费节拍、不写现场，但这一场天劫已经算在进行——重复启动照样被拒绝，`status` 报的是「还在前摇，还剩 N tick」，`darken_sky` 也照常生效。剩余 tick 跟着附件一起存档、一起同步，所以存档退出再进来是接着倒计时，而不是从头开始。
 
@@ -52,6 +55,19 @@ aside: false
     { "type": "mxt:action", "action": { "type": "mxt:spawn_lightning", "palette": ["#7A5CFF", "#66CCFF"], "alpha": 0.45, "thickness": 1.6 } }
   ],
   "success_action": { "type": "mxt:add_resource", "resource": "example:true_essence", "amount": 10 }
+}
+```
+
+分段式天劫：限期等到玩家暴露在天空下，然后按血量分两条支线，`mxt:branch` 的 `if_true: 3` 直接跳到第 4 拍（`0` 起）、把第 3 拍让过去。
+
+```json
+{
+  "timeline": [
+    { "type": "mxt:wait_for", "condition": { "type": "mxt:exposed_to_sky" }, "timeout": 600, "on_timeout": "fail" },
+    { "type": "mxt:branch", "condition": { "type": "mxt:health", "comparison": "<", "compare_to": 10 }, "if_true": 3 },
+    { "type": "mxt:action", "action": { "type": "mxt:spawn_lightning", "damage": 4 } },
+    { "type": "mxt:action", "action": { "type": "mxt:spawn_lightning", "damage": 12 } }
+  ]
 }
 ```
 

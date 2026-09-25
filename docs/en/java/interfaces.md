@@ -136,7 +136,7 @@ The pure client-side wheel entry interface.
 
 | Member | Description |
 |--------|-------------|
-| `WheelEntryKind kind()` | `ABILITY` or `AURA`: the tooltip's first line, the editor pool it appears in, and which side of the server dispatch triggers it. |
+| `WheelEntryKind kind()` | Which kind the entry is (an `api/WheelEntryKind`, whose built-in ids are `mxt:ability`, `mxt:aura` and `mxt:behavior`): the tooltip's first line, the editor pool it appears in, and which side of the server dispatch triggers it. |
 | `Identifier id()` | The definition's id. |
 | `Component title()` | The name drawn in the middle of the wheel. |
 | `Optional<IconReference> icon()` | An optional icon, either an item or a texture, drawn inside the sector. |
@@ -146,7 +146,7 @@ The pure client-side wheel entry interface.
 | `boolean usable(Player player)` | Whether using the entry would do anything; it dims the sector and notes "On cooldown 4.3s" in the middle, but never stops the trigger being sent. |
 | `void onSelected(WheelSelection selection)` | Called once the entry is used, with the wheel still open; the `WheelSelection` carries the cell's number and the source it was read from. |
 
-Where an entry sits is not its business: `WheelMenuProvider` (implemented by `WheelContent`) answers what one source contributes - it takes the player and a `WheelSource` (main wheel / main hand / off hand / artifacts / contract beast), and its answer **may be longer than one page**, which `WheelMenuContent` turns into pages of twelve cells. Artifact abilities are abilities, so a **skill that needs a key** (`Toggable` - a switch or a one-shot such as flight and storage) goes on the wheel like any other ability, under its own **registry holder** (`Holder<Ability>`, with no reference layer in between), whose id is that ability's own registry id, so one artifact may give several. The two hotbar entry interfaces were deleted with the hotbars - see [Wheel Entries](./wheel.md) for a complete implementation example.
+Where an entry sits is not its business: `WheelMenuProvider` answers what one source contributes, and **it is registered per source id** (`WheelMenuContent.register(source, provider)`, with `WheelContent` registering one shared instance for all five built-in pages, so a content mod adds a page of its own) - it takes the player and an `api/WheelSource` (main wheel / main hand / off hand / artifacts / contract beast, all instances registered in `runtime/wheel/WheelSourceTypes`), and its answer **may be longer than one page**, which `WheelMenuContent` turns into pages of twelve cells. Artifact abilities are abilities, so a **skill that needs a key** (`Toggable` - a switch or a one-shot such as flight and storage) goes on the wheel like any other ability, under its own **registry holder** (`Holder<Ability>`, with no reference layer in between), whose id is that ability's own registry id, so one artifact may give several. The two hotbar entry interfaces were deleted with the hotbars - see [Wheel Entries](./wheel.md) for a complete implementation example.
 
 ## `Contractable` / `ContractOperations` / `CaptureListener`
 

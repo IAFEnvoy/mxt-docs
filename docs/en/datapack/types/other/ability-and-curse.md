@@ -11,7 +11,7 @@ The **top-level** `type` of an ability definition uses this registry. The ID is 
 | `type` | Fields | Description |
 |--------|--------|-------------|
 | `mxt:empty` | none | No lifecycle of its own |
-| `mxt:active` | `slot` | Castable from the wheel; where it sits is the player's own twelve-cell layout |
+| `mxt:active` | none | Castable from the wheel; where it sits is the player's own twelve-cell layout, and **it has no `slot` field** (writing one is a load error that names `slot`) |
 | `mxt:triggered` | `triggers`, `chance` | Fired when one of its triggers matches |
 | `mxt:modifier` | none | Passive modifier ability, applied while granted and re-checked against `condition` every tick |
 | `mxt:aura` | `interval`, `radius` | Repeats around the actor on an interval |
@@ -27,7 +27,6 @@ The **top-level** `type` of an ability definition uses this registry. The ID is 
 
 | `type` | Field | Type | Default | Description |
 |--------|-------|------|---------|-------------|
-| `mxt:active` | `slot` | String | `primary` | No longer read: the wheel's twelve cells are the player's own layout. Must not be blank. |
 | `mxt:triggered` | `triggers` | List of `Trigger` | `[]` | Trigger matchers that fire this ability |
 | `mxt:triggered` | `chance` | `NumberProvider` | `1` | Chance that a matching trigger actually fires |
 | `mxt:aura` | `interval` | `NumberProvider` | `20` | Ticks between aura applications |
@@ -55,7 +54,9 @@ The **top-level** `type` of an ability definition uses this registry. The ID is 
 | `mxt:upkeep` | `on_fail` | `ItemAction` | `mxt:no_op` | What runs on the holder and that stack when the price cannot be paid |
 | `mxt:upkeep` | `owner_only` | Boolean | `true` | Only the owner pays; with `false`, whoever carries it pays |
 
-`mxt:empty` has no fields. `mxt:word` is a terminal payload that never executes target behaviour, and datapacks cannot supply an arbitrary command string for it.
+`mxt:empty` has no fields. Neither does `mxt:active` (its `slot` was removed on 2026-09-25): which cell a skill occupies is the **player's own twelve-cell layout** and was never part of the skill's definition; an old pack writing `"slot": "..."` is a **load error that names `slot`** (the "known key this type never reads" case, refused rather than silently ignored), so delete the line.
+
+`mxt:word` is a terminal payload that never executes target behaviour, and its `effect` is a **code whitelist**: exactly `self_heal` and `purge_self_curses`, with no third value a datapack could add, and it is not an arbitrary command string; for anything else use an ordinary ability type with an `entity_action` (such as `mxt:heal`).
 
 ```json
 {
@@ -105,22 +106,40 @@ A declaration leaves the state field out; a write fills it in, and both forms ar
 
 ## `ability_target_selector_type`
 
-Selects which entities an ability's bi-entity behaviour applies to.
+Selects which entities an ability's bi-entity behaviour applies to. All three area-like selectors take `include_actor`, `limit` and `order`.
 
 | `type` | Fields | Description |
 |--------|--------|-------------|
 | `mxt:self` | none | Selects only the ability actor |
-| `mxt:area` | `radius`, `include_actor` | Selects entities in an actor-centred area |
+| `mxt:area` | `radius`, `include_actor`, `limit`, `order` | Selects entities in an area centred on the actor (or on this invocation's origin) |
+| `mxt:ray` | `length`, `radius`, `include_actor`, `limit`, `order` | A **cylinder** along the actor's look: `length` blocks long and `radius` blocks thick, starting at the eye position (or this invocation's origin) |
+| `mxt:cone` | `length`, `angle`, `include_actor`, `limit`, `order` | A **cone** along the actor's look, where `angle` is the **half-angle** in degrees (`0`..`180`) |
 | `mxt:js` | `id`, `params?` | Selects the entities a server script returns |
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `radius` | `NumberProvider` | **required** | Area radius, capped at `128`; a negative or non-finite value selects nothing |
+| `radius` | `NumberProvider` | **required** for `mxt:area`, `0.5` for `mxt:ray` | The area's radius for `mxt:area` (capped at `128`) and the cylinder's thickness for `mxt:ray`; a negative or non-finite value selects nothing |
+| `length` | `NumberProvider` | **required** (`mxt:ray` / `mxt:cone`) | How far the shape reaches along the look, capped at `128`; a non-finite or non-positive value selects nothing |
+| `angle` | `NumberProvider` | **required** (`mxt:cone`) | The cone's **half-angle** in degrees, between `0` and `180` |
 | `include_actor` | Boolean | `false` | Whether the actor is included in the selection |
+| `limit` | Integer | `0` | At most how many targets to keep, `0` meaning no cap; `order` only matters when a `limit` is written |
+| `order` | `nearest` / `farthest` / `random` | `nearest` | Which targets survive when there are more than `limit` |
+
+`mxt:area` gained `limit` and `order` in the same change, so "the nearest three" and "a random few" can be written directly. **Ties in that ordering are broken by entity id**, so the same instant always selects the same beings.
+
+**Only values written as constants are checked at load time**: `limit` must not be negative, `length` must be finite and positive, `radius` finite and non-negative and `angle` between `0` and `180`; a value written as a formula is only settled at runtime, and an invalid evaluation makes that selection empty.
 
 ```json
-{"type": "mxt:area", "radius": 6, "include_actor": true}
+{"type": "mxt:area", "radius": 6, "include_actor": true, "limit": 3, "order": "nearest"}
+{"type": "mxt:ray", "length": 24, "radius": 0.5, "limit": 1}
+{"type": "mxt:cone", "length": 8, "angle": 30}
 ```
+
+::: info Both the cylinder and the cone are stopped by blocks
+
+The `mxt:ray` cylinder is clipped by blocks along its **centre line**, so it never reaches through a wall, and the `mxt:cone` centre line is clipped the same way, so a wall in front shortens the cone. **Occlusion from the side is not tested per target inside a cone**: a target inside the cone is selected while the centre line is clear, even with something between it and the actor.
+
+:::
 
 `mxt:js` takes an `id` registered with `MxtAbilities.selector(...)` and an optional `params` object:
 
@@ -128,7 +147,7 @@ Selects which entities an ability's bi-entity behaviour applies to.
 {"type": "mxt:js", "id": "example:nearest_three", "params": {"range": 12}}
 ```
 
-The callback runs on the server while the ability executes and returns an array of entities. Selection happens for every execution of the ability, so a missing callback selects nobody and logs a warning.
+The callback runs on the server while the ability executes and returns an array of entities. Selection happens for every execution of the ability, so a missing callback selects nobody and logs a warning. `mxt:js` still implements only the two-argument `select(actor, context)`, so it never receives this invocation's origin.
 
 ---
 

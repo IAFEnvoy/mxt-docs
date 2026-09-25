@@ -53,11 +53,13 @@ Renderer parameters:
 
 | `type` | Fields | Default | Description |
 |--------|--------|---------|-------------|
-| `mxt:boss_bar` | `sprite_location`, `bar_index`, `icon_index`, `inverted` | see above | Origins-style 71x8 bar and icon. |
-| `mxt:textured_bar` | `background_sprite`, `fill_sprite`, `width`, `height`, `fill_color`, `show_value` | `fill_color=#ffffff,show_value=false` | Uses two separate textures. Width and height range from `1` to `1024`. |
+| `mxt:boss_bar` | `sprite_location` (a `SpriteIcon`, **textures only**), `bar_index`, `icon_index`, `inverted` | see above | Origins-style 71x8 bar and icon; the texture defaults to `mxt:textures/gui/resource_bar.png`, treated as a `256x256` sheet by default, and `region.texture_width` / `texture_height` change that. |
+| `mxt:textured_bar` | `background_sprite`, `fill_sprite` (both `SpriteIcon`; **the fill takes no size**), `width`, `height`, `fill_color`, `show_value` | `fill_color=#ffffff,show_value=false` | Background and fill are drawn once each, at the bar's own width and height, which range from `1` to `1024`. |
 | `mxt:segmented_bar` | `segments`, `gap`, `full_color`, `empty_color` | `gap=1,full_color=#ffffff,empty_color=#555555` | Segmented bar; `segments` ranges from `1` to `256`. |
 | `mxt:radial_bar` | `radius`, `thickness`, `start_angle`, `end_angle`, `fill_color` | `start_angle=0,end_angle=360,fill_color=#ffffff` | Radial bar. |
 | `mxt:text_only` | `format`, `color`, `show_maximum` | `%current%,#ffffff,false` | Text only; the format supports `%current%`. |
+
+> **Note** (updated 2026-09-25): these three fields are no longer bare Identifiers — they take a `SpriteIcon`, documented on [Shared Data Types · `SpriteIcon`](../types/shared_data_types.md#spriteicon). The two "should this be wired in later?" TODOs in the source went away with that change. A `SpriteIcon` is **not** the icon reference `ability.icon` / `resource.icon` uses (one 16x16 texture or one item, drawn in a single cell, with no `region`, no `width` / `height` and no `{"sprite": ...}`; and a `SpriteIcon` cannot be written as an item either); the two mean different things, so do not mix them up. `width` / `height` is the **target** size drawn and belongs to the background side only: `background_sprite` (and `mxt:boss_bar`'s sheet) may carry it, while **a size on `fill_sprite` is a load-time error** (the fill is cut by the bar's own progress, so a fixed size would freeze the bar at one width). A bare string behaves **exactly as it always did**.
 
 Visibility types: `mxt:always`, `mxt:non_full`, `mxt:non_zero`, `mxt:recently_changed` (`hold_ticks` defaults to `60`), `mxt:resource_range` (requires `min` and `max`), `mxt:and`, `mxt:or` and `mxt:not`. `mxt:non_zero` is shown only while `maximum - minimum > 0`; when the difference is zero or negative the bar is hidden.
 

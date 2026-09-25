@@ -14,7 +14,7 @@ title: 动态注册表
 | `realm_stage` | `mxt/realm_stage` | 线性境界链和突破。 |
 | `element` | `mxt/element` | 元素关系（`overcomes`/`adapted_to`，每条关系自带伤害倍率）、它认领的伤害类型（`damage_types`）、附着与衰减参数与显示色；灵气用自身的 `aura_type` 指向一个元素，统一伤害管线按双方灵根的元素关系结算克制与适应，元素附着由 `element_reaction` 结算。 |
 | `element_reaction` | `mxt/element_reaction` | 元素附着达到要求时触发的反应。 |
-| `spirit_root` | `mxt/spirit_root` | 与单一元素绑定的灵根：修炼倍率、元素亲和技能倍率（伤害管线第一层的因子）、授予能力、稀有度与同体互斥。 |
+| `spirit_root` | `mxt/spirit_root` | 与一个或多个元素绑定的灵根：修炼倍率、元素亲和技能倍率（伤害管线第一层的因子）、授予能力、稀有度与同体互斥。 |
 | `physique` | `mxt/physique` | 独立于元素的体质加成：原版属性、授予能力、互斥标签、稀有度，以及打出/受到伤害的两个倍率。 |
 | `ability` | `mxt/ability` | 主动、被动和触发技能。 |
 | `curse` | `mxt/curse` | 可引用的诅咒定义。 |

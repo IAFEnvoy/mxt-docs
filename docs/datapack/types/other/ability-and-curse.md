@@ -11,7 +11,7 @@ title: 技能、状态与诅咒类型
 | `type` | 字段 | 说明 |
 | --- | --- | --- |
 | `mxt:empty` | 无 | 自身没有生命周期 |
-| `mxt:active` | `slot` | 可从轮盘施放；具体落在哪一格由玩家自己的 12 格布局决定 |
+| `mxt:active` | 无 | 可从轮盘施放；具体落在哪一格由玩家自己的 12 格布局决定，**它没有 `slot` 字段**（写了会在加载期报错并点名 `slot`） |
 | `mxt:triggered` | `triggers`、`chance` | 当它的某个事件规则匹配时触发 |
 | `mxt:modifier` | 无 | 被动修正技能，在授予期间生效，并每 tick 依据 `condition` 重新检查 |
 | `mxt:aura` | `interval`、`radius` | 按间隔在施法者周围重复 |
@@ -27,7 +27,6 @@ title: 技能、状态与诅咒类型
 
 | `type` | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- | --- |
-| `mxt:active` | `slot` | String | `primary` | **不再被读取**：轮盘的位置由玩家自己的 12 格布局决定。不能为空。 |
 | `mxt:triggered` | `triggers` | `Trigger` 列表 | `[]` | 触发该技能的触发器匹配器 |
 | `mxt:triggered` | `chance` | `NumberProvider` | `1` | 匹配的触发器实际触发该技能的概率 |
 | `mxt:aura` | `interval` | `NumberProvider` | `20` | 两次灵气施加之间的 tick 数 |
@@ -55,7 +54,9 @@ title: 技能、状态与诅咒类型
 | `mxt:upkeep` | `on_fail` | `ItemAction` | `mxt:no_op` | 付不出时对持有者与该物品堆执行的行为 |
 | `mxt:upkeep` | `owner_only` | Boolean | `true` | 只有主人承担；为 `false` 时谁带着谁付 |
 
-`mxt:empty` 没有字段。`mxt:word` 是终端载荷，永远不会执行目标行为，数据包也无法为它提供任意命令字符串。
+`mxt:empty` 没有字段。`mxt:active` **也没有**（2026-09-25 删除 `slot`）：技能落在轮盘哪一格由**玩家自己的 12 格布局**决定，从来不是技能定义的一部分；旧包里写 `"slot": "..."` 会在**加载期报错并点名 `slot`**（这类"永远不读的已知键"按类型拒收，不是静默忽略），删掉这一行即可。
+
+`mxt:word` 是终端载荷，永远不会执行目标行为，它的 `effect` 是一份**代码白名单**：只有 `self_heal` 与 `purge_self_curses`，数据包**加不了第三个**，也不是"任意命令字符串"；要别的效果请用普通技能类型加 `entity_action`（如 `mxt:heal`）。
 
 ```json
 {
@@ -105,22 +106,40 @@ title: 技能、状态与诅咒类型
 
 ## `ability_target_selector_type`
 
-选择技能的双实体行为作用于哪些实体。
+选择技能的双实体行为作用于哪些实体。三种"区域型"选择器都支持 `include_actor`、`limit` 与 `order`。
 
 | `type` | 字段 | 说明 |
 | --- | --- | --- |
 | `mxt:self` | 无 | 只选择技能施法者 |
-| `mxt:area` | `radius`、`include_actor` | 选择以施法者为中心的区域内的实体 |
+| `mxt:area` | `radius`、`include_actor`、`limit`、`order` | 选择以施法者（或本次激发的原点）为中心的区域内的实体 |
+| `mxt:ray` | `length`、`radius`、`include_actor`、`limit`、`order` | 沿施法者视线的**圆柱**：从眼睛位置（或本次激发的原点）起，长 `length` 格、粗 `radius` 格 |
+| `mxt:cone` | `length`、`angle`、`include_actor`、`limit`、`order` | 沿施法者视线的**圆锥**，`angle` 是**半角**（单位为度，`0`..`180`） |
 | `mxt:js` | `id`、`params?` | 选择服务端脚本返回的实体 |
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `radius` | `NumberProvider` | **必填** | 区域半径，上限为 `128`；负数或非有限值选不出任何实体 |
+| `radius` | `NumberProvider` | `mxt:area` **必填**、`mxt:ray` 为 `0.5` | `mxt:area` 里是区域半径（上限 `128`），`mxt:ray` 里是圆柱的粗细；负数或非有限值选不出任何实体 |
+| `length` | `NumberProvider` | **必填**（`mxt:ray` / `mxt:cone`） | 沿视线伸出的长度，上限 `128`；非有限或非正数选不出任何实体 |
+| `angle` | `NumberProvider` | **必填**（`mxt:cone`） | 圆锥的**半角**，单位为度，取值 `0`..`180` |
 | `include_actor` | Boolean | `false` | 是否把施法者包含在选择结果中 |
+| `limit` | Integer | `0` | 最多留下几个目标，`0` 表示不设上限；`order` 只在写了 `limit` 时才有意义 |
+| `order` | `nearest` / `farthest` / `random` | `nearest` | 超出 `limit` 时按这个顺序留下目标 |
+
+`mxt:area` 这次也拿到了 `limit` 与 `order`，所以"最近的三个"与"随机几个"都能直接写出来。排序的**平局按实体 id 打破**，因此同一瞬间永远选出同一批生物。
+
+**加载期只校验写成常量的值**：`limit` 不能为负、`length` 必须有限且为正、`radius` 必须有限且非负、`angle` 必须在 `0`..`180` 之间；写成公式的值要到运行时才定，求值不合法时这一次选择就是空的。
 
 ```json
-{"type": "mxt:area", "radius": 6, "include_actor": true}
+{"type": "mxt:area", "radius": 6, "include_actor": true, "limit": 3, "order": "nearest"}
+{"type": "mxt:ray", "length": 24, "radius": 0.5, "limit": 1}
+{"type": "mxt:cone", "length": 8, "angle": 30}
 ```
+
+::: info 圆柱与圆锥都被方块挡住
+
+`mxt:ray` 的圆柱沿视线的**中心线**被方块裁断，因此它不会穿墙打到人；`mxt:cone` 的中心线同样被裁断——正前方一堵墙会让圆锥变短。但**圆锥侧面造成的遮挡不逐个目标判定**：目标落在圆锥里、中心线又没被挡住时就会入选，哪怕它与施法者之间隔着东西。
+
+:::
 
 `mxt:js` 接受一个用 `MxtAbilities.selector(...)` 注册的 `id` 和一个可选的 `params` 对象：
 
@@ -128,7 +147,7 @@ title: 技能、状态与诅咒类型
 {"type": "mxt:js", "id": "example:nearest_three", "params": {"range": 12}}
 ```
 
-回调在技能执行期间于服务端运行，并返回一个实体数组。技能的每一次执行都会进行一次选择，因此回调缺失时选不出任何实体，并记录一条警告。
+回调在技能执行期间于服务端运行，并返回一个实体数组。技能的每一次执行都会进行一次选择，因此回调缺失时选不出任何实体，并记录一条警告。`mxt:js` 仍然只实现两参数的 `select(actor, context)`，所以它拿不到本次激发的原点。
 
 ---
 

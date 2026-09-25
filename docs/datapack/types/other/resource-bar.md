@@ -38,8 +38,8 @@ title: 资源条与灵气类型
 
 | `type` | 字段 | 说明 |
 | --- | --- | --- |
-| `mxt:boss_bar` | `sprite_location`、`bar_index`、`icon_index`、`inverted` | Origins 风格 71x8 带图标的条 |
-| `mxt:textured_bar` | `background_sprite`、`fill_sprite`、`width`、`height`、`fill_color`、`show_value` | 两张独立贴图 |
+| `mxt:boss_bar` | `sprite_location`（`SpriteIcon`，只接受贴图）、`bar_index`、`icon_index`、`inverted` | Origins 风格 71x8 带图标的条 |
+| `mxt:textured_bar` | `background_sprite`、`fill_sprite`（都是 `SpriteIcon`，填充不许声明尺寸）、`width`、`height`、`fill_color`、`show_value` | 两张独立贴图 |
 | `mxt:segmented_bar` | `segments`、`gap`、`full_color`、`empty_color` | 离散分段 |
 | `mxt:radial_bar` | `radius`、`thickness`、`start_angle`、`end_angle`、`fill_color` | 环形条 |
 | `mxt:text_only` | `format`、`color`、`show_maximum` | 仅文本 |
@@ -47,12 +47,12 @@ title: 资源条与灵气类型
 
 | `type` | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- | --- |
-| `mxt:boss_bar` | `sprite_location` | Identifier | `mxt:textures/gui/resource_bar.png` | 贴图集 |
+| `mxt:boss_bar` | `sprite_location` | `SpriteIcon`（**只接受贴图**） | `mxt:textures/gui/resource_bar.png` | 贴图集；默认视为 `256×256`，可用 `region.texture_width` / `texture_height` 改成别的尺寸，也可以带目标尺寸 `width` / `height` |
 | `mxt:boss_bar` | `bar_index` | Integer | `0` | 贴图集中的条索引，`0..24` |
 | `mxt:boss_bar` | `icon_index` | Integer | `bar_index` | 贴图集中的图标索引，`0..24` |
 | `mxt:boss_bar` | `inverted` | Boolean | `false` | 反转填充方向 |
-| `mxt:textured_bar` | `background_sprite` | Identifier | **必填** | 背景贴图 |
-| `mxt:textured_bar` | `fill_sprite` | Identifier | **必填** | 填充贴图 |
+| `mxt:textured_bar` | `background_sprite` | `SpriteIcon` | **必填** | 背景：贴图或 GUI 图集精灵；可以带目标尺寸 `width` / `height` |
+| `mxt:textured_bar` | `fill_sprite` | `SpriteIcon` | **必填** | 填充：贴图或 GUI 图集精灵；**不许声明 `width` / `height`**（加载期报错） |
 | `mxt:textured_bar` | `width` | Integer | **必填** | 宽度，`1..1024` |
 | `mxt:textured_bar` | `height` | Integer | **必填** | 高度，`1..1024` |
 | `mxt:textured_bar` | `fill_color` | RGB 颜色 | `#FFFFFF` | 填充着色 |
@@ -71,6 +71,10 @@ title: 资源条与灵气类型
 | `mxt:text_only` | `show_maximum` | Boolean | `false` | 是否在数值旁显示最大值 |
 
 分段条的宽度为 `segments * 8 + (segments - 1) * gap` 像素，环形条在两个方向上都占用 `radius * 2 + thickness` 像素。颜色接受 `#RRGGBB` 或 `0` 到 `16777215` 的整数。绘制在客户端进行，并且只显示服务端同步过来的数值。
+
+`mxt:boss_bar` 的 `sprite_location` 与 `mxt:textured_bar` 的两个贴图字段自 2026-09-25 起是 **`SpriteIcon`**，不再是裸 Identifier：裸字符串沿用字段本来的含义，对象形式可以点名 GUI 图集精灵（`{"sprite": ...}`）或一张贴图（`{"texture": ..., "region": {...}, "width": ..., "height": ...}`，`region` 用来取贴图的一块、`width` / `height` 用来指定画出来的**目标**尺寸且必须成对）。`mxt:boss_bar` 要拿它切背景 / 填充 / 图标三种格子，所以**只接受贴图**；精灵不能声明 `region`；尺寸只属于背景那一侧——`background_sprite`（与 `mxt:boss_bar` 的图集贴图）可以写 `width` / `height`，**`fill_sprite` 声明尺寸是加载期错误**：填充是按条自己的进度裁出来的，给它一个固定尺寸只会把条冻结在一个宽度上。写法与全部加载期约束见[共享数据类型 · `SpriteIcon`](../shared_data_types.md#spriteicon)。
+
+`SpriteIcon` 与 `ability.icon` / `resource.icon` 用的**图标引用不是同一个值**：图标引用是一张 16x16 贴图或一个物品、只画一格，没有 `region` / `width` / `height`，也不认 `{"sprite": ...}`；反过来 `SpriteIcon` 也写不成物品——`SpriteIcon` 画的是资源条自己的底图/填充，两者别混用。
 
 ```json
 {"type": "mxt:segmented_bar", "segments": 10, "gap": 2, "full_color": "#66CCFF"}

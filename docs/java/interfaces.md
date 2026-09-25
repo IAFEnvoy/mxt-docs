@@ -90,7 +90,7 @@ classDiagram
 
 ## `WheelMenuEntry`
 
-纯客户端轮盘条目接口：`kind()`（技能 / 灵气 / 契约行为）、`id()`、`title()`（轮盘中间显示的名字）、可选 `icon()`、强调色、`tooltip(Player)`（类型 + 具体数值）、`cooldownTicks(Player)`（还剩几 tick，0 = 就绪）/ `usable(Player)` 两个可用性钩子，以及使用回调 `onSelected(WheelSelection)`（它带着这次使用发生在**哪一格的编号**上、以及那一格读自**哪个来源**）。一个来源贡献哪些条目由 `WheelMenuProvider`（唯一实现 `WheelContent`）给出——它的入参是玩家与该来源（`WheelSource`：主盘 / 主手物品 / 副手物品 / 法器 / 契约灵兽），返回值**可以比一页长**（一页 12 格，多出来的由 `WheelMenuContent` 开新页），条目本身既不知道自己落在第几格，也不知道自己属于哪一页。法器能力就是技能，所以**需要按键的技能**（`Toggable`：可能是开关，也可能是一次性，如飞行与储物）与其它技能一样用自己的**注册表 holder**（`Holder<Ability>`，没有中间引用层）进轮盘（id 就是那条技能自己的注册表 id，因此一件法器可以给出好几条）；原有的两个快捷栏条目接口 `HotbarEntry` 随快捷栏一起删除，见[轮盘条目](./wheel.md)。
+纯客户端轮盘条目接口：`kind()`（返回 `api/WheelEntryKind`，内建 id 是 `mxt:ability` / `mxt:aura` / `mxt:behavior`，见[轮盘条目](./wheel.md)）、`id()`、`title()`（轮盘中间显示的名字）、可选 `icon()`、强调色、`tooltip(Player)`（类型 + 具体数值）、`cooldownTicks(Player)`（还剩几 tick，0 = 就绪）/ `usable(Player)` 两个可用性钩子，以及使用回调 `onSelected(WheelSelection)`（它带着这次使用发生在**哪一格的编号**上、以及那一格读自**哪个来源**）。一个来源贡献哪些条目由 `WheelMenuProvider` 给出，**按来源 id 登记**（`WheelMenuContent.register(source, provider)`；内建那五页都由 `WheelContent` 登记，所以内容模组加的是自己那一页）——它的入参是玩家与该来源（`api/WheelSource`：主盘 / 主手物品 / 副手物品 / 法器 / 契约灵兽，都是 `runtime/wheel/WheelSourceTypes` 里注册出来的实例），返回值**可以比一页长**（一页 12 格，多出来的由 `WheelMenuContent` 开新页），条目本身既不知道自己落在第几格，也不知道自己属于哪一页。法器能力就是技能，所以**需要按键的技能**（`Toggable`：可能是开关，也可能是一次性，如飞行与储物）与其它技能一样用自己的**注册表 holder**（`Holder<Ability>`，没有中间引用层）进轮盘（id 就是那条技能自己的注册表 id，因此一件法器可以给出好几条）；原有的两个快捷栏条目接口 `HotbarEntry` 随快捷栏一起删除，见[轮盘条目](./wheel.md)。
 
 ## `Contractable` / `ContractOperations` / `CaptureListener`
 

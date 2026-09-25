@@ -122,6 +122,17 @@ title: 共享数据类型
 
 物品图标存的是**模板**而不是现成的堆，因为数据包注册表在物品组件绑定之前就解析完了；客户端绘制时才实体化，所以需要组件的图标也能正确显示。
 
+### `SpriteIcon`
+
+**资源条的贴图是另一种图标**（`SpriteIcon`，2026-09-25 起）：`mxt:boss_bar` 的 `sprite_location` 与 `mxt:textured_bar` 的 `background_sprite` / `fill_sprite` 用它，因为一整套资源条不能只画 16x16。它**不是**上面那种图标引用（`ability.icon` / `resource.icon` 是一张 16x16 贴图或一个物品，只画一格、没有 `region` / `width` / `height`，也不认 `{"sprite": ...}`），反过来 `SpriteIcon` 也写不成物品，两者名字像、用途不同，别混。两种写法：
+
+| 写法 | 类型 | 说明 |
+| --- | --- | --- |
+| 字符串 | Identifier | 沿用这个字段本来的含义：`sprite_location` 是**贴图路径**（默认 `mxt:textures/gui/resource_bar.png`，一张 25 格图集），`background_sprite` / `fill_sprite` 是 **GUI 图集精灵**。 |
+| 对象 | `SpriteIcon` | `{"sprite": ...}` 是 GUI 图集精灵；`{"texture": ...}` 是贴图，可带 `region`（`u` / `v` / `texture_width` / `texture_height`，默认起点 `0,0`、整图 `256×256`）。两者都可带 `width` / `height`（画出来的**目标**尺寸，必须成对；省略＝按条自己的宽高画；`fill_sprite` 是例外，见下）。 |
+
+`mxt:boss_bar` 的 `sprite_location` **只接受贴图**（它要把图集切成背景 / 填充 / 图标三种格子，精灵没有这个概念）；`mxt:textured_bar` 的两个字段两种都接受。精灵不能声明 `region`——图集已经知道它在哪。`width` / `height` 是**画出来的目标尺寸**（不是裁剪），而且只属于背景那一侧：`background_sprite` 与 `mxt:boss_bar` 的图集贴图可以写，**`fill_sprite` 不能声明 `width` / `height`**——填充是按条自己的进度裁出来的，给它一个固定尺寸只会把条冻结在一个宽度上。这几条都是**加载期错误**，会被明确拒绝：`mxt:boss_bar` 的 `sprite_location` 写精灵、精灵带 `region`、`fill_sprite` 声明 `width` / `height`、`width` / `height` 只写一个。旧包里写裸字符串的行为**完全不变**。
+
 ## Holder、标签与匹配器
 
 跨注册表字段尽量在数据包加载阶段解析成 Holder，不在运行时重复查询注册表。

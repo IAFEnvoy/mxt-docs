@@ -65,13 +65,13 @@ aside: false
 
 | `type` | 字段 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `mxt:boss_bar` | `sprite_location`、`bar_index`、`icon_index`、`inverted` | 见上文 | Origins 风格 71x8 条和图标。 |
-| `mxt:textured_bar` | `background_sprite`、`fill_sprite`、`width`、`height`、`fill_color`、`show_value` | `fill_color=#ffffff,show_value=false` | 使用两张独立贴图。宽高范围 `1..1024`。 |
+| `mxt:boss_bar` | `sprite_location`（`SpriteIcon`，**只接受贴图**）、`bar_index`、`icon_index`、`inverted` | 见上文 | Origins 风格 71x8 条和图标；贴图默认 `mxt:textures/gui/resource_bar.png`，默认视为 `256×256` 的图集，可用 `region.texture_width` / `texture_height` 改成别的尺寸。 |
+| `mxt:textured_bar` | `background_sprite`、`fill_sprite`（都是 `SpriteIcon`，**填充不许声明尺寸**）、`width`、`height`、`fill_color`、`show_value` | `fill_color=#ffffff,show_value=false` | 底图与填充各画一次，按条自身宽高。宽高范围 `1..1024`。 |
 | `mxt:segmented_bar` | `segments`、`gap`、`full_color`、`empty_color` | `gap=1,full_color=#ffffff,empty_color=#555555` | 分段条；`segments` 范围 `1..256`。 |
 | `mxt:radial_bar` | `radius`、`thickness`、`start_angle`、`end_angle`、`fill_color` | `start_angle=0,end_angle=360,fill_color=#ffffff` | 径向条。 |
 | `mxt:text_only` | `format`、`color`、`show_maximum` | `%current%,#ffffff,false` | 只显示文本；格式支持 `%current%`。 |
 
-> **注**：`sprite_location`、`background_sprite`、`fill_sprite` 目前仍是裸 Identifier，**不是**图标引用——它们是按条自身宽高拉伸的底图/填充对，`sprite_location` 还带 25 格图集索引，与单个 16x16 的图标引用语义不同。后续是否接入见源码里的 TODO。
+> **注**（2026-09-25 更新）：这三个字段已经从裸 Identifier 换成 `SpriteIcon`，写法见[共享数据类型 · `SpriteIcon`](../types/shared_data_types.md#spriteicon)——源码里那两处"后续是否接入"的 TODO 已随本次替换删除。`SpriteIcon` **不是** `ability.icon` / `resource.icon` 用的那种图标引用（那是一张 16x16 贴图或一个物品，只画一格，没有 `region` / `width` / `height`，也不认 `{"sprite": ...}`；反过来 `SpriteIcon` 也写不成物品），两者语义不同，别混用。`width` / `height` 是画出来的**目标**尺寸、只属于背景那一侧：`background_sprite`（与 `mxt:boss_bar` 的图集贴图）可以写，**`fill_sprite` 声明尺寸是加载期错误**（填充按条自己的进度裁，固定尺寸会把条冻结在一个宽度上）。旧包里写裸字符串的行为**完全不变**。
 
 可见性类型：`mxt:always`、`mxt:non_full`、`mxt:non_zero`、`mxt:recently_changed`（`hold_ticks` 默认 `60`）、`mxt:resource_range`（必填 `min`、`max`）、`mxt:and`、`mxt:or` 和 `mxt:not`。其中 `mxt:non_zero` 仅在 `maximum - minimum > 0` 时显示；差值为零或负数时隐藏。
 
