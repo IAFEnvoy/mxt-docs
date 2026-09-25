@@ -17,6 +17,6 @@ aside: false
 | `toxicity_threshold` | `NumberProvider` | `Double.MAX_VALUE` | 过量阈值。 |
 | `on_overdose` | `EntityAction` | `mxt:no_op` | 超过阈值行为。 |
 | `toxicity_after_overdose` | `NumberProvider` | `0` | 过量后丹毒值。 |
-| `quality_group` | `Tag<item_quality>` | 无 | 允许的品质组。 |
+| `quality_chain` | `Holder<quality_chain>` | 无 | 这个物品所在的品质链条（见 [quality_chain](./quality_chain.md)）。链同时给出成员资格（解析出的档必须在链上，否则不能使用）、默认档（链的 `default`）与可升级的路径。 |
 | `conditions` | `EntityCondition[]` | `[]` | 食用前检查；支持内联条件或带描述的条件对象。 |
 

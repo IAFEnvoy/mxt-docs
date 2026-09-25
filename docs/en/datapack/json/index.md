@@ -5,7 +5,7 @@ description: Reference for every JSON datapack registry provided by MiXianTu, in
 
 # JSON Data Formats
 
-This section documents the JSON format of every datapack registry the mod provides. Definitions are plain JSON files loaded by the vanilla datapack registry system and become immutable after loading. Basic value shapes shared by all definitions are listed in [Shared Data Types](../types/shared_data_types.md).
+This section documents the JSON format of every datapack registry the mod provides. Definitions are plain JSON files loaded by the vanilla datapack registry system and become immutable after loading. Basic value shapes shared by all definitions are listed in [Shared Data Types](../types/shared_data_types.md). Where the files go, and how to sort them into subdirectories by category, is on the [Datapack Overview](../overview.md).
 
 The pages are sorted by registry id and each title carries that id in parentheses, so the sidebar can be read as a lookup list: finding `mxt:item_binding` in a datapack leads to [Item Binding (item_binding)](./item_binding.md).
 
@@ -37,20 +37,20 @@ Entries listed in `disabled` are not used by the corresponding service, but they
 
 ## Registries
 
-The table below lists the 34 datapack registries the mod registers, in registry id order, plus the two recipe types documented in this section. `mxt:alchemy`, `mxt:spirit_shaped` and `mxt:spirit_shapeless` are vanilla recipe types rather than datapack registries, and are listed here because their JSON is documented in this section too.
+The table below lists the 35 datapack registries the mod registers, in registry id order, plus the two recipe types documented in this section. `mxt:alchemy`, `mxt:spirit_shaped` and `mxt:spirit_shapeless` are vanilla recipe types rather than datapack registries, and are listed here because their JSON is documented in this section too.
 
 | Registry | Directory | Purpose |
 |----------|-----------|---------|
 | [`ability`](./ability.md) | `mxt/ability` | Active, passive and triggered abilities. |
 | [`alchemy_recipe`](./alchemy_recipe.md) | `recipe` | Vanilla recipe type (`mxt:alchemy`), not a datapack registry. |
-| [`artifact`](./artifact.md) | `mxt/artifact` | Artifacts: which existing items a definition claims, how much of each aura they store, and the abilities they carry (passive, active, flight and storage). |
+| [`artifact`](./artifact.md) | `mxt/artifact` | Artifacts: which existing items a definition claims, how much of each aura they store, and the abilities they carry (passive, active, storage, and data-only entries such as a mount). |
 | [`aura`](./aura.md) | `mxt/aura` | The aura identity of one stored value: what it is, its realm chain entry, regeneration, conversions and availability. |
 | [`aura_zone`](./aura_zone.md) | `mxt/aura_zone` | Environment aura templates. |
 | [`block_aura`](./block_aura.md) | `mxt/block_aura` | Aura provided by blocks. |
 | [`blueprint_binding`](./blueprint_binding.md) | `mxt/blueprint_binding` | Forging blueprints provided by blueprint items. |
-| [`contract_type`](./contract_type.md) | `mxt/contract_type` | Contract lifecycle. |
-| [`creature_profile`](./creature_profile.md) | `mxt/creature_profile` | Creature profiles and entity binding conditions. |
-| [`cultivate_action`](./cultivate_action.md) | `mxt/cultivate_action` | The cultivation process and its environment requirements. |
+| [`contract_type`](./contract_type.md) | `mxt/contract_type` | Contract lifecycle. **Marked as possibly removable.** |
+| [`creature_profile`](./creature_profile.md) | `mxt/creature_profile` | Creature attributes: matching, gates, inner core and the action run when the profile is written. |
+| [`cultivate_action`](./cultivate_action.md) | `mxt/cultivate_action` | The cultivation process and its environment requirements. **Marked as possibly removable.** |
 | [`currency`](./currency.md) | `mxt/currency` | Item currency denominations and exchange. |
 | [`curse`](./curse.md) | `mxt/curse` | Curse definitions that can be referenced. |
 | [`element`](./element.md) | `mxt/element` | Element relations (`overcomes`/`adapted_to`), what each relation is worth in damage, the damage types the element claims (`damage_types`), its accumulation numbers, and its display colour; an aura points at one through its `aura_type`. |
@@ -60,9 +60,10 @@ The table below lists the 34 datapack registries the mod registers, in registry 
 | [`formation`](./formation.md) | `mxt/formation` | Formation lifecycle and aura overrides. |
 | [`item_aura`](./item_aura.md) | `mxt/item_aura` | Cultivation fuel provided by held items. |
 | [`item_binding`](./item_binding.md) | `mxt/item_binding` | Bindings from existing items to action arrays. |
-| [`item_quality`](./item_quality.md) | `mxt/item_quality` | Shared quality and quality conditions. |
+| [`quality`](./quality.md) | `mxt/quality` | Shared quality: its name, colour, three modifiers and use condition. Order, default tier and upgrade path come from a `quality_chain`. |
 | [`physique`](./physique.md) | `mxt/physique` | Physique bonuses that are independent of elements: vanilla attributes, granted abilities, exclusion tags and rarity, plus the two multipliers for damage dealt and damage taken. |
 | [`pill_binding`](./pill_binding.md) | `mxt/pill_binding` | Pill and pill toxicity rules for existing items. |
+| [`quality_chain`](./quality_chain.md) | `mxt/quality_chain` | Quality chains: the tiers low to high, the default tier, and the cost and condition of every upgrade step. **Marked as possibly removable.** |
 | [`secret_realm`](./secret_realm.md) | `mxt/secret_realm` | Secret realm templates: instance dimension generation, borders, structures, landing points, claiming and the entry and exit rules. |
 | [`realm_stage`](./realm_stage.md) | `mxt/realm_stage` | Linear realm chains and breakthrough. |
 | [`resource`](./resource.md) | `mxt/resource` | Entity resources such as cultivation progress, spirit power and stamina, plus inline resource bars. |
@@ -90,8 +91,7 @@ The following fields use `MapCodec`s from Java built-in registries. A datapack m
 
 | Data Type | Dispatch Field | Purpose |
 |-----------|----------------|---------|
-| `Ability` | `ability.type` | The top-level field is named `ability`; the `type` inside that nested object selects the ability lifecycle and trigger style. |
-| `ArtifactAbility` | `artifact.abilities[].type` | Artifact abilities: granting abilities, carrying the holder in flight, and built-in storage. |
+| `Ability` | top-level `type` | The top-level `type` selects the ability lifecycle and trigger style, with eleven built-ins (`empty`, `active`, `triggered`, `modifier`, `aura`, `channelled`, `composite`, `word`, `flight`, `storage`, `upkeep`); an entry of an artifact's `abilities` writes an ability registry id or a `#ability tag`, see [Ability](./ability.md#ability-types). |
 | `CurseType` | `type` | How a curse persists and expires. |
 | `EntityAction` | `type` | Entity actions. |
 | `BiEntityAction` | `type` | Bi-entity actions. |

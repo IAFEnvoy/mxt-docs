@@ -24,7 +24,7 @@ This tutorial adds two abilities to the example pack: an active bolt cast from t
 ```json
 // data/example/mxt/ability/qi_bolt.json
 {
-  "ability": {"type": "mxt:active", "slot": "primary"},
+  "type": "mxt:active",
   "icon": "example:textures/gui/ability/qi_bolt.png",
   "costs": [
     {"type": "mxt:resource", "resource": "example:qi", "amount": 10}
@@ -42,8 +42,7 @@ This tutorial adds two abilities to the example pack: an active bolt cast from t
 
 | Field | What it does |
 | --- | --- |
-| `ability.type` | Selects the lifecycle from the built-in `ability_type` registry: `empty`, `active`, `triggered`, `modifier`, `aura`, `channelled`, `composite`, `word`. `mxt:active` is the type that can be put on the wheel. |
-| `ability.slot` | The hotbar slot group, `primary` by default, and it must not be blank. **It is no longer read** - where an entry sits on the wheel is the player's own twelve-cell layout - so writing it neither errors nor does anything. |
+| `type` | Selects the lifecycle from the built-in `ability_type` registry, written **at the top level** (not inside a nested `ability` object): `empty`, `active`, `triggered`, `modifier`, `aura`, `channelled`, `composite`, `word`, `flight`, `storage`, `upkeep`. `mxt:active` is the type that can be put on the wheel. |
 | `icon` | Optional. A bare string is a 16x16 GUI texture; an object is an item stack template (`{"id": ...}`, optionally `count` and `components`). Without it the entry is drawn with its name. |
 | `costs` | A list of `Cost` objects, paid before the behaviour runs, all or nothing as one array. `mxt:resource` spends a value, `mxt:aura` charges the value that aura is measured in, `mxt:item` spends items, `mxt:js` delegates to a script (which runs last), and the `{"id": ..., "amount": ...}` shorthand means `mxt:resource`. |
 | `cast_time` | Cast duration in ticks. |
@@ -71,11 +70,9 @@ A triggered ability fires when the world does something to its owner. The trigge
 ```json
 // data/example/mxt/ability/qi_recovery.json
 {
-  "ability": {
-    "type": "mxt:triggered",
-    "triggers": [{"type": "mxt:hurt"}],
-    "chance": 1
-  },
+  "type": "mxt:triggered",
+  "triggers": [{"type": "mxt:hurt"}],
+  "chance": 1,
   "cooldown": 100,
   "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
   "costs": [
@@ -133,9 +130,9 @@ Keep `source` stable and meaningful — the definition ID that granted the abili
 
 ## Step 4 — Putting the Ability on the Wheel
 
-Active abilities can be put on the twelve-sector wheel that abilities, spirit power and artifact skills share (a main wheel plus pages read from what you carry):
+Active abilities can be put on the twelve-sector wheel that abilities and spirit power share (a main wheel plus pages read from what you carry):
 
-1. Type `/wheel` in chat (the client command, the same as the "Open Wheel Configuration" key, unbound by default) to open the **wheel editor**: six columns of spirit power on the left, six columns of abilities and artifact skills on the right, and one row of twelve shared cells underneath which are the **main wheel**'s twelve cells (`1` is straight up, counting clockwise). Left-click the bolt in the right pool to pick it up, then click a cell to put it there, and press `Escape` to save and close. A cell you deliberately leave empty stays empty, and a saved cell whose definition no longer exists shows a red `?` and is **never replaced by something else**.
+1. Type `/wheel` in chat (the client command, the same as the "Open Wheel Configuration" key, unbound by default) to open the **wheel editor**: six columns of spirit power on the left, six columns of abilities on the right, and one row of twelve shared cells underneath which are the **main wheel**'s twelve cells (`1` is straight up, counting clockwise). Left-click the bolt in the right pool to pick it up, then click a cell to put it there, and press `Escape` to save and close. A cell you deliberately leave empty stays empty, and a saved cell whose definition no longer exists shows a red `?` and is **never replaced by something else**.
 2. Hold "Wheel Menu" (`R` by default) and point at that cell - pointing is what changes the **selection**, which is never empty: the wheel opens with the **first cell that holds anything** already selected (that is where the gold frame sits before you move the pointer), and pointing at an empty cell leaves the selection where it was. Letting go of `R` only closes the wheel and casts nothing. Press "Use Wheel Selection" (`V` by default) to cast it, and the wheel stays open so you can move to another cell and press it again; with the wheel closed `V` spends **the cell the number you chose stands for right now** (a number addressing a page that is gone falls back to the last cell holding anything, and is never rewritten), and a left click is the same as `V`. The "Wheel Grid" on the left of the screen is a four-column view of the whole wheel, one row per three cells of a page, and the cell outlined in gold is what `V` would spend.
 3. Everything is server-authoritative: the client only sends which kind and which id was used, and the server decides the grant, the conditions, the costs, the cooldown, the duration and the effects.
 
@@ -160,7 +157,7 @@ Abilities are a data pack registry, so load the world again rather than running 
 
 | Symptom | Cause |
 | --- | --- |
-| The ability never appears in the wheel's pool | Only `mxt:active` abilities are listed; a triggered, modifier or channelled ability has no wheel entry of its own. |
+| The ability never appears in the wheel's pool | The pool lists the **skills that need a key**; triggered and passive abilities have no wheel entry of their own. |
 | A channelled ability cannot be released from the wheel | `mxt:active` and `mxt:channelled` are mutually exclusive types. Wrap the channelled ability as the child of an `mxt:composite` ability and make the composite the top-level definition. |
 | Costs are never paid | An entry needs a `type` together with its own fields, such as `{"type": "mxt:resource", "resource": ..., "amount": ...}`, or the `{"id": ..., "amount": ...}` shorthand — not `{"resource": ...}` without a `type`. |
 | An ability formula is always `0` | It used a variable its context does not provide, such as `realm_rank` in an entity formula. The name is reported at evaluation time: a development environment logs the whole error, production logs one warning line per distinct message, and both continue with `0`. |

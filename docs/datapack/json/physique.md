@@ -17,7 +17,7 @@ aside: false
 | `granted_abilities` | `HolderOrTag<ability>[]` | `[]` | 授予的能力。 |
 | `holder_condition` | `EntityCondition` | `mxt:always_true` | 授予前的持有条件；可组合 `mxt:has_spirit_root`、`mxt:has_physique` 等条件表达先决体质或灵根。 |
 | `exclusive_tags` | `Identifier[]` | `[]` | 互斥标签。 |
-| `rarity` | String | `common` | 稀有度标识；信息面板与 `/mxt identity physique list` 显示原文，存在 `mxt.rarity.<rarity>` 时用它的翻译。 |
+| `rarity` | String | `common` | 稀有度标识；信息面板与 `/mxt physique list` 显示原文，存在 `mxt.rarity.<rarity>` 时用它的翻译。 |
 | `allow_stacking` | Boolean | `false` | 是否允许同一体质叠加。 |
 | `damage_dealt_multiplier` | `NumberProvider` | `1` | 持有者**打出**的伤害在管线第一层乘上它。多条生效体质相乘。 |
 | `damage_taken_multiplier` | `NumberProvider` | `1` | 持有者**受到**的伤害在管线第二层乘上它。多条生效体质相乘。 |
@@ -57,6 +57,6 @@ aside: false
 
 ## 持有与开关 {#holding}
 
-`spirit_root` 与 `physique` 的授予和移除均可用实体行为完成：`mxt:grant_spirit_root`、`mxt:remove_spirit_root`、`mxt:grant_physique`、`mxt:remove_physique`。持有状态可用实体条件 `mxt:has_spirit_root`、`mxt:has_physique` 判定，脚本侧是 `MxtSpiritRoots` 与 `MxtPhysiques`，管理员侧是 `/mxt identity`。
+`spirit_root` 与 `physique` 的授予和移除均可用实体行为完成：`mxt:grant_spirit_root`、`mxt:remove_spirit_root`、`mxt:grant_physique`、`mxt:remove_physique`。持有状态可用实体条件 `mxt:has_spirit_root`、`mxt:has_physique` 判定，脚本侧是 `MxtSpiritRoots` 与 `MxtPhysiques`，管理员侧是 `/mxt spirit_root` 与 `/mxt physique`。
 
 已持有的体质可以被**关闭**而不失去：关闭后它的属性修正、授予能力与两个伤害倍率全部不生效，但它仍然"持有"（`mxt:has_physique` 照旧为真，也能正常移除）。

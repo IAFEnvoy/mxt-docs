@@ -22,7 +22,7 @@ aside: false
 | `particle_color` | `RGBColor` | `#FFFFFF` | 灵力射线使用的粒子颜色。可写入 `#RRGGBB` 或 `0..16777215` 整数。 |
 | `bars` | `List<ResourceBar>` | `[]` | 内联资源条；为空时不显示该数值。 |
 
-数值始终被钳制在 `[min, max]`，越界变更会被拒绝。数值可以作为消耗数组里的 `mxt:resource` 条目被消耗（见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)）、用 `mxt:resource_compare` 比较、在公式里以 `caster_<名称>` 读取、把**该值所对应的灵气**（`Aura` 定义）通过存取接口（`AuraAccess`/`ItemAuraAccess`）存入物品，并用 `mxt:add_resource` 行为增减。
+数值始终被钳制在 `[min, max]`：越界的变更会**被钳到边界**，而不是被拒绝（`ResourceService.change` 只做钳制，不会因此失败）。数值可以作为消耗数组里的 `mxt:resource` 条目被消耗（见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)）、用 `mxt:resource_compare` 比较、在公式里以 `caster_<名称>` 读取、把**该值所对应的灵气**（`Aura` 定义）通过存取接口（`AuraAccess`/`ItemAuraAccess`）存入物品，并用 `mxt:add_resource` 行为增减。
 
 示例：
 
@@ -103,5 +103,5 @@ aside: false
 
 `use_condition`（在 `aura` 定义中）是可选的 `EntityCondition`，用于控制实体能否主动消耗该数值，同时控制其所有资源条的可见性。它不影响修炼、环境吸收、自然恢复或突破。`show_cultivation_info` 默认为 `true`；设为 `false` 时该数值仍可拥有境界链和修为，但不会出现在人物信息面板的“境界”或“修为进度”中。
 
-数值、境界、元素、技能等数据驱动定义不再填写 `translation_key`。显示名称统一由定义文件的标识符自动生成翻译键 `<注册表类别>.<注册表命名空间>.<定义命名空间>.<路径>`：注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`（注册表键都写作 `mxt:<路径>`），类别默认取注册表自己的 path，所以 `example:qi` 在 `resource` 类别下对应 `resource.mxt.example.qi`。路径里的 `/` **原样**保留（`example:foo/bar` 得到 `resource.mxt.example.foo/bar`），不会被转成 `.`，所以定义文件名建议不要带子目录。数据包作者只需在语言文件中提供该键的翻译。`resource` 也是可以自带可选 `name` / `description` 的 18 个注册表之一：写了就用你自己的文本，省略才用上面的生成键，`description` 再加 `.description`；目前这两个字段只被存储与读取，还没有地方绘制它们。
+数值、境界、元素、技能等数据驱动定义不再填写 `translation_key`。显示名称统一由定义文件的标识符自动生成翻译键 `<注册表类别>.<注册表命名空间>.<定义命名空间>.<路径>`：注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`（注册表键都写作 `mxt:<路径>`），类别默认取注册表自己的 path，所以 `example:qi` 在 `resource` 类别下对应 `resource.mxt.example.qi`。路径里的 `/` **原样**保留（`example:foo/bar` 得到 `resource.mxt.example.foo/bar`），不会被转成 `.`，所以按类别分子文件夹不会多出第二套翻译键规则。数据包作者只需在语言文件中提供该键的翻译。`resource` 也是可以自带可选 `name` / `description` 的 19 个注册表之一：写了就用你自己的文本，省略才用上面的生成键，`description` 再加 `.description`；目前这两个字段只被存储与读取，还没有地方绘制它们。
 

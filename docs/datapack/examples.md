@@ -82,7 +82,7 @@ data/example/tags/mxt/resource/disabled.json
   "actions": [
     {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
   ],
-  "quality_group": "#example:quality/root_pellet"
+  "quality_chain": "example:root_pellet"
 }
 ```
 

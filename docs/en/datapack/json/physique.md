@@ -26,7 +26,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/physique/blaz
 | `granted_abilities` | `HolderOrTag<ability>[]` | `[]` | Granted abilities. |
 | `holder_condition` | `EntityCondition` | `mxt:always_true` | The holder condition checked before granting; conditions such as `mxt:has_spirit_root` and `mxt:has_physique` can be combined to express prerequisite physiques or spirit roots. |
 | `exclusive_tags` | `Identifier[]` | `[]` | Mutual exclusion tags. |
-| `rarity` | String | `common` | Rarity marker; the info panel and `/mxt identity physique list` show the raw text, and the `mxt.rarity.<rarity>` translation is used when one exists. |
+| `rarity` | String | `common` | Rarity marker; the info panel and `/mxt physique list` show the raw text, and the `mxt.rarity.<rarity>` translation is used when one exists. |
 | `allow_stacking` | Boolean | `false` | Whether the same physique may stack. |
 | `damage_dealt_multiplier` | `NumberProvider` | `1` | Damage the holder **deals** is multiplied by this in layer one of the pipeline. Several active physiques multiply together. |
 | `damage_taken_multiplier` | `NumberProvider` | `1` | Damage the holder **takes** is multiplied by this in layer two of the pipeline. Several active physiques multiply together. |
@@ -70,6 +70,6 @@ They are the seam through which a physique can talk about combat without talking
 
 ## Holding and Switching Off {#holding}
 
-Both `spirit_root` and `physique` can be granted and removed with entity actions: `mxt:grant_spirit_root`, `mxt:remove_spirit_root`, `mxt:grant_physique` and `mxt:remove_physique`. Whether one is held can be tested with the entity conditions `mxt:has_spirit_root` and `mxt:has_physique`; the script side is `MxtSpiritRoots` and `MxtPhysiques`, and the administrator side is `/mxt identity`.
+Both `spirit_root` and `physique` can be granted and removed with entity actions: `mxt:grant_spirit_root`, `mxt:remove_spirit_root`, `mxt:grant_physique` and `mxt:remove_physique`. Whether one is held can be tested with the entity conditions `mxt:has_spirit_root` and `mxt:has_physique`; the script side is `MxtSpiritRoots` and `MxtPhysiques`, and the administrator side is `/mxt spirit_root` and `/mxt physique`.
 
 A physique that is already held can be **switched off** without being lost: once it is off, its attribute modifiers, granted abilities and both damage multipliers all stop applying, but it is still "held" (`mxt:has_physique` still answers true, and it can still be removed normally).

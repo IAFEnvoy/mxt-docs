@@ -25,6 +25,23 @@ data/example/mxt/ability/firebolt.json
 
 The definition ID of that file is `example:firebolt`. The filename may contain directories, and those directories become part of the ID path.
 
+**Once there is a lot of content, sort the JSON into subdirectories by category.** With dozens or hundreds of files flat in one registry directory, "which of these are the passives of the same school" can only be guessed from the filenames; once they are sorted, the path is the index:
+
+```text
+data/example/mxt/ability/sword/slash.json            → example:sword/slash
+data/example/mxt/ability/sword/parry.json
+data/example/mxt/ability/passive/body_tempering.json
+data/example/mxt/artifact/sword/azure_flight_sword.json
+data/example/mxt/artifact/charm/ward_jade_talisman.json
+```
+
+There is no hard rule for how to categorise: by purpose (`passive/`, `active/`), by school (`sword/`, `alchemy/`) or by the batch an update added are all fine. A few things to keep in mind:
+
+- **The directories are part of the ID**: `data/example/mxt/ability/sword/slash.json` has the ID `example:sword/slash`, so **moving a file to another directory changes its ID**. Other definitions, tags and saved data (the ability grant ledger, cooldowns, the ids in wheel cells) all store that ID, so settle the categories before writing content.
+- The default `name` / `description` keys carry that path too (`<category>.mxt.<namespace>.<path>`, with the `/` in the path kept as written), so folders do not introduce a second set of translation-key rules.
+- Tags have a tree of their own (`tags/mxt/<registry>/...`) and do **not** have to mirror the definition directories level for level; keeping the same habit there only makes them easier to find. The values in the `mxt:disabled` tag still have to be the **full ID including the directories**.
+- The levels only affect readability and take **no part in loading or validation**: the first level under `data/<namespace>/mxt/` is always the registry name (`ability/`, `artifact/`, …), and categories can only go below it; cramming every file into one registry directory works just as well.
+
 Data pack tags use the vanilla tag path:
 
 ```text
@@ -35,11 +52,11 @@ data/<namespace>/tags/mxt/<registry>/<tag path>.json
 
 The display name of a data-driven definition is generated automatically from its identifier: the key is `<category>.<registry namespace>.<namespace>.<path>`.
 
-The category defaults to the registry's own path, and the **registry namespace is always `mxt`** for this mod's own registries (each registry key is written `mxt:<path>`), so `mxt:fire` in `mxt:aura` is `aura.mxt.mxt.fire`, `example:qi` in `mxt:resource` is `resource.mxt.example.qi`, and `mxt_test:flame_sigil` in `mxt:talisman` is `talisman.mxt.mxt_test.flame_sigil`. The single category override is still `mxt:item_quality`, whose definitions are always translated under `quality` (`example:refined` reads as `quality.mxt.example.refined`).
+The category defaults to the registry's own path, and the **registry namespace is always `mxt`** for this mod's own registries (each registry key is written `mxt:<path>`), so `mxt:fire` in `mxt:aura` is `aura.mxt.mxt.fire`, `example:qi` in `mxt:resource` is `resource.mxt.example.qi`, and `mxt_test:flame_sigil` in `mxt:talisman` is `talisman.mxt.mxt_test.flame_sigil`. There is no category override list: every category is the registry's own path, so `example:refined` in `mxt:quality` reads as `quality.mxt.example.refined`.
 
-A `/` inside the path stays in the key: `Identifier#toLanguageKey` does not turn it into `.`, so `example:foo/bar` produces `resource.mxt.example.foo/bar`. Keep definition files out of subdirectories.
+A `/` inside the path stays in the key: `Identifier#toLanguageKey` does not turn it into `.`, so `example:foo/bar` produces `resource.mxt.example.foo/bar`. Sorting definitions into subdirectories therefore needs no second set of translation-key rules.
 
-The definitions of these 18 registries may also carry an optional `name` and `description` (written like any other component field: a bare string is a translation key, an object is a full component): `resource`, `aura`, `realm_stage`, `element`, `spirit_root`, `physique`, `ability`, `curse`, `technique`, `skill_stage`, `cultivate_action`, `artifact`, `formation`, `tribulation`, `secret_realm`, `contract_type`, `talisman`, `item_quality`. Writing one uses your own text, while omitting it falls back to the generated key above, with `.description` appended for the description. The pair means a pack may either **translate the generated key or write its own text** (and so avoid a name clash); **`description` is stored and read today but nothing draws it yet — except on `item_quality`, whose description is the line under the quality name**. Every other registry has the generated key only.
+The definitions of these 19 registries may also carry an optional `name` and `description` (written like any other component field: a bare string is a translation key, an object is a full component): `resource`, `aura`, `realm_stage`, `element`, `spirit_root`, `physique`, `ability`, `curse`, `technique`, `skill_stage`, `cultivate_action`, `artifact`, `formation`, `tribulation`, `secret_realm`, `contract_type`, `talisman`, `quality`, `quality_chain`. Writing one uses your own text, while omitting it falls back to the generated key above, with `.description` appended for the description. The pair means a pack may either **translate the generated key or write its own text** (and so avoid a name clash); **`description` is stored and read today but nothing draws it yet — except on `quality`, whose description is the line under the quality name**. Every other registry has the generated key only.
 
 A `realm_stage` that declares its `minor_stages` as an integer still names them `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`, counting from `0`.
 
@@ -51,7 +68,7 @@ JSON no longer contains a `translation_key` field. Provide the matching translat
 }
 ```
 
-Registry titles use their own fixed key, `mxt.registry.<registry path>` — `mxt.registry.aura`, `mxt.registry.item_quality` and so on. The mod ships those; a data pack only supplies the key described above.
+Registry titles use their own fixed key, `mxt.registry.<registry path>` — `mxt.registry.aura`, `mxt.registry.quality` and so on. The mod ships those; a data pack only supplies the key described above.
 
 ## Loading and Overriding
 
@@ -61,7 +78,7 @@ Expanded, that loading rule is one path from a file on disk to what the player s
 
 ```mermaid
 flowchart TD
-    A["Datapack definition files<br/>one JSON file per entry"] --> B["34 datapack registries<br/>native NeoForge registries"]
+    A["Datapack definition files<br/>one JSON file per entry"] --> B["35 datapack registries<br/>native NeoForge registries"]
     B --> C["Read and validated at world load<br/>JSON, holders and codecs"]
     C --> D["Decoding fails<br/>the world will not load"]
     C --> E["mxt:disabled tag<br/>listed entries are not queried at runtime"]
@@ -204,14 +221,14 @@ See [Types Reference](./types/index.md) for the built-in action and condition ty
 
 ## Registry Index
 
-The mod registers **34** data pack registries, all of them declared in `MxtDatapackRegistries`:
+The mod registers **35** data pack registries, all of them declared in `MxtDatapackRegistries`:
 
 | Category | Registries |
 | --- | --- |
 | Resources and cultivation | `resource`, `aura`, `element`, `element_reaction`, `realm_stage`, `spirit_root`, `physique`, `technique`, `skill_stage`, `cultivate_action` |
 | Abilities and rules | `ability`, `curse`, `formation`, `tribulation`, `trigger`, `talisman` |
 | Aura and world | `aura_zone`, `block_aura`, `item_aura`, `secret_realm` |
-| Items and quality | `item_binding`, `weapon_binding`, `pill_binding`, `technique_binding`, `artifact`, `item_quality` |
+| Items and quality | `item_binding`, `weapon_binding`, `pill_binding`, `technique_binding`, `artifact`, `quality`, `quality_chain` |
 | Economy and content | `currency`, `spirit_herb`, `forging_method`, `forging_blueprint`, `tool_binding`, `blueprint_binding`, `creature_profile`, `contract_type` |
 
 `mxt:aura` is the registry that used to be called `mxt:cultivation`; it holds the aura identity and cultivation behaviour of one stored value, while the value itself lives in `resource`. `title`, `badge` and `sect` no longer exist. Alchemy recipes use the vanilla recipe system (`mxt:alchemy`) rather than a data pack registry.

@@ -1,6 +1,6 @@
 ---
 title: Technique Binding (technique_binding)
-description: "Describes how one cultivation technique is read — hold length, pose, sound, quality group and conditions — and which item the mod generates as its carrier. What a stack teaches comes from its mxt:technique data component."
+description: "Describes how one cultivation technique is read — hold length, pose, sound, quality chain and conditions — and which item the mod generates as its carrier. What a stack teaches comes from its mxt:technique data component."
 aside: false
 ---
 
@@ -8,7 +8,7 @@ aside: false
 
 Technique binding JSON files go in `data/<namespace>/mxt/technique_binding/` within your data pack.
 
-**Purpose**: it describes how one technique is **read** — the length, pose and sound of the gesture, the quality group, the conditions that gate an attempt, and the item the mod generates as that technique's carrier. **Whether a stack is a manual at all, and which technique it teaches, is decided by the stack's own `mxt:technique` data component, not by this table.**
+**Purpose**: it describes how one technique is **read** — the length, pose and sound of the gesture, the quality chain, the conditions that gate an attempt, and the item the mod generates as that technique's carrier. **Whether a stack is a manual at all, and which technique it teaches, is decided by the stack's own `mxt:technique` data component, not by this table.**
 
 ## Fields
 
@@ -16,7 +16,7 @@ Technique binding JSON files go in `data/<namespace>/mxt/technique_binding/` wit
 |-------|------|---------|-------------|
 | `technique` | `Holder<technique>` | **required** | The technique this definition describes. Declarations are matched by technique id, no longer by item |
 | `carrier_item` | Item ID | `mxt:cultivation_jade_slip` | The item the mod uses when it generates a carrier for this technique. A single item ID — item tags, wildcards and arrays are not accepted |
-| `quality_group` | `Tag<item_quality>` | none | The allowed quality group |
+| `quality_chain` | `Holder<quality_chain>` | none | The quality chain this item belongs to. The chain answers membership (a resolved tier must be on it), the default tier (the chain's `default`) and the upgrade path |
 | `conditions` | `EntityCondition[]` | `[]` | The conditions checked before learning; supports inline conditions or described condition objects |
 | `learn_time` | Integer | `0` | The ticks the item has to be held down; range `0..72000`. `0` learns on the first right-click |
 | `hold_animation` | String | `block` | The pose played while holding. It only means anything together with `learn_time`; see the allowed values below |
@@ -48,7 +48,7 @@ The mod walks the `mxt:technique` registry and **generates one carrier per techn
 
 To use an item of your own as the manual, write `carrier_item: "namespace:item"` and take the generated carrier from either entry point — the stack you get already carries the `mxt:technique` component.
 
-**A technique does not need a declaration at all.** Declarations are matched by technique id, and a technique with no `technique_binding` file is still read, with the defaults: it is learned on the first right-click, with the default pose and sound, no quality group, no conditions and the jade slip as its carrier.
+**A technique does not need a declaration at all.** Declarations are matched by technique id, and a technique with no `technique_binding` file is still read, with the defaults: it is learned on the first right-click, with the default pose and sound, no quality chain, no conditions and the jade slip as its carrier.
 
 ## Reading: Hold Length and Authority
 
@@ -85,7 +85,7 @@ A technique that uses an item of the content pack as its carrier:
 {
   "technique": "example:fire_manual",
   "carrier_item": "kubejs:fire_manual",
-  "quality_group": "#example:group/manual",
+  "quality_chain": "example:manual",
   "conditions": [{"type": "mxt:realm", "realm": "example:foundation"}]
 }
 ```

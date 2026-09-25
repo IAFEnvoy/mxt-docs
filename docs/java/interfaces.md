@@ -4,7 +4,7 @@ title: 特殊公开接口
 
 # 特殊公开接口
 
-本页的实现型接口里，`AuraAccess`、`ItemAuraAccess`、`UseItemAuraAccess`、`WheelMenuEntry` 已于 2026-09-22 搬进 **`com.iafenvoy.mxt.api`**：该包只有接口与包注释，实现仍留在各自的模块包里，搬动只改包名与 import。`TooltipAppender` 是 NeoForge 的扩展点、`Cost` 在 `data/cost`；`ToggableArtifactAbility` 留在 `data/artifact/ability`——它不算对外 API（它是本体登记法器技能类型的形状）。
+本页的实现型接口里，`AuraAccess`、`ItemAuraAccess`、`UseItemAuraAccess`、`WheelMenuEntry` 位于 **`com.iafenvoy.mxt.api`**：该包只有接口与包注释，实现仍留在各自的模块包里。`TooltipAppender` 是 NeoForge 的扩展点、`Cost` 在 `data/cost`；**`Toggable` 留在 `data/ability`——它不算对外 API**（它是本体登记"需要按键的技能"的形状，`mxt:active` / `mxt:flight_control` / `mxt:storage` 三个技能类型实现它；它的前身 `ToggableArtifactAbility` 已经删除）。
 
 ## `AuraAccess`
 
@@ -14,7 +14,7 @@ title: 特殊公开接口
 
 ## `ItemAuraAccess`
 
-可充能物品实现的**存储**接口，只回答三件事：能装哪些灵气（`getCapacity`）、装进去多少（`insert`）、取出多少（`extract`）。除灵气、增加/抽取和模拟参数外，通过 `getCapacity(LivingEntity, ItemStack)` 从物品动态计算容量，不能在 Java 中写死容量；装的是哪种灵气与装了多少由 `mxt:spirit_storage` 组件记在物品自己身上（一张「灵气 → 已存单位」的表，键是 `Holder<Aura>`，灵石与符箓载体共用），`SpiritStoneItem` 因此只把定义当容量来源，不会因为数据包改了 `item_aura.type` 就把已有存量改读成另一种灵气。缺组件对灵石读作"满"、对符箓读作"空"，这条**由物品回答**而不是由组件回答——组件只是一份数据。
+可充能物品实现的**存储**接口，只回答三件事：能装哪些灵气（`getCapacity`）、装进去多少（`insert`）、取出多少（`extract`）。除灵气、增加/抽取和模拟参数外，通过 `getCapacity(LivingEntity, ItemStack)` 从物品动态计算容量，不能在 Java 中写死容量；装的是哪种灵气与装了多少由 `mxt:spirit_storage` 组件记在物品自己身上（一张「灵气 → 已存量」的表，**数值是浮点数**，键是 `Holder<Aura>`，灵石、符箓载体与法器共用；这个接口本身按**整单位**交换），`SpiritStoneItem` 因此只把定义当容量来源，不会因为数据包改了 `item_aura.type` 就把已有存量改读成另一种灵气。缺组件对灵石读作"满"、对符箓读作"空"，这条**由物品回答**而不是由组件回答——组件只是一份数据。
 
 存取被问在**任何地方**：展示架读写一张符、热键栏读一件物品、`item_aura` 定义描述一个物品，用的都是这个接口。所以只实现它的物品是**被存进去**的，不会被"按住右键灌"——那个手势是物品额外选择加入的，见下。
 
@@ -90,4 +90,24 @@ classDiagram
 
 ## `WheelMenuEntry`
 
-纯客户端轮盘条目接口：`kind()`（技能 / 灵气 / 法器技能）、`id()`、`title()`（轮盘中间显示的名字）、可选 `icon()`、强调色、`tooltip(Player)`（类型 + 具体数值）、`cooldownTicks(Player)`（还剩几 tick，0 = 就绪）/ `usable(Player)` 两个可用性钩子，以及使用回调 `onSelected(WheelSelection)`（它带着这次使用发生在**哪一格的编号**上、以及那一格读自**哪个来源**）。一个来源贡献哪些条目由 `WheelMenuProvider`（唯一实现 `WheelContent`）给出——它的入参是玩家与该来源（`WheelSource`：主盘 / 主手物品 / 副手物品 / 法器），返回值**可以比一页长**（一页 12 格，多出来的由 `WheelMenuContent` 开新页），条目本身既不知道自己落在第几格，也不知道自己属于哪一页。`ARTIFACT` 那种条目是一个**需要按键的法器技能**（`ToggableArtifactAbility`：可能是开关，也可能是一次性，如飞行与储物），身份用的是**法器 id + 能力 key**（`ns:path/key`，因此一件法器可以有好几个技能）。原有的两个快捷栏条目接口 `HotbarEntry` 随快捷栏一起删除，见[轮盘条目](./wheel.md)。
+纯客户端轮盘条目接口：`kind()`（技能 / 灵气 / 契约行为）、`id()`、`title()`（轮盘中间显示的名字）、可选 `icon()`、强调色、`tooltip(Player)`（类型 + 具体数值）、`cooldownTicks(Player)`（还剩几 tick，0 = 就绪）/ `usable(Player)` 两个可用性钩子，以及使用回调 `onSelected(WheelSelection)`（它带着这次使用发生在**哪一格的编号**上、以及那一格读自**哪个来源**）。一个来源贡献哪些条目由 `WheelMenuProvider`（唯一实现 `WheelContent`）给出——它的入参是玩家与该来源（`WheelSource`：主盘 / 主手物品 / 副手物品 / 法器 / 契约灵兽），返回值**可以比一页长**（一页 12 格，多出来的由 `WheelMenuContent` 开新页），条目本身既不知道自己落在第几格，也不知道自己属于哪一页。法器能力就是技能，所以**需要按键的技能**（`Toggable`：可能是开关，也可能是一次性，如飞行与储物）与其它技能一样用自己的**注册表 holder**（`Holder<Ability>`，没有中间引用层）进轮盘（id 就是那条技能自己的注册表 id，因此一件法器可以给出好几条）；原有的两个快捷栏条目接口 `HotbarEntry` 随快捷栏一起删除，见[轮盘条目](./wheel.md)。
+
+## `Contractable` / `ContractOperations` / `CaptureListener`
+
+三个**生物侧**接口，由内容模组自己的实体类实现；本体只在 `runtime/creature/Contracts` 一处查找它们，契约卷轴、御兽铃、灵兽袋、命令与两个事件桥都走那一处。
+
+**能不能被契约是代码事实**：目标生物必须实现 `Contractable`，数据包造不出这个资格，所以原版生物默认都签不了。它同时继承原版的 `OwnableEntity`，所以**谁是主人交给原版的 owner 逻辑**（`getOwner()` 由 `EntityReference` 经所在维度解析，`getRootOwner()` 白拿）。它自己的成员是 `setContractOwner(owner)`（签订时框架调用，生物把主人写进**它自己存主人的地方**）、`acceptsContract(context)`（回答它签不签某份契约类型，默认读**该契约类型自己的实体类型标签** `#<命名空间>:contract/<路径>`，标签不存在或写成空即不限制，见 [contract_type](/datapack/json/contract_type)）、`onContractBound`（主人写好之后回调）与两个分开的结束钩子 `onContractReleased` / `onContractDeath`（一个钩子只面对一个时刻）。
+
+**主人没有第二份**：本体不存主人，`mxt:contract` 附件里也没有这个字段——`getOwnerReference()` 与 `setContractOwner` 都由实体自己实现：原版驯服动物用 `TamableAnimal` 已有的那一对，其它生物自己存一个 `EntityReference<LivingEntity>`（记得跟着自己的存档与同步数据走）。框架侧只有一个读点（`Contracts.ownerOf` / `Contracts.owner`），问的永远是实体。**解除契约只清契约记录**：要不要连主人一起忘掉，由生物自己在 `onContractReleased` 里决定——"解约"和"忘掉谁驯服了它"不是同一件事。
+
+`ContractOperations` 是"契约之后这只灵兽自己怎么做"：`recall`（主人摇了铃，落地动作交给它）、`follow`（每 tick 跟随，主人必须在线且同维度）、`onDealtDamage`（自己打出伤害、结算之后）。**每个默认实现就是框架从前写死的那一段**——传送到主人；超过 32 格传送、超过 4 格寻路——所以实现接口却不覆写任何东西的灵兽，行为与从前一致。**不实现它等于不要这套通用行为**：这只生物仍能被契约，但框架不替它跟随、不替它召回落地、也不上报协战，`follow_action` 与 `combat_action` 因此不跑。
+
+**命令（order）是 2026-09-25 加进来的第三组方法**，形状与"谁来做"的既有口径一致：`behaviors()` 回答**这只兽认哪些命令**（默认是框架的四个内置项：跟随 / 游荡 / 驻守 / 召回；两侧都要能答，御兽铃读它填轮盘页）、`onBehaviorSelected(context, behavior)` 是**输入端**（主人下了命令；返回 `false` 即拒绝，当前命令保持原样）、`tick(context, behavior)` 是每 tick 的驱动（默认分派到 `follow` / `wander` / `stay`，不认识的就什么都不做）。新增的两个默认是 `wander`（主人 32 格外先传送过去，免得游荡的兽被丢下；否则每约两秒、且寻路空闲时在主人周围 3–8 格挑个新点走过去——**框架不往实体里塞 goal**，生物自己的游荡目标照旧）与 `stay`（停寻路并清攻击目标，“停下来”而不是“冻住”）。
+
+**命令本身是类，不是枚举**：`ContractBehavior`（`id` + `momentary` + `name()`，`equals` 只认 id）配 `ContractBehaviors` 这个装载类，`new` 一个再 `register(...)` 就多一条（"停手""回窝"都行），**内容方不用改框架的清单**；`momentary` 区分常驻与"只此一次"（召回的闩与冷却归框架，所以它走 `ContractService.requestRecall`，不写记录）。当前命令**只有一份**，在 `mxt:contract` 附件上（存 id；旧存档或读不出来的 id 一律按跟随处理）。输入端唯一出口是 `runtime/creature/ContractBehaviorService`：已绑定 → 主人 → 实现了接口 → **这条命令在它的 `behaviors()` 里** → `onBehaviorSelected` → 写入（常驻）或只执行一次（一次性）。
+
+**御兽铃只是指针**：右键生物＝把"生物 UUID + 显示名 + 它自己答的命令表"写进物品组件 `mxt:contract_bell`，右键空处＝在客户端打开轮盘并停在「契约灵兽」那一页。页面读的正是铃上那份快照，所以**不需要在客户端解析一只可能没加载的灵兽**；命令真正生效前，服务端还会把铃、灵宠的记录、主人与这条命令全部重查一遍。
+
+`CaptureListener` 是**被捕捉与释放的通知接口**（前身 `Capturable` 的门槛已取消）：捕捉**不是实体的资格**——任何生物都可能被捕捉，**怎么捕捉由物品决定**（能装什么、要不要契约、代价多少，全是那个物品自己的规则；灵兽袋自己的规则是"你自己的已契约灵兽、一次一只"）。所以只有两个可选钩子：`onCaptured(captor)`（被收走之后、实体离开世界之前）与 `onReleased(captor)`（重新回到世界之后），默认什么都不做。**不实现它也照样能被捕捉**，只是收不到这两次通知；`captor` 在不是玩家动手时为空。
+
+契约**记录**不在这些接口里：它只有一份，在生物的 `mxt:contract` 附件上（契约类型、签订时刻、召回闩、当前命令），别的模块读的都是那一份。字段、代价、每人上限与召回冷却见 [contract_type](/datapack/json/contract_type)，玩家侧入口见[命令](/player-guide/commands/contract)。

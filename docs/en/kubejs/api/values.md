@@ -49,3 +49,10 @@ const actualAura = MxtValues.evaluateResource(player, 'mxt:spirit_power', {
   type: 'mxt:actual_concentration'
 })
 ```
+
+## Related
+
+- The other two places that receive a `FormulaContext`: [MxtActions](/en/kubejs/api/actions) and [MxtConditions](/en/kubejs/api/conditions).
+- Using a value as a price: [MxtCosts](/en/kubejs/api/costs) and [MxtResources](/en/kubejs/api/resources).
+- Data pack side: [Number Provider Types](/en/datapack/types/number_provider_types), [Formula Variables](/en/datapack/types/formula_variables) and [Shared Data Types](/en/datapack/types/shared_data_types).
+- [KubeJS API Reference](/en/kubejs/api-reference).

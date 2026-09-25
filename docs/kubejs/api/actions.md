@@ -44,3 +44,10 @@ MxtActions.executeEntity(player, {
   amount: 4
 })
 ```
+
+## 相关
+
+- 条件侧的同一套写法：[MxtConditions](/kubejs/api/conditions)。
+- 回调收到的 `context`：[MxtValues](/kubejs/api/values#formulacontext)。
+- 数据包侧：[实体行为类型](/datapack/types/action/entity_action_types)、[双实体行为类型](/datapack/types/action/bientity_action_types)、[方块行为类型](/datapack/types/action/block_action_types)、[物品行为类型](/datapack/types/action/item_action_types)。
+- [KubeJS API 参考](/kubejs/api-reference)。

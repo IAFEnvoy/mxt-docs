@@ -63,12 +63,12 @@ Writing an inscription is a component, so the `/talisman` subtree exists for ope
 | Command | Description |
 |---------|-------------|
 | `/talisman` or `/talisman blank [count]` | Hands out blank carriers. |
-| `/talisman give <talismans>` | Hands out carriers inscribed with a comma-separated list of talisman IDs, in the `fire` mode. |
-| `/talisman give <talismans> count <1..64>` | The same, for a stack. |
-| `/talisman give <talismans> count <1..64> charged` | The same, with the carriers already poured full. |
-| `/talisman give <talismans> stored [count <1..64>]` | The same, in the `store` mode. A stored carrier is poured by hand, so `charged` is not offered with it. |
+| `/talisman give <talisman>` | Hands out carriers inscribed with that one talisman ID, in the `fire` mode. |
+| `/talisman give <talisman> count <1..64>` | The same, for a stack. |
+| `/talisman give <talisman> count <1..64> charged` | The same, with the carriers already poured full. |
+| `/talisman give <talisman> stored [count <1..64>]` | The same, in the `store` mode. A stored carrier is poured by hand, so `charged` is not offered with it. |
 
-The definition argument is completed from the loaded `talisman` registry.
+`give` takes **one** talisman ID: a carrier is inscribed with a single definition. To write several onto one carrier, put the list in the `talismans` item component directly, for example `give @s mxt:talisman[mxt:talisman={talismans:["mypack:flame_sigil","mypack:common_sigil"]}]`. The definition argument is completed from the loaded `talisman` registry.
 
 ## Filling and firing
 

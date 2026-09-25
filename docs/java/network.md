@@ -8,17 +8,18 @@ title: 网络协议与服务端权威
 
 | Payload | 用途 |
 | --- | --- |
-| `WheelActionC2SPayload` | 轮盘选中一项：`(source, kind, id)`——**哪个来源**、哪一类、哪个 id（按下那一刻由客户端从**当时那一格**解析出来）。技能、灵气与法器技能**共用这一条通道**，服务端先按 `source` 把那个来源重读一遍（主盘读存档布局、从盘的技能读现在的授予账、从盘的法器技能读那一页的装备栈），这一项不在那里就整个请求作废，然后才按 `kind` 分派（技能走 `AbilityService.use`，灵气走 `SpiritBurstService.fireOnce`，法器技能走 `ArtifactToggleService`——**请求只说"按了这一格"**，该开该关、该打开哪个界面都由服务端问实现）。**格子编号不走这条路**：它只用于存储。 |
+| `WheelActionC2SPayload` | 轮盘选中一项：`(source, kind, id)`——**哪个来源**、哪一类、哪个 id（按下那一刻由客户端从**当时那一格**解析出来）。技能与灵气**共用这一条通道**（法器能力就是技能），服务端先按 `source` 把那个来源重读一遍（主盘读存档布局、从盘读现在的授予账），这一项不在那里就整个请求作废，然后才按 `kind` 分派（技能走 `runtime/ability/AbilityActivationService`，**它是服务端唯一的按压入口**：`mxt:active` 在那里转成施放，`mxt:flight_control` / `mxt:storage` 各自做自己的事；灵气走 `SpiritBurstService.fireOnce`）。**请求只说"按了这一格"**：该开该关、该打开哪个界面都由服务端问实现。**格子编号不走这条路**：它只用于存储。 |
 | `BackSlotSwapC2SPayload` | 交换主手和背部槽位。 |
 | `ForgingActionC2SPayload` | 锻造开始、敲击、完成和取消。 |
 | `ChequeActionC2SPayload` | 支票桌存入/取出。 |
 | `StationTradeC2SPayload` | 交易站结算。 |
 | `PlayerTradeActionC2SPayload` | 已打开的一对一交易里改变请求方自己的状态。 |
 | `CultivationToggleC2SPayload` | 请求切换修炼模式。 |
-| `FlightToggleC2SPayload` | 请求开关一种飞行状态；服务端仍会校验请求里那个 ID（payload 自己的字段名仍是 `archetype`）是不是一件法器的 `mxt:artifact` 条目。 |
+| `WheelActionC2SPayload` | 轮盘选中一项：`(source, kind, id, enabled)`——**哪个来源**、哪一类、哪个 id，加上一个**可选的**方向。`enabled` 留空＝"按了这一格"（轮盘走的就是这条，方向归服务端）；填了＝**点名一个状态**的直接请求（脚本或界面用，此时这一项按 id 寻址、不重新读来源那一页，但技能自己的闸门照过，要求的正是当前状态时什么都不做）。旧的 `FlightToggleC2SPayload` 已并入这个字段。 |
 | `WheelLayoutC2SPayload` | 轮盘配置界面关闭时把**完整的 12 格主盘布局**送回服务端；服务端逐格校验 id 后写进玩家附件。从盘没有对应的包，因为它们不存。 |
 | `WheelSelectionC2SPayload` | 换了选中的格子（`Optional<Integer>` = **格子编号**，空 = 没选）：格子按整张轮盘连续编号、页会随装备来去，所以存的只是一个位置；服务端只做范围检查，不解析也不记 warning——"这个位置上现在什么都没有"是合法状态（客户端那边会自动落到最后一个有东西的格子）。 |
 | `OwnerNameC2SPayload` | 问某个归属 UUID 叫什么名字（只带 id）。服务端只查在线玩家列表与持久化的名字缓存，**不查会话服务**——那是网络请求，而处理器跑在主线程上。 |
+| `FlightDescendC2SPayload` | 飞行下降键（`key.mxt.flight_descend`，默认 `X`，可改绑）的**按住状态**：按下与松开各发一次，上座那一刻再补一次。它不是原版输入，所以只能这样告诉服务端；服务端把它写在驾驶者那份飞行记录上（没在飞就丢掉），下降由服务端的飞行 tick 每刻读一次。 |
 
 以 `WheelActionC2SPayload` 为例，一次请求往返是这样的——客户端只报"哪一类的哪个 id"，服务端自己把它解析成定义、再自己判断该不该放：
 

@@ -12,3 +12,4 @@ Java 扩展应优先复用现有数据定义、Action、Condition、Cost 和运�
 - [网络协议与服务端权威](/java/network)
 - [客户端轮盘](/java/wheel)
 - [客户端界面](/java/screens)
+- [信息面板](/java/information-panel)

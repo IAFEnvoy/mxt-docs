@@ -38,7 +38,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/forging_bluep
 
 ## Finish Pattern
 
-`finish_pattern` has the fields `steps` (six forging methods) and `required_suffix_steps` (`0..6`). When `required_suffix_steps > 0` you must provide all six steps. **Only the last `N` entries of `steps` are checked**; the first `6-N` entries are neither shown nor checked, and in the interface they are barrier slots. Success requires the final value to fall inside the target range and the required trailing steps to match exactly; the number of extra steps decides the quality.
+`finish_pattern` has the fields `steps` (six forging methods) and `required_suffix_steps` (`0..6`). When `required_suffix_steps > 0` you must provide all six steps. **Only the last `N` entries of `steps` are checked**; the first `6-N` entries are neither shown nor checked, and in the interface they are barrier slots. Success requires the final value to fall inside the target range and the required trailing steps to match exactly; the number of extra steps decides the quality. **That tier table is drawn line by line in the Forge Table's blueprint tooltip** (each line in its own tier's `color`, with the last entry written as "any number of extra steps"), and once a piece is finished the readout on the right adds a "Quality: name" line taken from the tier the server wrote onto the result - the screen never predicts it.
 
 ## Step Limit
 
@@ -81,5 +81,5 @@ A blueprint that declares a step limit shows that limit in the Forge Table's blu
 }
 ```
 
-The methods it names are defined by [Forging Method](./forging_method.md), made available by the tools in [Tool Binding](./tool_binding.md), offered to the player through [Blueprint Binding](./blueprint_binding.md), and its quality ladder points at entries of [Item Quality](./item_quality.md).
+The methods it names are defined by [Forging Method](./forging_method.md), made available by the tools in [Tool Binding](./tool_binding.md), offered to the player through [Blueprint Binding](./blueprint_binding.md), and its quality ladder points at entries of [Quality](./quality.md).
 

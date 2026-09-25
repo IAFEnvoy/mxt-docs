@@ -5,7 +5,11 @@ aside: false
 
 # cultivate_action（修炼行为） {#cultivate_action}
 
-> **已标记为将来可能移除**（`CultivateAction` 上是 `//TODO::May be removed`）。它是"运功/打坐"这件事的一个数据包化写法；若将来把"当前怎么修炼"整个收回状态附件（进度、境界、燃料都在那儿），这个注册表会连同 `CultivationModeService`、`CultivationActionService`、`AuraDistributionService`、`mxt:cultivation` 附件里的四个 `cultivate_*` 字段、开关包 `/mxt cultivate` 一起消失。**现在声明它是完全受支持的**，只是不要把它当成不会变的地基。
+::: warning 已标记为将来可能移除
+
+`CultivateAction` 上是 `//TODO::May be removed`。它是"运功/打坐"这件事的一个数据包化写法；若将来把"当前怎么修炼"整个收回状态附件（进度、境界、燃料都在那儿），这个注册表会连同 `CultivationModeService`、`CultivationActionService`、`AuraDistributionService`、`mxt:cultivation` 附件里的四个 `cultivate_*` 字段、开关包 `/mxt cultivate` 一起消失。**现在声明它是完全受支持的**，只是不要把它当成不会变的地基。
+
+:::
 
 文件位置：`data/<namespace>/mxt/cultivate_action/<path>.json`
 

@@ -6,7 +6,7 @@ title: Ability, State and Curse Types
 
 ## `ability_type`
 
-The nested `ability` object of an ability definition uses this registry. The ID is written as `ability.type`.
+The **top-level** `type` of an ability definition uses this registry. The ID is written directly in the top-level `type` (`{"type": "mxt:active", ...}`), not inside a nested `ability` object.
 
 | `type` | Fields | Description |
 |--------|--------|-------------|
@@ -18,6 +18,12 @@ The nested `ability` object of an ability definition uses this registry. The ID 
 | `mxt:channelled` | `tick_interval`, `upkeep_costs` | Runs once on activation and then once per interval while its upkeep is paid |
 | `mxt:composite` | `abilities`, `all_required` | Delegates to child abilities rather than acting itself |
 | `mxt:word` | `effect`, `requires_operator`, `amount` | Terminal, code-whitelisted word effect |
+| `mxt:mount` | `speed`, `seats`, `sit`, `display`, `width` / `height`, `step_height`, `seat_offsets`, `mount_action`, `trail` | The mount (**data, never pressed**): speed, seats, pose, look, box and seat layout. It reads only its own fields, its top-level `costs` (the fuel of every tick: the carried artifact's store is spent first and only the remainder falls to the driver) and its `condition` (re-read every tick); **any other top-level field is a load error** rather than being ignored. Hitting a block or the ground ends the flight |
+| `mxt:flight_control` | `hand`, `speed_multiplier` | The skill that flies (**needs a key**, one wheel cell): it takes the flying artifact out of the main hand and then the off hand and takes off, and a second press lands. A technique usually grants it - without it there is no cell. It reads `costs` / `condition` / `cooldown` / `components` and the display fields; `cast_time` / `entity_action` / `target_selector` / `target_condition` / `bi_entity_action` / `modifiers` / `damage_condition` / `element_affinity` / `element_affinity_mode` / `item_action` are load errors |
+| `mxt:storage` | `slots` | The carrier's own storage slot count: **needs an item to carry it**, and needs a key (one wheel cell) with no state |
+| `mxt:upkeep` | `interval`, `on_fail`, `owner_only` | A periodic price: while carried, the ability's own `costs` are settled all-or-nothing every `interval` ticks; **needs an item to carry it** and needs no key |
+
+`mxt:storage`, `mxt:upkeep` and today's `mxt:mount` / `mxt:flight_control` once belonged to another table, `mxt:artifact_ability_type` (**deleted whole**): they are ordinary ability types now, and any source can grant them. The full field list is on [Ability](../../json/ability.md#ability-types).
 
 | `type` | Field | Type | Default | Description |
 |--------|-------|------|---------|-------------|
@@ -33,16 +39,29 @@ The nested `ability` object of an ability definition uses this registry. The ID 
 | `mxt:word` | `effect` | Enum | **required** | `self_heal` or `purge_self_curses` |
 | `mxt:word` | `requires_operator` | Boolean | `true` | Whether the actor must be an operator |
 | `mxt:word` | `amount` | `NumberProvider` | `0` | Magnitude passed to the word effect |
+| `mxt:mount` | `speed` | `NumberProvider` | **required** | The mount's speed; the per-tick fuel is the ability's top-level `costs`, taken out of the carried artifact's own store first (the remainder falls to the driver; fractions are allowed) |
+| `mxt:mount` | `seats` | int | `1` | Total seats including the driver, at most `4` |
+| `mxt:mount` | `sit` | bool | `false` | The riding pose; one pose for the whole vehicle |
+| `mxt:mount` | `display` | object | laid flat, blade forward, twice the authored size | How the mount sits relative to the item model it carries; same names and meaning as a vanilla item model's `display` |
+| `mxt:mount` | `width` / `height` | double | `0.35` / `0.12` | The collision box; the mount re-measures itself when either changes |
+| `mxt:mount` | `step_height` | double | `0` | The mount's `maxUpStep()` |
+| `mxt:mount` | `seat_offsets` | array of three doubles | spread behind the model by `0.8` per seat, the first at `0.65` high | Where each seat's feet land, in blocks; the last written offset is reused for any seat past the list |
+| `mxt:mount` | `mount_action` | object | all three are `mxt:no_op` | The mount's own three hooks, `on_mount` / `on_dismount` / `tick`, all running on the **driver**: the moment the flight starts, the moment it ends (before the seat is given up), and every tick once the fuel is paid |
+| `mxt:mount` | `trail` | object | absent means no trail | Particles left behind, emitted by **the mount itself**: `particle` (required, a vanilla `ParticleOptions` in its **object form** `{"type": "minecraft:end_rod"}`; a bare id string is a load error, `Not a JSON object`) / `interval` (`1`) / `count` (`1`) / `speed` (`0`) / `spread` (`[0.2, 0.1, 0.2]`, blocks) / `offset_x` / `offset_y` (`0.1`) / `offset_z` (blocks) / `moving_only` (`false`; on means it only shows while actually moving) |
+| `mxt:flight_control` | `hand` | `main` / `off` / `either` | `either` | Which hand the mount is looked for in; `either` means main hand first |
+| `mxt:flight_control` | `speed_multiplier` | `NumberProvider` | `1` | Multiplied into the mount's `speed` |
+| `mxt:storage` | `slots` | `NumberProvider` | **required** | Storage slots, rounded up to whole rows of nine and cut at six rows (54 slots) |
+| `mxt:upkeep` | `interval` | `NumberProvider` | `20` | Ticks between settlements, on the **world's** clock (only ticks divisible by it settle) |
+| `mxt:upkeep` | `on_fail` | `ItemAction` | `mxt:no_op` | What runs on the holder and that stack when the price cannot be paid |
+| `mxt:upkeep` | `owner_only` | Boolean | `true` | Only the owner pays; with `false`, whoever carries it pays |
 
 `mxt:empty` has no fields. `mxt:word` is a terminal payload that never executes target behaviour, and datapacks cannot supply an arbitrary command string for it.
 
 ```json
 {
-  "ability": {
-    "type": "mxt:channelled",
-    "tick_interval": 20,
-    "upkeep_costs": [{"id": "example:qi", "amount": 1}]
-  }
+  "type": "mxt:channelled",
+  "tick_interval": 20,
+  "upkeep_costs": [{"id": "example:qi", "amount": 1}]
 }
 ```
 

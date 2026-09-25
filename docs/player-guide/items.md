@@ -17,7 +17,7 @@ MiXianTu 不为每个玩法预设具体数值，但提供少量通用承载物�
 | `item_binding` | 给现有物品附加行为、条件、灵根或通用显示。 |
 | `weapon_binding` | 配置伤害、攻击速度、属性和攻击/使用/Tick 行为。 |
 | `pill_binding` | 配置丹药消耗和行为。 |
-| `technique_binding` | 描述一门功法**怎么被读**——长按时长、姿势、音效、品质组与条件，以及本体替它生成载体时用哪个物品。**这一叠是不是手册、教的是哪门功法，由堆上的物品组件 `mxt:technique` 决定**，不由本表决定。 |
+| `technique_binding` | 描述一门功法**怎么被读**——长按时长、姿势、音效、品质链与条件，以及本体替它生成载体时用哪个物品。**这一叠是不是手册、教的是哪门功法，由堆上的物品组件 `mxt:technique` 决定**，不由本表决定。 |
 
 物品匹配支持单个物品、原版物品标签、通配符、正则和混合数组。`carrier_item` 是例外：它只接受单个物品 id。`technique_binding` 按功法 id 匹配，不再按物品匹配。
 
@@ -55,8 +55,8 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 物品 | ID | 持久化组件 | 统一行为 |
 | --- | --- | --- | --- |
 | 契约卷轴 | `mxt:contract_scroll` | `mxt:contract_scroll` | 保存 `contract_type`，对生物使用时由 `ContractService` 校验并签订契约。 |
-| 御兽铃 | `mxt:beast_taming_bell` | 无 | 对自己的契约灵宠执行统一召回。 |
-| 灵兽袋 | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | 保存一只已契约生物的完整持久化实体数据；对灵宠使用收纳，空袋右键释放。 |
+| 御兽铃 | `mxt:beast_taming_bell` | `mxt:contract_bell` | 保存"对准的那只灵宠"（UUID、显示名、它认的行为）。右键灵宠＝对准它，右键空处＝打开轮盘「契约灵兽」那一页，点一格给这只灵宠下跟随 / 游荡 / 驻守 / 召回的命令。 |
+| 灵兽袋 | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | 保存一只已契约生物的完整持久化实体数据（契约与档案附件也在里面），另外记着它的类型、当时的名字、契约类型与主人——这几项让提示框不必加载实体就能说清袋里是谁。对灵宠右键收纳，**对着方块右键在方块上方放出**。 |
 | 阵盘 | `mxt:formation_plate` | `mxt:formation_plate` | 保存 `allowed`（允许激活哪些阵法，支持 `#标签`）与 `formation`（当前选中）；对方块使用时调用 `FormationWorldService`。没绑定阵法时会**自动识别**脚下这座阵法。 |
 | 秘境令牌 | `mxt:secret_realm_token` | `mxt:secret_realm_token` | 保存一份 `secret_realm` 定义；右键进入绑定秘境（走定义自己的进入条件、实例上限与在场人数上限），在秘境内右键返回原位置（受定义的退出条件约束）。 |
 | 裂隙（方块物品） | `mxt:rift` | `mxt:rift` | 摆放裂隙方块；堆叠上带组件时按组件里的目标与颜色摆。整套机制见[裂隙](./rift.md)。 |

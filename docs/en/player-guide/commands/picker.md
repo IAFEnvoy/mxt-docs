@@ -14,7 +14,7 @@ title: /picker
 
 `<category>` names one datapack registry, and the registered categories are, in order:
 
-`minecraft:item`, `minecraft:block`, `mxt:item_aura`, `mxt:currency`, `mxt:spirit_herb`, `mxt:item_binding`, `mxt:weapon_binding`, `mxt:pill_binding`, `mxt:technique`, `mxt:artifact`, `mxt:contract_type`, `mxt:secret_realm`, `mxt:formation`, `mxt:talisman`, `mxt:aura`, `mxt:block_aura`, `mxt:item_quality`.
+`minecraft:item`, `minecraft:block`, `mxt:item_aura`, `mxt:currency`, `mxt:spirit_herb`, `mxt:item_binding`, `mxt:weapon_binding`, `mxt:pill_binding`, `mxt:technique`, `mxt:artifact`, `mxt:contract_type`, `mxt:secret_realm`, `mxt:formation`, `mxt:talisman`, `mxt:aura`, `mxt:block_aura`, `mxt:quality`.
 
 Note that `mxt:technique` is a category but `mxt:technique_binding` is not: a technique is what gets a row, and the row is the carrier stack the mod generates for it (the item the technique's declaration names as its `carrier_item`, or the jade slip), already carrying its `mxt:technique` component. See [Technique Binding](/en/datapack/json/technique_binding#carrier).
 

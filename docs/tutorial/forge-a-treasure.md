@@ -22,7 +22,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 | `data/example/mxt/tool_binding/smith_hammer.json` | 铁匠锤解锁哪四种手法。 |
 | `data/example/mxt/forging_blueprint/spirit_sword.json` | 材料、允许手法、锻打条、收尾模式、品质阶梯、失败结算。 |
 | `data/example/mxt/blueprint_binding/sword_manual.json` | 图纸物品提供哪一份蓝图。 |
-| `data/example/mxt/item_quality/flawless.json` | 品质阶梯的最高一档。 |
+| `data/example/mxt/quality/flawless.json` | 品质阶梯的最高一档。 |
 
 ## 第 1 步 —— 一次锻打是什么
 
@@ -169,9 +169,10 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 ```
 
 ```json
-// data/example/mxt/item_quality/flawless.json
+// data/example/mxt/quality/flawless.json
 {
-  "name": "quality.mxt.example.flawless"
+  "name": "quality.mxt.example.flawless",
+  "color": "#FFAA00"
 }
 ```
 
@@ -187,8 +188,9 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 **额外步数 = 实际步数 − 最短步数。** 最短步数在会话开始时就算好了（就是第 3 步那次搜索），不是"数值超出目标多少"。上面这份蓝图的最短解是三锤（重锤 → 轻敲 → 重锤，落到 3），所以额外步数为 `0` 就是绝品。
 
 - 品质取第一个满足 `额外步数 ≤ max_extra_steps` 的档，所以这个列表必须**升序**，并留一个 `2147483647` 兜底。
-- **材料的品质会除这个额外步数。** `item_quality` 的 `forging_modifier` 大于 1 时，同样的额外步数会被算成更少，于是拿到更好的档；多种材料取其中**最低**的一档（一件成品只和它最差的材料一样好），没有品质可解析的材料被跳过；修正项缺失或不可用时按 `1` 处理。
-- 这里读的是**蓝图声明的 `id` + `count`**（结算时重新构造的一份普通物品栈），而不是被拿走的那一摞。因此**只写在某一摞上的 `mxt:item_quality` 组件读不到**：要么把这种材料声明成灵植，要么在它的绑定表里给一个 `quality_group` 默认档，品质才会参与锻造结算。
+- 档位的颜色写在**品质定义**自己的 `color` 上（选填）：写了就给提示框的物品名、提示框里品质那一行、`/picker` 里品质分类的条目名与蓝图 tooltip 的档位表上色，不写就保持原样（不是"默认白色"）。这张档位表本身在锻造台的蓝图 tooltip 里能看到，交工后读数区还会显示成品的那一档。
+- **材料的品质会除这个额外步数。** `quality` 的 `forging_modifier` 大于 1 时，同样的额外步数会被算成更少，于是拿到更好的档；多种材料取其中**最低**的一档（一件成品只和它最差的材料一样好），没有品质可解析的材料被跳过；修正项缺失或不可用时按 `1` 处理。
+- 这里读的是**蓝图声明的 `id` + `count`**（结算时重新构造的一份普通物品栈），而不是被拿走的那一摞。因此**只写在某一摞上的 `mxt:item_quality` 组件读不到**：要么把这种材料声明成灵植，要么让它的绑定表指一条 `quality_chain`（链的 `default` 就是没写覆盖组件时的那一档），品质才会参与锻造结算。
 
 ::: tip 完成是自动的
 
@@ -276,5 +278,5 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 - [forging_blueprint（锻造图纸）](../datapack/json/forging_blueprint.md) —— 图纸的完整字段表与校验规则。
 - [forging_method（锻造手法）](../datapack/json/forging_method.md) 与 [tool_binding（工具绑定）](../datapack/json/tool_binding.md) —— 手法与工具那一半。
 - [blueprint_binding（图纸绑定）](../datapack/json/blueprint_binding.md) —— 组件与物品的关系。
-- [item_quality（品质）](../datapack/json/item_quality.md) —— `forging_modifier`、品质组与品质的解析顺序。
+- [quality（品质）](../datapack/json/quality.md) 与 [quality_chain（品质链条）](../datapack/json/quality_chain.md) —— `forging_modifier`、链条的顺序与默认档、以及品质的解析顺序。
 - [MxtEvents：事件](../kubejs/api/events.md) —— 用脚本读/改锻打消耗、拦下某个阶段。

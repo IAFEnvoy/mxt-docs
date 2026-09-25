@@ -70,8 +70,8 @@ Each entry of a `choice` list is a weighted wrapper around a nested action:
 
 | Entry Field | Type | Default | Description |
 |-------------|------|---------|-------------|
-| `element` | Bi-entity action | **required** | The action this entry runs when it is picked. |
-| `weight` | Integer | `1` | Relative weight; larger weights are picked more often. |
+| `value` | Bi-entity action | **required** | The action this entry runs when it is picked. |
+| `weight` | Integer | `1` | Relative weight; larger weights are picked more often, a weight of `0` or less is never picked, and an all-zero table picks uniformly. |
 
 ## Action Types
 

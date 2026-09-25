@@ -141,15 +141,15 @@ Each entry has its own fields:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `data` | `NumberProvider` | **required** | The value produced by this entry |
-| `weight` | Integer | **required** | Positive integer weight; larger weights are picked more often |
+| `value` | `NumberProvider` | **required** | The value produced by this entry |
+| `weight` | Integer | `1` | Relative weight; larger weights are picked more often, a weight of `0` or less is never picked, and an all-zero table picks uniformly |
 
 ```json
 {
   "type": "mxt:weighted_list",
   "distribution": [
-    {"data": 1, "weight": 3},
-    {"data": "level * 2", "weight": 1}
+    {"value": 1, "weight": 3},
+    {"value": "level * 2", "weight": 1}
   ]
 }
 ```

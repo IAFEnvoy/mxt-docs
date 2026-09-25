@@ -26,18 +26,18 @@ The filename corresponds to its ID. For example, `data/example/mxt/pill_binding/
 | `toxicity_threshold` | `NumberProvider` | `Double.MAX_VALUE` | The overdose threshold |
 | `on_overdose` | `EntityAction` | `mxt:no_op` | The action executed when the threshold is exceeded |
 | `toxicity_after_overdose` | `NumberProvider` | `0` | The pill toxicity value after an overdose |
-| `quality_group` | `Tag<item_quality>` | none | The allowed quality group |
+| `quality_chain` | `Holder<quality_chain>` | none | The quality chain this item belongs to. The chain answers membership (a resolved tier must be on it), the default tier (the chain's `default`) and the upgrade path |
 | `conditions` | `EntityCondition[]` | `[]` | The check performed before consumption; supports inline conditions or described condition objects |
 
 ### `items`
 
 The `items` matcher accepts one item ID, one item tag (such as `"#example:pills"`), or a mixed array of both; one binding can therefore cover many physical pills. Any array entry may also be written as a typed object dispatched by the built-in `item_matcher_entry_type` registry (`mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:herb_tag` and the `mxt:spirit_storage` capability matcher); see [Shared Data Types](../types/shared_data_types.md) for the entry types. When multiple bindings match an item, the matcher selects the definition with the lowest `priority` first, and all four binding types currently use priority `0`.
 
-### `quality_group`
+### `quality_chain`
 
-`quality_group` must be a native item-quality tag reference prefixed with `#`. Its `values` order defines the group's quality order. When no explicit `mxt:item_quality` component or forge result exists, the last member not disabled by the `mxt:disabled` tag becomes the default quality.
+`quality_chain` names one [Quality Chain](./quality_chain.md). The chain answers membership (a tier the pill resolves to must be on the chain, or it cannot be consumed), the default tier when neither an override component nor a settled result exists, and the upgrade path [`/quality upgrade`](/en/player-guide/commands/quality) walks.
 
-The pill cannot be consumed when its current quality is outside the group, the group has no usable member, a binding condition fails, or the quality's own `condition` fails. See [Item Quality](./item_quality.md).
+The pill cannot be consumed when its current quality is not on the chain, a binding condition fails, or the quality's own `condition` fails. See [Quality](./quality.md).
 
 ### `conditions`
 
@@ -49,7 +49,7 @@ The pill cannot be consumed when its current quality is outside the group, the g
 // data/example/mxt/pill_binding/returning_pill.json
 {
   "items": "kubejs:returning_pill",
-  "quality_group": "#example:group/pill",
+  "quality_chain": "example:pill",
   "conditions": [{"condition": {"type": "mxt:realm", "realm": "example:foundation"}, "description": "condition.example.pill"}],
   "on_consume": {"type": "mxt:heal", "amount": 4},
   "toxicity_gain": 10,

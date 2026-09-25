@@ -250,7 +250,7 @@ The aura environment has enough depth to deserve its own page — that is [Build
 
 ## Step 6 — Names
 
-Display names are generated from the definition ID by default, so you do not have to write a translation key into the JSON — unless you want your own text: the definitions of 18 registries, including `resource`, `aura`, `realm_stage`, `element` and `cultivate_action`, may carry an optional `name` / `description`, both filled in from the id when omitted. Add the keys to your own language file:
+Display names are generated from the definition ID by default, so you do not have to write a translation key into the JSON — unless you want your own text: the definitions of 19 registries, including `resource`, `aura`, `realm_stage`, `element` and `cultivate_action`, may carry an optional `name` / `description`, both filled in from the id when omitted. Add the keys to your own language file:
 
 ```json
 // assets/example/lang/en_us.json
@@ -267,7 +267,7 @@ Display names are generated from the definition ID by default, so you do not hav
 
 The pattern is always `<category>.<registry namespace>.<namespace>.<path>`, where the category is the registry's own path and the **registry namespace is always `mxt`**, so `example:qi` in `resource` is `resource.mxt.example.qi` and the same id in `aura` is `aura.mxt.example.qi`. A path containing `/` keeps the slash: `example:realm/qi` is `realm_stage.mxt.example.realm/qi`. A definition without a key still works; the game simply shows the raw key.
 
-A definition whose text field is omitted uses the **same key**: `item_quality`'s `name` / `description` read as `quality.mxt.<namespace>.<path>` (the description adds `.description`, so `mxt_test:poor` is `quality.mxt.mxt_test.poor`), and a `realm_stage` counting its layers in an integer reads `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`. Apart from `item_quality`'s `description` (the line under the quality name), those fields are stored and read today but nothing draws them yet.
+A definition whose text field is omitted uses the **same key**: `quality`'s `name` / `description` read as `quality.mxt.<namespace>.<path>` (the description adds `.description`, so `mxt_test:poor` is `quality.mxt.mxt_test.poor`), and a `realm_stage` counting its layers in an integer reads `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`. Apart from `quality`'s `description` (the line under the quality name), those fields are stored and read today but nothing draws them yet.
 
 ## Step 7 — Load and Verify
 
@@ -292,7 +292,7 @@ Then, in game:
 
 ::: tip Faster testing
 
-`/mxt resource example:qi set 500` (also `gamemaster`) fills the pool instantly so you can check the cost and condition gates without waiting. `/mxt realm set example:foundation` jumps the chain to a stage directly, which is useful when you are tuning later stages.
+`/mxt resource example:qi set 500` (also `gamemaster`) fills the pool instantly so you can check the cost and condition gates without waiting. `/realm set example:foundation` (= `/mxt realm set …`) jumps the chain to a stage directly, which is useful when you are tuning later stages, and `/realm chain example:foundation` prints the whole chain that stage is on — the stage itself green, the ones before it grey and the ones after it white — which makes a mistyped `next_realm` obvious at a glance.
 
 :::
 

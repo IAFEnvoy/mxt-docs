@@ -12,7 +12,7 @@ aside: false
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `items` | `ItemMatcher` | **必填** | 绑定现有物品，不创建新的灵植物品。 |
-| `quality` | `Holder<item_quality>` | **必填** | 该物品的默认品质。 |
+| `quality` | `Holder<quality>` | **必填** | 该物品的品质，也是整套解析顺序的**最后一格**：覆盖组件 → 锻造结果 → 定义默认档（法器 / 功法）→ 所属链条的 `default` → 灵植这里（见 [quality_chain](./quality_chain.md#resolution)）。 |
 | `age` | `NumberProvider` | `0` | 年龄元数据。 |
 | `element_tags` | `HolderOrTag<element>[]` | `[]` | 这株草的元素归属，写的是**元素注册表**：条目是一个元素，`#` 标签是一组元素，被停用的元素不算。可被 `mxt:herb_tag`（`element`）匹配，因此能写进任何接受 `ItemMatcher` 的地方（物品条件、绑定、`mxt:item_matcher`…）。 |
 | `material_tags` | Identifier[] | `[]` | 材料分类标签，同上由 `mxt:herb_tag` 的 `material` 匹配。 |

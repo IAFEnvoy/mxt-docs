@@ -31,7 +31,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/item_binding/
 |-------|------|---------|-------------|
 | `items` | `ItemMatcher` | **required** | The item IDs, item tags, or mixed array of both this binding matches |
 | `actions` | `List<EntityAction>` | `[]` | The ordered actions executed after vanilla consumption finishes |
-| `quality_group` | `Tag<item_quality>` | none | The quality group in which the item is allowed to be used |
+| `quality_chain` | `Holder<quality_chain>` | none | The quality chain this item belongs to. The chain answers membership (a resolved tier must be on it), the default tier (the chain's `default`) and the upgrade path |
 | `conditions` | `EntityCondition[]` | `[]` | Binding use conditions; each entry may be an inline condition, or a `{condition, description}` object carrying a translation-key `description`. Described conditions are marked in the tooltip with a green `✓` or a red `✗` |
 | `element` | `HolderOrTag<element>[]` | `[]` | What this item **is made of**: an entry names one element and a `#tag` names a set of them. This is the first source of "the element of an item" — a declaration wins, and only when none is written does the item fall back to the `aura_type` of the aura it carries; the full reading is on [weapon_binding](./weapon_binding.md). |
 | `attachment_multiplier` | Double | `1.0` | What this item is worth as a ward: while it is carried (both hands and the Curios slots), every strike that leaves an element on the carrier leaves this fraction of it — `0.5` for half, `0` for none. Several carried items multiply, and the default is a no-op. |
@@ -69,13 +69,13 @@ Every binding uses the `items` matcher. It accepts one item ID, one item tag (su
 The matcher only references already registered items. See [Shared Data Types](../types/shared_data_types.md) for the full `ItemMatcher` description and [Other Type Families](/en/datapack/types/other/formation-and-matcher#item-matcher-entry-type) for the entry types.
 :::
 
-### `quality_group`
+### `quality_chain`
 
-`quality_group` must be a native item-quality tag reference prefixed with `#`. Its `values` order defines the group's quality order. When no explicit `mxt:item_quality` component or forge result exists, the last member not disabled by the `mxt:disabled` tag becomes the default quality.
+`quality_chain` names one [Quality Chain](./quality_chain.md) rather than a `#` tag. The chain answers three things at once: **membership** (a tier the item resolves to must be on the chain, or the item cannot be used), the **default tier** an item falls to when neither an override component nor a settled result exists, and the **upgrade path** [`/quality upgrade`](/en/player-guide/commands/quality) walks.
 
-An item cannot be used when its current quality is outside the group, the group has no usable member, a binding condition fails, or the quality's own `condition` fails. See [Item Quality](./item_quality.md).
+An item cannot be used when its current quality is not on the chain, a binding condition fails, or the quality's own `condition` fails. See [Quality](./quality.md).
 
-A quality carries `name` / `description` fields of its own, and both are generated from the id when omitted: `example:refined` in `mxt:item_quality` reads as `quality.mxt.example.refined`, its description as `quality.mxt.example.refined.description`. Quality is also translated under the `quality` category rather than the registry path.
+A quality carries `name` / `description` / `color` fields of its own, and the two text fields are generated from the id when omitted: `example:refined` in `mxt:quality` reads as `quality.mxt.example.refined`, its description as `quality.mxt.example.refined.description`.
 
 ### `conditions`
 
@@ -85,7 +85,7 @@ Every matching binding condition and the current quality's condition must pass b
 
 ## Example
 
-A pellet that grants a spirit root when consumed and is restricted to one quality group:
+A pellet that grants a spirit root when consumed and is restricted to one quality chain:
 
 ```json
 // data/example/mxt/item_binding/root_pellet.json
@@ -94,7 +94,7 @@ A pellet that grants a spirit root when consumed and is restricted to one qualit
   "actions": [
     {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
   ],
-  "quality_group": "#example:quality/root_pellet"
+  "quality_chain": "example:root_pellet"
 }
 ```
 

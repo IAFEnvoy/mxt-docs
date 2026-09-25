@@ -33,4 +33,4 @@ title: /lightning
 
 `color <色>` 与 `palette <渐变>` 是**二选一**的两支，各自后面接着同一条固定顺序的尾巴 `[alpha [thickness [damage [visual_only]]]]`：想写后面的就必须把前面的也写出来（Tab 补全会一路提示），例如要 `thickness` 就得先写颜色或渐变、再写 `alpha`。数据包侧的同一个行为 `mxt:spawn_lightning` 支持任意组合的字段（渐变写在 `palette`），见[数据包 JSON 格式](/datapack/json/index)。
 
-命令中的注册表 ID 使用原版 `IdentifierArgument`，Tab 补全来自服务端当前注册表。
+命令中的注册表 ID 使用原版 `ResourceArgument`，解析、Tab 补全与"没有这个条目"的报错一起由它给出，补全来自服务端当前注册表；被停用的定义会出现在补全里，执行时才被拒绝。哪些参数不走这条路，见[命令总页](/player-guide/commands)的「补全」。

@@ -14,7 +14,7 @@ title: /picker
 
 已注册的分类按顺序是：
 
-`minecraft:item`、`minecraft:block`、`mxt:item_aura`、`mxt:currency`、`mxt:spirit_herb`、`mxt:item_binding`、`mxt:weapon_binding`、`mxt:pill_binding`、`mxt:technique`、`mxt:artifact`、`mxt:contract_type`、`mxt:secret_realm`、`mxt:formation`、`mxt:talisman`、`mxt:aura`、`mxt:block_aura`、`mxt:item_quality`。
+`minecraft:item`、`minecraft:block`、`mxt:item_aura`、`mxt:currency`、`mxt:spirit_herb`、`mxt:item_binding`、`mxt:weapon_binding`、`mxt:pill_binding`、`mxt:technique`、`mxt:artifact`、`mxt:contract_type`、`mxt:secret_realm`、`mxt:formation`、`mxt:talisman`、`mxt:aura`、`mxt:block_aura`、`mxt:quality`。
 
 注意 `mxt:technique` 是分类，`mxt:technique_binding` **不是**：拿到一行的是功法本身，那一行是本体为它生成的载体（这条功法定义里 `carrier_item` 指定的物品，不写就是玉简），并且**已经带好 `mxt:technique` 组件**。见[功法绑定](/datapack/json/technique_binding#carrier)。
 

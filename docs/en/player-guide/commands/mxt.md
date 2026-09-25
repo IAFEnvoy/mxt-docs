@@ -14,7 +14,9 @@ title: /mxt
 | `/mxt resourcebar [resource] [index]` | Shows a resource bar's raw current value, minimum, maximum, untruncated percentage, context, anchor and order; without arguments it lists every resource bar. |
 | `/mxt cultivate status` | Shows the cultivation state: the active cultivation behaviour, the progress stored per aura and the next cultivation tick. |
 | `/mxt breakthrough <aura>` | Attempts a breakthrough into the realm that the given aura leads to. |
-| `/mxt realm set <realm>` | Sets a linear realm. |
+| `/mxt realm set <realm>`, `/mxt realm chain <realm>` | Sets your own linear realm; `chain` prints the whole realm chain that stage is on. See [`/realm`](/en/player-guide/commands/realm). |
+| `/mxt contract list`, `/mxt contract info <target>` | Lists a player's spirit beasts and reads one creature's contract record. See [`/contract`](/en/player-guide/commands/contract). |
+| `/mxt contract bind <player> <target> <contract_type>`, `/mxt contract break <target>`, `/mxt contract recall <target>`, `/mxt contract behavior <target> <behavior>` | Bind, release, recall and order (all need the `gamemaster` permission), sharing one flow with the scroll and the bell. See [`/contract`](/en/player-guide/commands/contract). |
 | `/mxt secret_realm list` | Lists every secret realm: dimension key, index, definition, members and their cap, owner, whether the terrain is prepared and whether the dimension is loaded right now. |
 | `/mxt secret_realm info <dimension>` | Shows the same line for one instance. |
 | `/mxt secret_realm enter <definition>` | Opens or joins a secret realm with you as the entrant (needs the `gamemaster` permission). This is the operator's way in without a token, and it runs the very same path as the token: conditions, member count, instance cap and generation. |

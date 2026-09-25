@@ -32,7 +32,7 @@ description: MiXianTu 内置类型分派的工作方式，以及每一类类型�
 
 | 数据类型 | 分派字段 | 作用 |
 | --- | --- | --- |
-| `Ability` | `ability.type` | 顶层字段名为 `ability`；嵌套对象中的 `type` 选择技能生命周期和触发方式 |
+| `Ability` | `type`（顶层字段） | 顶层 `type` 选择技能生命周期和触发方式（十一种，见[技能类型](./other/ability-and-curse.md#ability-type)）；法器 `abilities` 里的条目写注册表技能 id 或 `#技能标签` |
 | `CurseType` | `type` | 诅咒的持续和过期方式 |
 | `EntityAction` | `type` | 实体行为 |
 | `BiEntityAction` | `type` | 双实体行为 |

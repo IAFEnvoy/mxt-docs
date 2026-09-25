@@ -78,9 +78,9 @@ MXT_EN_DOCS=/path/to/old-docs MXT_ZH_DOCS=/path/to/MiXianTu/docs pnpm run migrat
 | --- | --- |
 | 数据包字段新增 / 改名 / 删除 | 对应的 `docs/datapack/json/<定义>.md`：字段表、示例、行为说明，以及受影响的 `docs/datapack/types/*` |
 | 新命令 / 新配置项 | `docs/player-guide/commands*`（一个根命令一页）+ 相关功能页 + **`pages.mjs` 登记** |
-| 公开 API / KubeJS 全局对象 | `docs/kubejs/*`（含 API 参考的概览表） |
+| 公开 API / KubeJS 全局对象 | `docs/kubejs/*`（**一个全局对象一页**，概览表与通用规则在 `kubejs/api-reference`） |
 | 数据包语义变化（例如某个倍率改由管线消费） | `docs/technical/*` + `docs/datapack/types/formula_variables.md` + 相关教程——**教程里的旧写法必须改掉**，否则读者照抄会重复相乘 |
-| 模块完成度变化 | `docs/index.md` 功能表与相关页的状态措辞 |
+| 模块完成度变化 | `docs/index.md` 与 `docs/en/index.md` 模块表的**状态列**（与模组仓库的两份 README 对齐，四处状态必须一致，完成度以代码为准）；**介绍列只讲"这个模块提供什么"**，不写"XX 还没做"这类进度措辞 |
 | 类型 ID 增加 / 语义变化 | 该类型的"一览"页（条件、行为、触发器…） |
 
 反向也成立：如果你在这里发现某条字段说明与代码不符，**权威在模组仓库**（`docs/数据包格式.md` 与定义本身），要回那边改，不要在文档站"就地编"一个说法。

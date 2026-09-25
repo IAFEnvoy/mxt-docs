@@ -9,7 +9,7 @@ A secret realm is a pocket world that is either throwaway or claimable: **the de
 
 ::: warning Two different commands
 
-`/mxt realm` only manages the **linear realm chain** (`/mxt realm set <realm>`). Secret *realms* are managed by **`/mxt secret_realm …`**. This tutorial is about the latter.
+`/realm` only manages the **linear realm chain** (`/realm set <realm>`, `/realm chain <realm>`). Secret *realms* are managed by **`/mxt secret_realm …`**. This tutorial is about the latter.
 
 :::
 

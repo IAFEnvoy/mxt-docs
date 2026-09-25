@@ -33,3 +33,10 @@ const enoughQi = MxtConditions.testEntity(player, {
   min: 10
 })
 ```
+
+## 相关
+
+- 行为侧的同一套写法：[MxtActions](/kubejs/api/actions)。
+- 回调收到的 `context`：[MxtValues](/kubejs/api/values#formulacontext)。
+- 数据包侧：[实体条件类型](/datapack/types/condition/entity_condition_types)、[双实体条件类型](/datapack/types/condition/bientity_condition_types)、[方块条件类型](/datapack/types/condition/block_condition_types)、[物品条件类型](/datapack/types/condition/item_condition_types)、[伤害条件类型](/datapack/types/condition/damage_condition_types)。
+- [KubeJS API 参考](/kubejs/api-reference)。

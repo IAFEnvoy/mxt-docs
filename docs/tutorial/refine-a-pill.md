@@ -21,7 +21,7 @@ description: 炼丹的教程还没写：这一页先说清这套系统现在有�
 | 灵气工作台 | 方块 `mxt:spirit_crafting_table` | 只跑[灵气合成](../datapack/json/spirit_crafting.md)（`mxt:spirit_shaped` / `mxt:spirit_shapeless`），**与炼丹之间没有任何代码路径**。 |
 | 丹药与丹毒 | [pill_binding](../datapack/json/pill_binding.md) | 完整可用：产出的物品一匹配上就有丹毒收益、阈值与过量行为。 |
 | 灵植 | [spirit_herb](../datapack/json/spirit_herb.md) | 完整可用：给**已有物品**挂元数据（品质、生长、掉落），它本身不注册物品。 |
-| 品质的炼丹修正 | [item_quality](../datapack/json/item_quality.md) 的 `alchemy_modifier` | 完整可用：只改炼制时长，取这一批材料里**最低**的一档。 |
+| 品质的炼丹修正 | [quality](../datapack/json/quality.md) 的 `alchemy_modifier` | 完整可用：只改炼制时长，取这一批材料里**最低**的一档。 |
 
 ## 今天能做什么、不能做什么
 
@@ -48,7 +48,7 @@ description: 炼丹的教程还没写：这一页先说清这套系统现在有�
 - [alchemy_recipe（炼丹配方）](../datapack/json/alchemy_recipe.md) —— 材料、温度与容差、丹炉等级、时长、灵气最低量、成败产物与四个行为字段。
 - [pill_binding（丹药绑定）](../datapack/json/pill_binding.md) —— 丹毒收益、阈值、过量后的残留与过量行为。
 - [spirit_herb（灵植）](../datapack/json/spirit_herb.md) —— 灵植元数据、品质与灵植标签匹配器。
-- [item_quality（品质）](../datapack/json/item_quality.md) —— `alchemy_modifier` 与品质的解析顺序。
+- [quality（品质）](../datapack/json/quality.md) —— `alchemy_modifier` 与品质的解析顺序。
 
 ## 教程发布时会讲什么
 

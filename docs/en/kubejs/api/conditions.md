@@ -33,3 +33,10 @@ const enoughQi = MxtConditions.testEntity(player, {
   min: 10
 })
 ```
+
+## Related
+
+- The same shape on the action side: [MxtActions](/en/kubejs/api/actions).
+- The `context` a callback receives: [MxtValues](/en/kubejs/api/values#formulacontext).
+- Data pack side: [Entity Condition Types](/en/datapack/types/condition/entity_condition_types), [Bi-entity Condition Types](/en/datapack/types/condition/bientity_condition_types), [Block Condition Types](/en/datapack/types/condition/block_condition_types), [Item Condition Types](/en/datapack/types/condition/item_condition_types) and [Damage Condition Types](/en/datapack/types/condition/damage_condition_types).
+- [KubeJS API Reference](/en/kubejs/api-reference).

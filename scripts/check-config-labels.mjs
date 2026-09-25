@@ -26,7 +26,7 @@ function index(lang, prefix) {
   const tabs = new Map() // tab label -> tab key
   const entries = new Map() // `${tabKey}.${entryKey}` -> entry label
   for (const [key, value] of Object.entries(lang)) {
-    if (!key.startsWith(prefix) || key.includes('.tooltip')) continue
+    if (!key.startsWith(prefix) || /\.tooltip$/.test(key)) continue
     const rest = key.slice(prefix.length).replace(/^\./, '')
     if (rest === '') continue
     const parts = rest.split('.')

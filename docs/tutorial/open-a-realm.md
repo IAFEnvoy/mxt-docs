@@ -9,7 +9,7 @@ description: 写一份秘境模板：用什么维度生成、边界怎么划、�
 
 ::: warning 先分清两个命令
 
-`/mxt realm` 只管**线性境界链**（`/mxt realm set <境界>`）；秘境实例的运维全在 **`/mxt secret_realm …`**。本篇讲的是后者。
+`/realm` 只管**线性境界链**（`/realm set <境界>`、`/realm chain <境界>`）；秘境实例的运维全在 **`/mxt secret_realm …`**。本篇讲的是后者。
 
 :::
 

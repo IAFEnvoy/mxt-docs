@@ -47,3 +47,10 @@ const actualAura = MxtValues.evaluateResource(player, 'mxt:spirit_power', {
   type: 'mxt:actual_concentration'
 })
 ```
+
+## 相关
+
+- 拿到 `FormulaContext` 的另外两处：[MxtActions](/kubejs/api/actions)、[MxtConditions](/kubejs/api/conditions)。
+- 用数值当代价：[MxtCosts](/kubejs/api/costs)、[MxtResources](/kubejs/api/resources)。
+- 数据包侧：[数值提供器类型](/datapack/types/number_provider_types)、[常见公式变量](/datapack/types/formula_variables)、[基础类型](/datapack/types/shared_data_types)。
+- [KubeJS API 参考](/kubejs/api-reference)。

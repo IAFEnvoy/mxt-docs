@@ -45,7 +45,7 @@ title: 数值提供器
 | `mxt:sum` | `summands` | 数值提供器求和。 |
 | `mxt:uniform` | `min`、`max` | 使用传入上下文的 `RandomSource` 取均匀随机值。 |
 | `mxt:binomial` | `n`、`p` | `n` 次伯努利试验；`n` 为 `0..16384`，`p` 为 `0..1`。 |
-| `mxt:weighted_list` | `distribution` | 按正整数 `weight` 选择 `data`。 |
+| `mxt:weighted_list` | `distribution` | 按 `weight` 从每一项的 `value` 里选一个求值；条目形状见 [共享数据类型](./shared_data_types) 的加权条目。 |
 | `mxt:conditional` | `branches`、`fallback` | 按顺序检查条件并返回第一个满足分支的值；`fallback` 只能填写数字或表达式字符串，用于没有 `Player` 或所有分支均不匹配的情况。未填写时返回 `0`。 |
 | `mxt:js` | 类型专用字段 | 调用 KubeJS 数值提供器扩展。 |
 

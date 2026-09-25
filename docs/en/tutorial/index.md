@@ -41,16 +41,16 @@ data/example/
 │   ├── tool_binding/smith_hammer.json       Which methods a placed tool unlocks
 │   ├── forging_blueprint/spirit_sword.json  Materials, target band, quality ladder
 │   ├── blueprint_binding/sword_manual.json  Which blueprint the item offers
-│   ├── item_quality/common.json             Quality tiers
-│   ├── item_quality/refined.json
-│   ├── item_quality/flawless.json
+│   ├── quality/common.json             Quality tiers
+│   ├── quality/refined.json
+│   ├── quality/flawless.json
+│   ├── quality_chain/pill.json              A tier ladder: order, default tier, step costs
+│   ├── quality_chain/weapon.json
 │   ├── item_binding/qi_pill.json            Bindings attach rules to real items
 │   ├── item_binding/root_pellet.json
 │   ├── pill_binding/qi_pill.json
 │   ├── weapon_binding/spirit_sword.json
 │   └── technique_binding/azure_manual.json
-├── tags/mxt/item_quality/group/pill.json    Quality groups
-├── tags/mxt/item_quality/group/weapon.json
 └── (kubejs/startup_scripts/mxt_items.js)    The items themselves, registered by KubeJS
 ```
 
@@ -72,7 +72,7 @@ data/example/
 ## Conventions
 
 - **Namespace.** All examples use `example`. Rename it to your own modpack or content pack id, and keep the ids of the files and the references between them in sync.
-- **File locations.** Data pack files go under `data/<namespace>/mxt/<registry>/<path>.json`; tags go under `data/<namespace>/tags/...`. The full list is in [JSON Data Formats](../datapack/json/index.md).
+- **File locations.** Data pack files go under `data/<namespace>/mxt/<registry>/<path>.json`; tags go under `data/<namespace>/tags/...`. Once there is a lot of content, sort the files into subdirectories by category (the directories are part of the ID) — the [Datapack Overview](../datapack/overview.md) spells it out. The full list is in [JSON Data Formats](../datapack/json/index.md).
 - **Applying changes.** MiXianTu data tables are native data pack registries, which Minecraft reads **while the world loads**, so `/reload` does not re-read them. After editing a data pack file, leave to the title screen and open the world again (or restart the server). `/reload` only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts. Registering new items or blocks with KubeJS also needs a game restart.
 - **Broken files block the world.** There is no previous snapshot to fall back on: if a definition fails to decode, the world will not load until the file is fixed. The log names the file and the codec error, so keep the last working copy of a file you are editing.
 - **Verifying.** `/mxt registries validate` reports the registry count, the total entry count and whether validation passed, and `/mxt registries list` prints each registry id with its entry count. The other commands are listed in [Commands](../player-guide/commands.md).

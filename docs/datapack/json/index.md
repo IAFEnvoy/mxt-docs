@@ -4,12 +4,12 @@ title: 动态注册表
 
 # 动态注册表
 
-下表列出 `MxtDatapackRegistries` 注册的 34 个数据包注册表。字段表中的“默认”是 Codec 默认值；“必填”表示缺失时加载失败。表格末尾的 `alchemy_recipe` 与 `spirit_crafting` 不是数据包注册表，而是使用原版配方系统的配方类型，一并列在此处便于查阅。
+下表列出 `MxtDatapackRegistries` 注册的 35 个数据包注册表。字段表中的“默认”是 Codec 默认值；“必填”表示缺失时加载失败。表格末尾的 `alchemy_recipe` 与 `spirit_crafting` 不是数据包注册表，而是使用原版配方系统的配方类型，一并列在此处便于查阅。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
 
 | 注册表 | 文件目录 | 用途 |
 | --- | --- | --- |
 | `resource` | `mxt/resource` | 修为、灵力、体力等实体资源及内联资源条。 |
-| `artifact` | `mxt/artifact` | 法器：认领哪些现有物品、每种灵气存多少、提供哪些能力（被动／主动／飞行／储物）。 |
+| `artifact` | `mxt/artifact` | 法器：认领哪些现有物品、每种灵气存多少、提供哪些能力（被动／主动／储物，以及载具数据这种"不按键"的条目）。 |
 | `aura` | `mxt/aura` | 单个数值的灵气定义：它是什么（元素标记、灵力射线量）、境界链入口、恢复、换算与可用性。 |
 | `realm_stage` | `mxt/realm_stage` | 线性境界链和突破。 |
 | `element` | `mxt/element` | 元素关系（`overcomes`/`adapted_to`，每条关系自带伤害倍率）、它认领的伤害类型（`damage_types`）、附着与衰减参数与显示色；灵气用自身的 `aura_type` 指向一个元素，统一伤害管线按双方灵根的元素关系结算克制与适应，元素附着由 `element_reaction` 结算。 |
@@ -30,8 +30,8 @@ title: 动态注册表
 | `spirit_crafting` | `recipe`（配方类型 `mxt:spirit_shaped` / `mxt:spirit_shapeless`） | 灵气合成配方，只在灵气工作台（`mxt:spirit_crafting_table`）里跑。 |
 | `formation` | `mxt/formation` | 阵法生命周期和灵气覆写。 |
 | `tribulation` | `mxt/tribulation` | 天劫：启动门槛、时间线节拍与成败行为。 |
-| `creature_profile` | `mxt/creature_profile` | 生物档案和实体绑定条件。 |
-| `contract_type` | `mxt/contract_type` | 契约生命周期。 |
+| `creature_profile` | `mxt/creature_profile` | 生物属性档案：匹配、门槛、内丹与写入时的一条行为。 |
+| `contract_type` | `mxt/contract_type` | 契约生命周期。**已标记为将来可能移除。** |
 | `secret_realm` | `mxt/secret_realm` | 秘境模板：实例维度生成、边界、结构、落点、认领与进出规则。 |
 | `currency` | `mxt/currency` | 物品货币面值和兑换。 |
 | `item_binding` | `mxt/item_binding` | 现有物品到行为数组的绑定。 |
@@ -41,7 +41,8 @@ title: 动态注册表
 | `aura_zone` | `mxt/aura_zone` | 环境灵气模板。 |
 | `block_aura` | `mxt/block_aura` | 方块提供的灵气。 |
 | `item_aura` | `mxt/item_aura` | 手持物品提供的修炼燃料。 |
-| `item_quality` | `mxt/item_quality` | 共享品质和品质条件。 |
+| `quality` | `mxt/quality` | 共享品质：名字、颜色、三个修正与使用条件。顺序、默认档与升级路径由 `quality_chain` 给。 |
+| `quality_chain` | `mxt/quality_chain` | 品质链条：由低到高的档位列表、默认档，以及每一步升级的代价与条件。**已标记为将来可能移除。** |
 | `trigger` | `mxt/trigger` | 事件规则：信号、条件与行为。 |
 | `talisman` | `mxt/talisman` | 符箓定义：一张符箓铭刻的能力。 |
 
@@ -53,8 +54,7 @@ title: 动态注册表
 
 | 数据类型 | 分派字段 | 作用 |
 | --- | --- | --- |
-| `Ability` | `ability.type` | 顶层字段名为 `ability`，嵌套对象中的 `type` 选择技能生命周期和触发方式。 |
-| `ArtifactAbility` | `artifact.abilities[].type` | 法器能力：授予技能、载人飞行、自带储物。 |
+| `Ability` | `type`（顶层字段） | 顶层 `type` 选择技能的生命周期与触发方式，共十一种（`empty`、`active`、`triggered`、`modifier`、`aura`、`channelled`、`composite`、`word`、`flight`、`storage`、`upkeep`）；法器 `abilities` 里的条目写注册表技能 id 或 `#技能标签`，见[技能](./ability.md#ability-types)。 |
 | `CurseType` | `type` | 诅咒的持续和过期方式。 |
 | `EntityAction` | `type` | 实体行为。 |
 | `BiEntityAction` | `type` | 双实体行为。 |
@@ -102,7 +102,7 @@ title: 动态注册表
 数据包无法向固有注册表**新增 `type`**，只能选择已注册的类型；`mxt:js` 是其中唯一能把行为交给脚本的类型。
 
 - `curse`：可被多个模块引用的诅咒定义与持续类型；到期与被解毒各有一个行为，而「谁能解我」不由诅咒决定——解毒剂用 `mxt:remove_curses_by_tag` 声明它能解的 `mxt:curse` 标签，标签文件列出诅咒。物品可以携带诅咒（`mxt:curse_container`，装上即施加、脱下即移除），`display_condition` 决定它在人物信息面板里露不露面。详见[数据包格式](/datapack/json/curse)。
-- `creature_profile` / `contract_type`：生物档案和契约规则，框架不提供具体生物数值。
+- `creature_profile` / `contract_type`：生物档案和契约规则，框架不提供具体生物数值。**能不能被契约是代码事实**（目标生物要实现 `Contractable`），数据包只能用契约类型自己的实体类型标签与 `*_condition` 收窄名单，另可用 `costs` / `max_owned` / `recall_cooldown` 规定代价与限制，见 [contract_type](/datapack/json/contract_type)。
 - `secret_realm`：秘境模板，按需为每次进入开出实例维度。
 - `spirit_herb`：绑定现有物品的灵植数据。
 - `artifact`：把现有物品认领为法器，并按 `abilities` 声明被动／主动技能、飞行与自带储物。

@@ -52,15 +52,15 @@ MyBar bar = HudManager.register(new MyBar());
 - 编辑器里元素**照常真实绘制**，编辑器只额外画半透明矩形与名字标签，所以拖的时候看到的就是实际效果。
 - 诊断用客户端命令 `/hud`：打出每个元素的布局键、位置、尺寸、当前块数与可见/可拖状态。"一个元素都没登记"和"登记了但这一帧没有内容"在界面上长得一样，只有它能分开。
 
-当前**已接入的元素**是五个：资源条四个——两列可拖的（`resource_bars.left` / `resource_bars.right`）+ 两条不可拖的固定行（`resource_bars.target` / `resource_bars.boss`）——加上轮盘的「轮盘格」（`wheel.selection`，`screen/wheel/WheelSelectionEntry`：它 `renderBlocks()` 返回空、自己 `render()` 画**永远 4 列、行数随页数向下长的格子**（每格 22px，一页 12 格 = 三行；块宽固定 94、高按内容算，格子号 = 编号读序，**编号此刻代表的那一格换金色边框贴图**），是"整块自己画"那条口子的第一个范例，也是"尺寸随内容变"的第一个范例（`layoutWidth` / `layoutHeight` 每帧算，`refreshPlacement` 里 `setSize` 回报，长出去会被夹回窗口）；默认位置在窗口左边、竖直居中；**画的是整张轮盘的一览**（每一页的每一格）；**不写任何文字标签**）。资源条那四个的做法可以当范例：`ResourceBarOverlay.column(anchor)`／`row(target, layout)` 只回答"哪些条、什么顺序"，条目用 `ResourceBarEntry.blocksWithGaps(...)` 把每条包成块并在条之间插 `spacer`。**位置在数据包那边没有字段**——`resource.bars` 的 `anchor` 只决定落进哪一列，列摆在哪是玩家自己的设置在客户端配置里；两条固定行钉在准心实体上、位置每帧现算、永不入档。资源条自己的 `mxt:resource_bars` GUI 层已经删掉，全部走框架那一层。框架本身的取舍见仓库里的 `research/26_可拖动HUD框架设计.md`，轮盘格这次的改动见 `research/27_轮盘选择系统设计.md` §8 与 `research/31_多轮盘与轮盘来源设计.md` §10.4。
+当前**已接入的元素**是五个：资源条四个——两列可拖的（`resource_bars.left` / `resource_bars.right`）+ 两条不可拖的固定行（`resource_bars.target` / `resource_bars.boss`）——加上轮盘的「轮盘格」（`wheel.selection`，`screen/wheel/WheelSelectionEntry`：它 `renderBlocks()` 返回空、自己 `render()` 画**永远 4 列、行数随页数向下长的格子**（每格 22px，一页 12 格 = 三行；块宽固定 94、高按内容算，格子号 = 编号读序，**编号此刻代表的那一格换金色边框贴图**；**冷却中的格子按原版物品冷却那样压一层白幕**——盖住图标的剩余比例、随时间从上往下退（剩余读条目的 `cooldownTicks`、全长读 `cooldownLength`），其它原因不可用时才压暗），是"整块自己画"那条口子的第一个范例，也是"尺寸随内容变"的第一个范例（`layoutWidth` / `layoutHeight` 每帧算，`refreshPlacement` 里 `setSize` 回报，长出去会被夹回窗口）；默认位置在窗口左边、竖直居中；**画的是整张轮盘的一览**（每一页的每一格）；**不写任何文字标签**）。资源条那四个的做法可以当范例：`ResourceBarOverlay.column(anchor)`／`row(target, layout)` 只回答"哪些条、什么顺序"，条目用 `ResourceBarEntry.blocksWithGaps(...)` 把每条包成块并在条之间插 `spacer`。**位置在数据包那边没有字段**——`resource.bars` 的 `anchor` 只决定落进哪一列，列摆在哪是玩家自己的设置在客户端配置里；两条固定行钉在准心实体上、位置每帧现算、永不入档。资源条自己的 `mxt:resource_bars` GUI 层已经删掉，全部走框架那一层。框架本身的取舍见仓库里的 `research/26_可拖动HUD框架设计.md`，轮盘格这次的改动见 `research/27_轮盘选择系统设计.md` §8 与 `research/31_多轮盘与轮盘来源设计.md` §10.4。
 
 ## 轮盘选择系统 `screen.wheel`
 
-按住按键（`key.mxt.wheel`，默认 `R`），屏幕上出现一个 **12 扇**的轮盘：指针**朝哪个方向**就选中哪一扇，选中的扇区变金色并向外扩一点，**这一扇的名字与 tooltip 写在轮盘正中间**。它是技能、灵气与法器技能**唯一的触发入口**——原来"技能栏 + 灵力栏"两条快捷栏与它们各自的配置界面已经删除（过程见 `research/28_技能与灵气归一化设计.md`）。
+按住按键（`key.mxt.wheel`，默认 `R`），屏幕上出现一个 **12 扇**的轮盘：指针**朝哪个方向**就选中哪一扇，选中的扇区变金色并向外扩一点，**这一扇的名字与 tooltip 写在轮盘正中间**。它是技能与灵气**唯一的触发入口**——法器能力就是技能，原来"技能栏 + 灵力栏"两条快捷栏与它们各自的配置界面已经删除（过程见 `research/28_技能与灵气归一化设计.md`）。
 
-**轮盘由"主盘 + 从盘"组成，用一套连续编号串起来**（2026-09-22 新增并按玩家口径重做，见 `research/31_多轮盘与轮盘来源设计.md` §10）：主盘是玩家自己摆的 12 格（编号 `0..11`），从盘（主手物品 / 副手物品 / 法器）按随身装备**自动生成、不存储**（内容是这些装备此刻授予的主动技能，加上它们作为法器声明的**开关**），格子从 `12` 起接着排；**一页 12 格**，一个来源占 `ceil(条目数 / 12)` 页（一条都没有就一页都不占），所以"一个从盘不够用就再开一个新的"。翻页是两把键（`key.mxt.wheel_previous` / `key.mxt.wheel_next`，默认键盘左 / 右方向键，**默认两头环绕**，由客户端配置「轮盘选择 → 循环翻页」决定绕回还是停在两端），`R` **打开始终回到主盘（第一页）**。**页只是视图，编号才是选择**：轮盘画当前页、HUD 轮盘格画整张轮盘、12 把槽位键作用于当前页，关着时的 `V` 作用于编号此刻代表的那一格（**编号指向不存在的格子时落到最后一个有东西的格子，编号落在空格子上时落到第一个有内容的格子，编号本身不改写**）。
+**轮盘由"主盘 + 从盘"组成，用一套连续编号串起来**（见 `research/31_多轮盘与轮盘来源设计.md` §10）：主盘是玩家自己摆的 12 格（编号 `0..11`），从盘（主手物品 / 副手物品 / 法器 / 契约灵兽）按随身装备与手里的御兽铃**自动生成、不存储**（内容是这些装备此刻授予的主动技能，加上它们作为法器声明的**技能**；契约灵兽那一页是铃对准的灵宠认的行为），格子从 `12` 起接着排；**一页 12 格**，一个来源占 `ceil(条目数 / 12)` 页（一条都没有就一页都不占），所以"一个从盘不够用就再开一个新的"。翻页是两把键（`key.mxt.wheel_previous` / `key.mxt.wheel_next`，默认键盘左 / 右方向键，**默认两头环绕**，由客户端配置「轮盘选择 → 循环翻页」决定绕回还是停在两端），`R` **打开始终回到主盘（第一页）**。**页只是视图，编号才是选择**：轮盘画当前页、HUD 轮盘格画整张轮盘、12 把槽位键作用于当前页，关着时的 `V` 作用于编号此刻代表的那一格（**编号指向不存在的格子时落到最后一个有东西的格子，编号落在空格子上时落到第一个有内容的格子，编号本身不改写**）。
 
-框架（几何、扇环渲染、开合状态机、选择语义）在 `screen.wheel`，内容（技能、灵气与法器技能怎样变成条目、每个来源贡献什么）在 `screen.wheel/content`，编辑界面是 `WheelConfigurationScreen`；接法、布局的存储与校验、编号与分页、触发分派见[轮盘条目](../java/wheel.md)，这里只记要点：
+框架（几何、扇环渲染、开合状态机、选择语义）在 `screen.wheel`，内容（技能与灵气怎样变成条目、每个来源贡献什么）在 `screen.wheel/content`，编辑界面是 `WheelConfigurationScreen`；接法、布局的存储与校验、编号与分页、触发分派见[轮盘条目](../java/wheel.md#轮盘条目)，这里只记要点：
 
 - **框架不决定轮盘上有什么**：`WheelMenuProvider`（唯一实现 `WheelContent`，客户端初始化时登记）回答"这个来源现在贡献哪些条目"（入参是玩家与来源 `WheelSource`；返回值可以比一页长，分页由 `WheelMenuContent` 做），条目契约是 `WheelMenuEntry`（`kind` / `id` / `title` / `icon` / `tooltip` / `cooldown` / `usable` / `onSelected`）。这替换掉了框架最初"模块静态登记 12 个槽位"的做法：内容已经是玩家自己的布局，第二条入口只会和它抢格子。
 - **布局内容存在服务端**：玩家附件 `wheel_layout` 存一份 12 格 `WheelLayout`（每格 `WheelSlot = 类型 + id`，空格是 `EMPTY` 哨兵，**只有主盘进附件**），以及一个 `armed` 字段存"当前选中的格子编号"（`Optional<Integer>`，一个数字）；配置界面关闭时发 `WheelLayoutC2SPayload`，服务端 `WheelService.sanitize` 强制 12 格、逐格校验 id 能否在对应注册表里解析后再写回。编号走 `WheelSelectionC2SPayload`，由 `screen.wheel/content/WheelSelectionSync` 在登录时恢复、编号变化时上送——细节见[轮盘条目](../java/wheel.md#选中项跨会话)。
@@ -77,7 +77,7 @@ MyBar bar = HudManager.register(new MyBar());
 
 ## 法器储物窗口 `MxtMenus.ARTIFACT_STORAGE`
 
-轮盘上「储物」那一格按下去打开的就是它（2026-09-22 新增，见 `research/32_法器开关与轮盘接线设计.md`）：**没有自己的菜单类，也没有自己的界面类**——它就是原版箱子那一套，注册的是 `ChestMenu`，客户端注册的是 `ContainerScreen`（`generic_54.png` 那张贴图本来就画 1..6 行），所以宽度固定 176、行数由 `getRowCount()` 决定，标题由开窗包带过去（`screen.mxt.artifact_storage` = 「储物 · 法器名」）。行数走 `IMenuTypeExtension` 的附加数据（服务端写 `capacity / 9`），客户端据此重建一个同样大小的 `SimpleContainer` 镜像，格子内容照常走菜单同步。
+轮盘上「储物」那一格按下去打开的就是它（见 `research/32_法器开关与轮盘接线设计.md`，由 `AbilityActivationService` 统一进入）：**没有自己的菜单类，也没有自己的界面类**——它就是原版箱子那一套，注册的是 `ChestMenu`，客户端注册的是 `ContainerScreen`（`generic_54.png` 那张贴图本来就画 1..6 行），所以宽度固定 176、行数由 `getRowCount()` 决定，标题由开窗包带过去（`screen.mxt.artifact_storage` = 「储物 · 法器名」）。行数走 `IMenuTypeExtension` 的附加数据（服务端写 `capacity / 9`），客户端据此重建一个同样大小的 `SimpleContainer` 镜像，格子内容照常走菜单同步。
 
 内容那一侧是 `runtime/artifact/ArtifactStorageContainer`（`SimpleContainer` 子类）：开窗时从法器的 `mxt:artifact_storage` 组件读进来，之后**每一次改动都在 `setChanged()` 里整份写回**（`ArtifactStorageService#replace`，一次组件更新而不是每格一次）。它**故意不持有那个物品堆**——法器的位置是会变的，往一个没人拿着的栈里写就是物品消失的经典成因：所以每次读写都按"这件法器还在不在玩家身上"重新解析（`ArtifactService#carried` 扫双手、背包与 Curios），`stillValid` 一旦为假，服务端每刻的菜单检查就会把窗口关掉。储物格数由定义给出：**按 9 向上取整、最多 6 行（54 格）**，容量与窗口永远是同一个数。
 
@@ -141,12 +141,12 @@ if (screen != null) Minecraft.getInstance().setScreen(screen);
 `ItemPickerManager` 只负责「注册表 → 可选项」的映射，现在只是**界面内容**的来源，服务端不再需要它。它产出的每一项是 `PickerItem(stack, names)`：**要画的堆**，加上**这一行能被哪些名字搜到**。堆本身保持原样，**不往物品上写任何东西**（没有自定义名称、没有后缀）——同一件替身物品代表好几个定义时靠搜索区分，不靠名字上的标记。名字交给目录自己给：
 
 - 物品/方块注册表的条目本身就是物品，堆上已经写着它叫什么，于是名字就是「它显示的名字 + 它的注册 id」；
-- 数据驱动定义没有自己的物品，堆上根本看不出它代表谁，于是名字由 `DefinitionText` 从它的 `Holder` / `ResourceKey` 生成翻译键得到——`mxt:fire` 在 `mxt:aura` 里就查 `aura.mxt.mxt.fire`——再补上它的 id。`resource`、`aura` 等 18 个注册表的定义自带 `name` / `description`，读字段本身；字段省略时由 `ContextNameCodec` 在加载期按 id 生成**同一套**键（描述再加 `.description`）；
+- 数据驱动定义没有自己的物品，堆上根本看不出它代表谁，于是名字由 `DefinitionText` 从它的 `Holder` / `ResourceKey` 生成翻译键得到——`mxt:fire` 在 `mxt:aura` 里就查 `aura.mxt.mxt.fire`——再补上它的 id。`resource`、`aura` 等 19 个注册表的定义自带 `name` / `description`，读字段本身；字段省略时由 `ContextNameCodec` 在加载期按 id 生成**同一套**键（描述再加 `.description`）；
 - 标签匹配展开出来的行，名字里既有那个物品自己的名字，也有它所属定义的名字和 id。
 
 用列表而不是单个名字，是因为一行可以有好几种叫法。界面不再需要从「注册表 key + 条目 id」去反推任何东西；只有 `over(...)` 那条路没有目录可问，界面自己补上「展示名 + item id」。
 
-翻译键的拼法统一由 `com.iafenvoy.mxt.util.DefinitionText` 决定：类别默认取注册表自己的 path、注册表命名空间恒为 `mxt`，少数类别不是注册表 path 的（`mxt:item_quality` 一直按 `quality` 翻译）在它里面的 `CATEGORIES` 声明一次。手里已经有 `Holder` / `ResourceKey` 时直接 `DefinitionText.name(holder)`，只有拿到的是一根光秃秃的 `Identifier` 时才需要把类别当参数传进去（`DefinitionText.name(id, "resource")`）。
+翻译键的拼法统一由 `com.iafenvoy.mxt.util.DefinitionText` 决定：类别就是注册表自己的 path、注册表命名空间恒为 `mxt`，没有例外表。手里已经有 `Holder` / `ResourceKey` 时直接 `DefinitionText.name(holder)`，只有拿到的是一根光秃秃的 `Identifier` 时才需要把类别当参数传进去（`DefinitionText.name(id, "resource")`）。
 
 分类就是注册表本身，`/picker <分类 id>` 可以只列出某一个（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`），不写则给出全部已注册分类。
 

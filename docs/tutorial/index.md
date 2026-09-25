@@ -41,16 +41,16 @@ data/example/
 │   ├── tool_binding/smith_hammer.json       Which methods a placed tool unlocks
 │   ├── forging_blueprint/spirit_sword.json  Materials, target band, quality ladder
 │   ├── blueprint_binding/sword_manual.json  Which blueprint the item offers
-│   ├── item_quality/common.json             Quality tiers
-│   ├── item_quality/refined.json
-│   ├── item_quality/flawless.json
+│   ├── quality/common.json             Quality tiers
+│   ├── quality/refined.json
+│   ├── quality/flawless.json
+│   ├── quality_chain/pill.json              A tier ladder: order, default tier, step costs
+│   ├── quality_chain/weapon.json
 │   ├── item_binding/qi_pill.json            Bindings attach rules to real items
 │   ├── item_binding/root_pellet.json
 │   ├── pill_binding/qi_pill.json
 │   ├── weapon_binding/spirit_sword.json
 │   └── technique_binding/azure_manual.json
-├── tags/mxt/item_quality/group/pill.json    Quality groups
-├── tags/mxt/item_quality/group/weapon.json
 └── (kubejs/startup_scripts/mxt_items.js)    The items themselves, registered by KubeJS
 ```
 
@@ -72,7 +72,7 @@ data/example/
 ## 约定
 
 - **命名空间。** 所有示例都使用 `example`。把它改成你自己整合包或内容包的 ID，并保持文件的 ID 与它们之间的引用同步。
-- **文件位置。** 数据包文件放在 `data/<namespace>/mxt/<registry>/<path>.json` 下；标签放在 `data/<namespace>/tags/...` 下。完整列表见 [动态注册表](../datapack/json/index.md)。
+- **文件位置。** 数据包文件放在 `data/<namespace>/mxt/<registry>/<path>.json` 下；标签放在 `data/<namespace>/tags/...` 下。内容一多就按类别分进子文件夹（目录是 ID 的一部分），写法见[数据包开发总览](../datapack/overview.md)。完整列表见 [动态注册表](../datapack/json/index.md)。
 - **生效方式。** MiXianTu 的数据表是原版数据包注册表，Minecraft 在**世界加载时**读取它们，所以 `/reload` 不会重新读取。修改数据包文件后，请退回标题界面重新打开世界（或重启服务器）。`/reload` 只会刷新配方、战利品表、进度、函数和 KubeJS 服务端脚本。用 KubeJS 注册新物品或方块同样需要重启游戏。
 - **坏文件会挡住世界。** 没有上一份快照可以退回：只要有定义解码失败，世界就会一直加载不了，直到该文件被修好。日志会给出文件名和 Codec 错误，所以要留一份正在编辑的文件的最后可用副本。
 - **校验。** `/mxt registries validate` 报告注册表数量、条目总数以及校验是否通过，`/mxt registries list` 打印每个注册表 ID 及其条目数量。其余命令列在[命令](../player-guide/commands.md)里。

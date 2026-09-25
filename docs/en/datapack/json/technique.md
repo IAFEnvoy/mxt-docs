@@ -22,7 +22,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/technique/vit
 |-------|------|---------|-------------|
 | `name` | Text Component | `technique.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
 | `description` | Text Component | `technique.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
-| `grade` | String | `common` | Cultivation technique grade marker. It is free-form text a data pack chooses, and the technique panel shows it in the row tooltip as `Grade: <value>`. The language key `mxt.technique_grade.<grade>` is used when it exists, which is how a data pack translates its own grades; otherwise the text is shown exactly as written. |
+| `quality` | `Holder<quality>` | none | The technique's own **grade**, as one [quality](./quality.md) entry. It does two jobs: the technique panel reads it — a row starts with "technique name + level", the name is tinted with the grade's `color`, and the row tooltip's "Grade" line reads its name and colour — and it is the **default tier of the technique's carrier item** (an `mxt:item_quality` override component on the stack wins). Omitted, no grade is shown and the carrier gets no default tier. |
 | `learn_condition` | `EntityCondition` | `mxt:always_true` | Learning condition. |
 | `exclusive_tags` | `Identifier[]` | `[]` | Mutual exclusion tags of the technique. |
 | `cultivation_modifier` | `NumberProvider` | `1` | Cultivation multiplier. |
@@ -73,7 +73,7 @@ Every learned cultivation technique is active at the same time.
 
 ```json
 {
-  "grade": "earth",
+  "quality": "example:earth",
   "learn_condition": {"type": "mxt:has_realm", "aura": "example:qi"},
   "exclusive_tags": ["example:fire_technique"],
   "cultivation_modifier": 1.5,

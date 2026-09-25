@@ -13,8 +13,10 @@ title: /mxt
 | `/mxt resource <id> set <value>` | 设置资源值。 |
 | `/mxt resourcebar [resource] [index]` | 查看资源条的原始当前值、上下限、未截断百分比、上下文、位置和顺序；不填参数时列出全部资源条。 |
 | `/mxt cultivate status` | 查看修炼状态。 |
-| `/mxt breakthrough <resource>` | 尝试突破指定资源对应的境界。 |
-| `/mxt realm set <realm>` | 设置线性境界。 |
+| `/mxt breakthrough <aura>` | 尝试突破到这门**灵气**（`mxt:aura` 条目，补全给的就是它）所通往的境界。缺哪一种修炼资源由境界自己声明，失败时会点名。 |
+| `/mxt realm set <realm>`、`/mxt realm chain <realm>` | 设置自己的线性境界；`chain` 打印这一档所在的整条境界链。见 [`/realm`](/player-guide/commands/realm)。 |
+| `/mxt contract list`、`/mxt contract info <target>` | 列出主人名下的灵兽与读一只灵兽的契约记录。见 [`/contract`](/player-guide/commands/contract)。 |
+| `/mxt contract bind <player> <target> <contract_type>`、`/mxt contract break <target>`、`/mxt contract recall <target>`、`/mxt contract behavior <target> <behavior>` | 签订、解除、召回与下行为命令（都需要 gamemaster 权限），与卷轴、御兽铃共用同一条流程。见 [`/contract`](/player-guide/commands/contract)。 |
 | `/mxt secret_realm list` | 列出当前所有秘境实例：维度键、序号、定义、在场人数与上限、主人、地形是否已布置、维度当前是否加载。 |
 | `/mxt secret_realm info <dimension>` | 查看某一份实例的同一行信息。 |
 | `/mxt secret_realm enter <definition>` | 以自己为进入者开一份或加入一份秘境实例（需要 gamemaster 权限）。这是无需令牌就能进秘境的管理入口，走的是与令牌完全相同的那条流程（条件、人数、实例上限、生成）。 |

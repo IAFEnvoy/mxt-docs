@@ -18,7 +18,7 @@ A `cultivate_action` defines a named cultivation activity: when cultivation may 
 
 Cultivate action files go in `data/<namespace>/mxt/cultivate_action/` within your datapack.
 
-**Purpose**: The cultivation process and its environment requirements.
+**Purpose**: The cultivation process and its environment requirements. **Marked as possibly removable.**
 
 The filename corresponds to its ID. For example, `data/example/mxt/cultivate_action/meditate.json` has the ID `example:meditate`.
 

@@ -19,13 +19,15 @@ title: 共享数据类型
 | `HolderOrTag<T>` | 字符串或字符串数组 | 单个 ID、单个标签或混合数组。 |
 | `ItemMatcher` | ID、标签或混合数组 | 物品绑定表的 `items` 字段；匹配现有物品，不创建物品。 |
 | `Text Component` | 字符串或文本对象 | 支持翻译键字符串和原版文本组件。 |
-| `ItemStackTemplate` | `{"id":"minecraft:stone"}` | 原版物品堆模板，可附带 `count` 和数据组件。 |
+| `ItemStackTemplate` | `{"id":"minecraft:stone"}` | 原版物品堆模板，可附带 `count` 和数据组件；也接受裸物品 ID 字符串。 |
+| `ItemStack` | `{"id":"minecraft:amethyst_shard"}` | 原版物品堆，**必须写成对象**（`id` 必填，可带 `count` 与 `components`），不接受裸物品 ID 字符串；与上面那条模板的区别就在这里。 |
 | `NumberProvider` | 数字、字符串或对象 | 常量、exp4j 表达式或固有数值提供器。 |
 | `EntityAction` | 对象或对象数组 | 对实体执行行为；数组按顺序执行。 |
 | `BiEntityAction` | 对象或对象数组 | 对来源实体和目标实体执行行为。 |
 | `BlockAction` | 对象或对象数组 | 对方块位置执行行为。 |
 | `ItemAction` | 对象或对象数组 | 对物品堆执行行为。 |
 | `EntityCondition` | 对象或对象数组 | 数组表示全部条件都必须满足。 |
+| `Weighted<T>` | `{"value": …, "weight": 3}` | 加权列表的一项，全站只有这一种形状：`value` 必填、`weight` 可选（默认 `1`）。权重 `≤0` 的条目算 `0`（永远不会被选中），整表权重全为 `0` 时等概率抽一项。用在 `mxt:choice` 的 `actions` 与 `mxt:weighted_list` 的 `distribution`。`secret_realm` 的 `entry` 数组是唯一例外：`weight` 直接写在落点对象上（它还要带 `pos`、随机半径等字段），而且**负权重在那里的加载期被拒绝**，不按 `0` 算；`0` 一样表示不会被选中。 |
 
 ### `Cost`
 
@@ -67,9 +69,9 @@ title: 共享数据类型
 
 缺少某个通道只会被报成「付不出」，永远不会被报成定义坏了。无法解码的条目会让**定义加载失败**，不再有「打一条警告然后把这一项丢掉」的行为。
 
-用这个数组的字段（共 11 个）：`ability.costs`、`mxt:channelled` 的 `upkeep_costs`、`realm_stage.costs`、`cultivate_action.costs` 与 `cultivate_action.aura_costs`、`formation.activation_costs` 与 `formation.maintenance_costs`、`forging_method.costs`、法器技能 `mxt:flight` 与 `mxt:upkeep` 的 `costs`，以及灵气合成配方（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）的 `aura`。最后两项只接受 `mxt:aura` 条目（写其它类型是加载错误），它们旧的 `{"<灵气 id>": NumberProvider}` 映射写法仍然可读（兼容），但序列化时一律写成数组形式。
+用这个数组的字段（共 10 个）：`ability.costs`（**所有技能类型共用**，所以 `mxt:mount` 的每 tick 燃料与 `mxt:upkeep` 的每周期费用也写在这里）、`mxt:channelled` 的 `upkeep_costs`、`realm_stage.costs`、`cultivate_action.costs` 与 `cultivate_action.aura_costs`、`formation.activation_costs` 与 `formation.maintenance_costs`、`forging_method.costs`、`contract_type.costs`（签订契约的代价，由主人支付），以及灵气合成配方（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）的 `aura`。最后两项只接受 `mxt:aura` 条目（写其它类型是加载错误），它们旧的 `{"<灵气 id>": NumberProvider}` 映射写法仍然可读（兼容），但序列化时一律写成数组形式。
 
-**下面这些故意不是 `Cost`**，别去「修」它们：`talisman.aura_cost` 仍然是 `{"<灵气 id>": NumberProvider}` 映射，它是「载体要充满多少这门灵气才触发」的**要求**（同时也是灌注容量），不是支付；`alchemy` 配方的 `minimum_aura` 与 `creature_profile.minimum_aura` 是要求，从不被消耗。货币系统与这套形状无关：`currency` 的 `exchanges[].cost` 是「一次兑换要几个货币物品」的整数价格（`1..99`），`item_quality.value_multiplier` 是价值修正，两者都不是 `Cost`。
+**下面这些故意不是 `Cost`**，别去「修」它们：`talisman.aura_cost` 仍然是 `{"<灵气 id>": NumberProvider}` 映射，它是「载体要充满多少这门灵气才触发」的**要求**（同时也是灌注容量），不是支付；`alchemy` 配方的 `minimum_aura` 与 `creature_profile.minimum_aura` 是要求，从不被消耗。货币系统与这套形状无关：`currency` 的 `exchanges[].cost` 是「一次兑换要几个货币物品」的整数价格（`1..99`），`quality.value_multiplier` 是价值修正，两者都不是 `Cost`。
 
 ### `AuraGain`
 

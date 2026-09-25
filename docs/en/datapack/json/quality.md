@@ -1,20 +1,20 @@
 ---
-title: Item Quality (item_quality)
+title: Quality (quality)
 description: An item quality names a quality tier and carries the value, forging and alchemy modifiers attached to it.
 aside: false
 ---
 
-# Item Quality (item_quality)
+# Quality (quality)
 
 An item quality defines one quality tier that items can carry, together with the modifiers that tier applies to currency value, forging and alchemy.
 
 ## File Location
 
-Item quality JSON files go in `data/<namespace>/mxt/item_quality/` within your data pack.
+Item quality JSON files go in `data/<namespace>/mxt/quality/` within your data pack.
 
 **Purpose**: Shared quality and quality conditions.
 
-The filename corresponds to its ID. For example, `data/example/mxt/item_quality/refined.json` has the ID `example:refined`.
+The filename corresponds to its ID. For example, `data/example/mxt/quality/refined.json` has the ID `example:refined`.
 
 ## Fields
 
@@ -22,12 +22,15 @@ The filename corresponds to its ID. For example, `data/example/mxt/item_quality/
 |-------|------|---------|-------------|
 | `name` | Text Component | `quality.mxt.<namespace>.<path>` | The quality's name. When omitted it is the default key in the previous column. |
 | `description` | Text Component | `quality.mxt.<namespace>.<path>.description` | The quality's description, drawn below the quality name. When omitted it is the default key in the previous column. |
+| `color` | Color | none | The quality's colour, optional. Writing it tints **everywhere a quality is named**: the item's own name line in its tooltip, the "Quality: name" line, the entry names in the picker's quality category, and the tier table in a forge blueprint's tooltip. Leaving it out changes nothing at all (it is **not** a default white, so a quality without one keeps its vanilla rarity colour). Six hex digits `"#RRGGBB"` or an integer. The name line can also be switched off by the player: **Client Settings → Tooltips → Tint Item Name** (on by default) covers that one line and leaves the other three alone. |
 | `value_multiplier` | `Modifier` | `1` | The currency value modifier. |
 | `forging_modifier` | `Modifier` | `1` | The forging modifier. |
 | `alchemy_modifier` | `Modifier` | `1` | The alchemy modifier. |
 | `condition` | `EntityCondition` | `mxt:always_true` | The condition for using this quality. |
 
 `name` and `description` may both be omitted: omitting one means the key generated from the id above, while writing it uses the text you give (a bare string is a translation key, an object is a full component). `name` is drawn on the quality line of an item tooltip, and `description` on the grey line below it.
+
+`color` follows different rules from those two text fields: **writing it wins** (it even overrides a colour set inside the `name` component), and **leaving it out changes nothing at all** - it is not a default white, so a quality without one keeps its vanilla rarity colour. The description line is always grey and is not affected.
 
 ## Modifiers
 
@@ -57,24 +60,21 @@ A modifier of exactly `1` changes nothing. A field that is missing, a stack that
 
 That file omits `name`, `description` and `forging_modifier.description`.
 
-## Order and Groups
+## Order, Default and Upgrades
 
-Quality order and grouping are decided by vanilla tags:
+Quality **order, default tier, membership and upgrade path are all decided by a chain**: a [quality_chain](./quality_chain.md) orders several qualities from low to high, and a binding table points at it with `quality_chain`. A tier an item resolves to has to be on the chain, or the item cannot be used, and the chain's `default` answers which tier an item falls to when no override component was written.
 
-```text
-data/mxt/tags/mxt/item_quality/tooltip_order.json
-data/<namespace>/tags/mxt/item_quality/group/<name>.json
-```
+The old vanilla-tag arrangement is retired: `group/<name>` tags are no longer read (`ItemQualityTags.group`, `groups`, `inGroup` and `groupDefault` are gone). The `tooltip_order` tag and `ItemQualityService.ordered()` are still in the code but have **no consumer at all** - nothing in the interface sorts by quality order today, so this page does not describe them as a working sort.
 
-The order of `values` in `tooltip_order` is preserved by `ItemQualityService.ordered`, and group tags may overlap. The `quality_group` in a binding table must be a `#` tag, and an explicit quality component or a forging quality must belong to that group.
+`color` only affects **wherever a quality is named** and plays no part in resolution: resolution only answers "which tier", and the full order is on [Quality Chain](./quality_chain.md#resolution).
 
 ## Translation
 
-`item_quality` is the one registry whose category is not its own path. The category here is `quality`, while the **registry namespace is still `mxt`**, so `example:refined` is looked up as `quality.mxt.example.refined`, and its description as `quality.mxt.example.refined.description`.
+The category is the registry's own path, so `example:refined` is looked up as `quality.mxt.example.refined`, and its description as `quality.mxt.example.refined.description` (the **registry namespace is still `mxt`**).
 
 Among the registries that carry `name` and `description`, this is also the only one that **already** draws the description (the line under the quality name); the others store and read both fields but have nothing that renders them yet. There is no `translation_key` JSON field; a path containing `/` keeps it in the key, exactly as it does in every other registry.
 
 ## Related Formats
 
-Quality entries are referenced by the quality ladder of [Forging Blueprint](./forging_blueprint.md) and by [Spirit Herb](./spirit_herb.md). An item's quality is resolved in a fixed order: an explicit `mxt:item_quality` component, then the quality of a forge result, then the last enabled member of the matching binding's `quality_group`, then the default quality declared by a matching spirit herb.
+Quality entries are referenced by the quality ladder of [Forging Blueprint](./forging_blueprint.md), by [Spirit Herb](./spirit_herb.md) and by the [Quality Chain](./quality_chain.md) that a binding table points at. An item's quality is resolved in a fixed order: an explicit `mxt:item_quality` component, then the quality of a forge result, then a definition default (an artifact or a technique), then the chain's `default`, then the default quality declared by a matching spirit herb.
 

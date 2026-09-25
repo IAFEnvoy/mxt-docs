@@ -1,10 +1,13 @@
 ---
-title: MxtCosts 与 MxtResources
+title: MxtCosts：单个消耗
+description: 预检或支付一个 Cost；多个条目请用 MxtResources 的原子支付。
 ---
 
-# `MxtCosts` 与 `MxtResources`
+# `MxtCosts`：单个消耗
 
-## `MxtCosts`
+`MxtCosts` 收的是**一个** `Cost`：只回答"这里付得出吗"，或者一次性把它付掉。多个条目请用 [MxtResources](/kubejs/api/resources)，它把整份数组当成一笔原子事务；**不要把多次 `MxtCosts.consume` 当成一次原子支付**。
+
+## 方法
 
 | 方法 | 参数 | 返回值 | 说明 |
 | --- | --- | --- | --- |
@@ -52,27 +55,8 @@ MxtCosts.register('example:quest_token',
 { type: 'mxt:js', id: 'example:quest_token', params: { count: 3 } }
 ```
 
-单个 `Cost` 是安全入口；多项消耗请使用下方的 `MxtResources.consume`，它把整份数组当成一笔原子事务。不要把多个 `MxtCosts.consume` 当成一次原子支付。
+## 相关
 
-## `MxtResources`
-
-| 方法 | 参数 | 返回值 | 说明 |
-| --- | --- | --- | --- |
-| `consume(entity, costs)` | 活着的实体、`Cost[]` | `ResourceTransactions.Result` | 原子支付整份数组，**全有或全无**；任一项付不出时什么都不扣。 |
-
-`costs` 就是上面那套**统一的 `Cost` 数组**：五种写法都能直接写，旧的 `{"id": ..., "amount": ...}` 简写仍然有效（读作 `mxt:resource`）。付款者必须是**活着的实体**（不需要是玩家，但需要玩家背包的 `mxt:item` 与需要玩家的 `mxt:js` 对非玩家付款者就是付不出）。无法解码的条目**不再被静默丢掉**，而是让这次调用直接失败——从前那种「打一条 WARN、丢掉那一项、整笔照常提交」的行为已经没有了。
-
-```js
-const result = MxtResources.consume(player, [
-  { id: 'mxt:spirit_power', amount: 10 },
-  { type: 'mxt:aura', aura: 'mxt:fire_aura', amount: 'level + 2' }
-])
-
-if (result.committed()) {
-  console.info(`已扣除: ${result.amounts()}`)
-} else {
-  console.warn(`付不出: ${result.failedResource()}`)
-}
-```
-
-返回 record 的访问器为 `committed()`、`failedResource()`、`amounts()`。在客户端、非法公式或任一项付不出时 `committed()` 均为 `false`。
+- 多条目一次付清：[MxtResources](/kubejs/api/resources)。
+- `Cost` 的形状与它扣在哪条通道上：[共享数据类型](/datapack/types/shared_data_types#cost)。
+- [KubeJS API 参考](/kubejs/api-reference)。

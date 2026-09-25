@@ -28,7 +28,8 @@ So this tutorial covers the chain that genuinely runs today: **define → hand o
 ```json
 // data/example/mxt/ability/spark.json
 {
-  "ability": {"type": "mxt:active", "slot": "primary"},
+  "type": "mxt:active",
+  "slot": "primary",
   "cooldown": 60,
   "entity_action": {
     "type": "mxt:apply_effect",

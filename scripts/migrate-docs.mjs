@@ -293,43 +293,12 @@ const ZH_EXCLUDED = new Set(['模块实现审计.md',
  * overview of the group (it gains a link list and keeps everything that did not move).
  *
  * Section names are matched per language, because the two trees are written separately.
+ *
+ * The KubeJS reference used to be split here (one page per `##` section, with the runtime
+ * domain objects sharing one page). That section is now hand written with one page per
+ * global object, which a section split cannot express, so it is listed in `KEEP` instead.
  */
 const SPLITS = [
-  {
-    parent: 'kubejs/api-reference',
-    children: [
-      {
-        page: 'kubejs/api/actions',
-        title: { zh: '`MxtActions`：脚本 Action', en: '`MxtActions`: Script Actions' },
-        sections: { zh: ['MxtActions'], en: ['MxtActions'] }
-      },
-      {
-        page: 'kubejs/api/conditions',
-        title: { zh: '`MxtConditions`：脚本 Condition', en: '`MxtConditions`: Script Conditions' },
-        sections: { zh: ['MxtConditions'], en: ['MxtConditions'] }
-      },
-      {
-        page: 'kubejs/api/values',
-        title: { zh: '`MxtValues`：脚本数值', en: '`MxtValues`: Script Providers' },
-        sections: { zh: ['MxtValues'], en: ['MxtValues'] }
-      },
-      {
-        page: 'kubejs/api/costs',
-        title: { zh: '`MxtCosts` 与 `MxtResources`', en: '`MxtCosts` and `MxtResources`' },
-        sections: { zh: ['MxtCosts 与 MxtResources'], en: ['MxtCosts and MxtResources'] }
-      },
-      {
-        page: 'kubejs/api/runtime',
-        title: { zh: '运行时领域 API', en: 'Runtime Domain APIs' },
-        sections: { zh: ['运行时领域 API'], en: ['Runtime Domain APIs'] }
-      },
-      {
-        page: 'kubejs/api/events',
-        title: { zh: '`MxtEvents`：事件', en: '`MxtEvents`: Events' },
-        sections: { zh: ['MxtEvents'], en: ['MxtEvents'] }
-      }
-    ]
-  },
   {
     parent: 'datapack/types/other_types',
     children: [
@@ -408,8 +377,37 @@ const SPLITS = [
 /**
  * Pages that are written and owned by hand. The script neither regenerates nor deletes
  * them, so translating a page by hand is enough to take it away from the migration.
+ * The KubeJS section is hand written end to end: it went from six pages (one of them a
+ * catch-all for ten global objects) to one page per object, which the section-based
+ * split below cannot express.
  */
-const KEEP = new Set(['index.md', 'installation.md', 'player-guide/index.md'])
+const KEEP = new Set([
+  'index.md',
+  'installation.md',
+  'player-guide/index.md',
+  'kubejs/index.md',
+  'kubejs/items.md',
+  'kubejs/api-reference.md',
+  'kubejs/api/actions.md',
+  'kubejs/api/conditions.md',
+  'kubejs/api/values.md',
+  'kubejs/api/costs.md',
+  'kubejs/api/resources.md',
+  'kubejs/api/abilities.md',
+  'kubejs/api/cultivation.md',
+  'kubejs/api/curses.md',
+  'kubejs/api/aura.md',
+  'kubejs/api/elements.md',
+  'kubejs/api/spirit_roots.md',
+  'kubejs/api/physiques.md',
+  'kubejs/api/souls.md',
+  'kubejs/api/triggers.md',
+  'kubejs/api/loot.md',
+  'kubejs/api/events.md'
+])
+
+/** `KEEP` holds locale-less paths; the English tree is looked up through the same set. */
+const isKept = (rel) => KEEP.has(rel) || (rel.startsWith('en/') && KEEP.has(rel.slice(3)))
 
 /** Datapack registries documented as their own `###` section of the spec file. */
 const REGISTRIES = [
@@ -425,7 +423,7 @@ const REGISTRIES = [
   'forging_blueprint',
   'tool_binding',
   'blueprint_binding',
-  'item_quality',
+  'quality',
   'skill_stage',
   'technique',
   'cultivate_action',
@@ -561,7 +559,7 @@ const REGISTRY_TITLES = {
   forging_blueprint: '锻造图纸',
   tool_binding: '工具绑定',
   blueprint_binding: '图纸绑定',
-  item_quality: '品质',
+  quality: '品质',
   skill_stage: '技能水平',
   technique: '功法',
   cultivate_action: '修炼行为',
@@ -640,6 +638,7 @@ function convertEn() {
   for (const file of walk(EN_SRC)) {
     if (!file.endsWith('.md')) continue
     const rel = path.relative(EN_SRC, file).replace(/\\/g, '/')
+    if (isKept(rel)) continue
     const { meta, body } = splitFrontMatter(read(file))
     const content = frontMatter({ title: meta.title, description: meta.description }) +
       convertContainers(body).trim() + '\n'
@@ -791,8 +790,8 @@ function migrateZh() {
       const page = filePages.get(file)
       return page ? `[${file.replace(/\.md$/, '')}](/${page})` : whole
     })
-    out = out.replace(/以\s*模块实现审计\s*为准/g, '以项目仓库内的「模块实现审计」为准')
-    out = out.replace(/见模块实现审计/g, '见项目仓库内的「模块实现审计」')
+    out = out.replace(/以\s*模块实现审计\s*为准/g, '以代码为准（模组仓库两份 README 的模块完成情况表是汇总）')
+    out = out.replace(/见模块实现审计/g, '见模组仓库两份 README 的模块完成情况表')
     return out
   }
 
@@ -855,7 +854,7 @@ function migrateZh() {
   }
 
   for (const [page, sources] of pageSources) {
-    if (KEEP.has(`${page}.md`)) continue
+    if (isKept(`${page}.md`)) continue
     const content = composePage(page, sources)
     if (content !== null) {
       write(`${page}.md`, content, manifest)
@@ -1251,6 +1250,7 @@ function refreshGroupNav(locale) {
     const nav = groupNavFor(page, locale)
     if (nav === null) continue
     const rel = `${prefix}${page}.md`
+    if (isKept(rel)) continue
     const full = path.join(DOCS, rel)
     if (!existsSync(full)) continue
     const { meta, body } = splitFrontMatter(read(full))
@@ -1462,7 +1462,7 @@ applyCommandPages('en')
 refreshGroupNav('zh')
 refreshGroupNav('en')
 for (const stale of previous) {
-  if (KEEP.has(stale)) continue
+  if (isKept(stale)) continue
   if (!manifest.includes(stale) && !beforeZh.has(stale) && !beforeSplit.has(stale)) {
     const target = path.join(DOCS, stale)
     if (existsSync(target)) rmSync(target)

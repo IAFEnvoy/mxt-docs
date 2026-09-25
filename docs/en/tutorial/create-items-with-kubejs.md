@@ -29,8 +29,8 @@ Do not invent a `mxt:item`, `mxt:pill` or `mxt:weapon` file. Those registries do
 | --- | --- |
 | `kubejs/startup_scripts/mxt_items.js` | Four items: a qi pill, a spirit root pellet, a sword and a manual. |
 | `kubejs/server_scripts/mxt_recipes.js` | Recipes for them. |
-| `data/example/mxt/item_quality/common.json`, `refined.json` | Two quality tiers. |
-| `data/example/tags/mxt/item_quality/group/pill.json` | The quality group the pills belong to. |
+| `data/example/mxt/quality/common.json`, `refined.json` | Two quality tiers. |
+| `data/example/mxt/quality_chain/pill.json` | The pills' quality ladder: the tiers low to high, the default tier and each upgrade step's cost. |
 | `data/example/mxt/element/fire.json` | Element used by the spirit root. |
 | `data/example/mxt/spirit_root/fire_root.json` | What the pellet grants. |
 | `data/example/mxt/technique/azure_breath.json` | What the manual teaches. |
@@ -86,17 +86,17 @@ ServerEvents.recipes(event => {
 
 ## Step 2 — Quality Tiers
 
-An `item_quality` is a tier an item can carry. Quality order and grouping are decided by vanilla tags, not by a field inside the definition:
+An `quality` is a tier an item can carry. Its **order, default tier, membership and upgrade path all come from a chain**; the definition itself has no ordering field:
 
 ```json
-// data/example/mxt/item_quality/common.json
+// data/example/mxt/quality/common.json
 {
   "name": "quality.mxt.example.common"
 }
 ```
 
 ```json
-// data/example/mxt/item_quality/refined.json
+// data/example/mxt/quality/refined.json
 {
   "name": "quality.mxt.example.refined",
   "value_multiplier": {
@@ -111,29 +111,28 @@ An `item_quality` is a tier an item can carry. Quality order and grouping are de
 ```
 
 ```json
-// data/example/tags/mxt/item_quality/group/pill.json
+// data/example/mxt/quality_chain/pill.json
 {
-  "replace": false,
-  "values": [
-    "example:refined",
-    "example:common"
+  "tiers": ["example:common", "example:refined"],
+  "default": "example:common",
+  "upgrades": [
+    { "costs": [{ "id": "example:qi", "amount": 20 }] }
   ]
 }
 ```
 
-- The group is referenced from a binding as `#example:group/pill`. The `#` is part of the reference and a binding without it fails to load.
-- The order of `values` is the group's quality order, and the last usable member is the **default** for an item with no explicit quality — so this file lists `refined` first and `common` last, which makes `common` the default.
-- Both `name` and `description` may be omitted: they are then generated from the entry id as `quality.mxt.<namespace>.<path>` (and `…description`), while writing them uses your own key (a bare string is a translation key, an object is a full component). `description` on a modifier appears in the item tooltip only when it is written — omit it and that line is simply not drawn — while `modifier` is the value used at runtime: `value_multiplier` scales the item's currency unit value, `forging_modifier` divides the extra steps the forging quality is read from, and `alchemy_modifier` divides the brewing duration. Each reads the quality of the stack it settles — for forging and alchemy the **lowest** quality among the session's own materials — and a missing or unusable modifier behaves as `1`.
-- An item whose current quality is outside its group cannot be used at all, so keep one group per kind of item rather than one group for everything.
+- A binding points at the chain with `quality_chain: "example:pill"` — the **chain's id**, no longer a `#` tag.
+- The array order of `tiers` is the chain order (**low to high**); with neither an override component nor a forge result an item falls to `default` (omitting `default` means the lowest tier).
+- `upgrades[i]` describes what `tiers[i]` to `tiers[i+1]` costs and requires: here common to refined spends 20 `example:qi` through the global cost transaction, **atomic as a whole** — a step that cannot be paid moves nothing and writes no tier. A step that is not declared cannot be taken and is **not** free.
+- Both `name` and `description` may be omitted: they are then generated from the entry id as `quality_chain.mxt.<namespace>.<path>` (and `…description`). The same holds for `name` / `description` on an `quality`; `description` on a modifier appears in the item tooltip only when it is written — omit it and that line is simply not drawn — while `modifier` is the value used at runtime: `value_multiplier` scales the item's currency unit value, `forging_modifier` divides the extra steps the forging quality is read from, and `alchemy_modifier` divides the brewing duration. Each reads the quality of the stack it settles — for forging and alchemy the **lowest** quality among the session's own materials — and a missing or unusable modifier behaves as `1`.
+- An item whose current quality is not on its chain cannot be used at all, so keep one chain per kind of item rather than one chain for everything.
+- A chain that only orders tiers and picks a default, with no upgrades at all, simply declares none:
 
 ```json
-// data/example/tags/mxt/item_quality/group/weapon.json
+// data/example/mxt/quality_chain/weapon.json
 {
-  "replace": false,
-  "values": [
-    "example:common",
-    "example:refined"
-  ]
+  "tiers": ["example:common", "example:refined"],
+  "default": "example:refined"
 }
 ```
 
@@ -145,7 +144,7 @@ An `item_quality` is a tier an item can carry. Quality order and grouping are de
 // data/example/mxt/item_binding/qi_pill.json
 {
   "items": "kubejs:qi_pill",
-  "quality_group": "#example:group/pill",
+  "quality_chain": "example:pill",
   "conditions": [
     {
       "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
@@ -185,7 +184,7 @@ A pellet that hands out a spirit root:
 // data/example/mxt/item_binding/root_pellet.json
 {
   "items": "kubejs:root_pellet",
-  "quality_group": "#example:group/pill",
+  "quality_chain": "example:pill",
   "actions": [
     {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
   ]
@@ -228,7 +227,7 @@ Both tables can be used on the same item; they carry different fields and neithe
   "items": "kubejs:spirit_sword",
   "attack_damage": 8,
   "attack_speed": -2.4,
-  "quality_group": "#example:group/weapon",
+  "quality_chain": "example:weapon",
   "use_action": {"type": "mxt:no_op"},
   "attack_action": {
     "type": "mxt:target_action",
@@ -243,16 +242,16 @@ Both tables can be used on the same item; they carry different fields and neithe
 - `tick_action` runs every tick while the weapon is held, which is the place for upkeep, particles or aura drain.
 - `attributes` adds further vanilla attribute modifiers; an entry with a `value` formula is recalculated every tick.
 
-The `#example:group/weapon` tag from Step 2 defines which qualities this weapon may carry.
+The `example:weapon` chain from Step 2 defines which qualities this weapon may carry, and the tier it falls to when no override component is written.
 
 ## Step 6 — Techniques and Manuals
 
-A technique is the logic; `technique_binding` describes how one is **read** — hold length, pose, sound, quality group and conditions — and names the item the mod generates as its carrier.
+A technique is the logic; `technique_binding` describes how one is **read** — hold length, pose, sound, quality chain and conditions — and names the item the mod generates as its carrier.
 
 ```json
 // data/example/mxt/technique/azure_breath.json
 {
-  "grade": "earth",
+  "quality": "example:refined",
   "learn_condition": {"type": "mxt:has_realm", "aura": "example:qi"},
   "cultivation_modifier": 1.25,
   "passive_modifiers": [
@@ -289,7 +288,7 @@ Right-clicking the manual attempts to learn `example:azure_breath`. Every learne
 (restart the game)                     → the four items now exist
 (load the world again)                 → the bindings load
 /mxt registries validate               → no codec errors
-/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, mxt:item_quality=2, …
+/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, mxt:quality=2, …
 ```
 
 Both halves need their own restart: KubeJS registers items at startup, and the binding tables are data pack registries that Minecraft reads while the world loads. `/reload` does neither — it only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts.
@@ -309,8 +308,8 @@ Then in game:
 | --- | --- |
 | The world refuses to load with an unknown item | A binding names an item id that is not registered. As a single id this fails the load; inside an array the unreadable element is dropped with a log line instead. |
 | The rule silently never matches | `example:qi_pill` was written while the script produced `kubejs:qi_pill` (or any other typo) inside an `items` array, so that element was dropped and the file loaded without it. Use the real registered ID. |
-| The item has no behaviour at all | The rule was put in a binding table that does not match the item, or the item is not in the `quality_group` it declares. |
-| `quality_group` is rejected | It must be a `#`-prefixed tag reference, and the tag must exist. |
+| The item has no behaviour at all | The rule was put in a binding table that does not match the item, or the item's quality is not on the `quality_chain` it declares. |
+| `quality_chain` is rejected | It must name an existing `quality_chain`, and the chain's `tiers`, `default` and `upgrades` have to pass the load-time validation. |
 | A pill cannot be eaten | `pill_binding` only matches edible items, so the item needs `.food(...)`. |
 | New items do not appear after `/reload` | Item registration happens at startup; restart the game. |
 | Edited bindings do not change anything | `/reload` does not re-read data pack registries; load the world again. |

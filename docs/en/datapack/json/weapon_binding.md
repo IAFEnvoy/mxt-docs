@@ -27,7 +27,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/weapon_bindin
 | `use_action` | `EntityAction` | `mxt:no_op` | The right-click use action |
 | `attack_action` | `BiEntityAction` | `mxt:no_op` | The action executed on a successful hit |
 | `tick_action` | `EntityAction` | `mxt:no_op` | The action executed while the weapon is held in the main hand |
-| `quality_group` | `Tag<item_quality>` | none | The allowed quality group |
+| `quality_chain` | `Holder<quality_chain>` | none | The quality chain this item belongs to. The chain answers membership (a resolved tier must be on it), the default tier (the chain's `default`) and the upgrade path |
 | `conditions` | `EntityCondition[]` | `[]` | The conditions checked before use, attack and attribute application; supports inline conditions or described condition objects |
 | `element` | `HolderOrTag<element>[]` | `[]` | What this weapon **is made of**: an entry names one element and a `#tag` names a set of them. This is the first source of "the element of an item", explained below. |
 | `attachment_multiplier` | Double | `1.0` | What this weapon is worth as a ward: while it is carried (both hands and the Curios slots), every strike that leaves an element on the carrier leaves this fraction of it — `0.5` for half, `0` for none. Several carried items multiply, and the default is a no-op. See the buildup step on [The damage system](/en/technical/damage). |
@@ -42,11 +42,11 @@ The `items` matcher accepts one item ID, one item tag (such as `"#example:fire_w
 
 Each entry uses the vanilla `AttributeModifier` shape: `attribute`, `id`, `amount` and `operation`, plus an optional dynamic `value` formula. An entry that declares `value` is recalculated on the server every tick from the entity context and replaces `amount`. The weapon's own `attack_damage` and `attack_speed` are installed as main-hand `ADD_VALUE` modifiers on top of the item's existing ones, so an item whose binding conditions or quality gate currently fail keeps its vanilla attributes. See [Shared Data Types](../types/shared_data_types.md).
 
-### `quality_group`
+### `quality_chain`
 
-`quality_group` must be a native item-quality tag reference prefixed with `#`. Its `values` order defines the group's quality order. When no explicit `mxt:item_quality` component or forge result exists, the last member not disabled by the `mxt:disabled` tag becomes the default quality.
+`quality_chain` names one [Quality Chain](./quality_chain.md). The chain answers membership (a tier the weapon resolves to must be on the chain, or it cannot be used), the default tier when neither an override component nor a settled result exists, and the upgrade path [`/quality upgrade`](/en/player-guide/commands/quality) walks.
 
-The weapon cannot be used when its current quality is outside the group, the group has no usable member, a binding condition fails, or the quality's own `condition` fails. See [Item Quality](./item_quality.md).
+The weapon cannot be used when its current quality is not on the chain, a binding condition fails, or the quality's own `condition` fails. See [Quality](./quality.md).
 
 ### `conditions`
 
@@ -60,7 +60,7 @@ The weapon cannot be used when its current quality is outside the group, the gro
   "items": ["kubejs:firebound_sword", "#example:fire_weapons"],
   "attack_damage": 8,
   "attack_speed": -2.4,
-  "quality_group": "#example:group/firebound_weapon",
+  "quality_chain": "example:firebound_weapon",
   "conditions": [{"type": "mxt:realm", "realm": "example:foundation"}],
   "use_action": {"type": "mxt:add_resource", "resource": "example:qi", "amount": 5},
   "attack_action": {"type": "mxt:target_action", "action": {"type": "mxt:damage", "amount": 3}},

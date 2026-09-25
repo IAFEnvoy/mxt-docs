@@ -29,7 +29,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/resource/qi.j
 | `particle_color` | `RGBColor` | `#FFFFFF` | Particle colour used by spirit power rays. May be written as `#RRGGBB` or as an integer in `0..16777215`. |
 | `bars` | `List<ResourceBar>` | `[]` | Inline resource bars; when empty, the value is not displayed. |
 
-Values are always clamped to `[min, max]`, and an out-of-range change is rejected rather than silently reduced. A value can be spent as the `mxt:resource` entry of a cost array (see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost)), compared with `mxt:resource_compare`, read by formulas through `caster_<name>`, changed by the `mxt:add_resource` action, and stored in items through the aura access interfaces (`AuraAccess`/`ItemAuraAccess`) — which exchange auras, so a value needs an [aura](./aura.md) definition to have an aura identity at all. It can still enter the player's own pool without one, because a pool is keyed by the value.
+Values are always clamped to `[min, max]`: an out-of-range change is pinned to the bound rather than rejected (`ResourceService.change` only clamps and never fails for that reason). A value can be spent as the `mxt:resource` entry of a cost array (see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost)), compared with `mxt:resource_compare`, read by formulas through `caster_<name>`, changed by the `mxt:add_resource` action, and stored in items through the aura access interfaces (`AuraAccess`/`ItemAuraAccess`) — which exchange auras, so a value needs an [aura](./aura.md) definition to have an aura identity at all. It can still enter the player's own pool without one, because a pool is keyed by the value.
 
 ### bars
 
@@ -91,8 +91,8 @@ The resource value providers `mxt:environment_concentration` and `mxt:actual_con
 :::
 
 ::: info Display Names
-Data-driven definitions do not fill in a `translation_key` — that field does not exist. A definition's display name is generated from its identifier as `<category>.<registry namespace>.<namespace>.<path>`: the registry namespace is always `mxt` for this mod's own registries (each registry key is written `mxt:<path>`), and the category is the registry's own path, so `example:qi` in `mxt:resource` is `resource.mxt.example.qi`. The single category override is `mxt:item_quality`, which is translated under `quality`. A `/` in the path is **kept as written**, not turned into `.` (`example:foo/bar` gives `resource.mxt.example.foo/bar`), so avoid subdirectories in definition filenames. Registry titles use `mxt.registry.<registry path>`, for example `mxt.registry.aura`.
+Data-driven definitions do not fill in a `translation_key` — that field does not exist. A definition's display name is generated from its identifier as `<category>.<registry namespace>.<namespace>.<path>`: the registry namespace is always `mxt` for this mod's own registries (each registry key is written `mxt:<path>`), and the category is the registry's own path, so `example:qi` in `mxt:resource` is `resource.mxt.example.qi`. A `/` in the path is **kept as written**, not turned into `.` (`example:foo/bar` gives `resource.mxt.example.foo/bar`), so sorting definitions into subdirectories needs no second set of translation-key rules. Registry titles use `mxt.registry.<registry path>`, for example `mxt.registry.aura`.
 
-`resource` is one of the 18 registries that may also carry an optional `name` / `description`: writing one uses your own text, omitting it falls back to the generated key above with `.description` appended for the description. Both fields are stored and read today, but nothing draws them yet.
+`resource` is one of the 19 registries that may also carry an optional `name` / `description`: writing one uses your own text, omitting it falls back to the generated key above with `.description` appended for the description. Both fields are stored and read today, but nothing draws them yet.
 :::
 

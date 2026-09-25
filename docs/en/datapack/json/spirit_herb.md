@@ -21,7 +21,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/spirit_herb/f
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `items` | `ItemMatcher` | **required** | Binds existing items. It does not create a new spirit herb item. |
-| `quality` | `Holder<item_quality>` | **required** | The default quality of that item. |
+| `quality` | `Holder<quality>` | **required** | The quality of that item, and the **last** step of resolution: override component, forge result, definition default (artifact or technique), the chain's `default`, then here. See [Quality Chain](./quality_chain.md#resolution). |
 | `age` | `NumberProvider` | `0` | Age metadata. |
 | `element_tags` | `HolderOrTag<element>[]` | `[]` | The element alignment of this herb, written against the **element registry**: an entry is one element and a `#` tag is a set of them, and disabled elements do not count. It is matched by `mxt:herb_tag` (`element`), so a herb can be named anywhere an `ItemMatcher` is accepted (item conditions, bindings, `mxt:item_matcher`, …). |
 | `material_tags` | Identifier[] | `[]` | Material classification tags. |
@@ -48,5 +48,5 @@ The mod has no spirit herb planting or growth system at all: growth, harvesting 
 
 :::
 
-The `items` matcher is the shared item matcher used by several formats; it accepts a single item ID, a single `#namespace:tag` or a list of both, and an array entry may also be a typed object dispatched by the built-in `item_matcher_entry_type` registry. See [Shared Data Types](../types/shared_data_types.md). The quality it points at is defined by [Item Quality](./item_quality.md), where a spirit herb's `quality` is also the last fallback an item's resolved quality uses when no component, forge result or quality group decides it. Herbs are intended as materials for [Alchemy Recipe](./alchemy_recipe.md).
+The `items` matcher is the shared item matcher used by several formats; it accepts a single item ID, a single `#namespace:tag` or a list of both, and an array entry may also be a typed object dispatched by the built-in `item_matcher_entry_type` registry. See [Shared Data Types](../types/shared_data_types.md). The quality it points at is defined by [Quality](./quality.md), and a spirit herb's `quality` is the **last** fallback an item's resolved quality uses - after the override component, a forge result, a definition default and the chain's `default`, as laid out on [Quality Chain](./quality_chain.md#resolution). Herbs are intended as materials for [Alchemy Recipe](./alchemy_recipe.md).
 

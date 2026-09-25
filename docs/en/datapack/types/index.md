@@ -32,7 +32,7 @@ The following fields use the `MapCodec` of a Java built-in registry. Datapacks c
 
 | Data Type | Dispatch Field | Purpose |
 |-----------|----------------|---------|
-| `Ability` | `ability.type` | The top-level field is named `ability`; the nested `type` selects the ability lifecycle and trigger style |
+| `Ability` | top-level `type` | The top-level `type` selects the ability lifecycle and trigger style (eleven built-ins, see [Ability Types](./other/ability-and-curse.md#ability-type)); an entry of an artifact's `abilities` writes an ability registry id or a `#ability tag` |
 | `CurseType` | `type` | How a curse lasts and expires |
 | `EntityAction` | `type` | Entity action |
 | `BiEntityAction` | `type` | Bi-entity action |

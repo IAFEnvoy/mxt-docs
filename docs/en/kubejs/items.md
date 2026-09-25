@@ -50,7 +50,7 @@ MiXianTu owns behaviour, conditions, aura, currency and tooltips; the binding ta
 | Item binding | `mxt/item_binding/` | Ordered entity actions and tooltip conditions for any item. |
 | Weapon binding | `mxt/weapon_binding/` | Attack damage and speed, weapon actions and attribute modifiers. |
 | Pill binding | `mxt/pill_binding/` | Consumption behaviour and toxicity for an edible item. |
-| Technique binding | `mxt/technique_binding/` | How one technique is read: hold length, pose, sound, quality group and conditions, plus the item the mod generates as its carrier. |
+| Technique binding | `mxt/technique_binding/` | How one technique is read: hold length, pose, sound, quality chain and conditions, plus the item the mod generates as its carrier. |
 
 Bind a pill that grants a spirit root:
 
@@ -58,7 +58,7 @@ Bind a pill that grants a spirit root:
 // kubejs/data/example/mxt/item_binding/fire_root_pellet.json
 {
   "items": "kubejs:fire_root_pellet",
-  "quality_group": "#example:group/pellet",
+  "quality_chain": "example:pellet",
   "actions": [
     {
       "type": "mxt:grant_spirit_root",
@@ -76,7 +76,20 @@ Bind a weapon's damage and attack speed:
   "items": ["kubejs:firebound_sword", "#example:fire_weapons"],
   "attack_damage": 8,
   "attack_speed": -2.4,
-  "quality_group": "#example:group/firebound_weapon"
+  "quality_chain": "example:firebound_weapon"
+}
+```
+
+Bind a pill's toxicity:
+
+```json
+// kubejs/data/example/mxt/pill_binding/returning_pill.json
+{
+  "items": "kubejs:returning_pill",
+  "quality_chain": "example:pill",
+  "toxicity_gain": 10,
+  "toxicity_threshold": 100,
+  "toxicity_after_overdose": 25
 }
 ```
 
@@ -87,11 +100,11 @@ Bind a cultivation technique to its carrier item:
 {
   "technique": "example:fire_manual",
   "carrier_item": "kubejs:fire_manual",
-  "quality_group": "#example:group/manual"
+  "quality_chain": "example:manual"
 }
 ```
 
-The first three tables match the item themselves: `items` accepts an item ID, an item tag or a mixed array, so one file can cover a whole family of items. `technique_binding` does not — it is matched by technique id, and `carrier_item` is a single item ID. What makes a stack a manual is its own `mxt:technique` component, so the item above still has to be handed out as a stack that carries it (the mod's creative tab and `/picker mxt:technique` offer exactly that generated stack). `quality_group` is an optional `#`-prefixed tag reference into the `item_quality` registry. When a binding names an item ID that does not exist, the data pack fails to load, so no unresolvable item rule is created. The full field list of each table is in [Item Binding](../datapack/json/item_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md).
+The first three tables match the item themselves: `items` accepts an item ID, an item tag or a mixed array, so one file can cover a whole family of items. `technique_binding` does not — it is matched by technique id, and `carrier_item` is a single item ID. What makes a stack a manual is its own `mxt:technique` component, so the item above still has to be handed out as a stack that carries it (the mod's creative tab and `/picker mxt:technique` offer exactly that generated stack). `quality_chain` is an optional reference to a [quality chain](../datapack/json/quality_chain.md): the chain answers membership, the default tier and the upgrade path. When a binding names an item ID that does not exist, the data pack fails to load, so no unresolvable item rule is created. The full field list of each table is in [Item Binding](../datapack/json/item_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md).
 
 ## Reloading
 

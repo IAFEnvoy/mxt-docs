@@ -72,9 +72,9 @@ The from-the-ground (shared aura pool) channel and the from-a-block-entity's-sto
 
 A missing channel is reported as "cannot pay", never as a broken definition. An entry that cannot be decoded now **fails the load** of the definition instead of being logged and dropped.
 
-The **11** fields that take this array are `ability.costs`, the `upkeep_costs` of `mxt:channelled`, `realm_stage.costs`, `cultivate_action.costs` and `cultivate_action.aura_costs`, `formation.activation_costs` and `formation.maintenance_costs`, `forging_method.costs`, the `costs` of the artifact abilities `mxt:flight` and `mxt:upkeep`, and the `aura` of a spirit crafting recipe (`mxt:spirit_shaped` / `mxt:spirit_shapeless`). Those last two accept **only `mxt:aura` entries** (any other type is a load error), and their older `{"<aura id>": NumberProvider}` map form is still read for compatibility, while serialization always emits the array form.
+The **10** fields that take this array are `ability.costs` (**shared by every ability type**, which is why the per-tick fuel of `mxt:mount` and the per-period price of `mxt:upkeep` are written here too), the `upkeep_costs` of `mxt:channelled`, `realm_stage.costs`, `cultivate_action.costs` and `cultivate_action.aura_costs`, `formation.activation_costs` and `formation.maintenance_costs`, `forging_method.costs`, `contract_type.costs` (the price of signing a contract, paid by the owner), and the `aura` of a spirit crafting recipe (`mxt:spirit_shaped` / `mxt:spirit_shapeless`). Those last two accept **only `mxt:aura` entries** (any other type is a load error), and their older `{"<aura id>": NumberProvider}` map form is still read for compatibility, while serialization always emits the array form.
 
-**These deliberately are not `Cost`, so do not "fix" them**: `talisman.aura_cost` is still a `{"<aura id>": NumberProvider}` map, and it is the **requirement** "how much of this aura the carrier has to be filled with before it fires" (it is also the pour capacity), not a payment; `alchemy`'s `minimum_aura` and `creature_profile.minimum_aura` are requirements that are never consumed. The currency system has nothing to do with this shape: `currency`'s `exchanges[].cost` is an integer price (`1..99`) saying how many currency items an exchange takes, and `item_quality.value_multiplier` is a value modifier; neither is a `Cost`.
+**These deliberately are not `Cost`, so do not "fix" them**: `talisman.aura_cost` is still a `{"<aura id>": NumberProvider}` map, and it is the **requirement** "how much of this aura the carrier has to be filled with before it fires" (it is also the pour capacity), not a payment; `alchemy`'s `minimum_aura` and `creature_profile.minimum_aura` are requirements that are never consumed. The currency system has nothing to do with this shape: `currency`'s `exchanges[].cost` is an integer price (`1..99`) saying how many currency items an exchange takes, and `quality.value_multiplier` is a value modifier; neither is a `Cost`.
 
 ---
 
@@ -193,3 +193,31 @@ Array entries may also be typed objects, which is how a wildcard, a regular expr
 ```
 
 A matcher only references items that are already registered; it never creates items. When several definitions match, they are selected by `priority` from low to high, and for the current data classes that priority is fixed at `0`.
+
+---
+
+## Weighted Entry
+
+Every weighted list in the mod uses the same entry shape: `value` is the entry itself, and `weight` is an optional relative weight (`1` when omitted).
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `value` | any | **required** | The entry that can be picked |
+| `weight` | Integer | `1` | Relative weight; larger weights are picked more often, a weight of `0` or less is never picked, and a list whose weights are all `0` is picked from uniformly |
+
+| Used by | Field |
+|---------|-------|
+| `mxt:choice` (entity, item, block, bi-entity) | `actions` |
+| `mxt:weighted_list` | `distribution` |
+
+`secret_realm`'s `entry` array is the one exception: there the `weight` sits directly on the landing object, because that object also carries `pos`, a random radius and so on. Its weight is also validated at load, so a negative weight is a load error rather than a `0`, while `0` still means the entry is never picked.
+
+```json
+{
+  "type": "mxt:choice",
+  "actions": [
+    {"value": {"type": "mxt:no_op"}, "weight": 3},
+    {"value": {"type": "mxt:spawn_lightning", "damage": 4}, "weight": 1}
+  ]
+}
+```

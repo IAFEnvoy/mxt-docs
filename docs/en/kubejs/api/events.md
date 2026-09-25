@@ -80,7 +80,7 @@ In the table below, `native` stands for `const native = event.getEvent()`. Retur
 | `lifespanEnd` | `Pre`, `Post` | `entity()`, `spirit()`; `Pre` can cancel the end, and after cancelling the lifespan is set to unlimited. |
 | `secretRealm` | `Create`, `Destroy`, `EnterPre`, `EnterPost`, `Exit` | `definition()` (`Holder<SecretRealm>`), `dimension()` (`ResourceKey<Level>`, the instance dimension key), `index()` (which instance, counted from 0), `owner()` (`Optional<UUID>`), `server()`; the member events also have `member()` (`UUID`). Only `EnterPre` can be cancelled. `Create` is posted once a fresh instance dimension exists and before the first member lands; `Destroy` is posted when an instance ends — whether its terrain is deleted or (for a claimed secret realm) merely unloaded. |
 | `soul` | `TransferPre`, `TransferPost`, `ReclaimPre`, `ReclaimPost` | `entity()`, `soul()`; every `*Pre` can be cancelled. |
-| `spiritContract` | `Pre`, `Post` | `contract()`, `contractType()`, `requester()`, `action()`; `contractType()` is an `Optional<Holder<ContractType>>`, `action()` is `BIND`, `BREAK`, `RECALL` or `RELEASE`; `Pre` can be cancelled. |
+| `spiritContract` | `Pre`, `Post` | `contract()`, `contractType()`, `requester()`, `action()`; `contractType()` is an `Optional<Holder<ContractType>>`, `action()` is `BIND`, `RELEASE`, `DEATH`, `RECALL` or `RECALL_COMPLETED` (the recall latch was consumed, never cancellable); `Pre` can be cancelled. |
 | `tribulation` | `StartPre`, `StartPost`, `EntryPre`, `EntryPost`, `Complete` | `tribulation()` (`Holder<Tribulation>`), `data()`; the two entry events also expose `index()` (which beat it is, counted from 0) and `entry()`. `data()` is the attachment itself: `peek()`/`remaining()` read the beat at the head and how many are left, `state()` reads what that beat has kept, and `windup()` reads the ticks of start-up wind-up that are left (`0` once the timeline is running, or when the run has none). `StartPre` can be cancelled (refusing the attempt) and `EntryPre` can be cancelled (skipping that entry). |
 
 ## Two Extra Conventions for `forging`
@@ -98,3 +98,10 @@ MxtEvents.cultivationBreak(event => {
   native.setCost('mxt:spirit_power', 20)
 })
 ```
+
+## Related
+
+- The formula context carried by an event payload: [MxtValues](/en/kubejs/api/values#formulacontext).
+- The active counterparts of these events: abilities through [MxtAbilities](/en/kubejs/api/abilities), curses through [MxtCurses](/en/kubejs/api/curses) and signals through [MxtTriggers](/en/kubejs/api/triggers).
+- Callbacks while loot is generated: [MxtLoot](/en/kubejs/api/loot).
+- [KubeJS API Reference](/en/kubejs/api-reference).

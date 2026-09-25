@@ -28,7 +28,8 @@ description: 写一份符箓定义、把它交给玩家、灌注灵气并发动�
 ```json
 // data/example/mxt/ability/spark.json
 {
-  "ability": {"type": "mxt:active", "slot": "primary"},
+  "type": "mxt:active",
+  "slot": "primary",
   "cooldown": 60,
   "entity_action": {
     "type": "mxt:apply_effect",

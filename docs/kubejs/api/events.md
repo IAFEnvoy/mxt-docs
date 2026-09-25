@@ -79,7 +79,7 @@ MxtEvents.friendRelation(event => {
 | `lifespanEnd` | `Pre`、`Post` | `entity()`、`spirit()`；`Pre` 可取消结束，取消后寿元会被设为不受限。 |
 | `secretRealm` | `Create`、`Destroy`、`EnterPre`、`EnterPost`、`Exit` | `definition()`（`Holder<SecretRealm>`）、`dimension()`（`ResourceKey<Level>`，实例维度键）、`index()`（第几份，从 0 数）、`owner()`（`Optional<UUID>`，主人）、`server()`；成员事件另有 `member()`（`UUID`）。只有 `EnterPre` 可取消。`Create` 在一份新实例维度建好后、第一位成员落下之前发布；`Destroy` 在实例结束时发布——无论它是销毁地形还是（被认领的实例）只卸载休眠。 |
 | `soul` | `TransferPre`、`TransferPost`、`ReclaimPre`、`ReclaimPost` | `entity()`、`soul()`；所有 `*Pre` 可取消。 |
-| `spiritContract` | `Pre`、`Post` | `contract()`、`contractType()`、`requester()`、`action()`；`contractType()` 是 `Optional<Holder<ContractType>>`，`action()` 为 `BIND`、`BREAK`、`RECALL`、`RELEASE`；`Pre` 可取消。 |
+| `spiritContract` | `Pre`、`Post` | `contract()`、`contractType()`、`requester()`、`action()`；`contractType()` 是 `Optional<Holder<ContractType>>`，`action()` 为 `BIND`、`RELEASE`、`DEATH`、`RECALL`、`RECALL_COMPLETED`（召回闩被消费，不可取消）；`Pre` 可取消。 |
 | `tribulation` | `StartPre`、`StartPost`、`EntryPre`、`EntryPost`、`Complete` | `tribulation()`（`Holder<Tribulation>`）、`data()`；两种节拍事件另有 `index()`（第几拍，从 0 数）与 `entry()`。`data()` 就是附件本身：`peek()`/`remaining()` 读队首与还剩几拍，`state()` 读当前节拍写下的现场，`windup()` 读启动前摇还剩多少 tick（0 表示已经在走时间线、或这场天劫没有前摇）。`StartPre` 可取消（拒绝这次启动），`EntryPre` 可取消（跳过该节拍）。 |
 
 ## `forging` 的两条额外约定
@@ -103,3 +103,10 @@ MxtEvents.cultivationBreak(event => {
   native.setCost('mxt:spirit_power', 20)
 })
 ```
+
+## 相关
+
+- 事件荷载里的公式上下文：[MxtValues](/kubejs/api/values#formulacontext)。
+- 与事件成对的主动入口：技能用 [MxtAbilities](/kubejs/api/abilities)、诅咒用 [MxtCurses](/kubejs/api/curses)、信号用 [MxtTriggers](/kubejs/api/triggers)。
+- 战利品生成时的回调用 [MxtLoot](/kubejs/api/loot)。
+- [KubeJS API 参考](/kubejs/api-reference)。

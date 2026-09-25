@@ -12,6 +12,23 @@ data/<namespace>/mxt/<registry>/<path>.json
 
 例如 `data/example/mxt/ability/fireball.json` 的定义 ID 是 `example:fireball`。
 
+**内容一多，请按类别把 JSON 分进子文件夹。** 一个注册表目录下平铺几十上百个文件时，"哪几个是同一套流派的被动"只能靠文件名猜；分好类之后路径本身就是索引：
+
+```text
+data/example/mxt/ability/sword/slash.json            → example:sword/slash
+data/example/mxt/ability/sword/parry.json
+data/example/mxt/ability/passive/body_tempering.json
+data/example/mxt/artifact/sword/azure_flight_sword.json
+data/example/mxt/artifact/charm/ward_jade_talisman.json
+```
+
+分类方式没有硬性规定，按用途（`passive/`、`active/`）、按流派（`sword/`、`alchemy/`）或按一次更新的批次都行。几条要注意：
+
+- **目录就是 ID 的一部分**：`data/example/mxt/ability/sword/slash.json` 的 ID 是 `example:sword/slash`，**换目录等于换 ID**。别的定义、标签、存档（技能授予账本、冷却、轮盘格子的 id）存的全是这个 ID，所以分类要在写内容之前定好。
+- 默认的 `name` / `description` 键也带这段路径（`<类别>.mxt.<命名空间>.<路径>`，路径里的 `/` 原样保留），分文件夹不会多出第二套翻译键规则。
+- 标签有自己的一棵树（`tags/mxt/<注册表名>/...`），**不必**与定义目录逐层对应；按同一个分类习惯摆只是为了好找。`mxt:disabled` 标签里的值同样要写带目录的**完整 ID**。
+- 层级只影响可读性，**不参与加载与校验**：`data/<命名空间>/mxt/` 下面第一层永远是注册表名（`ability/`、`artifact/`……），分类只能加在它下面；把所有文件塞进同一个注册表目录也照样能跑。
+
 数据包加载使用 NeoForge 原生可写注册表，服务器加载后同步到客户端。数据包对象在加载后视为不可变对象；不要在运行时修改 Codec 返回的集合。
 
 ## 引用规则
@@ -69,7 +86,7 @@ data/mxt/tags/damage_type/no_bonus.json
 | 资源与修炼 | `resource`、`aura`、`element`、`element_reaction`、`realm_stage`、`spirit_root`、`physique`、`technique`、`skill_stage`、`cultivate_action` |
 | 技能与规则 | `ability`、`curse`、`formation`、`tribulation`、`trigger`、`talisman` |
 | 灵气与世界 | `aura_zone`、`block_aura`、`item_aura`、`secret_realm` |
-| 物品与品质 | `item_binding`、`weapon_binding`、`pill_binding`、`technique_binding`、`tool_binding`、`blueprint_binding`、`artifact`、`item_quality` |
+| 物品与品质 | `item_binding`、`weapon_binding`、`pill_binding`、`technique_binding`、`tool_binding`、`blueprint_binding`、`artifact`、`quality`、`quality_chain` |
 | 经济与内容 | `currency`、`spirit_herb`、`forging_method`、`forging_blueprint`、`creature_profile`、`contract_type` |
 
 ## 模块页面
@@ -85,13 +102,13 @@ data/mxt/tags/damage_type/no_bonus.json
 
 ## 加载与覆盖
 
-- 34 个动态注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。
+- 35 个动态注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。
 
 把这条加载规则展开，从磁盘上的文件到玩家看到的结果就是下面这条路径。
 
 ```mermaid
 flowchart TD
-    A["数据包定义文件<br/>一份 JSON 一个条目"] --> B["34 个动态注册表<br/>NeoForge 原版数据包注册表"]
+    A["数据包定义文件<br/>一份 JSON 一个条目"] --> B["35 个动态注册表<br/>NeoForge 原版数据包注册表"]
     B --> C["世界加载时读取并校验<br/>JSON / Holder / Codec 校验"]
     C --> D["解码失败：世界无法加载<br/>修好该文件后才能再次进入"]
     C --> E["mxt:disabled 标签<br/>被列入的条目不参与运行时查询"]
@@ -106,10 +123,10 @@ flowchart TD
 - 文件冲突遵循 Minecraft 数据包优先级：高优先级数据包覆盖低优先级数据包的同一路径。
 - 原版标签使用 `replace: false` 时，值按数据包合并顺序追加；除品质排序标签外，玩法不依赖标签值顺序。
 - 数据包只读，定义中没有通用的 `schema_version`、`enabled` 或 `tags` 字段。
-- 数据驱动定义的显示名称由标识符自动生成翻译键 `<类别>.<注册表命名空间>.<定义命名空间>.<路径>`。类别默认取注册表自己的 path；**注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`**（这些注册表的键都写作 `mxt:<路径>`），所以 `aura` 里的 `mxt:fire` 查 `aura.mxt.mxt.fire`，`resource` 里的 `example:qi` 查 `resource.mxt.example.qi`，`talisman` 里的 `mxt_test:flame_sigil` 查 `talisman.mxt.mxt_test.flame_sigil`。唯一例外是 `item_quality`，它的类别一直是 `quality`（`example:refined` 查 `quality.mxt.example.refined`）。路径里的 `/` **原样**进入键中，不会转成 `.`（`example:foo/bar` 得到的键是 `resource.mxt.example.foo/bar`），所以定义文件名不要带子目录。JSON 不填写 `translation_key`，请在 `assets/<命名空间>/lang/zh_cn.json` 和 `en_us.json` 中提供对应翻译。
-- 下面这 18 个注册表的定义还可以自带可选的 `name` 与 `description`（写法与其它组件字段相同：裸字符串当翻译键、对象当完整组件）：`resource`、`aura`、`realm_stage`、`element`、`spirit_root`、`physique`、`ability`、`curse`、`technique`、`skill_stage`、`cultivate_action`、`artifact`、`formation`、`tribulation`、`secret_realm`、`contract_type`、`talisman`、`item_quality`。写了就用你自己的文本，省略才用上一条的生成键——`description` 省略时是生成键再接 `.description`。这对字段的意义是数据包可以**翻译生成键、也可以自己写文本**（从而避开名字冲突）；**`description` 目前只被存储与读取，除 `item_quality`（品质描述那一行）以外还没有任何界面或提示框绘制它**。其余注册表仍然只有生成键。
+- 数据驱动定义的显示名称由标识符自动生成翻译键 `<类别>.<注册表命名空间>.<定义命名空间>.<路径>`。类别默认取注册表自己的 path；**注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`**（这些注册表的键都写作 `mxt:<路径>`），所以 `aura` 里的 `mxt:fire` 查 `aura.mxt.mxt.fire`，`resource` 里的 `example:qi` 查 `resource.mxt.example.qi`，`talisman` 里的 `mxt_test:flame_sigil` 查 `talisman.mxt.mxt_test.flame_sigil`。类别就是注册表自己的 path，没有例外表（`example:refined` 在 `mxt:quality` 里查 `quality.mxt.example.refined`）。路径里的 `/` **原样**进入键中，不会转成 `.`（`example:foo/bar` 得到的键是 `resource.mxt.example.foo/bar`），所以按类别分子文件夹不会多出第二套翻译键规则。JSON 不填写 `translation_key`，请在 `assets/<命名空间>/lang/zh_cn.json` 和 `en_us.json` 中提供对应翻译。
+- 下面这 19 个注册表的定义还可以自带可选的 `name` 与 `description`（写法与其它组件字段相同：裸字符串当翻译键、对象当完整组件）：`resource`、`aura`、`realm_stage`、`element`、`spirit_root`、`physique`、`ability`、`curse`、`technique`、`skill_stage`、`cultivate_action`、`artifact`、`formation`、`tribulation`、`secret_realm`、`contract_type`、`talisman`、`quality`、`quality_chain`。写了就用你自己的文本，省略才用上一条的生成键——`description` 省略时是生成键再接 `.description`。这对字段的意义是数据包可以**翻译生成键、也可以自己写文本**（从而避开名字冲突）；**`description` 目前只被存储与读取，除 `quality`（品质描述那一行）以外还没有任何界面或提示框绘制它**。其余注册表仍然只有生成键。
 - `realm_stage` 用整数写法声明 `minor_stages` 时，子阶段名同样带注册表命名空间：`realm_stage.mxt.<定义命名空间>.<路径>.minor_stage.<下标>`（下标从 `0` 起）。
-- 每个数据包注册表的界面标题另有固定键 `mxt.registry.<注册表 path>`（如 `mxt.registry.aura`、`mxt.registry.item_quality`），由本模组自己的语言文件提供；数据包只需要为自己的定义提供上面那个键。
+- 每个数据包注册表的界面标题另有固定键 `mxt.registry.<注册表 path>`（如 `mxt.registry.aura`、`mxt.registry.quality`），由本模组自己的语言文件提供；数据包只需要为自己的定义提供上面那个键。
 - 必填的单个 Holder 引用不存在时，整个数据包加载失败；可选 Holder 和容错列表引用按对应 Codec 处理。
 - 这些注册表不保留旧快照，因此解码失败的定义会直接导致世界无法加载：修好该文件后才能再次进入。
 
@@ -122,7 +139,7 @@ flowchart TD
 - `/mxt technique repair` 清理玩家数据里**已失效的功法引用**（引用的定义已被数据包删除或禁用时使用）；`dry-run` 只报告不改动；`/mxt technique drop <id>` 精确移除某一门功法。见下节。
 - `/picker [<分类 id>]` 打开物品选择器，直接查看这些定义对应的物品：分类就是注册表 ID（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`），不写则列出全部已注册分类。需要 gamemaster 权限，且只在创造模式下可用；顶层 `/picker` 别名由服务端配置「命令别名 → /picker」开关，`/mxt picker` 始终可用。
 - 测试模组数据位于 `src/test-mod/resources/data/mxt_test/mxt`，启动测试服务端可验证数据包闭环。
-- 精确的当前完成度、字段消费者和测试覆盖见项目仓库内的「模块实现审计」。
+- 精确的当前完成度、字段消费者和测试覆盖**以代码为准**（模组仓库两份 README 的「模块完成情况」表是汇总）。
 
 ### 失效功法数据与修复
 

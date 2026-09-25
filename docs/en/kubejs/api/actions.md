@@ -44,3 +44,10 @@ MxtActions.executeEntity(player, {
   amount: 4
 })
 ```
+
+## Related
+
+- The same shape on the condition side: [MxtConditions](/en/kubejs/api/conditions).
+- The `context` a callback receives: [MxtValues](/en/kubejs/api/values#formulacontext).
+- Data pack side: [Entity Action Types](/en/datapack/types/action/entity_action_types), [Bi-entity Action Types](/en/datapack/types/action/bientity_action_types), [Block Action Types](/en/datapack/types/action/block_action_types) and [Item Action Types](/en/datapack/types/action/item_action_types).
+- [KubeJS API Reference](/en/kubejs/api-reference).

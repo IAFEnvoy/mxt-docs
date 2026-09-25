@@ -29,8 +29,8 @@ actions, conditions, quality, aura, tooltips
 | --- | --- |
 | `kubejs/startup_scripts/mxt_items.js` | 四个物品：一枚聚气丹、一枚灵根丹、一把剑和一本功法手册。 |
 | `kubejs/server_scripts/mxt_recipes.js` | 它们的配方。 |
-| `data/example/mxt/item_quality/common.json`、`refined.json` | 两个品质档位。 |
-| `data/example/tags/mxt/item_quality/group/pill.json` | 丹药所属的品质组。 |
+| `data/example/mxt/quality/common.json`、`refined.json` | 两个品质档位。 |
+| `data/example/mxt/quality_chain/pill.json` | 丹药的品质阶梯：由低到高的档位、默认档与每一步的升级代价。 |
 | `data/example/mxt/element/fire.json` | 灵根使用的元素。 |
 | `data/example/mxt/spirit_root/fire_root.json` | 这枚丹药赋予什么。 |
 | `data/example/mxt/technique/azure_breath.json` | 手册传授什么。 |
@@ -86,17 +86,17 @@ ServerEvents.recipes(event => {
 
 ## 第 2 步 —— 品质档位
 
-`item_quality` 是物品可以携带的档位。品质的顺序与分组由原版标签决定，而不是由定义里的字段决定：
+`quality` 是物品可以携带的档位。品质的**顺序、默认档、成员资格与升级路径都由一条链条决定**，定义里没有排序字段：
 
 ```json
-// data/example/mxt/item_quality/common.json
+// data/example/mxt/quality/common.json
 {
   "name": "quality.mxt.example.common"
 }
 ```
 
 ```json
-// data/example/mxt/item_quality/refined.json
+// data/example/mxt/quality/refined.json
 {
   "name": "quality.mxt.example.refined",
   "value_multiplier": {
@@ -111,29 +111,28 @@ ServerEvents.recipes(event => {
 ```
 
 ```json
-// data/example/tags/mxt/item_quality/group/pill.json
+// data/example/mxt/quality_chain/pill.json
 {
-  "replace": false,
-  "values": [
-    "example:refined",
-    "example:common"
+  "tiers": ["example:common", "example:refined"],
+  "default": "example:common",
+  "upgrades": [
+    { "costs": [{ "id": "example:qi", "amount": 20 }] }
   ]
 }
 ```
 
-- 绑定通过 `#example:group/pill` 引用这个组。`#` 是引用的一部分，缺了它的绑定会加载失败。
-- `values` 的顺序就是这个组的品质顺序，其中最后一个可用成员是没有显式品质的物品的**默认值**——所以这个文件把 `refined` 写在前面、`common` 写在后面，`common` 因此成为默认值。
-- `name` 与 `description` 都可以省略：省略时按条目 id 自动生成 `quality.mxt.<命名空间>.<路径>`（描述再加 `.description`），写了就用你给的键（字符串当翻译键、对象当完整组件）。修正项上的 `description` 只有写了才会出现在物品 Tooltip 里（省略就不画那一行），而 `modifier` 是运行时使用的数值：`value_multiplier` 缩放物品的货币单位价值，`forging_modifier` 用来除锻造品质读取的额外步骤数，`alchemy_modifier` 用来除酿造时长。三者都读取它所结算的那堆物品的品质——锻造和炼丹取该次会话自身材料中**最低**的品质——修正项缺失或不可用时按 `1` 处理。
-- 当前品质不在自己组内的物品完全无法使用，所以请按物品种类各留一个组，而不要所有东西共用一个组。
+- 绑定通过 `quality_chain: "example:pill"` 引用这条链——写的是**链的 id**，不再是带 `#` 的标签。
+- `tiers` 的数组顺序就是链条顺序（**低 → 高**）；没有覆盖组件、也没有锻造结果时，物品落到 `default` 那一档（省略 `default` 就是最低一档）。
+- `upgrades[i]` 描述 `tiers[i] → tiers[i+1]` 这一步要付什么、要满足什么条件：这里从 `common` 升到 `refined` 要花 20 点 `example:qi`，走全局消耗事务，**整组原子**——付不出就一点不动，也不会写档。没声明的步不能升，**不会**当成免费。
+- `name` 与 `description` 都可以省略：省略时按条目 id 自动生成 `quality_chain.mxt.<命名空间>.<路径>`（描述再加 `.description`）。`quality` 上的 `name` / `description` 同理；修正项上的 `description` 只有写了才会出现在物品 Tooltip 里（省略就不画那一行），而 `modifier` 是运行时使用的数值：`value_multiplier` 缩放物品的货币单位价值，`forging_modifier` 用来除锻造品质读取的额外步骤数，`alchemy_modifier` 用来除酿造时长。三者都读取它所结算的那堆物品的品质——锻造和炼丹取该次会话自身材料中**最低**的品质——修正项缺失或不可用时按 `1` 处理。
+- 当前品质不在自己链上的物品完全无法使用，所以请按物品种类各留一条链，而不要所有东西共用一条。
+- 只想用链来排序与定默认档、不开升级，就一个 `upgrades` 都不写：
 
 ```json
-// data/example/tags/mxt/item_quality/group/weapon.json
+// data/example/mxt/quality_chain/weapon.json
 {
-  "replace": false,
-  "values": [
-    "example:common",
-    "example:refined"
-  ]
+  "tiers": ["example:common", "example:refined"],
+  "default": "example:refined"
 }
 ```
 
@@ -145,7 +144,7 @@ ServerEvents.recipes(event => {
 // data/example/mxt/item_binding/qi_pill.json
 {
   "items": "kubejs:qi_pill",
-  "quality_group": "#example:group/pill",
+  "quality_chain": "example:pill",
   "conditions": [
     {
       "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
@@ -185,7 +184,7 @@ ServerEvents.recipes(event => {
 // data/example/mxt/item_binding/root_pellet.json
 {
   "items": "kubejs:root_pellet",
-  "quality_group": "#example:group/pill",
+  "quality_chain": "example:pill",
   "actions": [
     {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
   ]
@@ -228,7 +227,7 @@ ServerEvents.recipes(event => {
   "items": "kubejs:spirit_sword",
   "attack_damage": 8,
   "attack_speed": -2.4,
-  "quality_group": "#example:group/weapon",
+  "quality_chain": "example:weapon",
   "use_action": {"type": "mxt:no_op"},
   "attack_action": {
     "type": "mxt:target_action",
@@ -243,16 +242,16 @@ ServerEvents.recipes(event => {
 - `tick_action` 在手持该武器时每 tick 执行，是放置维护、粒子或灵气抽取的地方。
 - `attributes` 追加更多原版属性修正；带 `value` 公式的条目每 tick 重新计算。
 
-第 2 步里的 `#example:group/weapon` 标签定义这把武器可以携带哪些品质。
+第 2 步里的 `example:weapon` 链定义这把武器可以携带哪些品质，以及没写覆盖组件时的默认档。
 
 ## 第 6 步 —— 功法与手册
 
-功法是逻辑；`technique_binding` 描述这门功法**怎么被读**——长按时长、姿势、音效、品质组与条件，并顺便声明本体为它生成的载体用哪件物品。
+功法是逻辑；`technique_binding` 描述这门功法**怎么被读**——长按时长、姿势、音效、品质链与条件，并顺便声明本体为它生成的载体用哪件物品。
 
 ```json
 // data/example/mxt/technique/azure_breath.json
 {
-  "grade": "earth",
+  "quality": "example:refined",
   "learn_condition": {"type": "mxt:has_realm", "aura": "example:qi"},
   "cultivation_modifier": 1.25,
   "passive_modifiers": [
@@ -289,7 +288,7 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 (restart the game)                     → the four items now exist
 (load the world again)                 → the bindings load
 /mxt registries validate               → no codec errors
-/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, mxt:item_quality=2, …
+/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, mxt:quality=2, …
 ```
 
 两半各需要各自的重启：KubeJS 在启动时注册物品，而绑定表是 Minecraft 在加载世界时读取的数据包注册表。`/reload` 两者都做不到——它只刷新配方、战利品表、进度、函数和 KubeJS 服务端脚本。
@@ -309,8 +308,8 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 | --- | --- |
 | 世界带着未知物品拒绝加载 | 某个绑定写了一个没有注册的物品 ID。作为单个 ID 会让加载失败；写在数组里则会丢弃那条读不出来的元素并记一行日志。 |
 | 规则静默地从不匹配 | 在 `items` 数组里写成了 `example:qi_pill`，而脚本产生的是 `kubejs:qi_pill`（或任何其它拼写错误），于是那个元素被丢弃、文件照常加载。请使用真正注册的 ID。 |
-| 物品完全没有行为 | 规则被放进了与该物品不匹配的绑定表，或者该物品不在它声明的 `quality_group` 里。 |
-| `quality_group` 被拒绝 | 它必须是带 `#` 前缀的标签引用，而且该标签必须存在。 |
+| 物品完全没有行为 | 规则被放进了与该物品不匹配的绑定表，或者该物品的品质不在它声明的 `quality_chain` 上。 |
+| `quality_chain` 被拒绝 | 它必须指向一条存在的 `quality_chain`，而且链的 `tiers` / `default` / `upgrades` 要通过加载期校验。 |
 | 丹药吃不了 | `pill_binding` 只匹配可食用物品，所以物品需要有 `.food(...)`。 |
 | 新物品在 `/reload` 后不出现 | 物品注册发生在启动阶段；请重启游戏。 |
 | 改过的绑定没有任何变化 | `/reload` 不会重新读取数据包注册表；请重新加载世界。 |

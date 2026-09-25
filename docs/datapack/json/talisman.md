@@ -24,6 +24,20 @@ aside: false
 
 `aura_cost` 只收具体 ID，**不收 `#标签`**，和 `abilities` 相反：灵气池本身就是按具体 aura 分池的（见 `aura_zone` 的 `aura`），标签在这里找不到对应的池子。它是一份 `{"<灵气 id>": NumberProvider}` **映射**（不是 `Cost` 数组），数值写法与其它灵气消耗一致（`formation.storage.capacity` 的映射值，或 `Cost` 数组里 `mxt:aura` 条目的 `amount`），因此可以写成 `"12"` 或 `"realm_rank * 4"`。
 
+## `/talisman` 命令
+
+铭刻写的是物品组件，所以 `/talisman` 子树是给"宁可直接点名定义、不想写组件语法"的管理员准备的。该子树的所有节点都需要 `gamemaster` 权限。
+
+| 命令 | 说明 |
+| --- | --- |
+| `/talisman` 或 `/talisman blank [count]` | 给出空白载体。 |
+| `/talisman give <talisman>` | 给出铭刻了这条符箓定义的载体，模式为 `fire`。 |
+| `/talisman give <talisman> count <1..64>` | 同上，给一整叠。 |
+| `/talisman give <talisman> count <1..64> charged` | 同上，并且已经灌满。 |
+| `/talisman give <talisman> stored [count <1..64>]` | 同上，模式为 `store`。储存模式的载体靠手动灌注，所以这一支不提供 `charged`。 |
+
+`give` 一次只收**一个**符箓 ID：一张载体只铭刻一条定义。要在一张载体上刻多条，直接写物品组件的 `talismans` 列表，例如 `give @s mxt:talisman[mxt:talisman={talismans:["mypack:flame_sigil","mypack:common_sigil"]}]`。定义参数用 `ResourceArgument` 补全，建议来自已加载的 `talisman` 注册表。
+
 ## 灌注与激发
 
 `aura_cost` 同时就是**载体的灌注容量**：把账单灌满，符箓就算"满了"，那一刻它铭刻的能力全部发动，并消耗一件载体本体（一用即焚）。所以这张账单既是激发的代价也是灌注的时间——每 tick 灌 1 单位、1 单位收 1 点自身灵气，账单有多少单位就要按住多久。被服务端的使用冷却挡着的符不会被灌（见下面的「徒手发动的冷却」），因为账单买了的是**一次激发**而不是一堆灵气。

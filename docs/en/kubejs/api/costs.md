@@ -1,10 +1,13 @@
 ---
-title: MxtCosts and MxtResources
+title: 'MxtCosts: A Single Cost'
+description: Check or pay one Cost; for several entries use the atomic MxtResources payment.
 ---
 
-# `MxtCosts` and `MxtResources`
+# `MxtCosts`: A Single Cost
 
-## `MxtCosts`
+`MxtCosts` takes **one** `Cost`: it either answers "could this be paid here" or pays it in one go. For several entries use [MxtResources](/en/kubejs/api/resources), which treats the whole array as one atomic transaction; **do not treat several `MxtCosts.consume` calls as one atomic payment**.
+
+## Methods
 
 | Method | Parameters | Return value | Description |
 | --- | --- | --- | --- |
@@ -52,27 +55,8 @@ Full cost registry dispatch is supported. The current built-in types:
 { type: 'mxt:js', id: 'example:quest_token', params: { count: 3 } }
 ```
 
-A single `Cost` is the safe entry point; for several entries use `MxtResources.consume` below, which treats the whole array as one atomic transaction. Do not treat several `MxtCosts.consume` calls as one atomic payment.
+## Related
 
-## `MxtResources`
-
-| Method | Parameters | Return value | Description |
-| --- | --- | --- | --- |
-| `consume(entity, costs)` | a living entity, `Cost[]` | `ResourceTransactions.Result` | Pays the whole array atomically, **all or nothing**; when any one entry cannot be paid, nothing is deducted. |
-
-`costs` is the **unified `Cost` array** described above: all five shapes can be written directly, and the older `{"id": ..., "amount": ...}` shorthand still works (it is read as `mxt:resource`). The payer has to be a **living entity** — it does not have to be a player, but `mxt:item` (which needs a player's inventory) and `mxt:js` (which needs a player) are simply unpayable for a non-player payer. An entry that cannot be decoded **is no longer dropped silently**: it fails the call, and the old behaviour of logging a WARN, discarding that entry while the rest still committed, is gone.
-
-```js
-const result = MxtResources.consume(player, [
-  { id: 'mxt:spirit_power', amount: 10 },
-  { type: 'mxt:aura', aura: 'mxt:fire_aura', amount: 'level + 2' }
-])
-
-if (result.committed()) {
-  console.info(`Deducted: ${result.amounts()}`)
-} else {
-  console.warn(`Could not pay: ${result.failedResource()}`)
-}
-```
-
-The accessors of the returned record are `committed()`, `failedResource()` and `amounts()`. On the client, with an invalid formula, or when any entry cannot be paid, `committed()` is `false`.
+- Several entries paid in one go: [MxtResources](/en/kubejs/api/resources).
+- The `Cost` shapes and which channel each is charged to: [Shared Data Types](/en/datapack/types/shared_data_types#cost).
+- [KubeJS API Reference](/en/kubejs/api-reference).

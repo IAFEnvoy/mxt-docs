@@ -7,13 +7,13 @@ aside: false
 
 文件位置：`data/<namespace>/mxt/technique_binding/<path>.json`
 
-**用途**：一条功法**怎么被读**——长按时长、姿势、音效、品质组与条件，外加本体替它生成的载体物品。**这一叠是不是手册、教的是哪门功法，由堆上的物品组件 `mxt:technique` 决定，不由本表决定。**
+**用途**：一条功法**怎么被读**——长按时长、姿势、音效、品质链与条件，外加本体替它生成的载体物品。**这一叠是不是手册、教的是哪门功法，由堆上的物品组件 `mxt:technique` 决定，不由本表决定。**
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `technique` | `Holder<technique>` | **必填** | 本定义描述的是哪门功法。按功法 id 匹配，不再是按物品匹配。 |
 | `carrier_item` | 物品 id | `mxt:cultivation_jade_slip` | 本体替这门功法**生成载体**时使用哪个物品。单个物品 id，不支持物品标签、通配符或数组。 |
-| `quality_group` | `Tag<item_quality>` | 无 | 允许的品质组。 |
+| `quality_chain` | `Holder<quality_chain>` | 无 | 这个物品所在的品质链条（见 [quality_chain](./quality_chain.md)）。链同时给出成员资格（解析出的档必须在链上，否则不能使用）、默认档（链的 `default`）与可升级的路径。 |
 | `conditions` | `EntityCondition[]` | `[]` | 学习前条件；支持内联条件或带描述的条件对象。 |
 | `learn_time` | Integer | `0` | 需要**长按**的时长，单位 tick，范围 `0..72000`。`0` 表示右键立刻学会。 |
 | `hold_animation` | String | `block` | 长按时播放的动作。仅在写了 `learn_time` 时有意义。取值见下表。 |
@@ -45,7 +45,7 @@ give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 
 内容包想用自己的物品当手册，就写 `carrier_item: "命名空间:物品"`，然后从上面两个入口取生成的载体——取到手的那一叠已经带好 `mxt:technique` 组件。
 
-**一条功法可以没有定义。** 定义按功法 id 匹配，找不到就按默认值读：右键即学、默认姿势与音效、无品质组、无条件、载体是玉简。也就是说没有任何 `technique_binding` 文件的功法照样能通过组件学习，只是读起来是最朴素的那一种。
+**一条功法可以没有定义。** 定义按功法 id 匹配，找不到就按默认值读：右键即学、默认姿势与音效、无品质链、无条件、载体是玉简。也就是说没有任何 `technique_binding` 文件的功法照样能通过组件学习，只是读起来是最朴素的那一种。
 
 ## 长按与判定
 
@@ -100,7 +100,7 @@ give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 {
   "technique": "example:fire_manual",
   "carrier_item": "kubejs:fire_manual",
-  "quality_group": "#example:group/manual",
+  "quality_chain": "example:manual",
   "conditions": [{"type": "mxt:realm", "realm": "example:foundation"}]
 }
 ```

@@ -21,7 +21,7 @@ The alchemy **data format** is settled, but the **workbench is not wired up**: n
 | Spirit Crafting Table | The block `mxt:spirit_crafting_table` | Runs [spirit crafting](../datapack/json/spirit_crafting.md) only (`mxt:spirit_shaped` / `mxt:spirit_shapeless`). There is **no code path between it and alchemy**. |
 | Pills and pill toxicity | [pill_binding](../datapack/json/pill_binding.md) | Fully working: as soon as the produced item matches, it has toxicity gain, a threshold and an overdose action. |
 | Spirit herbs | [spirit_herb](../datapack/json/spirit_herb.md) | Fully working: it attaches metadata (quality, growth, drops) to **existing** items and registers none of its own. |
-| The alchemy modifier of a quality | `alchemy_modifier` in [item_quality](../datapack/json/item_quality.md) | Fully working: it only changes the brewing duration, and reads the **lowest** tier among the batch's own materials. |
+| The alchemy modifier of a quality | `alchemy_modifier` in [quality](../datapack/json/quality.md) | Fully working: it only changes the brewing duration, and reads the **lowest** tier among the batch's own materials. |
 
 ## What You Can and Cannot Do Today
 
@@ -48,7 +48,7 @@ Before writing a recipe, keep these three in mind (all from the existing decodin
 - [alchemy_recipe](../datapack/json/alchemy_recipe.md) — materials, temperature and tolerance, furnace tier, duration, minimum aura, success and failure outputs, and the four action fields.
 - [pill_binding](../datapack/json/pill_binding.md) — toxicity gain, threshold, the residue left after an overdose, and the overdose action.
 - [spirit_herb](../datapack/json/spirit_herb.md) — the herb metadata, its quality, and the herb-tag matcher.
-- [item_quality](../datapack/json/item_quality.md) — `alchemy_modifier` and the order qualities are resolved in.
+- [quality](../datapack/json/quality.md) — `alchemy_modifier` and the order qualities are resolved in.
 
 ## What the Tutorial Will Cover
 

@@ -18,7 +18,7 @@ aside: false
 | `use_action` | `EntityAction` | `mxt:no_op` | 右键使用行为。 |
 | `attack_action` | `BiEntityAction` | `mxt:no_op` | 命中攻击行为。 |
 | `tick_action` | `EntityAction` | `mxt:no_op` | 持有 tick 行为。 |
-| `quality_group` | `Tag<item_quality>` | 无 | 允许的品质组。 |
+| `quality_chain` | `Holder<quality_chain>` | 无 | 这个物品所在的品质链条（见 [quality_chain](./quality_chain.md)）。链同时给出成员资格（解析出的档必须在链上，否则不能使用）、默认档（链的 `default`）与可升级的路径。 |
 | `conditions` | `EntityCondition[]` | `[]` | 使用、攻击和属性应用前的条件；支持内联条件或带描述的条件对象。 |
 | `element` | `HolderOrTag<element>[]` | `[]` | 这把武器**是什么元素**：条目是一个元素、`#` 标签是一组元素。这是「物品的元素」的第一顺位来源，详见下方。 |
 | `attachment_multiplier` | Double | `1.0` | 这把武器**作为护身物**值多少：携带（双手与 Curios 槽）期间，打在携带者身上的打击留下的元素附着乘上它——`0.5` 只留一半、`0` 一点也不留。多件携带物**相乘**，不写就没有影响。见[伤害系统](/technical/damage)的附着一步。 |

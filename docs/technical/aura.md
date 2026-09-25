@@ -226,5 +226,5 @@ sequenceDiagram
 ## 相关阅读
 
 - [aura（灵气）](/datapack/json/aura) / [aura_zone（灵气区域）](/datapack/json/aura_zone) / [block_aura（方块灵气）](/datapack/json/block_aura) / [item_aura（物品灵气）](/datapack/json/item_aura)：每个字段的含义。
-- [灵气](/kubejs/api/values) 与 [Java API](/java/api)：`AuraService`、`AuraLookup` 与脚本侧入口。
+- 脚本侧入口：[MxtAura](/kubejs/api/aura)；Java 侧：[Java API](/java/api)：`AuraService`、`AuraLookup`。
 - [敌我识别系统](/technical/identification)、[伤害系统](/technical/damage)：另外两个子系统的源码说明。

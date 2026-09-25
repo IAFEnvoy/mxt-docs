@@ -511,7 +511,7 @@ give @s mxt:formation_plate[mxt:formation_plate={allowed:["#mypack:wood_arrays"]
 ```
 
 `allowed` 为空是**歧义情况**，所以做成配置项：默认「不限制」（兼容所有旧阵盘），把服务端配置「阵法 → 空白名单放行」关掉后，空 `allowed` 表示**什么都不允许**，必须显式列出。
-`/mxt formation bind` 的 Tab 补全只列出这块阵盘允许的阵法；白名单把它们限定住，补全也就有了上界。
+`/mxt formation bind` 的 Tab 补全列出注册表里的全部阵法；白名单不再收窄补全，而是在写入前把关。
 
 **白名单只在写入前和激活前生效**，都先于任何资源消耗：`bind` 拒绝不在名单里的阵法且**不改动物品**；
 若某块阵盘的 `formation` 不在自己的 `allowed` 里（手改存档、或配置改动导致），右键会提示
