@@ -917,6 +917,33 @@ It is the same entry point the `/mxt lifespan reincarnate` command and KubeJS ca
 
 `LifeSpanRebirthEvent` fires `Pre` before and `Post` after: `Pre` can be cancelled, and cancelling means the whole rebirth does not happen and the body is left exactly as it was; a lifespan running out does **not** fire these two (that path fires `lifespanEnd`), see [MxtEvents](/en/kubejs/api/events). This is exactly what content such as a reincarnation pill, a rebirth tribulation or a foundation-washing curse needs, since otherwise a data pack can only wait for a lifespan to run out.
 
+### `mxt:cultivate`
+
+Makes the target **start cultivating**.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `action?` | Method id | Let the pick decide | Names one [`cultivate_action`](../../json/cultivate_action.md); with none written the applicable method of the highest `priority` is picked. |
+
+```json
+{ "type": "mxt:cultivate" }
+{ "type": "mxt:cultivate", "action": "example:azure_meditation" }
+```
+
+This is the **same start path** the player's own cultivation key uses: a named method still has to pass its own `start_condition` and `cultivate_condition` ("does this tick yield anything"; `tick_condition` answers "does the session carry on" and takes no part in the pick), and when nothing applies, nothing happens.
+
+**There is no return value, so every failure is silent**: already cultivating, still on cooldown, or conditions unmet all just mean "it did not start". To say something, branch in the data pack with `mxt:if_else` and [`mxt:cultivating`](../condition/entity_condition_types.md).
+
+Server side only; a non-living target is a silent no-op. Together with the player's key this is the only way to start a body cultivating.
+
+### `mxt:stop_cultivating`
+
+Makes the target **stop the method it is running**, writing that method's own `cooldown`.
+
+No fields; the whole action is written as `{"type": "mxt:stop_cultivating"}`.
+
+It is the same path the player's own key uses to stop (including returning a floating item, clearing breakthrough listeners and lifting the movement restriction). A target that is not cultivating is a silent no-op; server side only, and living entities only.
+
 ::: info Nested Values
 `mxt:if_else` takes an [entity condition](../condition/entity_condition_types.md); `mxt:passenger_action` and `mxt:riding_action` take an entity action, a [bi-entity action](bientity_action_types.md) and a [bi-entity condition](../condition/bientity_condition_types.md); `mxt:explode` filters protected blocks with a [block condition](../condition/block_condition_types.md).
 :::

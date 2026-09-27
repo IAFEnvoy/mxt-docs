@@ -46,7 +46,7 @@ The array shorthand only works where a condition itself is expected: inside the 
 Seven types — `mxt:always`, `mxt:never`, `mxt:js`, `mxt:and`, `mxt:or`, `mxt:not` and `mxt:chance` — do not look at the entities at all; they answer with a constant, call a script, or combine other conditions. Every other type looks at the actor and target it is handed.
 
 ::: info Directed and Undirected Use
-Most bi-entity conditions tell the actor from the target, so swapping the two entities changes the result. `mxt:undirected` runs a nested condition once in each direction, while `mxt:both` / `mxt:either` deliberately apply the same entity condition to both ends. Nested entity checks use the [entity condition types](entity_condition_types.md).
+Most bi-entity conditions tell the actor from the target, so swapping the two entities changes the result. `mxt:undirected` runs a nested condition once in each direction and passes when either one holds; `mxt:mutual` is its counterpart and passes only when **both** directions hold — that is what "the two of them are friends with each other" is written as. `mxt:both` / `mxt:either` deliberately apply the same entity condition to both ends. Nested entity checks use the [entity condition types](entity_condition_types.md).
 :::
 
 ::: tip Datapack Visual Editor
@@ -348,3 +348,18 @@ Passes when the nested bi-entity condition passes in either direction.
 ```json
 {"type": "mxt:undirected", "condition": {"type": "mxt:can_see"}}
 ```
+
+### `mxt:mutual`
+
+Passes when the nested bi-entity condition passes in **both** directions. It is the counterpart of `mxt:undirected`: that one asks for either direction, this one for both.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `condition` | [Bi-entity condition](bientity_condition_types.md) | **required** | The condition that has to hold both ways. |
+
+```json
+{"type": "mxt:mutual", "condition": {"type": "mxt:friend"}}
+```
+
+The example asks whether the two entities consider **each other** friends: `mxt:friend` is directed (it reads the actor's own friend list), so a bare `{"type": "mxt:friend"}` means "the actor counts the target as a friend", and only both directions together mean mutual.
+

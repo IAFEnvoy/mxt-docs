@@ -41,7 +41,9 @@ function anchors(file) {
   const seen = new Map()
   const out = new Set()
   let fence = false
-  for (const line of lines) {
+  for (const raw of lines) {
+    // Split on \n leaves the \r of a CRLF file behind, and `$` does not match before it.
+    const line = raw.replace(/\r$/, '')
     if (/^\s*(```|~~~)/.test(line)) {
       fence = !fence
       continue

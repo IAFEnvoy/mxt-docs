@@ -15,7 +15,7 @@ title: /contract
 
 ## 谁能被契约
 
-**能不能被契约是代码事实**：目标生物必须自己实现 `com.iafenvoy.mxt.api.Contractable`（见[特殊公开接口](/java/interfaces)）。数据包造不出这个资格，所以**原版生物默认都签不了**——对着一只狼用 `bind` 会得到"它不能被契约"。
+**能不能被契约是代码事实**：目标生物必须自己实现 `com.iafenvoy.mxt.api.Contractable`（见[接口](/java/interfaces/)）。数据包造不出这个资格，所以**原版生物默认都签不了**——对着一只狼用 `bind` 会得到"它不能被契约"。
 
 数据包能做的是**收窄**：[contract_type](/datapack/json/contract_type) 可以用自己的**实体类型标签** `#<命名空间>:contract/<路径>` 限定"这一类生物签不签这份契约"，可以用 `owner_condition` / `creature_condition` 限定双方，也可以用 `costs` 收代价。**没写这个标签、或标签写成空的，都表示不限制**（在实现接口的生物里谁都签得了）。
 

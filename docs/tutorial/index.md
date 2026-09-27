@@ -9,7 +9,7 @@ description: "一步步搭建一个小型 MiXianTu 内容包：灵气与境界�
 
 ## 示例包
 
-所有教程都在扩展同一个位于 `example` 命名空间下的小型内容包。前面四篇是一条线，每一篇都假定前面的页面已经完成；后面几篇各自独立，只用到这个包里已有的那几个定义。整组教程结束时，它长这样：
+所有教程都在扩展同一个位于 `example` 命名空间下的小型内容包。前面几篇是一条线，每一篇都假定它依赖的页面已经完成（双修那篇挂在第二篇后面，只用到同一个包里已有的定义）；后面几篇各自独立，只用到这个包里已有的那几个定义。整组教程结束时，它长这样：
 
 ```text
 data/example/
@@ -22,6 +22,7 @@ data/example/
 │   ├── realm_stage/foundation.json
 │   ├── realm_stage/core_formation.json
 │   ├── cultivate_action/meditation.json     What the player does to absorb aura
+│   ├── cultivate_action/dual_meditation.json  Only yields beside a friend holding a manual
 │   ├── aura_zone/common_land.json           Where the aura is
 │   ├── aura_zone/misty_valley.json          A denser zone (aura environment tutorial)
 │   ├── block_aura/spirit_stone_ore.json     Blocks that emit aura
@@ -41,11 +42,9 @@ data/example/
 │   ├── tool_binding/smith_hammer.json       Claims the hammer; lists its methods
 │   ├── forging_blueprint/spirit_sword.json  Materials, target band, quality ladder
 │   ├── blueprint_binding/sword_manual.json  Claims the manual; lists its blueprint
-│   ├── quality/common.json             Quality tiers
+│   ├── quality/common.json             Quality tiers: chain identity, next tier, step cost
 │   ├── quality/refined.json
 │   ├── quality/flawless.json
-│   ├── quality_chain/pill.json              A tier ladder: order, default tier, step costs
-│   ├── quality_chain/weapon.json
 │   ├── item_binding/qi_pill.json            Bindings attach rules to real items
 │   ├── item_binding/root_pellet.json
 │   ├── pill_binding/qi_pill.json
@@ -59,6 +58,7 @@ data/example/
 | 教程 | 你会搭建 | 什么时候读 |
 | --- | --- | --- |
 | [定义灵气与境界](./define-aura-and-realms.md) | 一个元素、一个灵气数值、一条线性境界链、一个修炼行为和一个最小的灵气区域——核心修炼循环。 | 你想让玩家能够修炼并突破。 |
+| [做一门双修功法](./dual-cultivation.md) | 一条只有身边有人时才出成果的修炼法门：判据怎么拼、两个人各自怎么进得去、对方走开时停不停。 | 基础循环已经跑通，你想让"两个人一起修"成为一条规则。 |
 | [搭建灵气环境](./aura-environment.md) | 分层灵气区域、方块灵气、物品燃料、噪声、波动、雾效和 HUD 条。 | 基础循环已经跑通，你想让世界参与进来。 |
 | [用 KubeJS 创建物品并绑定它们](./create-items-with-kubejs.md) | 由脚本注册的真实物品，加上四张绑定表、品质层级，以及让它们有玩法意义的配方。 | 你需要自己的丹药、武器或手册。 |
 | [添加技能](./add-an-ability.md) | 一个主动技能、一个触发技能，以及授予它们的方式。 | 你想给玩家一个花灵气的地方。 |

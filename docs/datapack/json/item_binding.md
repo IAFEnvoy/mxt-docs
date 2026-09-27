@@ -20,7 +20,6 @@ aside: false
 | `items` | 物品 id、`#标签` 或混合数组 | **必填** | 这份定义认领哪些物品，见[匹配器](/datapack/types/shared_data_types#itemmatcher)。 |
 | `priority` | Int | `0` | 多条定义匹配同一件物品时数值大者先；相同则按注册表顺序。 |
 | `actions` | `EntityAction[]` | `[]` | 物品使用周期走完时按顺序执行的行为。 |
-| `quality_chain` | 品质链 id | 无 | 这族物品所在的品质链条，见 [quality_chain](./quality_chain.md)。 |
 | `conditions` | `EntityCondition[]` | `[]` | 使用门槛；每一项都必须满足。 |
 | `element` | 元素 id、`#标签` 或混合数组 | `[]` | 这件物品**是什么元素**，读取口径见下方。 |
 
@@ -38,7 +37,7 @@ aside: false
 
 `priority` 是唯一的“谁赢”规则。多份定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选一条，字段默认 `0`；只有数值相同的两条才回落到注册表顺序，所以“谁赢”由数据包自己写死、与文件名无关。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。接受这个字段的共十张表：`artifact`、`item` / `weapon` / `pill` / `tool` / `blueprint` / `technique` 六种 binding、`spirit_herb`、`item_aura`、`currency`（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。详见 [`ItemMatcher`](/datapack/types/shared_data_types#itemmatcher)。
 
-**逐件附加看组件，其余只由定义给。** 这张表认领的物品自己可以带两个组件：`mxt:quality_chain`（单值，组件优先于定义的 `quality_chain`）与 `mxt:element`（列表，与定义声明的 `element` **取并集**）。`actions` 与 `conditions` **没有组件**，只由定义给。逐件想改就为那一堆写一条定义、用 `items` 点名，或者在物品注册时用 KubeJS / 原版组件处理。
+**逐件附加看组件，其余只由定义给。** 这张表认领的物品自己可以带两个组件：`mxt:quality`（单值，**整份品质对象**：组件写在那一堆上就以它为准，档位与这一档所属的链一起换）与 `mxt:element`（列表，与定义声明的 `element` **取并集**）。`actions` 与 `conditions` **没有组件**，只由定义给。逐件想改就为那一堆写一条定义、用 `items` 点名，或者在物品注册时用 KubeJS / 原版组件处理。
 
 ```json
 {
@@ -76,7 +75,7 @@ aside: false
 }
 ```
 
-`quality_chain` 指向一条[品质链](./quality_chain.md)：链同时给出成员资格（解析出的档必须在链上，否则这堆物品不能使用）、默认档（链的 `default`）与可升级的路径。堆上的 `mxt:quality_chain` 组件优先于这里写的。
+这族物品**读哪条链完全由它解析出的那一档决定**（链名写在 `quality` 自己身上，见 [quality](./quality)），绑定表不声明链。想让某一堆换档又换链，就在那一堆上写 `mxt:quality="<品质 id>"`。
 
 **物品的元素**只有一条读取口径，按顺序问两件事：
 

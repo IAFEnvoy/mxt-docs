@@ -17,7 +17,6 @@ aside: false
 | `use_action` | `EntityAction` | `mxt:no_op` | 右键使用行为。 |
 | `attack_action` | `BiEntityAction` | `mxt:no_op` | 命中攻击行为。 |
 | `tick_action` | `EntityAction` | `mxt:no_op` | 持有 tick 行为。 |
-| `quality_chain` | `quality_chain` id | 无 | 这个物品所在的品质链条（见 [quality_chain](./quality_chain.md)）。链同时给出成员资格（解析出的档必须在链上，否则不能使用）、默认档（链的 `default`）与可升级的路径。 |
 | `conditions` | `EntityCondition[]` | `[]` | 使用、攻击和属性应用前的条件；支持内联条件或带描述的条件对象。 |
 | `element` | 元素 id 或 `#元素标签`，可写数组 | `[]` | 这把武器**是什么元素**：条目是一个元素、`#` 标签是一组元素。堆上的 `mxt:element` 组件与它取并集。 |
 
@@ -46,7 +45,7 @@ aside: false
 }
 ```
 
-**武器只有两个组件**：`mxt:quality_chain`（单值，组件优先于定义）与 `mxt:element`（列表，与定义声明取并集）。`attributes`、三个动作（`use_action` / `attack_action` / `tick_action`）与 `conditions` **都只在定义里**：那一堆想改数值就写原版 `minecraft:attribute_modifiers`（KubeJS 或配方组件），或者为它写一条定义、用 `items` 点名。
+**武器只有两个组件**：`mxt:quality`（单值，**整份品质对象**：组件写在那一堆上就以它为准，档位与这一档所属的链一起换）与 `mxt:element`（列表，与定义声明取并集）。`attributes`、三个动作（`use_action` / `attack_action` / `tick_action`）与 `conditions` **都只在定义里**：那一堆想改数值就写原版 `minecraft:attribute_modifiers`（KubeJS 或配方组件），或者为它写一条定义、用 `items` 点名。
 
 **物品的元素**只有一条读取口径，按顺序问两件事：先看**声明**，堆上的 `mxt:element` 组件，加上 `weapon_binding`、[item_binding](./item_binding.md) 或 [artifact](./artifact.md) 里哪个认领了这堆物品、它写没写 `element`（三个注册表的结果取并集，每个注册表各取 `priority` 最大的那条匹配定义，标签会展开成元素集合）；一个都没声明时，才看**物品携带的灵气**：`mxt:spirit_storage` 里那唯一一种灵气，或（存量为空、或存了多种时）它的 `mxt:item_aura` 定义声明的灵气，取该灵气的 `aura_type`。条件 `mxt:item_element` 读的就是这条口径。
 

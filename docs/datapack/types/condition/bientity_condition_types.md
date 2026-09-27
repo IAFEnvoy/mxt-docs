@@ -46,7 +46,7 @@ description: 模组注册的全部内置双实体条件类型，以及每种类�
 `mxt:always`、`mxt:never`、`mxt:js`、`mxt:and`、`mxt:or`、`mxt:not`、`mxt:chance` 这七个不检查实体本身，只回答恒真、恒假、调用脚本或组合别的条件；其余类型都要看传进来的施动者与目标。
 
 ::: info 有向与无向用法
-大多数双实体条件会区分施动者与目标，交换这两个实体会改变结果。`mxt:undirected` 会把嵌套条件按两个方向各跑一次，而 `mxt:both` / `mxt:either` 是刻意把同一条实体条件应用到两端。嵌套的实体检查用[实体条件类型](entity_condition_types.md)。
+大多数双实体条件会区分施动者与目标，交换这两个实体会改变结果。`mxt:undirected` 会把嵌套条件按两个方向各跑一次、任一方向成立就算通过，`mxt:mutual` 是它的对偶——两个方向**都**成立才通过（"两人互相为友"就写它），而 `mxt:both` / `mxt:either` 是刻意把同一条实体条件应用到两端。嵌套的实体检查用[实体条件类型](entity_condition_types.md)。
 :::
 
 ::: tip 数据包可视化编辑器
@@ -348,3 +348,18 @@ description: 模组注册的全部内置双实体条件类型，以及每种类�
 ```json
 {"type": "mxt:undirected", "condition": {"type": "mxt:can_see"}}
 ```
+
+### `mxt:mutual`
+
+当嵌套双实体条件在**两个方向上都**通过时通过。`mxt:undirected` 的对偶：那个是"任一方向"，这个是"两个方向"。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `condition` | [双实体条件](bientity_condition_types.md) | **必填** | 两个方向都要成立的条件。 |
+
+```json
+{"type": "mxt:mutual", "condition": {"type": "mxt:friend"}}
+```
+
+上面的例子问的是"两个人**互相**把对方当好友"：`mxt:friend` 是有向的（问的是施动者自己的好友表），只写 `{"type": "mxt:friend"}` 是"施动者把目标当好友"，两个方向都写才是互相。
+

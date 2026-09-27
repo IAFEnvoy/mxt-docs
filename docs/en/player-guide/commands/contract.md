@@ -15,7 +15,7 @@ title: /contract
 
 ## Who can be contracted
 
-**Eligibility is a code fact**: the target creature must implement `com.iafenvoy.mxt.api.Contractable` itself (see [Special Public Interfaces](/en/java/interfaces)). No data pack can grant it, so **vanilla creatures can never be contracted** - `bind` on a wolf answers "it cannot be contracted".
+**Eligibility is a code fact**: the target creature must implement `com.iafenvoy.mxt.api.Contractable` itself (see [Interfaces](/en/java/interfaces/)). No data pack can grant it, so **vanilla creatures can never be contracted** - `bind` on a wolf answers "it cannot be contracted".
 
 What a data pack can do is **narrow** it: a [contract_type](/en/datapack/json/contract_type) can restrict "which kind of creature signs this contract" with its own **entity type tag** `#<namespace>:contract/<path>`, restrict both sides with `owner_condition` / `creature_condition`, and charge a price with `costs`. **A tag that is absent, or written empty, places no restriction** (every creature implementing the interface may sign).
 

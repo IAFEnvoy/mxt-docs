@@ -9,7 +9,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 
 三件事先说清楚：
 
-- **这些入口留在各自的模块包里**（`registry`、`util`、`runtime/*`），只有**要实现**的接口在 `com.iafenvoy.mxt.api`，见[特殊公开接口](/java/interfaces)。
+- **这些入口留在各自的模块包里**（`registry`、`util`、`runtime/*`），只有**要实现**的接口在 `com.iafenvoy.mxt.api`，见[接口](/java/interfaces/)。
 - **服务端权威**：扣费、修炼、技能、伤害、阵法结算都只在服务端做，客户端只渲染与发请求。哪些入口在客户端会失效，集中在[服务端与客户端的边界](#boundary)。
 - 想知道某条线**为什么**长这样（而不是"有哪些方法"），看技术页：[灵气计算](/technical/aura)、[伤害系统](/technical/damage)、[敌我识别系统](/technical/identification)。
 
@@ -286,7 +286,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 | `use(Holder<Ability> ability, Entity actor, AbilityAttachment attachment, ResourceHolderAttachment resources, long gameTime, FormulaContext context)` | 施放一个已授予的技能 | `cast_time > 0` 时只登记截止时间，结果是 `casting = true` |
 | `useCarried(..., @Nullable Vec3 origin)` | 物品自带的技能 | 不要求已授予（物品即许可）；非瞬发技能给 `CARRIED_NOT_INSTANT` |
 | `finishCast(Holder<Ability>, Entity, AbilityAttachment, ResourceHolderAttachment, long gameTime, FormulaContext)` | 引导到点后落地 | 没到点就原样返回引导中的结果 |
-| `gate(ToggleContext context)` | 共用闸门：授予 / 冷却 / 条件 / 消耗 | **不执行效果**；由 `AbilityActivationService.activate` 在 `Toggable#gated` 为真时调用 |
+| `gate(ToggleContext context)` | 共用闸门：授予 / 冷却 / 条件 / 消耗 | **不执行效果**；由 `AbilityActivationService.activate` 在 `Togglable#gated` 为真时调用 |
 | `tickChannel(Holder<Ability>, Entity, AbilityAttachment, ResourceHolderAttachment, long gameTime, FormulaContext)` | 引导每 tick 结算 | 只有服务端实体 tick 桥会调；任何失败都停止引导 |
 | `stopChannel(AbilityAttachment)` | 停止引导 | |
 | `cancelCast(Holder<Ability>, AbilityAttachment, long gameTime)` | 中断蓄力 | **不退费** |
@@ -296,7 +296,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 
 要点：
 
-- 凡是"按下某个开关"，服务端一律先经 `runtime/ability/AbilityActivationService`——轮盘、命令、KubeJS 与符箓都走它，**别在别处再写一套"按下某个开关"的分派**。实现了 `Toggable` 且 `gated(ctx)` 为真时它才回头调这里的 `gate`。
+- 凡是"按下某个开关"，服务端一律先经 `runtime/ability/AbilityActivationService`——轮盘、命令、KubeJS 与符箓都走它，**别在别处再写一套"按下某个开关"的分派**。实现了 `Togglable` 且 `gated(ctx)` 为真时它才回头调这里的 `gate`。
 - **冷却与消耗全由这条路负责**：`cooldown` 字段自己会写 `mxt:cooldown` 状态，内容不需要再声明一遍冷却。
 - **技能生效时做什么由类型回答**：四个动作字段（`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`）由**会跑动作的类型各自声明并各自执行**，所以这条路走到"该做什么"那一步就是 `AbilityEffect.run(definition.type(), actor, context, origin)`——一个静态入口，内部只判断类型有没有实现 `AbilityEffect` 这个**能力接口**，不是按具体类型分派；四个字段的共享执行在 `ActionCarrier` 上。四个字段各自的时机见[ability（技能）· 四个动作字段](/datapack/json/ability#action-fields-by-type)。
 - **定向施放（`mxt:targeted`）走的也是这条路**：它实现能力接口 `AbilityApplier`（`reach` 挑这次够得着的实体 + `payload` 每个目标上跑的那条技能），运行时在**付款之前**先问一次 `reach`——一个人都没选中＝`NO_TARGET`，载荷类型没有单目标那一半＝`NOT_APPLICABLE`（两个都进上面的 `Failure`）；它自己的价格、冷却与元素亲和照常由这条路收一次。见[定向施放](/datapack/json/ability#targeted)。

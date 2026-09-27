@@ -9,7 +9,7 @@ This page lists the **entry points another mod can call directly**. What a datap
 
 Three things up front:
 
-- **These entry points stay in their own module packages** (`registry`, `util`, `runtime/*`); only the interfaces you are meant to **implement** live in `com.iafenvoy.mxt.api`, see [Special Public Interfaces](interfaces.md).
+- **These entry points stay in their own module packages** (`registry`, `util`, `runtime/*`); only the interfaces you are meant to **implement** live in `com.iafenvoy.mxt.api`, see [Interfaces](interfaces/index.md).
 - **The server is authoritative**: costs, cultivation, abilities, damage and formation settlement all happen on the server only; the client only renders and sends requests. Which entry points go dead on the client are collected in [The Server and Client Boundary](#boundary).
 - To learn **why** a given line looks the way it does (rather than "which methods exist"), see the technical pages: [Aura Calculation](../technical/aura.md), [Damage System](../technical/damage.md), [Foe Identification](../technical/identification.md).
 
@@ -286,7 +286,7 @@ Package `com.iafenvoy.mxt.runtime.ability`. A pure static utility class. **There
 | `use(Holder<Ability> ability, Entity actor, AbilityAttachment attachment, ResourceHolderAttachment resources, long gameTime, FormulaContext context)` | Casts an already granted ability | With `cast_time > 0` it only records the deadline, and the result has `casting = true` |
 | `useCarried(..., @Nullable Vec3 origin)` | An ability carried by an item | Does not require a grant (the item is the permission); a non-instant ability gives `CARRIED_NOT_INSTANT` |
 | `finishCast(Holder<Ability>, Entity, AbilityAttachment, ResourceHolderAttachment, long gameTime, FormulaContext)` | Lands the ability once the channel is due | If it is not yet due it returns the in-progress result unchanged |
-| `gate(ToggleContext context)` | The shared gate: grant / cooldown / conditions / cost | **Executes no effect**; called by `AbilityActivationService.activate` when `Toggable#gated` is true |
+| `gate(ToggleContext context)` | The shared gate: grant / cooldown / conditions / cost | **Executes no effect**; called by `AbilityActivationService.activate` when `Togglable#gated` is true |
 | `tickChannel(Holder<Ability>, Entity, AbilityAttachment, ResourceHolderAttachment, long gameTime, FormulaContext)` | Settles a channel every tick | Only the server-side entity tick bridge calls it; any failure stops the channel |
 | `stopChannel(AbilityAttachment)` | Stops a channel | |
 | `cancelCast(Holder<Ability>, AbilityAttachment, long gameTime)` | Interrupts a charge | **No refund** |
@@ -296,7 +296,7 @@ Return types: `UseResult(committed, casting, failure, failedResource, amounts)` 
 
 Key points:
 
-- Whenever something is "pressing a switch", the server always goes through `runtime/ability/AbilityActivationService` first — the wheel, commands, KubeJS and talismans all use it, **so do not write another "pressing a switch" dispatch anywhere else**. Only when an implementation is `Toggable` and `gated(ctx)` is true does it come back and call `gate` here.
+- Whenever something is "pressing a switch", the server always goes through `runtime/ability/AbilityActivationService` first — the wheel, commands, KubeJS and talismans all use it, **so do not write another "pressing a switch" dispatch anywhere else**. Only when an implementation is `Togglable` and `gated(ctx)` is true does it come back and call `gate` here.
 - **Cooldown and cost are entirely this road's job**: the `cooldown` field writes the `mxt:cooldown` state itself, and content does not need to declare a cooldown a second time.
 - **What an ability does when it takes effect is the type's answer**: the four action fields (`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`) are **declared and run by each type that runs actions**, so the step this road takes to "what should happen" is `AbilityEffect.run(definition.type(), actor, context, origin)` — one static entry that only asks whether the type implements the `AbilityEffect` **capability interface** rather than dispatching on the concrete class, with the shared execution of the four fields on `ActionCarrier`. When each of the four fields runs is on [Ability · The Four Action Fields](/en/datapack/json/ability#action-fields-by-type).
 - **A targeted cast (`mxt:targeted`) takes this same road**: it implements the `AbilityApplier` capability interface (`reach` for the entities this cast lands on plus `payload` for the ability run on each of them), the runtime asks `reach` once **before anything is paid** - picking nobody is `NO_TARGET` and a payload with no one-target half is `NOT_APPLICABLE` (both are values of `Failure` above) - and its own price, cooldown and element affinity are still taken once by this road. See [Targeted Casts](/en/datapack/json/ability#targeted).

@@ -18,6 +18,8 @@ description: MiXianTu 内置类型分派的工作方式，以及每一族类型�
 
 数据包**只能选已有类型**，不能新增：未知的 `type` 会在加载期报错。新类型只能在代码或脚本里注册。
 
+`type` 一律写完整 ID：内置类型都在 `mxt:` 命名空间下，写成 `"and"` 会被当作 `minecraft:and`，加载期以「找不到这个 `type`」报错。
+
 几个类型族接受**简写**：JSON 数字就是 `mxt:constant`，字符串就是 `mxt:expression`，`"minecraft:apple"` 这样的物品 ID 就是匹配器条目 `mxt:item`。能简写的地方，写全类型对象也一样有效。
 
 ## 参与分派的字段

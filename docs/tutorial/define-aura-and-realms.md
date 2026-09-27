@@ -196,12 +196,12 @@ realm_stage chain             progress + conditions + costs → next realm
 
 ## 第 4 步 —— 修炼行为
 
-`cultivate_action` 是一个具名活动。玩家选择其中一个，它按固定间隔结算。
+`cultivate_action` 是一个具名活动。玩家选择其中一个，它按固定间隔结算；多条法门并存时，先在整张表里筛出**此刻适用的**（`start_condition` 与 `cultivate_condition` 都要成立），再取 `priority` 最大的一条，同分按注册表顺序；一条都不适用就报「没有一门当下能修的法门」。
 
 ```json
 // data/example/mxt/cultivate_action/meditation.json
 {
-  "default": true,
+  "priority": 1,
   "tick_interval": 20,
   "absorb_amount": 1.5,
   "aura_costs": [{"type": "mxt:aura", "aura": "example:qi", "amount": 1}],
@@ -211,13 +211,13 @@ realm_stage chain             progress + conditions + costs → next realm
 
 | 字段 | 效果 |
 | --- | --- |
-| `default` | 玩家没有选择其他行为时使用。没有任何默认行为时，使用注册表中的第一个行为。默认 `false`。 |
+| `priority` | 多条法门并存时的先后：数值大者先，相同则按注册表顺序。它只在**此刻适用的**法门里排序。默认 `0`。 |
 | `tick_interval` | 结算间隔，单位 tick，范围 `1..72000`；`20` 表示每秒一次。默认 `20`。 |
 | `absorb_amount` | 当前境界数值自然恢复的倍率；先填满资源条，溢出量成为修为。默认 `1`。 |
 | `aura_costs` | 每 tick 从修炼者所在位置的**共享灵气池**扣除的灵气消耗，只写 `mxt:aura` 条目（`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`）。多人同区块修炼时，各人的量先按池子分配份额缩放，再由池子**全有或全无**地扣。 |
 | `cooldown` | 停止后再次开始修炼前的冷却 tick。默认 `0`。 |
 
-`start_condition` 与 `condition` 决定修炼能否开始与继续；两者默认恒为真，并且都能读取环境。没有“灵气种类”字段：只应在正确地点运行的行为会直接要求那个地点，例如用 `mxt:aura_range`（某一门灵气的浓度区间，每一项都必填 `max`）或 `mxt:dimension`。剩下的字段是 `costs`（每 tick 从修炼者身上扣的消耗，`Cost` 数组、全有或全无）、`aura_gains`（每 tick 额外增加的灵气）和 `tick_action`（每次修炼 tick 运行的实体行为）。
+`start_condition` 与 `tick_condition` 决定修炼能否开始与继续；两者默认恒为真，并且都能读取环境。没有“灵气种类”字段：只应在正确地点运行的行为会直接要求那个地点，例如用 `mxt:aura_range`（某一门灵气的浓度区间，每一项都必填 `max`）或 `mxt:dimension`。剩下的字段是 `costs`（每 tick 从修炼者身上扣的消耗，`Cost` 数组、全有或全无）、`aura_gains`（每 tick 额外增加的灵气）和 `tick_action`（每次修炼 tick 运行的实体行为）。
 
 ## 第 5 步 —— 一个最小的灵气区域
 
@@ -244,7 +244,7 @@ realm_stage chain             progress + conditions + costs → next realm
 - `regen_per_tick` 随时间回填区块库存。
 - `distribution` 决定库存不足时多名玩家如何分配：`random`、`equal` 或 `realm_weighted`。
 - `biomes` 与 `dimensions` 决定模板在哪里生效；`#minecraft:is_overworld` 覆盖主世界的全部群系。维度级绑定优先于群系级，两者都低于手动区域和阵法。
-- `cultivate_condition` 是环境自己给修炼加上的条件；它默认恒为真，想让某处要求浓度就在区域里写 `mxt:aura_range`。行为自己的 `start_condition`/`condition` 是同一个判定的另一侧。
+- `cultivate_condition` 是环境自己给修炼加上的条件；它默认恒为真，想让某处要求浓度就在区域里写 `mxt:aura_range`。行为自己的 `start_condition`/`tick_condition` 是同一个判定的另一侧。
 
 灵气环境的深度值得单独一篇页面——那就是[搭建灵气环境](./aura-environment.md)，你会在那里加入更浓的区域、方块来源、物品燃料以及客户端的雾效和 HUD。
 
@@ -301,7 +301,7 @@ realm_stage chain             progress + conditions + costs → next realm
 | 现象 | 原因 |
 | --- | --- |
 | 谁都无法离开凡人 | aura 上缺少 `first_realm`，没有可以突破到的阶段。 |
-| 修炼从不开始 | 行为的 `start_condition` 或 `condition` 不满足——为你想要的地点写一个 `mxt:aura_range` 或群系条件，因为没有可匹配的“灵气种类”词汇。 |
+| 修炼从不开始 | 行为的 `start_condition` 或 `tick_condition` 不满足——为你想要的地点写一个 `mxt:aura_range` 或群系条件，因为没有可匹配的“灵气种类”词汇。 |
 | 资源条从不增长 | 共享灵气池付不出 `aura_costs`（池子本身不够，或那份被同区块的其他修炼者分掉），或者 `use_condition` 为假。 |
 | 世界拒绝加载 | 有定义解码失败：某个必填 Holder 指向不存在的 ID，或某个字段形状不对。整次加载都会失败，而不只是那个文件。 |
 | `breakthrough_exp` 大于 `max_experience` | 该阶段无法离开；两者都是常量时，Codec 会在加载期拒绝。 |
@@ -309,5 +309,6 @@ realm_stage chain             progress + conditions + costs → next realm
 
 ## 接下来
 
+- [做一门双修功法](./dual-cultivation.md) —— 在同一个包上再加一条"身边有人才出成果"的修炼法门。
 - [搭建灵气环境](./aura-environment.md) —— 让浓度随地点、方块和时间变化，并把它放到 HUD 上。
 - [resource（资源）](../datapack/json/resource.md)与 [realm_stage（境界阶段）](../datapack/json/realm_stage.md) —— 所有剩下的字段，包括资源条、换算和天劫。

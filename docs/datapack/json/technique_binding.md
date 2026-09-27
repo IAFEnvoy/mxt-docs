@@ -15,7 +15,6 @@ aside: false
 | `items` | 物品 id、`#标签` 或混合数组 | `[]` | **可选**：这些物品不带任何组件也算这门功法的手册，见[匹配器](/datapack/types/shared_data_types#itemmatcher)。省略时这份声明只能按功法 id 被读到。 |
 | `priority` | Int | `0` | 两条声明都认领同一件物品时数值大者先。 |
 | `carrier_item` | 物品 id | `mxt:cultivation_jade_slip` | 本体替这门功法**生成**载体物品时使用哪个物品（`/picker mxt:technique` 用它）。单个物品 id，不支持物品标签、通配符或数组。**声明的 `items` 里点名了具体物品时，选择器直接给那件物品、不再生成载体。** |
-| `quality_chain` | `quality_chain` id | 无 | 这个物品所在的品质链条（见 [quality_chain](./quality_chain.md)）。链同时给出成员资格（解析出的档必须在链上，否则不能使用）、默认档（链的 `default`）与可升级的路径。 |
 | `conditions` | `EntityCondition[]` | `[]` | 学习前条件；支持内联条件或带描述的条件对象。 |
 | `learn_time` | Integer | `0` | 需要**长按**的时长，单位 tick，范围 `0..72000`。`0` 表示右键立刻学会。 |
 | `hold_animation` | String | `block` | 长按时播放的动作。仅在写了 `learn_time` 时有意义。取值见下表。 |
@@ -47,7 +46,7 @@ give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 
 内容包想用自己的物品当手册，两条路都行：写 `carrier_item: "命名空间:物品"`，让选择器生成那一叠已经带好 `mxt:technique` 组件的载体；或者更直接，把物品写进声明的 `items`，那一叠**不带组件**就是手册。
 
-读多久、什么姿势、什么声音由**声明**给；某几堆想读得不一样就写 `mxt:technique_reading` 组件（键与上表同名、全部可选，按**字段**覆盖声明）；`mxt:quality_chain` 组件同样优先于声明里写的那条链。
+读多久、什么姿势、什么声音由**声明**给；某几堆想读得不一样就写 `mxt:technique_reading` 组件（键与上表同名、全部可选，按**字段**覆盖声明）。这一族物品读哪条品质链不由这张表决定：链名写在 `quality` 条目自己身上，写在哪一档上，那一档与它下面的每一档就属于那条链。
 
 **一条功法可以没有定义。** 声明按功法 id 匹配，找不到就按默认值读：右键即学、默认姿势与音效、无品质链、无条件、载体是玉简。也就是说没有任何 `technique_binding` 文件的功法照样能通过组件学习，只是读起来是最朴素的那一种。
 
@@ -104,7 +103,6 @@ give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 {
   "technique": "example:fire_manual",
   "carrier_item": "kubejs:fire_manual",
-  "quality_chain": "example:manual",
   "conditions": [{"type": "mxt:realm", "realm": "example:foundation"}]
 }
 ```

@@ -126,7 +126,6 @@ StartupEvents.registry('item', event => {
 // kubejs/data/example/mxt/item_binding/fire_root_pellet.json
 {
   "items": "kubejs:fire_root_pellet",
-  "quality_chain": "example:pellet",
   "actions": [
     {
       "type": "mxt:grant_spirit_root",
@@ -143,8 +142,7 @@ StartupEvents.registry('item', event => {
   "attributes": [
     {"attribute": "minecraft:attack_damage", "id": "example:firebound_sword/damage", "amount": 8, "operation": "add_value"},
     {"attribute": "minecraft:attack_speed", "id": "example:firebound_sword/speed", "amount": -2.4, "operation": "add_value"}
-  ],
-  "quality_chain": "example:firebound_weapon"
+  ]
 }
 ```
 
@@ -152,7 +150,6 @@ StartupEvents.registry('item', event => {
 // kubejs/data/example/mxt/pill_binding/returning_pill.json
 {
   "items": "kubejs:returning_pill",
-  "quality_chain": "example:pill",
   "toxicity_gain": 10,
   "toxicity_threshold": 100,
   "toxicity_after_overdose": 25
@@ -163,11 +160,10 @@ StartupEvents.registry('item', event => {
 // kubejs/data/example/mxt/technique_binding/fire_manual.json
 {
   "technique": "example:fire_manual",
-  "carrier_item": "kubejs:fire_manual",
-  "quality_chain": "example:manual"
+  "carrier_item": "kubejs:fire_manual"
 }
 ```
 
-前三张绑定表只引用已经由 KubeJS、原版或其他模组注册的物品，`quality_chain` 是可选的、指向一条 [品质链条](../datapack/json/quality_chain.md) 的引用。「手册」那一份不一样：它是前两张表的**定义**，`kubejs:fire_manual` 只通过 `carrier_item` 声明成本体生成的载体，真正教功法的还是**堆上的 `mxt:technique` 组件**——写组件的方式见[功法绑定](../datapack/json/technique_binding.md)。当前各绑定的运行时接入状态和缺口**以代码为准**（模组仓库两份 README 的「模块完成情况」表是汇总）。
+前三张绑定表只引用已经由 KubeJS、原版或其他模组注册的物品，**绑定里不声明品质链**（链名写在 `quality` 条目自己身上），见 [quality](../datapack/json/quality)。「手册」那一份不一样：它是前两张表的**定义**，`kubejs:fire_manual` 只通过 `carrier_item` 声明成本体生成的载体，真正教功法的还是**堆上的 `mxt:technique` 组件**——写组件的方式见[功法绑定](../datapack/json/technique_binding.md)。当前各绑定的运行时接入状态和缺口**以代码为准**（模组仓库两份 README 的「模块完成情况」表是汇总）。
 
 KubeJS 注册物品表后需要重启游戏；MXT 的绑定数据表属于原版数据包注册表，读取发生在世界加载时，因此修改后需要重新加载世界（单机退回标题界面再进入，服务器重启），`/reload` 不会重新读取它们。绑定的物品 ID 不存在时，数据包加载会失败，避免产生无法解析的物品规则。

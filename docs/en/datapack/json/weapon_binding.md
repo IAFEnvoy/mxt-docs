@@ -17,7 +17,6 @@ A weapon binding gives **items that are already registered** a set of weapon att
 | `use_action` | `EntityAction` | `mxt:no_op` | Right-click use behaviour. |
 | `attack_action` | `BiEntityAction` | `mxt:no_op` | Behaviour on a hit. |
 | `tick_action` | `EntityAction` | `mxt:no_op` | Held-tick behaviour. |
-| `quality_chain` | `quality_chain` ID | none | The quality chain this item sits on (see [quality_chain](./quality_chain.md)). The chain also answers membership (a resolved tier has to be on it, or the item cannot be used), the default tier (the chain's `default`) and the upgrade path. |
 | `conditions` | `EntityCondition[]` | `[]` | Conditions checked before use, attacks and attribute application; supports inline conditions or described condition objects. |
 | `element` | element ID or `#element tag`, an array is allowed | `[]` | What element this weapon **is**: one entry is one element, a `#` tag is a set of them. The `mxt:element` component on the stack is unioned with it. |
 
@@ -46,7 +45,7 @@ A weapon binding gives **items that are already registered** a set of weapon att
 }
 ```
 
-**A weapon has exactly two components**: `mxt:quality_chain` (single value — the component wins over the definition) and `mxt:element` (a list — unioned with what the definition declares). `attributes`, the three actions (`use_action` / `attack_action` / `tick_action`) and `conditions` **exist only in a definition**: for a stack whose numbers you want to change, write the vanilla `minecraft:attribute_modifiers` (KubeJS or recipe components), or write a definition for it and name that stack through `items`.
+**A weapon has exactly two components**: `mxt:quality` (single value — a **whole quality object**: written on a stack it wins, and it brings the ladder its own tier belongs to) and `mxt:element` (a list — unioned with what the definition declares). `attributes`, the three actions (`use_action` / `attack_action` / `tick_action`) and `conditions` **exist only in a definition**: for a stack whose numbers you want to change, write the vanilla `minecraft:attribute_modifiers` (KubeJS or recipe components), or write a definition for it and name that stack through `items`.
 
 **The element of an item** has exactly one reading, which asks two things in order: first the **declarations** — the `mxt:element` component on the stack, plus whichever of `weapon_binding`, [item_binding](./item_binding.md) or [artifact](./artifact.md) claims this stack and whether it writes `element` (the three registries are unioned, each taking its single highest-`priority` matching definition, and tags expand into sets of elements); only when none of them declares anything does it read the **aura the item carries** — the single aura in its `mxt:spirit_storage`, or (when that store is empty or holds several) the aura its `mxt:item_aura` definition declares, then that aura's `aura_type`. The `mxt:item_element` condition reads exactly this.
 

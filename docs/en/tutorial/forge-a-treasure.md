@@ -192,7 +192,7 @@ Add the finish pattern and the quality ladder to the same blueprint:
 - The quality is the first entry with `extra steps ≤ max_extra_steps`, so the list must be **ascending** and must end with `2147483647`.
 - A tier's colour is written on the **quality definition's** own `color` (optional): with one, the item name in a tooltip, the quality line in that tooltip, the entry names in the picker's quality category and the tier table in a blueprint's tooltip are all tinted; without one they keep their usual styling (it is not a default white). That tier table is visible in the Forge Table's blueprint tooltip, and once a piece is finished the readout shows the tier it came out as.
 - **A material's quality divides those extra steps.** When `forging_modifier` on an `quality` is above `1`, the same extra steps are read as fewer and buy a better tier. Among several materials the **lowest** tier wins (a piece is only as good as its worst material), materials that resolve no quality are skipped, and a missing or unusable modifier behaves as `1`.
-- What is read is the **blueprint's declared `id` and `count`** — a plain stack rebuilt at settlement — not the stack that was taken. A quality that exists **only as an `mxt:item_quality` component on that particular stack is therefore invisible** to forging. To have quality participate, either declare the material as a spirit herb, or point its binding at a `quality_chain` (the chain's `default` is the tier used when no override component is written).
+- What is read is the **blueprint's declared `id` and `count`** — a plain stack rebuilt at settlement — not the stack that was taken. A quality that exists **only as an `mxt:quality` component on that particular stack is therefore invisible** to forging. To have quality participate, declare the material as a spirit herb (a ladder plays no part here: its name is written on the `quality` tier itself, and a binding declares no ladder).
 
 ::: tip Completion is automatic
 
@@ -277,7 +277,7 @@ One reality you have to know: **a refused request never shows a message.** The r
 | "use blueprint" does nothing | The server refused. Besides materials and the output slot, the usual cause is an **unreachable target range**: no solution exists with this blueprint's methods and finish pattern. |
 | It never completes | The finish pattern names a method no tool unlocks, or the value never enters the range — remember that an out-of-bounds strike is refused outright. |
 | The step limit is reached with no result | `max_steps` was hit while the piece was still incomplete: the **next** strike fails the session and the `failure_settlement` runs. |
-| Every piece has the same quality | You always take the shortest solution (so extra steps stay at zero), or the materials resolve no quality — a quality marked only with an `mxt:item_quality` component does not count, see Step 4. |
+| Every piece has the same quality | You always take the shortest solution (so extra steps stay at zero), or the materials resolve no quality — a quality marked only with an `mxt:quality` component does not count, see Step 4. |
 | A method suddenly stops being usable | The usable set is recomputed on every strike and tool slots are never locked: removing a hammer removes its methods. |
 | Pressing during the cooldown does nothing | `cooldown` is tracked per (player, table) and is checked **before** the condition and the cost, so a refused strike still spends it. |
 | Materials did not come back | The input slots were full, and the remainder was dropped at the player's feet. |
@@ -287,5 +287,5 @@ One reality you have to know: **a refused request never shows a message.** The r
 - [forging_blueprint](../datapack/json/forging_blueprint.md) — the full field table and validation rules.
 - [forging_method](../datapack/json/forging_method.md) and [tool_binding](../datapack/json/tool_binding.md) — the methods and the tools that unlock them.
 - [blueprint_binding](../datapack/json/blueprint_binding.md) — how a definition claims blueprint items, and how a stack's own list adds to it.
-- [quality](../datapack/json/quality.md) and [quality_chain](../datapack/json/quality_chain.md) — `forging_modifier`, the chain's order and default tier, and the order qualities are resolved in.
+- [quality](../datapack/json/quality.md) — `forging_modifier`, the ladder's order and entry tier, and the order qualities are resolved in.
 - [MxtEvents: Events](../kubejs/api/events.md) — read or rewrite a strike's cost, or veto a phase from a script.

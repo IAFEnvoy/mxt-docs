@@ -41,8 +41,7 @@ title: 动态注册表
 | `aura_zone` | `mxt/aura_zone` | 环境灵气模板。 |
 | `block_aura` | `mxt/block_aura` | 方块提供的灵气。 |
 | `item_aura` | `mxt/item_aura` | 手持物品提供的修炼燃料。 |
-| `quality` | `mxt/quality` | 共享品质：名字、颜色、三个修正与使用条件。 |
-| `quality_chain` | `mxt/quality_chain` | 品质链条：由低到高的档位列表、默认档，以及每一步升级的代价与条件。 |
+| `quality` | `mxt/quality` | 共享品质：名字、颜色、三个修正、使用条件，以及它在品质链上的位置与升级代价。 |
 | `trigger` | `mxt/trigger` | 事件规则：信号、条件与行为。 |
 | `talisman` | `mxt/talisman` | 符箓定义：一张符箓铭刻的能力。 |
 

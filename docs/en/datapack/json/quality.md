@@ -1,6 +1,6 @@
 ---
 title: Quality (quality)
-description: A quality entry names one quality tier and carries the value, forging and alchemy modifiers that tier settles with.
+description: A quality entry names one tier, carries its three modifiers, and marks the tier above it plus what one step up costs.
 aside: false
 ---
 
@@ -8,25 +8,29 @@ aside: false
 
 File location: `data/<namespace>/mxt/quality/<path>.json`
 
-One `quality` is one tier. What it is called is for the interface to show; `value_multiplier` / `forging_modifier` / `alchemy_modifier` are what the economy, forging and alchemy settlements read. A quality's **order, default tier, membership and upgrade path are not in this file**: all of them are decided by a [quality_chain](./quality_chain.md), so a single `quality` only describes what this tier is called and what it is worth.
+One `quality` is one tier. What it is called is for the interface to show; `value_multiplier` / `forging_modifier` / `alchemy_modifier` are what the economy, forging and alchemy settlements read. A tier is also one link of a quality ladder: `next` points at the tier above it, and `quality` gives that ladder a name.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `quality.mxt.<namespace>.<path>` | The quality's name. |
-| `description` | Text Component | `quality.mxt.<namespace>.<path>.description` | The quality's description, drawn below the quality name. |
-| `color` | Color | none | The quality's colour, six hex digits `"#RRGGBB"` or an integer. |
-| `value_multiplier` | `Modifier` | `1` | The currency value modifier. |
-| `forging_modifier` | `Modifier` | `1` | The forging modifier. |
-| `alchemy_modifier` | `Modifier` | `1` | The alchemy modifier. |
-| `condition` | `EntityCondition` | `mxt:always` | The condition for using this quality. |
+| `name` | Text Component | `quality.mxt.<namespace>.<path>` | The tier's name. |
+| `description` | Text Component | `quality.mxt.<namespace>.<path>.description` | The tier's description, drawn under its name. |
+| `color` | Color | none | The tier's colour, either `"#RRGGBB"` or an integer. |
+| `value_multiplier` | `Modifier` | `1` | Currency value modifier. |
+| `forging_modifier` | `Modifier` | `1` | Forging modifier. |
+| `alchemy_modifier` | `Modifier` | `1` | Alchemy modifier. |
+| `condition` | `EntityCondition` | `mxt:always` | The condition for using this tier. |
+| `next` | `quality` id | none | The tier above this one; omitted on the highest tier. |
+| `upgrade_costs` | `Cost` array | `[]` | What one step up along `next` costs, through the same transaction abilities use: `plan` → `commit`, **the whole group atomically**, so a refused payment moves nothing and writes no tier. |
+| `upgrade_condition` | `EntityCondition` | `mxt:always` | Whether the step may be taken, asked before anything is paid. |
+| `quality` | Identifier | none | The ladder's name. **Writing it once is enough**: every tier that writes it, and every tier below one that does, belongs to that ladder. |
 
-`name` and `description` may both be omitted: omitting one means the key generated from the entry id in the table above, writing one uses the text you give (a string is a translation key, an object is a full component).
+Both `name` and `description` may be omitted: omitting one uses the key generated from the entry id in the table above, writing one uses your own text (a bare string is a translation key, an object is a full component).
 
-While `condition` does not hold, an item that resolves to this tier cannot be used: use, attacks, the periodic behaviour of a main-hand weapon and the vanilla attribute modifiers it grants all stop.
+A `condition` that does not pass makes the item unusable: use, attack, the main-hand weapon's periodic behaviour and the vanilla attribute modifiers it grants all stop.
 
-`color` follows rules of its own, unlike those two text fields: **writing it wins** (it even overrides a colour carried inside the `name` component), and **leaving it out changes nothing at all**. It is not "default white" - a quality without a colour goes on showing the vanilla rarity colour. Only four places tint: the item name line of an item tooltip, the "Quality: name" line in that tooltip, the entry names of the quality category in `/picker`, and the tier table in a Forge Table blueprint tooltip. The item name line can also be switched off by the player: **Client Settings → Tooltips → Tint Item Name** (on by default), which leaves the other three alone. The quality description line is always grey.
+`color` does not follow the two text fields: **when it is written it wins** (it even overrides a colour inside a `name` component), and **when it is omitted nothing changes at all**. It is not "white by default", so a tier without a colour still draws in the vanilla rarity colour. Only four places are tinted: the item-name line of the tooltip, the `Quality: <name>` line inside it, the entries of the quality category in `/picker`, and the tier table of a forging blueprint's tooltip. A player can still turn the name line off in the client config ("Tooltip → tint the item name with its quality", on by default); the other three are unaffected. The description line is always grey.
 
-All three `Modifier` fields are optional objects, and `description` and `modifier` inside one may be omitted as well: an omitted `modifier` is `1`, and an omitted `description` **draws no line at all** (the modifier still settles). Its wording is entirely for the data pack to write and is never generated:
+`Modifier` is three optional objects, and inside each one both `description` and `modifier` may be omitted: an omitted `modifier` means `1`, an omitted `description` means **that line is simply not drawn** (the modifier still applies). Its text is entirely the pack's own, nothing is generated:
 
 ```json
 {
@@ -40,18 +44,63 @@ All three `Modifier` fields are optional objects, and `description` and `modifie
 }
 ```
 
-That file omits `name`, `description` and `forging_modifier.description`.
+The entry above omits `name`, `description` and `forging_modifier.description`.
 
-`value_multiplier` settles by multiplying the item's currency unit value by `modifier` and rounding to a whole number, so **what you can see is what gets paid** (the tooltip shows the settled value too). A `modifier` that is missing, non-finite or ≤0 is treated as 1; a product that is non-finite, below 1 or past `long` falls back to the declared value, and never conjures up a number the data pack never wrote.
+At settlement, `value_multiplier` multiplies the item's currency denomination by `modifier` and rounds to a whole number, so **what you see is what you pay** (the tooltip shows the settled value too). A `modifier` that is missing, non-finite or ≤ 0 counts as 1; a product that is non-finite, below 1 or beyond `long` falls back to the declared denomination rather than inventing a number the pack never wrote.
 
-`forging_modifier` settles by looking the quality tier up with `effective extra steps = actual extra steps ÷ modifier`, so above `1` the same technique buys a better tier. The value comes from the **materials this session locked in**: with several materials the lowest tier among them wins, and a material that resolves no quality is skipped. A `modifier` of 1 changes nothing at all.
+At settlement, `forging_modifier` looks the quality tier up with `effective extra steps = actual extra steps ÷ modifier`, so > 1 means the same technique reaches a better tier. The value comes from the materials **locked in by that session**: with several materials the lowest tier among them is used, and materials with no resolved quality are skipped. A `modifier` of 1 changes nothing.
 
-`alchemy_modifier` settles by deciding the brewing duration with `duration = declared duration ÷ modifier` (above `1` brews faster); the value comes from the input stacks in the furnace **at the moment the batch starts**, again the lowest tier and skipping the ones without a quality, and the result is written into the session snapshot.
+At settlement, `alchemy_modifier` decides the brewing duration as `duration = declared duration ÷ modifier` (> 1 brews faster). The value comes from the ingredient stacks in the cauldron **at the moment it is lit**, again the lowest tier, skipping the ones without a quality, and the result is written into the session snapshot.
 
-A quality's **order, default tier, membership and upgrade path are all decided by the chain**: one [quality_chain](./quality_chain.md) sorts several qualities low→high into a chain, and a binding table references it with `quality_chain`. The tier an item resolves to has to be on the chain, or the item cannot be used; which tier it falls to when no override component was written is answered by the chain's `default` as well. Resolution only answers which tier it is - for the full order see [How a Quality Is Resolved](./quality_chain.md#resolution).
+## The quality ladder {#ladder}
 
-Vanilla tags take no part in quality resolution: `group/<name>` tags are not read and nothing reads the `tooltip_order` tag either, and nothing in the interface sorts by quality order, so it is not a sorting input. `color` only affects where a quality name is drawn and takes no part in resolution.
+Where a tier sits is not written anywhere else: each tier points at the tier above with `next`, and the order, the entry and the ladder's identity are all walked out of those links at runtime. The ladder's name only has to be written on **one** tier:
 
-## Naming and Translation {#translation}
+```json
+// data/example/mxt/quality/common.json
+{
+  "next": "example:refined",
+  "upgrade_costs": [{ "id": "example:qi", "amount": 20 }]
+}
 
-The category is the registry's own path: `example:refined` looks up `quality.mxt.example.refined`, and the description appends `.description` (**the registry namespace is still `mxt`**). Among the registries carrying `name` / `description`, quality is the only one that draws `description` (below the quality name); the others only store and read theirs, and no interface draws it. There is no `translation_key` field in the JSON; a `/` in the path stays in the key exactly as it does in every other registry.
+// data/example/mxt/quality/refined.json
+{
+  "quality": "example:pill",
+  "next": "example:flawless",
+  "upgrade_costs": [{ "id": "example:qi", "amount": 60 }]
+}
+
+// data/example/mxt/quality/flawless.json
+{}
+```
+
+- All three tiers belong to one ladder, `example:pill`: `refined` names it, and `common` and `flawless` follow it. Renaming the ladder means editing that one place.
+- **The entry tier is automatically the one nothing points at** (here `common`), and it is also the ladder's default tier. A ladder therefore needs no `default`, and its lowest tier needs no `next`.
+- **To make a tier the top, leave `next` out.** A tier that writes `next` without `upgrade_costs` still has that step; its cost is simply an empty array.
+- **A ladder is a straight line.** A tier writes one `next`, so every tier has at most one tier above it; **two tiers naming the same `next`** (a fork) is reported, naming the tier and both tiers it follows — after a fork there is no single answer to "what is below this tier", so it belongs to the line that was walked first. The tier above and the tier below are both looked up in the walked order, so the two directions are symmetric.
+- **One name per ladder.** A tier that receives two different names (its own plus one from the tier above it) is reported, and so is a cycle, a pointer at an entry that does not exist, or a chain that cannot be reached from its start (`/reload` runs the check again).
+- **A tier on no ladder still works**: one tier with neither `next` nor `quality` stands alone, shows its name, and is read by a `mxt:quality` component as well as the three modifiers, but it has no order and cannot be climbed.
+
+::: tip Two things share the name
+`quality` is the **field on a tier** (the ladder's name, a plain string); `mxt:quality` is the **component on an item** (a whole quality object). The binding table's `quality_chain` writes that same string.
+:::
+
+## Which tier an item is {#resolution}
+
+A stack's quality is taken as the **first one it can get**, in a fixed order:
+
+1. the `mxt:quality` **component** on the stack (a whole quality object) - what [`/quality set`](/en/player-guide/commands/quality) and [MxtQuality](/en/kubejs/api/quality) write, and what a successful `upgrade` writes too;
+2. the tier recorded by the forge result `mxt:forging_result` on the stack;
+3. the **definition default**: `quality` on an [artifact](./artifact.md) or a [technique](./technique.md);
+4. the **entry tier of the ladder** this stack reads;
+5. the `quality` a matching [spirit herb](./spirit_herb.md) declares.
+
+Step 4 asks "which ladder does this stack's tier sit on", and a ladder is named only on the tier itself: whatever ladder the definition's default tier belongs to is the one the item falls back on its entry tier for. A tier on no ladder leaves that step unanswered. No binding table declares a ladder, and there is no second place that could.
+
+To gate on a tier, use the item condition `mxt:item_quality` (**that is the condition; the component is `mxt:quality`**): its `quality` accepts entries, `#tags` or an array (at least one; an empty list is refused at load), and it reads the result of the five steps above. An item that resolves to no tier at all answers no rather than falling back to the lowest one.
+
+Vanilla tags take no part in quality resolution: the `group/<name>` tag is not read and neither is `tooltip_order`, and nothing in the interface sorts by quality order, so it is not an ordering input. `color` only affects the places that draw a tier's name.
+
+## Names and translation {#translation}
+
+The category is the registry's own path: `example:refined` looks up `quality.mxt.example.refined`, and its description adds `.description` (**the registry namespace is still `mxt`**). Among the registries that carry their own `name` / `description`, quality is the one that has its `description` drawn (under the name); the others are only stored and read, and nothing draws them. There is no `translation_key` field in the JSON; a `/` in the path stays in the key like every other registry.

@@ -18,6 +18,8 @@ Actions, conditions, number providers and the like are **type tables held by the
 
 A data pack can **only pick an existing type**, never add one: an unknown `type` fails the load. New types are registered in code or from a script.
 
+Always write `type` with its full ID: the built-in types live in the `mxt:` namespace, so `"and"` is read as `minecraft:and` and the load fails with "no such `type`".
+
 Several families accept **shorthand**: a JSON number is `mxt:constant`, a string is `mxt:expression`, and an item ID such as `"minecraft:apple"` is the matcher entry `mxt:item`. Wherever a shorthand exists, writing the full typed object works just as well.
 
 ## Dispatched Fields

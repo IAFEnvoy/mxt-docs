@@ -16,7 +16,6 @@ File location: `data/<namespace>/mxt/technique_binding/<path>.json`
 | `items` | item ID, `#tag` or a mixed array | `[]` | **Optional**: these items count as a manual for this technique even while carrying no component; see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher). When omitted, the declaration can only be reached by technique id. |
 | `priority` | Int | `0` | When two declarations both claim one item, the larger number wins. |
 | `carrier_item` | item ID | `mxt:cultivation_jade_slip` | The item the mod uses when it **generates** a carrier for this technique (`/picker mxt:technique` uses it). A single item ID — item tags, wildcards and arrays are not accepted. **When the declaration's `items` names concrete items, the picker hands those items out directly and generates no carrier.** |
-| `quality_chain` | `quality_chain` id | none | The quality chain this item sits on (see [quality_chain](./quality_chain.md)). The chain answers membership (a resolved tier must be on it, otherwise the item cannot be used), the default tier (the chain's `default`) and the upgrade path. |
 | `conditions` | `EntityCondition[]` | `[]` | Conditions checked before learning; inline conditions or described condition objects both work. |
 | `learn_time` | Integer | `0` | The **hold** length in ticks, range `0..72000`. `0` learns on the first right-click. |
 | `hold_animation` | String | `block` | The pose played while holding. Only meaningful when `learn_time` is written. Values below. |
@@ -48,7 +47,7 @@ The mod walks the `mxt:technique` registry and **generates one carrier per techn
 
 To use an item of your own as a manual, both routes work: write `carrier_item: "namespace:item"` and let the picker generate that stack with the `mxt:technique` component already on it; or, more directly, put the item into the declaration's `items`, and that stack is the manual **without any component**.
 
-How long a read takes, which pose it plays and which sound it makes come from the **declaration**; a stack that should read differently writes the `mxt:technique_reading` component (same keys as the table above, all optional, overriding the declaration **field by field**), and the `mxt:quality_chain` component likewise wins over the chain written in the declaration.
+How long a read takes, which pose it plays and which sound it makes come from the **declaration**; a stack that should read differently writes the `mxt:technique_reading` component (same keys as the table above, all optional, overriding the declaration **field by field**). Which quality ladder this family sits on is not decided here: the ladder's name is written on the `quality` entry itself, and every tier that names it, plus every tier below one that does, belongs to that ladder.
 
 **A technique can have no declaration at all.** Declarations are matched by technique id, and a technique with no `technique_binding` file is still read, with the defaults: learn on the first right-click, default pose and sound, no quality chain, no conditions, the jade slip as carrier. Such a technique can still be learned through the component — it just reads in the plainest possible way.
 
@@ -105,7 +104,6 @@ A technique that uses an item of the content pack as its carrier:
 {
   "technique": "example:fire_manual",
   "carrier_item": "kubejs:fire_manual",
-  "quality_chain": "example:manual",
   "conditions": [{"type": "mxt:realm", "realm": "example:foundation"}]
 }
 ```

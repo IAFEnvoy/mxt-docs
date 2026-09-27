@@ -60,7 +60,6 @@ MiXianTu 负责行为、条件、灵气、货币与 Tooltip，绑定表则把一
 // kubejs/data/example/mxt/item_binding/fire_root_pellet.json
 {
   "items": "kubejs:fire_root_pellet",
-  "quality_chain": "example:pellet",
   "actions": [
     {
       "type": "mxt:grant_spirit_root",
@@ -79,8 +78,7 @@ MiXianTu 负责行为、条件、灵气、货币与 Tooltip，绑定表则把一
   "attributes": [
     {"attribute": "minecraft:attack_damage", "id": "example:firebound_sword/damage", "amount": 8, "operation": "add_value"},
     {"attribute": "minecraft:attack_speed", "id": "example:firebound_sword/speed", "amount": -2.4, "operation": "add_value"}
-  ],
-  "quality_chain": "example:firebound_weapon"
+  ]
 }
 ```
 
@@ -90,7 +88,6 @@ MiXianTu 负责行为、条件、灵气、货币与 Tooltip，绑定表则把一
 // kubejs/data/example/mxt/pill_binding/returning_pill.json
 {
   "items": "kubejs:returning_pill",
-  "quality_chain": "example:pill",
   "toxicity_gain": 10,
   "toxicity_threshold": 100,
   "toxicity_after_overdose": 25
@@ -103,12 +100,11 @@ MiXianTu 负责行为、条件、灵气、货币与 Tooltip，绑定表则把一
 // kubejs/data/example/mxt/technique_binding/fire_manual.json
 {
   "technique": "example:fire_manual",
-  "carrier_item": "kubejs:fire_manual",
-  "quality_chain": "example:manual"
+  "carrier_item": "kubejs:fire_manual"
 }
 ```
 
-前五张表都是**拿物品去匹配**的：`items` 接受物品 ID、物品标签或混合数组，所以一份文件能覆盖一整族物品（`tool_binding` / `blueprint_binding` 也一样，只是它们给出的分别是锻打方式与蓝图）。`technique_binding` 的声明按**功法 id** 匹配，而它的 `items` 是可选的第二条路：一叠物品之所以是某门功法的手册，**首先看它自己身上的 `mxt:technique` 组件**，没有组件时才看哪条声明的 `items` 认领了它——所以上面那件物品可以靠 `/picker mxt:technique` 给出的带组件载体，也可以直接把 id 写进声明的 `items`。`quality_chain` 是可选的、指向一条 [品质链条](/datapack/json/quality_chain) 的引用：链同时给出成员资格、默认档与升级路径。绑定里写了一个**不存在**的物品 ID 会让数据包加载失败，因此不会留下解析不出来的物品规则。各表的完整字段见 [物品绑定](/datapack/json/item_binding)、[武器绑定](/datapack/json/weapon_binding)、[丹药绑定](/datapack/json/pill_binding)、[工具绑定](/datapack/json/tool_binding)、[图纸绑定](/datapack/json/blueprint_binding) 与 [功法绑定](/datapack/json/technique_binding)。
+前五张表都是**拿物品去匹配**的：`items` 接受物品 ID、物品标签或混合数组，所以一份文件能覆盖一整族物品（`tool_binding` / `blueprint_binding` 也一样，只是它们给出的分别是锻打方式与蓝图）。`technique_binding` 的声明按**功法 id** 匹配，而它的 `items` 是可选的第二条路：一叠物品之所以是某门功法的手册，**首先看它自己身上的 `mxt:technique` 组件**，没有组件时才看哪条声明的 `items` 认领了它——所以上面那件物品可以靠 `/picker mxt:technique` 给出的带组件载体，也可以直接把 id 写进声明的 `items`。绑定表**不声明品质链**：链名写在 `quality` 条目自己身上（那一档的 `quality`），物品解析出的档位属于哪条链，它就落在哪条链上，见 [quality](/datapack/json/quality)。绑定里写了一个**不存在**的物品 ID 会让数据包加载失败，因此不会留下解析不出来的物品规则。各表的完整字段见 [物品绑定](/datapack/json/item_binding)、[武器绑定](/datapack/json/weapon_binding)、[丹药绑定](/datapack/json/pill_binding)、[工具绑定](/datapack/json/tool_binding)、[图纸绑定](/datapack/json/blueprint_binding) 与 [功法绑定](/datapack/json/technique_binding)。
 
 ## 重载
 

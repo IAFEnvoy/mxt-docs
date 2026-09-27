@@ -53,9 +53,9 @@ A derived source reads the **ability grant ledger** (the `SourceLedger` inside `
 
 `R` opens the wheel when **any cell of any page holds anything**, so an empty main wheel cannot hide the pages behind it.
 
-## Skills that need a key (`Toggable`) {#skills-that-need-a-key-toggable}
+## Skills that need a key (`Togglable`) {#skills-that-need-a-key-toggable}
 
-The rule is one sentence: **everything a player has to press for counts as a skill and goes on the wheel**. Any ability type that implements the `Toggable` interface is such a thing - implementing the interface is the whole of saying "put me on the wheel" (the design is in `research/40_能力与法器能力合并设计.md`). There are five implementations today, all ordinary ability types: `mxt:active` (a press casts it), a **channel** (`mxt:channelled`: a press starts a channel, paying for itself through the full cast pipeline), a **targeted cast** (`mxt:targeted`: a press runs one full cast, marks out a set of targets with `target_selector` and runs the payload ability's one-target half on each of them), a **switch** (`mxt:flight_control`: on takes off, off lands) and a **one-shot** (`mxt:storage`: the press opens the artifact's own storage box and leaves nothing behind). The interface leaves three questions to the implementation:
+The rule is one sentence: **everything a player has to press for counts as a skill and goes on the wheel**. Any ability type that implements the `Togglable` interface is such a thing - implementing the interface is the whole of saying "put me on the wheel" (the design is in `research/40_能力与法器能力合并设计.md`). There are five implementations today, all ordinary ability types: `mxt:active` (a press casts it), a **channel** (`mxt:channelled`: a press starts a channel, paying for itself through the full cast pipeline), a **targeted cast** (`mxt:targeted`: a press runs one full cast, marks out a set of targets with `target_selector` and runs the payload ability's one-target half on each of them), a **switch** (`mxt:flight_control`: on takes off, off lands) and a **one-shot** (`mxt:storage`: the press opens the artifact's own storage box and leaves nothing behind). The interface leaves three questions to the implementation:
 
 | Method | Who asks it, and what for |
 |---|---|

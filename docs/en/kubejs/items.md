@@ -60,7 +60,6 @@ Bind a pill that grants a spirit root:
 // kubejs/data/example/mxt/item_binding/fire_root_pellet.json
 {
   "items": "kubejs:fire_root_pellet",
-  "quality_chain": "example:pellet",
   "actions": [
     {
       "type": "mxt:grant_spirit_root",
@@ -79,8 +78,7 @@ Bind a weapon's attribute modifiers (attack damage and attack speed go here too)
   "attributes": [
     {"attribute": "minecraft:attack_damage", "id": "example:firebound_sword/damage", "amount": 8, "operation": "add_value"},
     {"attribute": "minecraft:attack_speed", "id": "example:firebound_sword/speed", "amount": -2.4, "operation": "add_value"}
-  ],
-  "quality_chain": "example:firebound_weapon"
+  ]
 }
 ```
 
@@ -90,7 +88,6 @@ Bind a pill's toxicity:
 // kubejs/data/example/mxt/pill_binding/returning_pill.json
 {
   "items": "kubejs:returning_pill",
-  "quality_chain": "example:pill",
   "toxicity_gain": 10,
   "toxicity_threshold": 100,
   "toxicity_after_overdose": 25
@@ -103,12 +100,11 @@ Bind a cultivation technique to its carrier item:
 // kubejs/data/example/mxt/technique_binding/fire_manual.json
 {
   "technique": "example:fire_manual",
-  "carrier_item": "kubejs:fire_manual",
-  "quality_chain": "example:manual"
+  "carrier_item": "kubejs:fire_manual"
 }
 ```
 
-The first five tables match the item themselves: `items` accepts an item ID, an item tag or a mixed array, so one file can cover a whole family of items (the same holds for `tool_binding` / `blueprint_binding`, which just hand out forging methods and blueprints instead). A `technique_binding` declaration is matched by technique id, and its `items` is the optional second route: what makes a stack a manual is its own `mxt:technique` component, and only without one does the `items` of a declaration decide — so the item above can either be handed out as the generated carrier from `/picker mxt:technique`, or its id can be written into the declaration's `items` directly. `quality_chain` is an optional reference to a [quality chain](../datapack/json/quality_chain.md): the chain answers membership, the default tier and the upgrade path. When a binding names an item ID that does not exist, the data pack fails to load, so no unresolvable item rule is created. The full field list of each table is in [Item Binding](../datapack/json/item_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md), [Tool Binding](../datapack/json/tool_binding.md), [Blueprint Binding](../datapack/json/blueprint_binding.md) and [Technique Binding](../datapack/json/technique_binding.md).
+The first five tables match the item themselves: `items` accepts an item ID, an item tag or a mixed array, so one file can cover a whole family of items (the same holds for `tool_binding` / `blueprint_binding`, which just hand out forging methods and blueprints instead). A `technique_binding` declaration is matched by technique id, and its `items` is the optional second route: what makes a stack a manual is its own `mxt:technique` component, and only without one does the `items` of a declaration decide — so the item above can either be handed out as the generated carrier from `/picker mxt:technique`, or its id can be written into the declaration's `items` directly. A binding table **declares no quality ladder**: the ladder's name is written on the `quality` entry itself (that tier's `quality`), so an item sits on whichever ladder its resolved tier belongs to, see [quality](../datapack/json/quality). When a binding names an item ID that does not exist, the data pack fails to load, so no unresolvable item rule is created. The full field list of each table is in [Item Binding](../datapack/json/item_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md), [Tool Binding](../datapack/json/tool_binding.md), [Blueprint Binding](../datapack/json/blueprint_binding.md) and [Technique Binding](../datapack/json/technique_binding.md).
 
 ## Reloading
 

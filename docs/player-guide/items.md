@@ -23,7 +23,7 @@ MiXianTu 不为每个玩法预设具体数值，但提供少量通用承载物�
 
 物品匹配支持单个物品、原版物品标签、通配符、正则和混合数组。`carrier_item` 是例外：它只接受单个物品 id。`technique_binding` 的声明按功法 id 匹配，它的 `items` 是可选的那条路。
 
-**逐件附加的内容走物品组件**：`mxt:quality_chain`（单值，组件优先）、`mxt:element`（列表，与定义取并集）、`mxt:pill`（按字段覆盖丹药定义）、`mxt:technique_reading`（按字段覆盖功法阅读参数）、`mxt:forging_methods` 与 `mxt:forging_blueprints`（列表，与定义取并集）——它们只写给这一堆。`conditions` 与武器的数值/动作**没有**组件：想逐件改就为那一堆写一条定义、用 `items` 点名，武器的属性数值则写原版 `minecraft:attribute_modifiers`。
+**逐件附加的内容走物品组件**：`mxt:quality`（单值，整份品质对象；档位与这一堆读的链一起换）、`mxt:element`（列表，与定义取并集）、`mxt:pill`（按字段覆盖丹药定义）、`mxt:technique_reading`（按字段覆盖功法阅读参数）、`mxt:forging_methods` 与 `mxt:forging_blueprints`（列表，与定义取并集）——它们只写给这一堆。`conditions` 与武器的数值/动作**没有**组件：想逐件改就为那一堆写一条定义、用 `items` 点名，武器的属性数值则写原版 `minecraft:attribute_modifiers`。
 
 ## 灵气物品
 

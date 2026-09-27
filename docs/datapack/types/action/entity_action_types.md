@@ -917,6 +917,33 @@ description: 模组注册的全部内置实体行为类型，以及每种类型�
 
 前后会发 `LifeSpanRebirthEvent` 的 `Pre` 与 `Post`：`Pre` 可取消，取消＝整次转世不发生、身体原样不动；寿元耗尽**不发**这两个事件（那条路发 `lifespanEnd`），见 [MxtEvents](/kubejs/api/events)。"转世丹""转世天劫""洗基诅咒"这类内容要的就是它，不然数据包只能等一本寿元耗尽。
 
+### `mxt:cultivate`
+
+让目标**开始运功**。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `action?` | 法门 id | 走挑选 | 点名一条 [`cultivate_action`](../../json/cultivate_action.md)；不写就按"当下适用的里 `priority` 最大的一条"挑。 |
+
+```json
+{ "type": "mxt:cultivate" }
+{ "type": "mxt:cultivate", "action": "example:azure_meditation" }
+```
+
+与玩家自己按修炼键是**同一条开始路径**：点名的那条也要过自己的 `start_condition` 与 `cultivate_condition`（"这一拍能不能拿到成果"；`tick_condition` 答的是"还继续不继续修炼"，开始前不参与挑选），一条都不适用就什么都不发生。
+
+**没有返回值，失败一律静默**：已经在修炼、或在冷却、或条件不成立都只是"没开始"。要提示就在数据包里用 `mxt:if_else` 配 [`mxt:cultivating`](../condition/entity_condition_types.md) 自己发消息。
+
+只在服务端生效，非生物目标是静默无操作。这是数据包与脚本把一具身体"开练"的唯一入口（另一个入口是玩家的修炼键）。
+
+### `mxt:stop_cultivating`
+
+让目标**停下正在运功的那一条**，并按下这条法门自己的 `cooldown` 写冷却。
+
+没有字段，整条就写作 `{"type": "mxt:stop_cultivating"}`。
+
+与玩家自己按修炼键停下是同一条路径（含漂浮物的归还、突破侦听的清理与移动限制的解除）。目标本来就没在修炼时静默无操作；同样只在服务端生效、只认生物。
+
 ::: info 嵌套值
 `mxt:if_else` 接受一个[实体条件](../condition/entity_condition_types.md)；`mxt:passenger_action` 与 `mxt:riding_action` 接受实体行为、[双实体行为](bientity_action_types.md)和[双实体条件](../condition/bientity_condition_types.md)；`mxt:explode` 用[方块条件](../condition/block_condition_types.md)筛选受保护的方块。
 :::

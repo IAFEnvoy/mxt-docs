@@ -13,6 +13,7 @@ title: /mxt
 | `/mxt resource <id> set <value>` | Sets a resource value. |
 | `/mxt resourcebar [resource] [index]` | Shows a resource bar's raw current value, minimum, maximum, untruncated percentage, context, anchor and order; without arguments it lists every resource bar. |
 | `/mxt cultivate status` | Shows the cultivation state: the active cultivation behaviour, the progress stored per aura and the next cultivation tick. |
+| `/mxt cultivate select <action>` | Names one cultivation method (an entry of `mxt:cultivate_action`) and **starts it right away**: the one already running is stopped first, but the named method still has to apply right now — a pick that does not is refused and the running session is left alone. It covers this one start only; the next press of the cultivation key picks by "applies + `priority`" again. Requires the `gamemaster` permission. |
 | `/mxt breakthrough <aura>` | Attempts a breakthrough into the realm that the given aura leads to. |
 | `/mxt realm set <realm>`, `/mxt realm chain <realm>` | Sets your own linear realm; `chain` prints the whole realm chain that stage is on. See [`/realm`](/en/player-guide/commands/realm). |
 | `/mxt lifespan get`, `/mxt lifespan set`, `/mxt lifespan add`, `/mxt lifespan reincarnate` | Reads and rewrites the lifespan ledger and makes a target be reborn on the spot (the write nodes and `reincarnate` need the `gamemaster` permission). See [`/lifespan`](/en/player-guide/commands/lifespan). |

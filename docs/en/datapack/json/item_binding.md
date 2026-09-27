@@ -1,12 +1,12 @@
 ---
 title: Item Binding (item_binding)
-description: "Claims existing items for the mxt:item_binding datapack registry and hands them an ordered list of actions, a use gate, an optional quality chain and an element."
+description: "Claims existing items for the mxt:item_binding datapack registry and hands them an ordered list of actions, a use gate, an optional quality ladder and an element."
 aside: false
 ---
 
 # Item Binding (item_binding)
 
-An item binding turns items that already exist into carriers of data pack behaviour: it claims them through `items` and gives them an ordered list of `actions`, a use gate, an optional quality chain and an element.
+An item binding turns items that already exist into carriers of data pack behaviour: it claims them through `items` and gives them an ordered list of `actions`, a use gate, an optional quality ladder and an element.
 
 ## File Location
 
@@ -23,7 +23,6 @@ The filename corresponds to its ID. For example, `data/example/mxt/item_binding/
 | `items` | Item id, `#tag` or a mixed array | **required** | Which items this definition claims; see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher) |
 | `priority` | Int | `0` | When several definitions match one item, the higher number goes first; only equal numbers fall back to registry order |
 | `actions` | `EntityAction[]` | `[]` | The actions run in order on the tick the item's use cycle finishes |
-| `quality_chain` | Quality chain id | none | The quality chain this family of items sits on; see [quality_chain](./quality_chain.md) |
 | `conditions` | `EntityCondition[]` | `[]` | The use gate; every entry must pass |
 | `element` | Element id, `#tag` or a mixed array | `[]` | What element this item **is**; the reading is below |
 
@@ -41,7 +40,7 @@ The filename corresponds to its ID. For example, `data/example/mxt/item_binding/
 
 `priority` is the only "who wins" rule. When several definitions match one item, the one with the **highest** declared `priority` wins; the field defaults to `0`, and only two definitions carrying the **same** number fall back to registry order, so which one wins is written in the pack and never decided by file names. **The kind of matcher entry that matched is irrelevant**: any matching definition is ranked by the number it declares, and naming the item by id does not move it up. Ten tables accept the field: `artifact`, the six bindings `item` / `weapon` / `pill` / `tool` / `blueprint` / `technique`, `spirit_herb`, `item_aura` and `currency` (the same direction as `aura_zone` and `element_reaction`). See [`ItemMatcher`](/en/datapack/types/shared_data_types#itemmatcher).
 
-**Per-stack extras go through components; everything else comes from the definition.** An item claimed by this table may carry two components of its own: `mxt:quality_chain` (single value — the component wins over the definition's `quality_chain`) and `mxt:element` (a list — **unioned** with the `element` the definition declares). `actions` and `conditions` have **no** component and come only from the definition. To change one stack, write a definition that names it through `items`, or handle it while the item is registered, with KubeJS or vanilla components.
+**Per-stack extras go through components; everything else comes from the definition.** An item claimed by this table may carry two components of its own: `mxt:quality` (single value — a **whole quality object**: written on a stack it wins, and it brings the ladder its own tier belongs to) and `mxt:element` (a list — **unioned** with the `element` the definition declares). `actions` and `conditions` have **no** component and come only from the definition. To change one stack, write a definition that names it through `items`, or handle it while the item is registered, with KubeJS or vanilla components.
 
 ```json
 {
@@ -79,7 +78,7 @@ Holding a spirit root or a physique, granting one and removing one are all data 
 }
 ```
 
-`quality_chain` points at one [quality chain](./quality_chain.md), and the chain answers three things in one place: membership (the tier an item resolves to must be on the chain, or the item cannot be used), the default tier (the chain's `default`) and the path upwards. The `mxt:quality_chain` component on the stack wins over what is written here.
+**Which ladder this family reads follows entirely from the tier it resolves** (the ladder's name is written on the `quality` entry itself, see [quality](./quality)); a binding declares no ladder. To give one stack both another tier and another ladder, write `mxt:quality="<quality id>"` on that stack.
 
 **The element of an item** has exactly one reading, which asks two questions in order:
 

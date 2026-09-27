@@ -116,7 +116,7 @@ The latter is planned **before** the invocation: anything that cannot be paid **
 
 ### Tier
 
-`quality` gives this talisman a tier, which is where the grading of talisman paper / talisman treasures is written. The tier resolved on a carrier goes through the whole ordinary quality module: the tooltip's tier line, `mxt:quality` and a quality's own `condition`, upgrading along the quality chain and a quality's `value_multiplier` all see it as usual. The framework **writes no tier component onto the stack**, so a component still overrides the definition and the chain can still be climbed. On a carrier with several inscriptions, it takes the **first entry in writing order that declares a tier**.
+`quality` gives this talisman a tier, which is where the grading of talisman paper / talisman treasures is written. The tier resolved on a carrier goes through the whole ordinary quality module: the tooltip's tier line, `mxt:quality` and a quality's own `condition`, upgrading along the quality ladder and a quality's `value_multiplier` all see it as usual. The framework **writes no tier component onto the stack**, so a component still overrides the definition and the ladder can still be climbed. On a carrier with several inscriptions, it takes the **first entry in writing order that declares a tier**.
 
 ### How an Invocation Resolves
 

@@ -25,6 +25,7 @@ The KubeJS bridge is optional. It exposes **one global object per domain** inste
 | `MxtElements` | Read the elements and element accumulation on an entity, and apply accumulation. |
 | `MxtSpiritRoots` | Query, grant, remove and switch spirit roots on and off. |
 | `MxtPhysiques` | Query, grant, remove and switch physiques on and off. |
+| `MxtTechniques` | Query, learn and forget techniques, and read the skill stage one is at. |
 | `MxtQuality` | Read the quality a stack resolves to and its chain, write the override component, or climb one tier. |
 | `MxtSouls` | Reclaim the transferable soul of an entity. |
 | `MxtLifespan` | Read the lifespan ledger (ticks left and the ceiling), rewrite or adjust it, and make a body be reborn on the spot. |

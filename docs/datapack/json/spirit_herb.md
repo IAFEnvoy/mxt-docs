@@ -22,7 +22,7 @@ aside: false
 | --- | --- | --- | --- |
 | `items` | `ItemMatcher` | **必填** | 绑定现有物品，不创建新的灵植物品。 |
 | `priority` | Int | `0` | 多份同类定义匹配同一件物品时的先后：数值大者先（见 [匹配器](/datapack/types/shared_data_types#itemmatcher)）；相同则按注册表顺序。 |
-| `quality` | 品阶 id | **必填** | 该物品的品质，也是整套解析顺序的**最后一格**：覆盖组件 → 锻造结果 → 定义默认档（法器 / 功法）→ 所属链条的 `default` → 灵植这里（见 [quality_chain](./quality_chain.md#resolution)）。 |
+| `quality` | 品阶 id | **必填** | 该物品的品质，也是整套解析顺序的**最后一格**：覆盖组件 → 锻造结果 → 定义默认档（法器 / 功法）→ 所属链条的入口档 → 灵植这里（见 [quality](./quality.md#resolution)）。 |
 | `age` | `NumberProvider` | `0` | 年龄元数据。 |
 | `element_tags` | 元素 id 或 `#标签` 的数组 | `[]` | 这株草的元素归属，写的是**元素注册表**：条目是一个元素，`#` 标签是一组元素。可被 `mxt:herb_tag`（`element`）匹配，因此能写进任何接受 `ItemMatcher` 的地方（物品条件、绑定、`mxt:item_matcher`…）。 |
 | `material_tags` | Identifier[] | `[]` | 材料分类标签，同上由 `mxt:herb_tag` 的 `material` 匹配。 |

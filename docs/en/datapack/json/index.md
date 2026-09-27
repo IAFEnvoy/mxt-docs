@@ -42,8 +42,7 @@ The table below lists the mod's 35 datapack registries. In the field tables, "De
 | `aura_zone` | `mxt/aura_zone` | Environment aura templates. |
 | `block_aura` | `mxt/block_aura` | Aura provided by blocks. |
 | `item_aura` | `mxt/item_aura` | Cultivation fuel provided by held items. |
-| `quality` | `mxt/quality` | Shared quality: name, colour, three modifiers and a use condition. |
-| `quality_chain` | `mxt/quality_chain` | Quality chains: the tier list from low to high, the default tier, and the cost and condition of each upgrade step. |
+| `quality` | `mxt/quality` | Shared quality: name, colour, three modifiers, a use condition, and where the tier sits on its ladder with what one step up costs. |
 | `trigger` | `mxt/trigger` | Event rules: a signal, a condition and an action. |
 | `talisman` | `mxt/talisman` | Talisman definitions: the ability one inscribed talisman carries. |
 

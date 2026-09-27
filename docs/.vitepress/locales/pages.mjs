@@ -71,7 +71,16 @@ export const sections = [
     items: [
       { page: 'tutorial/index', zh: '教程索引', en: 'Tutorials' },
       { page: 'tutorial/add-an-ability', zh: '定义一个技能', en: 'Add an Ability' },
-      { page: 'tutorial/define-aura-and-realms', zh: '定义灵气与境界', en: 'Define Aura and Realms' },
+      // The dual cultivation page is a follow-up to the aura tutorial and only uses what that
+      // one built, so it hangs under it as a child; the parent stays a link to its own page.
+      {
+        page: 'tutorial/define-aura-and-realms',
+        zh: '定义灵气与境界',
+        en: 'Define Aura and Realms',
+        items: [
+          { page: 'tutorial/dual-cultivation', zh: '做一门双修功法', en: 'Write a Dual Cultivation Technique' }
+        ]
+      },
       { page: 'tutorial/aura-environment', zh: '搭建灵气环境', en: 'Build the Aura Environment' },
       { page: 'tutorial/create-items-with-kubejs', zh: '用 KubeJS 创建物品', en: 'Create Items with KubeJS' },
       { page: 'tutorial/define-a-formation', zh: '定义一个阵法', en: 'Define a Formation' },
@@ -107,7 +116,7 @@ export const sections = [
           { page: 'datapack/json/currency', zh: 'currency（货币）', en: 'currency' },
           { page: 'datapack/json/curse', zh: 'curse（诅咒）', en: 'curse' },
           { page: 'datapack/json/element', zh: 'element（元素）', en: 'element' },
-          { page: 'datapack/json/element_reaction', zh: '元素反应', en: 'Element Reactions' },
+          { page: 'datapack/json/element_reaction', zh: 'element_reaction（元素反应）', en: 'Element Reactions' },
           { page: 'datapack/json/forging_blueprint', zh: 'forging_blueprint（锻造图纸）', en: 'forging_blueprint' },
           { page: 'datapack/json/forging_method', zh: 'forging_method（锻造手法）', en: 'forging_method' },
           { page: 'datapack/json/formation', zh: 'formation（阵法）', en: 'formation' },
@@ -116,7 +125,6 @@ export const sections = [
           { page: 'datapack/json/physique', zh: 'physique（体质）', en: 'physique' },
           { page: 'datapack/json/pill_binding', zh: 'pill_binding（丹药绑定）', en: 'pill_binding' },
           { page: 'datapack/json/quality', zh: 'quality（品质）', en: 'quality' },
-          { page: 'datapack/json/quality_chain', zh: 'quality_chain（品质链条）', en: 'quality_chain' },
           { page: 'datapack/json/secret_realm', zh: 'secret_realm（秘境）', en: 'secret_realm' },
           { page: 'datapack/json/realm_stage', zh: 'realm_stage（境界阶段）', en: 'realm_stage' },
           { page: 'datapack/json/resource', zh: 'resource（资源）', en: 'resource' },
@@ -202,6 +210,7 @@ export const sections = [
           { page: 'kubejs/api/elements', zh: 'MxtElements', en: 'MxtElements' },
           { page: 'kubejs/api/spirit_roots', zh: 'MxtSpiritRoots', en: 'MxtSpiritRoots' },
           { page: 'kubejs/api/physiques', zh: 'MxtPhysiques', en: 'MxtPhysiques' },
+          { page: 'kubejs/api/techniques', zh: 'MxtTechniques', en: 'MxtTechniques' },
           { page: 'kubejs/api/quality', zh: 'MxtQuality', en: 'MxtQuality' },
           { page: 'kubejs/api/souls', zh: 'MxtSouls', en: 'MxtSouls' },
           { page: 'kubejs/api/lifespan', zh: 'MxtLifespan', en: 'MxtLifespan' },
@@ -219,7 +228,49 @@ export const sections = [
       { page: 'java/index', zh: '总览', en: 'Overview' },
       { page: 'java/registries', zh: '注册表与数据表', en: 'Registries and Data Tables' },
       { page: 'java/api', zh: '公开 API', en: 'Public API' },
-      { page: 'java/interfaces', zh: '接口', en: 'Interfaces' },
+      {
+        // The overview is the group's entry; one sub-page per interface, grouped by what the
+        // interface is for, so the Java chapter does not pile every type onto one page.
+        page: 'java/interfaces',
+        zh: '接口',
+        en: 'Interfaces',
+        items: [
+          {
+            text: { zh: '灵气存取', en: 'Aura Storage' },
+            items: [
+              { page: 'java/interfaces/aura/aura-access', zh: 'AuraAccess', en: 'AuraAccess' },
+              { page: 'java/interfaces/aura/item-aura-access', zh: 'ItemAuraAccess', en: 'ItemAuraAccess' },
+              { page: 'java/interfaces/aura/use-item-aura-access', zh: 'UseItemAuraAccess', en: 'UseItemAuraAccess' }
+            ]
+          },
+          {
+            text: { zh: '生物契约', en: 'Creature Contracts' },
+            items: [
+              { page: 'java/interfaces/creature/contractable', zh: 'Contractable', en: 'Contractable' },
+              { page: 'java/interfaces/creature/contract-operations', zh: 'ContractOperations', en: 'ContractOperations' },
+              { page: 'java/interfaces/creature/capture-listener', zh: 'CaptureListener', en: 'CaptureListener' },
+              { page: 'java/interfaces/creature/perchable', zh: 'Perchable', en: 'Perchable' }
+            ]
+          },
+          {
+            text: { zh: '轮盘与按键', en: 'Wheel and Keys' },
+            items: [
+              { page: 'java/interfaces/wheel/wheel-menu-entry', zh: 'WheelMenuEntry', en: 'WheelMenuEntry' },
+              { page: 'java/interfaces/wheel/wheel-source', zh: 'WheelSource', en: 'WheelSource' },
+              { page: 'java/interfaces/wheel/wheel-entry-kind', zh: 'WheelEntryKind', en: 'WheelEntryKind' },
+              { page: 'java/interfaces/wheel/togglable', zh: 'Togglable', en: 'Togglable' }
+            ]
+          },
+          {
+            text: { zh: '定义与消耗', en: 'Definitions and Costs' },
+            items: [
+              { page: 'java/interfaces/definition/named-definition', zh: 'NamedDefinition', en: 'NamedDefinition' },
+              { page: 'java/interfaces/definition/cost', zh: 'Cost', en: 'Cost' },
+              { page: 'java/interfaces/definition/tooltip-appender', zh: 'TooltipAppender', en: 'TooltipAppender' }
+            ]
+          }
+        ]
+      },
       { page: 'java/network', zh: '网络协议', en: 'Network Protocol' },
       { page: 'java/screens', zh: '客户端界面', en: 'Client Screens' },
       { page: 'java/wheel', zh: '轮盘条目', en: 'Wheel Entries' },

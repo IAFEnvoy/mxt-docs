@@ -29,8 +29,7 @@ actions, conditions, quality, aura, tooltips
 | --- | --- |
 | `kubejs/startup_scripts/mxt_items.js` | 四个物品：一枚聚气丹、一枚灵根丹、一把剑和一本功法手册。 |
 | `kubejs/server_scripts/mxt_recipes.js` | 它们的配方。 |
-| `data/example/mxt/quality/common.json`、`refined.json` | 两个品质档位。 |
-| `data/example/mxt/quality_chain/pill.json` | 丹药的品质阶梯：由低到高的档位、默认档与每一步的升级代价。 |
+| `data/example/mxt/quality/common.json`、`refined.json`、`flawless.json` | 品质档位：名字、修正，以及链名与每一档的下一档。 |
 | `data/example/mxt/element/fire.json` | 灵根使用的元素。 |
 | `data/example/mxt/spirit_root/fire_root.json` | 这枚丹药赋予什么。 |
 | `data/example/mxt/technique/azure_breath.json` | 手册传授什么。 |
@@ -86,19 +85,21 @@ ServerEvents.recipes(event => {
 
 ## 第 2 步 —— 品质档位
 
-`quality` 是物品可以携带的档位。品质的**顺序、默认档、成员资格与升级路径都由一条链条决定**，定义里没有排序字段：
+`quality` 是物品可以携带的档位。品质的**顺序、入口档、成员资格与升级路径都写在档位自己身上**——上一档是 `next`，链名是字段 `quality`，那一步的代价是 `upgrade_costs`：
 
 ```json
 // data/example/mxt/quality/common.json
 {
-  "name": "quality.mxt.example.common"
+  "next": "example:refined",
+  "upgrade_costs": [{ "id": "example:qi", "amount": 20 }]
 }
 ```
 
 ```json
 // data/example/mxt/quality/refined.json
 {
-  "name": "quality.mxt.example.refined",
+  "quality": "example:pill",
+  "next": "example:flawless",
   "value_multiplier": {
     "description": "quality.mxt.example.refined.value",
     "modifier": 1.25
@@ -111,30 +112,17 @@ ServerEvents.recipes(event => {
 ```
 
 ```json
-// data/example/mxt/quality_chain/pill.json
-{
-  "tiers": ["example:common", "example:refined"],
-  "default": "example:common",
-  "upgrades": [
-    { "costs": [{ "id": "example:qi", "amount": 20 }] }
-  ]
-}
+// data/example/mxt/quality/flawless.json
+{}
 ```
 
-- 绑定通过 `quality_chain: "example:pill"` 引用这条链——写的是**链的 id**，不再是带 `#` 的标签。
-- `tiers` 的数组顺序就是链条顺序（**低 → 高**）；没有覆盖组件、也没有锻造结果时，物品落到 `default` 那一档（省略 `default` 就是最低一档）。
-- `upgrades[i]` 描述 `tiers[i] → tiers[i+1]` 这一步要付什么、要满足什么条件：这里从 `common` 升到 `refined` 要花 20 点 `example:qi`，走全局消耗事务，**整组原子**——付不出就一点不动，也不会写档。没声明的步不能升，**不会**当成免费。
-- `name` 与 `description` 都可以省略：省略时按条目 id 自动生成 `quality_chain.mxt.<命名空间>.<路径>`（描述再加 `.description`）。`quality` 上的 `name` / `description` 同理；修正项上的 `description` 只有写了才会出现在物品 Tooltip 里（省略就不画那一行），而 `modifier` 是运行时使用的数值：`value_multiplier` 缩放物品的货币单位价值，`forging_modifier` 用来除锻造品质读取的额外步骤数，`alchemy_modifier` 用来除酿造时长。三者都读取它所结算的那堆物品的品质——锻造和炼丹取该次会话自身材料中**最低**的品质——修正项缺失或不可用时按 `1` 处理。
-- 当前品质不在自己链上的物品完全无法使用，所以请按物品种类各留一条链，而不要所有东西共用一条。
-- 只想用链来排序与定默认档、不开升级，就一个 `upgrades` 都不写：
-
-```json
-// data/example/mxt/quality_chain/weapon.json
-{
-  "tiers": ["example:common", "example:refined"],
-  "default": "example:refined"
-}
-```
+- 绑定里**不再声明链**：链名写在 `quality` 自己身上（上面写在 `refined` 上），这三档就都属于 `example:pill`，绑定只要认领物品即可。
+- **入口档自动是「没有任何一档指向它」的那一档**（这里就是 `common`），它同时就是默认档：没有 `mxt:quality` 组件、也没有锻造结果时，物品落到它上面。
+- `upgrade_costs` 写的是**从这一档往上一档**要付什么与要满足什么条件（条件的字段是 `upgrade_condition`，省略即 `mxt:always`）：这里从 `common` 升到 `refined` 要花 20 点 `example:qi`，走全局消耗事务，**整组原子**——付不出就一点不动，也不会写档。想让某一档当顶端就不写 `next`；写了 `next` 却没写 `upgrade_costs` 时那一步仍在，代价是空的。
+- `name` 与 `description` 都可以省略：省略时按条目 id 自动生成 `quality.mxt.<命名空间>.<路径>`（描述再加 `.description`），修正项上的 `description` 只有写了才会出现在物品 Tooltip 里（省略就不画那一行）。`modifier` 是运行时使用的数值：`value_multiplier` 缩放物品的货币单位价值，`forging_modifier` 用来除锻造品质读取的额外步骤数，`alchemy_modifier` 用来除酿造时长。三者都读取它所结算的那堆物品的品质——锻造和炼丹取该次会话自身材料中**最低**的品质——修正项缺失或不可用时按 `1` 处理。
+- 链名一条链上只写一次，别在两档上写不同的名字；成环或指向不存在的条目会在服务器重建数据包索引时报出来。
+- 想让某一堆单独定档（比如一把剑就是 `example:refined`），直接在那一堆上写 `mxt:quality="example:refined"`：组件装的是**整份品质对象**，所以它同时决定档位与所属的链，不必再动绑定表。
+- 只想用链来排序、不开升级，就把 `upgrade_costs` 全部省掉；想让某一档当顶端，就不写它的 `next`。
 
 ## 第 3 步 —— 通用绑定
 
@@ -144,7 +132,6 @@ ServerEvents.recipes(event => {
 // data/example/mxt/item_binding/qi_pill.json
 {
   "items": "kubejs:qi_pill",
-  "quality_chain": "example:pill",
   "conditions": [
     {
       "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
@@ -184,7 +171,6 @@ ServerEvents.recipes(event => {
 // data/example/mxt/item_binding/root_pellet.json
 {
   "items": "kubejs:root_pellet",
-  "quality_chain": "example:pill",
   "actions": [
     {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
   ]
@@ -229,7 +215,6 @@ ServerEvents.recipes(event => {
     {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"},
     {"attribute": "minecraft:attack_speed", "id": "example:spirit_sword/speed", "amount": -2.4, "operation": "add_value"}
   ],
-  "quality_chain": "example:weapon",
   "use_action": {"type": "mxt:no_op"},
   "attack_action": {
     "type": "mxt:target_action",
@@ -310,8 +295,8 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 | --- | --- |
 | 世界带着未知物品拒绝加载 | 某个绑定写了一个没有注册的物品 ID。作为单个 ID 会让加载失败；写在数组里则会丢弃那条读不出来的元素并记一行日志。 |
 | 规则静默地从不匹配 | 在 `items` 数组里写成了 `example:qi_pill`，而脚本产生的是 `kubejs:qi_pill`（或任何其它拼写错误），于是那个元素被丢弃、文件照常加载。请使用真正注册的 ID。 |
-| 物品完全没有行为 | 规则被放进了与该物品不匹配的绑定表，或者该物品的品质不在它声明的 `quality_chain` 上。 |
-| `quality_chain` 被拒绝 | 它必须指向一条存在的 `quality_chain`，而且链的 `tiers` / `default` / `upgrades` 要通过加载期校验。 |
+| 物品完全没有行为 | 规则被放进了与该物品不匹配的绑定表，或者那一堆的品质解析不出来（没有 `mxt:quality` 组件，也没有定义默认档或灵植声明）。 |
+| 品质链没有走通 | `next` 指向不存在的条目、成环、同一条链上出现两个链名，或有档写了 `quality` 却接不到入口，都会在服务器重建数据包索引时报出来。 |
 | 丹药吃不了 | `pill_binding` 只匹配可食用物品，所以物品需要有 `.food(...)`。 |
 | 新物品在 `/reload` 后不出现 | 物品注册发生在启动阶段；请重启游戏。 |
 | 改过的绑定没有任何变化 | `/reload` 不会重新读取数据包注册表；请重新加载世界。 |

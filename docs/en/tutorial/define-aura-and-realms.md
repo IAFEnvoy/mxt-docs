@@ -196,12 +196,12 @@ Inside a resource, realm or breakthrough formula, `level`, `realm` and `realm_ra
 
 ## Step 4 — A Cultivation Action
 
-A `cultivate_action` is a named activity. The player selects one, and it settles on a fixed interval.
+A `cultivate_action` is a named activity. The player selects one, and it settles on a fixed interval; with several methods in one pack, the ones that **apply right now** are filtered out first (both `start_condition` and `cultivate_condition` have to hold), then the highest `priority` among them wins, an equal one falling back to registry order; when none applies, the answer is "no method can be practised right now".
 
 ```json
 // data/example/mxt/cultivate_action/meditation.json
 {
-  "default": true,
+  "priority": 1,
   "tick_interval": 20,
   "absorb_amount": 1.5,
   "aura_costs": [{"type": "mxt:aura", "aura": "example:qi", "amount": 1}],
@@ -211,13 +211,13 @@ A `cultivate_action` is a named activity. The player selects one, and it settles
 
 | Field | Effect |
 | --- | --- |
-| `default` | Used when the player has not selected another behaviour. Without any default, the first registered behaviour is used. Defaults to `false`. |
+| `priority` | The order among several methods: the higher number wins, an equal one falling back to registry order. It only orders the methods that **apply right now**. Defaults to `0`. |
 | `tick_interval` | Settlement interval in ticks, `1..72000`; `20` means once per second. Defaults to `20`. |
 | `absorb_amount` | Multiplier for the natural recovery of the current realm's value; the bar fills first and the overflow becomes cultivation progress. Defaults to `1`. |
 | `aura_costs` | The aura spent each tick, paid from the **shared aura pool** at the cultivator's position, and written with `mxt:aura` entries only (`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`). When several players cultivate in the same chunk each one's amount is scaled by the pool's allocation first, and the pool is then charged **all or nothing**. |
 | `cooldown` | Ticks before cultivation can start again after it stops. Defaults to `0`. |
 
-`start_condition` and `condition` decide whether cultivation may start and continue; both default to always true, and both can read the environment. There is no "aura kind" field: an action that should only run in the right place asks for that place directly, for example with `mxt:aura_range` (a concentration range for one aura, where `max` is required on every entry) or `mxt:dimension`. `costs` (paid by the cultivating entity each tick, one `Cost` array and all or nothing), `aura_gains` (extra aura added per tick) and `tick_action` (an entity action run each tick) are the remaining fields.
+`start_condition` and `tick_condition` decide whether cultivation may start and continue; both default to always true, and both can read the environment. There is no "aura kind" field: an action that should only run in the right place asks for that place directly, for example with `mxt:aura_range` (a concentration range for one aura, where `max` is required on every entry) or `mxt:dimension`. `costs` (paid by the cultivating entity each tick, one `Cost` array and all or nothing), `aura_gains` (extra aura added per tick) and `tick_action` (an entity action run each tick) are the remaining fields.
 
 ## Step 5 — A Minimal Aura Zone
 
@@ -244,7 +244,7 @@ Without an aura zone the world contains no aura, so there is nothing for the med
 - `regen_per_tick` refills the chunk inventory over time.
 - `distribution` decides how several players split an insufficient inventory: `random`, `equal` or `realm_weighted`.
 - `biomes` and `dimensions` decide where the template applies; `#minecraft:is_overworld` covers every Overworld biome. A dimension-level binding beats a biome-level one, and both sit below manual areas and formations.
-- `cultivate_condition` is the condition the environment itself puts on cultivation; it defaults to always true, and a zone that wants to require a concentration writes `mxt:aura_range` here. The action's own `start_condition`/`condition` are the other side of the same test.
+- `cultivate_condition` is the condition the environment itself puts on cultivation; it defaults to always true, and a zone that wants to require a concentration writes `mxt:aura_range` here. The action's own `start_condition`/`tick_condition` are the other side of the same test.
 
 The aura environment has enough depth to deserve its own page — that is [Build the Aura Environment](./aura-environment.md), where you will add denser zones, block sources, item fuel and the client-side fog and HUD.
 
@@ -301,7 +301,7 @@ Then, in game:
 | Symptom | Cause |
 | --- | --- |
 | Nobody can ever leave Mortal | `first_realm` is missing on the aura, so there is no stage to break through to. |
-| Cultivation never starts | The action's `start_condition` or `condition` is not satisfied — write a `mxt:aura_range` or a biome condition for the place you want, because there is no aura-kind vocabulary to match against. |
+| Cultivation never starts | The action's `start_condition` or `tick_condition` is not satisfied — write a `mxt:aura_range` or a biome condition for the place you want, because there is no aura-kind vocabulary to match against. |
 | The bar never grows | The shared aura pool cannot pay `aura_costs` (it does not hold enough, or other cultivators in the chunk take their share), or `use_condition` is false. |
 | The world refuses to load | A definition failed to decode: a required holder points at an ID that does not exist, or a field has the wrong shape. The whole load fails, not just the file. |
 | `breakthrough_exp` greater than `max_experience` | The stage cannot be left; the codec rejects this at load time when both are constants. |
@@ -309,5 +309,6 @@ Then, in game:
 
 ## Next
 
+- [Write a Dual Cultivation Technique](./dual-cultivation.md) — add a method to the same pack that only yields while somebody is beside you.
 - [Build the Aura Environment](./aura-environment.md) — make the concentration vary by place, block and time, and put it on the HUD.
 - [Resource](../datapack/json/resource.md) and [Realm Stage](../datapack/json/realm_stage.md) — every remaining field, including resource bars, conversions and tribulations.

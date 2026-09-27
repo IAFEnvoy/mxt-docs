@@ -103,8 +103,7 @@ Item binding. `items` names an item and a tag at once; `actions` run when the it
   "items": ["kubejs:root_pellet", "#example:root_pellets"],
   "actions": [
     {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
-  ],
-  "quality_chain": "example:root_pellet"
+  ]
 }
 ```
 

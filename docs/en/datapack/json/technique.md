@@ -32,7 +32,7 @@ Each `configuration` entry describes one level:
 | `condition` | `EntityCondition` | **required** | The condition for **reaching** that level. Write `mxt:always` when a level needs nothing; an array means all of them have to hold. |
 | `ability` | Ability ID, `#tag`, or an array of either | `[]` | The abilities that level grants. They are a **minimum**: they stay active on later levels, so abilities accumulate. One ability, a `#` tag, or an array of either. |
 
-`quality` does two jobs: a technique panel row starts with "technique name + level", the name is tinted with the grade's `color`, and the row tooltip's "Grade" line reads its name and colour; it is also the **default tier of the technique's carrier item**, and an `mxt:item_quality` override component on the stack wins over it. Omit `quality` and no grade is shown and the carrier gets no default tier.
+`quality` does two jobs: a technique panel row starts with "technique name + level", the name is tinted with the grade's `color`, and the row tooltip's "Grade" line reads its name and colour; it is also the **default tier of the technique's carrier item**, and a `mxt:quality` component on the stack wins over it. Omit `quality` and no grade is shown and the carrier gets no default tier.
 
 `passive_modifiers` uses vanilla AttributeModifiers; `value` is an optional dynamic formula.
 

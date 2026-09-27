@@ -10,7 +10,7 @@ File location: `data/<namespace>/mxt/contract_type/<path>.json`
 
 A `contract_type` describes one contract from the moment it is signed to the moment it is released: what each side has to satisfy, what runs at each of the four moments, what signing costs, how many one owner may hold at once, and how long a recall has to wait.
 
-**Who may sign is a code fact**: the target creature has to support contracts itself (see [Special Public Interfaces](../../java/interfaces)), and no data pack can hand an entity that eligibility. Who owns it is answered by the creature as well - the mod stores no owner. A data pack gets three levers: narrow either side with the `*_condition` fields below, charge a price with `costs`, and narrow the list with an **entity type tag** - the tag reuses the contract type's own id, written `#<namespace>:contract/<path>` (file `data/<namespace>/tags/entity_type/contract/<path>.json`). **A tag that is absent, or written empty, places no restriction.**
+**Who may sign is a code fact**: the target creature has to support contracts itself (see [Interfaces](../../java/interfaces/index.md)), and no data pack can hand an entity that eligibility. Who owns it is answered by the creature as well - the mod stores no owner. A data pack gets three levers: narrow either side with the `*_condition` fields below, charge a price with `costs`, and narrow the list with an **entity type tag** - the tag reuses the contract type's own id, written `#<namespace>:contract/<path>` (file `data/<namespace>/tags/entity_type/contract/<path>.json`). **A tag that is absent, or written empty, places no restriction.**
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -34,7 +34,7 @@ Release and death are two fields, and one action answers one moment only: `relea
 
 `max_owned` is counted per owner, and a release or a death frees the slot. `recall_cooldown` starts from a stamp on the contract record and gates the "recall" order, whether it comes from the Beast Taming Bell's wheel or from the command.
 
-**Orders are not a data pack field here**: the orders an owner can give a spirit beast (follow / wander / stay / recall) are answered by the creature itself, and a content mod may add one of its own; the order in force is kept on the beast's contract record, and an id that does not resolve reads as follow. See the [command](/en/player-guide/commands/contract) and [Special Public Interfaces](../../java/interfaces).
+**Orders are not a data pack field here**: the orders an owner can give a spirit beast (follow / wander / stay / recall) are answered by the creature itself, and a content mod may add one of its own; the order in force is kept on the beast's contract record, and an id that does not resolve reads as follow. See the [command](/en/player-guide/commands/contract) and [Interfaces](../../java/interfaces/index.md).
 
 Every refusal reason reads from one table of text keys, `contract.mxt.failure.<lowercase enum name>`; the Contract Scroll, the Beast Taming Bell, the Spirit Beast Bag and the command all print from that same table.
 

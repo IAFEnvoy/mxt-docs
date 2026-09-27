@@ -22,7 +22,7 @@ The filename is its ID. For example, `data/example/mxt/spirit_herb/fire_ginseng.
 |-------|------|---------|-------------|
 | `items` | `ItemMatcher` | **required** | Binds existing items; it creates no new spirit herb item. |
 | `priority` | Int | `0` | Order between several definitions of the same kind matching one item: the higher number goes first (see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher)); ties fall back to registry order. |
-| `quality` | quality id | **required** | The quality of that item, and the **last** slot of the whole resolution order: override component → forge result → definition default (artifact / technique) → the chain's `default` → here (see [Quality Chain](./quality_chain.md#resolution)). |
+| `quality` | quality id | **required** | The quality of that item, and the **last** slot of the whole resolution order: override component → forge result → definition default (artifact / technique) → the entry tier of the ladder it sits on → here (see [Quality](./quality.md#resolution)). |
 | `age` | `NumberProvider` | `0` | Age metadata. |
 | `element_tags` | Array of element ids or `#tags` | `[]` | Which elements this herb belongs to, written against the **element registry**: an entry is one element, a `#` tag is a set of them. `mxt:herb_tag` (`element`) matches it, so a herb can be named anywhere an `ItemMatcher` is accepted (item conditions, bindings, `mxt:item_matcher`, …). |
 | `material_tags` | Identifier[] | `[]` | Material classification tags, matched the same way through `mxt:herb_tag`'s `material`. |

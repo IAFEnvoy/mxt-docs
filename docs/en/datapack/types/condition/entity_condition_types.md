@@ -157,6 +157,45 @@ Checks which [techniques](../../json/technique.md) the entity has **learned**.
 
 An empty list means "has learned any technique at all". An empty list with `all` is refused at load rather than quietly becoming a condition that always passes. It reads what was learned, not what is in effect, since techniques have no enable switch (only spirit roots and physiques do); write `mxt:not` around one for "has no technique".
 
+### `mxt:cultivating`
+
+Checks whether the entity is **cultivating**, optionally inside one named [method](../../json/cultivate_action.md).
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `action?` | Method id | Any | Names one `cultivate_action`; only a body running that one passes. |
+
+```json
+{"type": "mxt:cultivating"}
+{"type": "mxt:cultivating", "action": "example:azure_meditation"}
+```
+
+The state is written the moment cultivation starts, so the answer is the same for the whole run rather than becoming true only after a settlement. It naturally belongs to "should the session carry on" (`tick_condition`) — **before starting it is necessarily false**, so never use it to ask "can this body cultivate right now"; to ask whether a partner can share in the results, ask what that partner **holds** through `mxt:partner`.
+
+### `mxt:partner`
+
+Checks whether there is a **matching partner nearby**: living entities within `range` blocks of the asker, the asker never among them, each candidate passing a bi-entity condition.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `range?` | Decimal, `0.5..32` | `5.0` | Spherical radius in blocks. |
+| `count?` | `{min?, max?}` | `{"min": 1}` | Closed window on the number of hits; with no `max` it is "at least `min`". |
+| `bientity_condition?` | Bi-entity condition | Unconditional | **actor is the asker, target is the candidate**. |
+
+```json
+{"type": "mxt:partner", "range": 5.0, "count": {"min": 1, "max": 1},
+ "bientity_condition": {"type": "and", "conditions": [
+   {"type": "friend"},
+   {"type": "target_condition", "condition": {
+     "type": "mxt:main_hand_item",
+     "item_condition": {"type": "mxt:has_component", "component": "mxt:technique"}}}
+ ]}}
+```
+
+The fields have the same shape as `mxt:riding`, so `mxt:friend`, `mxt:distance`, `mxt:relation` and `mxt:same_team` all work directly; to ask about the candidate **itself** (what it holds, what state it is in) wrap the entity condition in `mxt:target_condition`. The writing above is the dual cultivation test: "there is a friend within 5 blocks holding a technique manual" — it holds **before either body has sat down**, so whichever of the two presses the cultivation key first gets in (to pin it to one specific manual, swap the inner condition for an item condition naming that carrier). It only answers "is there such a body nearby" and never creates a lasting relationship.
+
+It is asked every tick, and both the radius cap and the per-candidate bi-entity condition exist to keep that scan bounded: write it only in the method that really needs it.
+
 ### `mxt:skill_stage`
 
 Checks how far a learned technique has climbed.
@@ -476,6 +515,20 @@ Passes when a stack the entity wears or holds satisfies an [item condition](item
 ```
 
 This is the natural way to bind a passive `mxt:modifier` to gear. `slots` takes vanilla equipment slot names (`mainhand`, `offhand`, `head`, `chest`, `legs`, `feet`, `body`) or Curios slots with a `curios:` prefix (`curios:back_weapon`); leave it out and every vanilla slot and every Curios slot is asked. A name that matches nothing simply never passes.
+
+### `mxt:main_hand_item`
+
+Checks the stack in the **main hand** against an [item condition](item_condition_types.md); an empty main hand does not pass.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `item_condition?` | [Item condition](item_condition_types.md) | No condition | The condition to test against the main-hand stack. |
+
+```json
+{"type": "mxt:main_hand_item", "item_condition": {"type": "mxt:item_quality", "quality": ["example:fine"]}}
+```
+
+One field shorter than `mxt:equipped_item` (which needs `"mainhand"` to say the same thing), and unlike `mxt:has_equipped_item` it never asks the Curios slots.
 
 ## Players and Scoreboard
 

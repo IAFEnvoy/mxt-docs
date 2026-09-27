@@ -8,7 +8,7 @@ description: "How a Java addon extends MiXianTu: the public runtime services and
 Java extensions should reuse the existing data definitions, actions, conditions, costs and runtime services first. When adding gameplay, decide on the server-side settlement entry point first, and only then add the client display and the network payload.
 
 - [Public API](./api.md)
-- [Interfaces](./interfaces.md) (most of them in `com.iafenvoy.mxt.api`)
+- [Interfaces](./interfaces/index.md) (most of them in `com.iafenvoy.mxt.api`)
 - [Registries and Data Tables](./registries.md)
 - [Network Protocol and Server Authority](./network.md)
 - [Wheel Entries](./wheel.md)
@@ -29,7 +29,7 @@ Java extensions should reuse the existing data definitions, actions, conditions,
 ## Next Steps
 
 - [Public API](./api.md) — the runtime services an addon calls into, from `AuraService` to `DefinitionText`.
-- [Interfaces](./interfaces.md) — `AuraAccess`, `ItemAuraAccess`, `UseItemAuraAccess`, `TooltipAppender`, `Cost` and `WheelMenuEntry`.
+- [Interfaces](./interfaces/index.md) — one page per interface: aura storage, creature contracts, the wheel and keys, definitions and costs.
 - [Registries and Data Tables](./registries.md) — built-in type registries, the datapack registry list and the codec naming convention.
 - [Network Protocol and Server Authority](./network.md) — every C2S and S2C payload, and the one channel that carries item contents.
 - [Information Panel](./information-panel.md) — register your own lines in the character information panel.

@@ -9,7 +9,7 @@ The reference pages on this site describe one file, one field or one API at a ti
 
 ## The Example Pack
 
-Every tutorial extends the same small content pack in the `example` namespace. The first four form one chain, each assuming the pages before it are done; the rest stand on their own and only use definitions the pack already has. By the end of the series it looks like this:
+Every tutorial extends the same small content pack in the `example` namespace. The first few form one chain, each assuming the pages it depends on are done (the dual cultivation page hangs off the second one and only uses definitions the pack already has); the rest stand on their own and only use definitions the pack already has. By the end of the series it looks like this:
 
 ```text
 data/example/
@@ -22,6 +22,7 @@ data/example/
 │   ├── realm_stage/foundation.json
 │   ├── realm_stage/core_formation.json
 │   ├── cultivate_action/meditation.json     What the player does to absorb aura
+│   ├── cultivate_action/dual_meditation.json  Only yields beside a friend holding a manual
 │   ├── aura_zone/common_land.json           Where the aura is
 │   ├── aura_zone/misty_valley.json          A denser zone (aura environment tutorial)
 │   ├── block_aura/spirit_stone_ore.json     Blocks that emit aura
@@ -41,11 +42,9 @@ data/example/
 │   ├── tool_binding/smith_hammer.json       Claims the hammer; lists its methods
 │   ├── forging_blueprint/spirit_sword.json  Materials, target band, quality ladder
 │   ├── blueprint_binding/sword_manual.json  Claims the manual; lists its blueprint
-│   ├── quality/common.json             Quality tiers
+│   ├── quality/common.json             Quality tiers: chain identity, next tier, step cost
 │   ├── quality/refined.json
 │   ├── quality/flawless.json
-│   ├── quality_chain/pill.json              A tier ladder: order, default tier, step costs
-│   ├── quality_chain/weapon.json
 │   ├── item_binding/qi_pill.json            Bindings attach rules to real items
 │   ├── item_binding/root_pellet.json
 │   ├── pill_binding/qi_pill.json
@@ -59,6 +58,7 @@ data/example/
 | Tutorial | You build | Read it when |
 | --- | --- | --- |
 | [Define Aura and Realms](./define-aura-and-realms.md) | An element, an aura resource, a linear realm chain, a cultivation action and a minimal aura zone — the core cultivation loop. | You want a player to be able to cultivate and break through. |
+| [Write a Dual Cultivation Technique](./dual-cultivation.md) | A cultivation method that only yields while somebody is beside you: how the test is assembled, how both bodies get in, and what happens when one walks away. | The basic loop works and you want "two bodies cultivating together" to be a rule. |
 | [Build the Aura Environment](./aura-environment.md) | Layered aura zones, block aura, item fuel, noise, fluctuation, fog and HUD bars. | The basic loop works and you want the world to matter. |
 | [Create Items with KubeJS and Bind Them](./create-items-with-kubejs.md) | Real items registered by a script, plus the four binding tables, quality tiers and recipes that give them gameplay. | You need pills, weapons or manuals of your own. |
 | [Add an Ability](./add-an-ability.md) | An active ability, a triggered ability, and the ways to grant them. | You want something for the player to spend aura on. |

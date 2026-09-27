@@ -13,6 +13,7 @@ title: /mxt
 | `/mxt resource <id> set <value>` | 设置资源值。 |
 | `/mxt resourcebar [resource] [index]` | 查看资源条的原始当前值、上下限、未截断百分比、上下文、位置和顺序；不填参数时列出全部资源条。 |
 | `/mxt cultivate status` | 查看修炼状态。 |
+| `/mxt cultivate select <action>` | 手动点名一条法门（`mxt:cultivate_action` 的条目）**立刻开练**：正在修另一条就先停掉它，但仍要满足那条法门此刻的适用条件，不适用就拒绝、正在跑的那条不受影响。它只管这一次，下次按修炼键仍然由"适用 + `priority`"决定。需要 gamemaster 权限。 |
 | `/mxt breakthrough <aura>` | 尝试突破到这门**灵气**（`mxt:aura` 条目，补全给的就是它）所通往的境界。缺哪一种修炼资源由境界自己声明，失败时会点名。 |
 | `/mxt realm set <realm>`、`/mxt realm chain <realm>` | 设置自己的线性境界；`chain` 打印这一档所在的整条境界链。见 [`/realm`](/player-guide/commands/realm)。 |
 | `/mxt lifespan get`、`/mxt lifespan set`、`/mxt lifespan add`、`/mxt lifespan reincarnate` | 读与改写寿元账本，并让目标当场转世（写节点与 `reincarnate` 需要 gamemaster 权限）。见 [`/lifespan`](/player-guide/commands/lifespan)。 |

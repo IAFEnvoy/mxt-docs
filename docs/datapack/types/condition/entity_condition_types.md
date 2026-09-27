@@ -157,6 +157,45 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 
 空表就是"学过任意一门"。空表配 `all` 会在加载期被拒绝，免得静默变成恒真。读的是"学过"而不是"正在生效"，功法没有启用开关（灵根与体质才有）；要表达"没有功法"就写 `mxt:not` 套一条。
 
+### `mxt:cultivating`
+
+检查实体**是不是正在运功**，也可以要求它正好在跑某一条[法门](../../json/cultivate_action.md)。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `action?` | 法门 id | 不限定 | 点名一条 `cultivate_action`，只有正在跑它的实体才通过。 |
+
+```json
+{"type": "mxt:cultivating"}
+{"type": "mxt:cultivating", "action": "example:azure_meditation"}
+```
+
+运功状态在**开始运功的那一刻**就已经写好，所以同一趟运功里这个答案恒定，不是"结算过才为真"。它天然是给"还继续不继续修炼"（`tick_condition`）用的——**开始之前它必然为假**，所以别拿它去筛"此刻能不能修"；要判"同伴此刻能不能一起拿成果"，用 `mxt:partner` 问对方**手上拿着什么**。
+
+### `mxt:partner`
+
+检查**附近有没有符合条件的同伴**：以自己为球心 `range` 格内的存活生物，自己不算，每个候选再过一个双实体条件。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `range?` | 小数，`0.5..32` | `5.0` | 球形半径，单位格。 |
+| `count?` | `{min?, max?}` | `{"min": 1}` | 命中数量的闭区间；不写 `max` 就是"至少 `min` 个"。 |
+| `bientity_condition?` | 双实体条件 | 无条件 | **actor 是自己、target 是候选**。 |
+
+```json
+{"type": "mxt:partner", "range": 5.0, "count": {"min": 1, "max": 1},
+ "bientity_condition": {"type": "and", "conditions": [
+   {"type": "friend"},
+   {"type": "target_condition", "condition": {
+     "type": "mxt:main_hand_item",
+     "item_condition": {"type": "mxt:has_component", "component": "mxt:technique"}}}
+ ]}}
+```
+
+字段与 `mxt:riding` 同形，所以 `mxt:friend`、`mxt:distance`、`mxt:relation`、`mxt:same_team` 这一批双实体条件直接可用；要问候选**自己**的状态（手上拿着什么、身上什么状态）就套一层 `mxt:target_condition`。上面的写法就是双修的判据："5 格内有一个拿着功法手册的好友"——它在**双方都还没坐下时就能成立**，所以两人谁先按下修炼键都能进得去（要限定成"同一本"，把内层换成点名那件载体的物品条件即可）。它只回答"身边有没有这样的人"，不建立任何持久关系。
+
+每拍会被问一次，半径上限与"每个候选一次双实体条件"都是为了把这次扫描关住：建议只写在真的需要它的那条法门里。
+
 ### `mxt:skill_stage`
 
 检查已学功法爬到了哪一级。
@@ -476,6 +515,20 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 ```
 
 这是把被动 `mxt:modifier` 绑定在装备上的自然做法。`slots` 可以写原版装备槽名（`mainhand`、`offhand`、`head`、`chest`、`legs`、`feet`、`body`），也可以写带 `curios:` 前缀的 Curios 槽位（`curios:back_weapon`）；不写则询问全部原版槽位与全部 Curios 槽位。匹配不到任何东西的名字只是永远不通过。
+
+### `mxt:main_hand_item`
+
+只看**主手**那一堆物品的一条[物品条件](item_condition_types.md)；主手空着时不通过。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `item_condition?` | [物品条件](item_condition_types.md) | 无条件 | 对主手那一堆物品测的条件。 |
+
+```json
+{"type": "mxt:main_hand_item", "item_condition": {"type": "mxt:item_quality", "quality": ["example:fine"]}}
+```
+
+比 `mxt:equipped_item` 少写一个 `equipment_slot`（那个要写 `"mainhand"` 才是同一件事），也不像 `mxt:has_equipped_item` 会把 Curios 槽位一起问一遍。
 
 ## 玩家与计分板
 
