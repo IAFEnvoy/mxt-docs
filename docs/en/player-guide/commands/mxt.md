@@ -15,6 +15,7 @@ title: /mxt
 | `/mxt cultivate status` | Shows the cultivation state: the active cultivation behaviour, the progress stored per aura and the next cultivation tick. |
 | `/mxt breakthrough <aura>` | Attempts a breakthrough into the realm that the given aura leads to. |
 | `/mxt realm set <realm>`, `/mxt realm chain <realm>` | Sets your own linear realm; `chain` prints the whole realm chain that stage is on. See [`/realm`](/en/player-guide/commands/realm). |
+| `/mxt lifespan get`, `/mxt lifespan set`, `/mxt lifespan add`, `/mxt lifespan reincarnate` | Reads and rewrites the lifespan ledger and makes a target be reborn on the spot (the write nodes and `reincarnate` need the `gamemaster` permission). See [`/lifespan`](/en/player-guide/commands/lifespan). |
 | `/mxt contract list`, `/mxt contract info <target>` | Lists a player's spirit beasts and reads one creature's contract record. See [`/contract`](/en/player-guide/commands/contract). |
 | `/mxt contract bind <player> <target> <contract_type>`, `/mxt contract break <target>`, `/mxt contract recall <target>`, `/mxt contract behavior <target> <behavior>` | Bind, release, recall and order (all need the `gamemaster` permission), sharing one flow with the scroll and the bell. See [`/contract`](/en/player-guide/commands/contract). |
 | `/mxt secret_realm list` | Lists every secret realm: dimension key, index, definition, members and their cap, owner, whether the terrain is prepared and whether the dimension is loaded right now. |
@@ -36,7 +37,7 @@ A secret realm definition (`mxt:secret_realm`) is a template rather than one fix
 | --- | --- |
 | `list` | Lists every instance. `loaded=false` means the instance is dormant — usually because it was claimed and everybody left, so its terrain stays in the save until its owner returns. |
 | `info <dimension>` | Looks at one instance; the argument is the dimension key, for example `mxt:secret_realm/trial_realm/0`. |
-| `enter <definition>` | Enters yourself. The full path runs: the disabled check, the entry condition, joining an instance that is not full or opening a new one (bounded by `max_instances`), generating the dimension and its structures, and landing at the entry point. |
+| `enter <definition>` | Enters yourself. The full path runs: the existence check, the entry condition, joining an instance that is not full or opening a new one (bounded by `max_instances`), generating the dimension and its structures, and landing at the entry point. |
 | `exit` | Returns you to the position you entered from. The definition's `exit_condition` applies to this command too, exactly as it does to leaving with a token. |
 | `destroy <dimension>` | Ends one instance and **deletes its terrain**. Players locked inside are sent home; an `mxt:existing` secret realm only clears its members and leaves that real dimension alone. |
 

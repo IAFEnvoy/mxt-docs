@@ -1,101 +1,152 @@
 ---
 title: Talisman (talisman)
-description: "Defines one inscribed talisman: the abilities invoking it grants and the aura bill the carrier has to be filled with."
+description: "Defines one inscribed talisman: the abilities invoking it grants, how much aura its carrier holds, and what one invocation takes."
 aside: false
 ---
 
-# Talisman (talisman)
+# Talisman (talisman) {#talisman}
 
-A `talisman` defines one inscription that can be written onto a carrier: the abilities that invoking it grants, and the aura bill that invoking it pays. The bill is also what the carrier has to be filled with before it can fire, so a talisman definition is both the effect and the price.
+File location: `data/<namespace>/mxt/talisman/<path>.json`
 
-## File Location
+**Purpose**: talisman definitions: the abilities one inscribed talisman carries.
 
-Talisman files go in `data/<namespace>/mxt/talisman/` within your datapack.
+A talisman definition says what happens once it is inscribed onto a carrier: which abilities invoking it grants, how much aura the carrier can hold, and what every invocation pays.
 
-**Purpose**: Talisman definitions: the abilities one inscribed talisman carries.
-
-The filename corresponds to its ID. For example, `data/example/mxt/talisman/flame_sigil.json` has the ID `example:flame_sigil`.
-
-## Fields
+**`abilities` is the only effect field.** Every skill-like effect in this mod lands on an ability, so a talisman needs no effect vocabulary of its own. The other five optional fields each answer one thing: `capacity` is the carrier's pour capacity multiplier (see [Pouring and Firing](#pouring-and-firing)), `durability` / `consume` are its wear (see [Wear](#wear)), `costs` is what every invocation pays (see [Cost](#cost)), and `quality` is its tier (see [Tier](#tier)).
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | Text Component | `talisman.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `talisman.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
-| `abilities` | `HolderOrTag<ability>[]` | `[]` | The abilities this talisman grants when it is invoked, written the same way as a technique's `granted_abilities`: a single ID, a list of IDs, or a `#tag`. |
-| `aura_cost` | `Map<Holder<aura>, NumberProvider>` | `{}` | The aura bill one invocation of this talisman pays, keyed by concrete aura. Each entry may be a constant or a formula. An absent or empty map means this talisman costs no aura. |
+| --- | --- | --- | --- |
+| `name` | Text Component | `talisman.mxt.<namespace>.<path>` | Optional display name. When omitted it uses the default key in the left column. |
+| `description` | Text Component | `talisman.mxt.<namespace>.<path>.description` | Optional description. When omitted it uses the default key in the left column; it is stored and read today, but nothing draws it yet. |
+| `abilities` | Ability id, `#tag`, or an array of either | `[]` | The abilities this talisman grants, written the same way as `technique.granted_abilities`: a single id, an array of ids, or a `#tag`. |
+| `capacity` | double | `1` | The carrier's **pour capacity multiplier**: the capacity is one invocation's aura amount × this multiplier, counted per aura and rounded up to whole units. It has to be at least 1; anything below is refused at load. |
+| `durability` | int | `0` | How much wear this talisman gives a carrier once it is written on, with entries on one carrier **adding up**. `0` or omitted means this talisman keeps no wear account, and the carrier is still spent as one whole item per invocation. It cannot be negative. |
+| `consume` | int | `1` | How much wear one invocation takes off, at least 1. It only means anything while `durability > 0`. |
+| `quality` | Quality id | none | The tier of this talisman, used to grade talisman paper and talisman treasures. |
+| `costs` | Array, entries as in [`Cost`](../types/shared_data_types.md#cost) | `[]` | What **one invocation** pays, with the entries on one carrier adding up. |
 
-`abilities` is the only effect field: every skill-like effect in the mod already lands on an `ability`, so a talisman needs no effect vocabulary of its own.
+`capacity` is roughly how many times in a row the carrier can fire: the capacity is one invocation's aura amount × the multiplier that really applies, and that multiplier is `min(the written value, the uses the carrier has left)`. The uses left come out of wear (see [Wear](#wear)): a carrier declaring no wear counts as exactly 1, and one with wear counts as at least 1, so the multiplier only means anything on a talisman with wear, and writing it too large never wastes a pour. The default `1` is "exactly one invocation".
 
-`aura_cost` accepts concrete aura IDs only, **not** `#tags` — the opposite of `abilities`. Aura pools are keyed by concrete aura, so a tag has no pool to name. It is a `{"<aura id>": NumberProvider}` **map** (not a `Cost` array), and its amounts are written like any other aura cost (the map values of `formation.storage.capacity`, or the `amount` of an `mxt:aura` entry in a `Cost` array), so `"12"` and `"realm_rank * 4"` are both valid JSON.
+It is a **multiplier, not an aura table**: the capacity comes out of `costs` itself — over several inscriptions on one carrier, each inscription's amounts and multiplier are multiplied and then added up — so a pack never writes it aura by aura. A carrier's capacity may be written as `5` or `2.5` (≥ 1). `capacity` and the aura entries of `costs` are the two halves of "how much is poured in" and "what one invocation spends", and neither depends on the holder.
 
-### Display name
+`consume` only means anything while `durability > 0`: with `durability` at 0 that number is never read, so writing it is **silently ignored**, the same rule as an unknown key.
 
-A talisman may write its own optional `name`; omit it and the name is resolved from the ID as `talisman.mxt.<namespace>.<path>` (so `mxt_test:flame_sigil` is looked up as `talisman.mxt.mxt_test.flame_sigil`). The optional `description` works the same way, with `.description` appended to that generated key when it is omitted; it is stored and read today, but nothing draws it yet.
+The tier on a carrier is decided by the **first entry in inscription order that declares one**, through the ordinary quality module, and nothing has to be written onto the stack as a component.
 
-## The `mxt:talisman` component
+An `mxt:aura` entry in `costs` comes out of the **store poured into the carrier itself**, and short of it means "not charged", which refuses the invocation; `mxt:resource` / `mxt:item` / `mxt:js` entries are charged to the **holder** when it fires. Anything that cannot be paid **refuses the invocation** — a threshold such as "not enough spirit power to use this" goes here rather than in a condition field of its own.
 
-Which talismans are written onto one carrier, and how that carrier behaves, live in the item component `mxt:talisman` on the stack rather than in the definition.
+A definition has **no** switch of that kind for "does it answer an invocation": whether a carrier fires the moment it is full or banks the charge until you act is a **mode on the carrier itself (on the stack)**, not a property of the definition. The same inscriptions can go onto one talisman that fires when full and onto another that sits and waits. The modes are under [Carrier Mode](#carrier-mode) below and on [Items](/en/player-guide/items).
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `talismans` | `List<Holder<talisman>>` | `[]` | The inscribed definitions, in the order they were appended. An empty list is the blank carrier a fresh talisman item starts as. |
-| `mode` | `fire` / `store` | `fire` | Whether this carrier fires the moment it is filled. |
+## The `/talisman` Command
 
-The component holds concrete entries, so it cannot name a tag. Writing a talisman appends its definition instead of replacing what is there, so one carrier may hold several — and the same talisman twice.
-
-```mcfunction
-give @s mxt:talisman[mxt:talisman={talismans:["example:flame_sigil"]}]
-```
-
-`mode` belongs to the stack rather than to any definition: the same inscriptions can be written onto one carrier that fires on its own and another that waits to be told. **Sneaking while using** switches the mode and shows an action-bar message; the tooltip also reports the current mode. One special case: a `store` carrier that is **already full** does not switch on a sneaking use — it fires instead, because a stored charge exists to be spent. When it fires that way the stack is switched to `fire` first, so the carriers left in a stack continue in the firing mode.
-
-Pouring progress is kept separately in `mxt:spirit_storage`, the same component a spirit stone stores its charge in. It is keyed by aura and records the units poured so far; a missing component means nothing has been poured.
-
-```mcfunction
-give @s mxt:talisman[mxt:talisman={talismans:["example:common_sigil"]},mxt:spirit_storage={amounts:{"mxt:common":3}}]
-```
-
-## The `/talisman` command
-
-Writing an inscription is a component, so the `/talisman` subtree exists for operators who would rather name definitions than write component syntax. Every node asks for the gamemaster permission.
+Inscribing writes an item component, so the `/talisman` subtree is for operators who would rather name a definition than write component syntax. Every node in the subtree needs the `gamemaster` permission.
 
 | Command | Description |
-|---------|-------------|
+| --- | --- |
 | `/talisman` or `/talisman blank [count]` | Hands out blank carriers. |
-| `/talisman give <talisman>` | Hands out carriers inscribed with that one talisman ID, in the `fire` mode. |
-| `/talisman give <talisman> count <1..64>` | The same, for a stack. |
-| `/talisman give <talisman> count <1..64> charged` | The same, with the carriers already poured full. |
-| `/talisman give <talisman> stored [count <1..64>]` | The same, in the `store` mode. A stored carrier is poured by hand, so `charged` is not offered with it. |
+| `/talisman give <talisman>` | Hands out a carrier inscribed with that one talisman definition, in the `fire` mode; when the definition declares a `durability`, its cap is written into the item component on the spot, so the carrier has a durability bar the moment you get it. |
+| `/talisman give <talisman> count <1..64>` | The same, for a whole stack — except that a carrier with wear does not stack, so this hands out that many **single** carriers (see [Wear](#wear)). |
+| `/talisman give <talisman> count <1..64> charged` | The same, already poured full. |
+| `/talisman give <talisman> stored [count <1..64>]` | The same, in the `store` mode. A storing carrier is poured by hand, so this branch offers no `charged`. |
 
-`give` takes **one** talisman ID: a carrier is inscribed with a single definition. To write several onto one carrier, put the list in the `talismans` item component directly, for example `give @s mxt:talisman[mxt:talisman={talismans:["mypack:flame_sigil","mypack:common_sigil"]}]`. The definition argument is completed from the loaded `talisman` registry.
+`give` takes **one** talisman id at a time: a carrier is inscribed with a single definition. To write several onto one carrier, write the `talismans` list of the item component directly, for example `give @s mxt:talisman[mxt:talisman={talismans:["mypack:flame_sigil","mypack:common_sigil"]}]`. The definition argument is completed from the loaded `talisman` registry.
 
-## Filling and firing
+## Pouring and Firing
 
-`aura_cost` is also the carrier's pour capacity: the bill is the capacity, so filling the bill is what "full" means.
+A carrier has **a store of aura of its own**: the capacity is one invocation's aura amount × `capacity`; a pour moves 1 unit a tick and charges 1 point of the holder's own aura per unit; and every invocation draws, for each aura `costs` names, that aura's one-invocation amount out of it.
 
-- **Auras are counted separately.** The carrier stores one pool per aura the bill names, and one pour fills only the **first entry that is not full**, in the order the entries are written. Holding on after that entry fills continues with the next one. The carrier is full only when every entry is full.
-- **The bill is priced with an empty formula context.** The pour's length is capacity divided by the units moved per tick, and the client has to compute the same number for the gesture, so `aura_cost` is evaluated against `FormulaContext.EMPTY`. A constant or an expression that does not depend on a holder therefore works; an expression that is only meaningful with a holder (such as `"realm_rank * 4"`) resolves to `0`, which is treated as "this entry takes no part in the pour" rather than as an error. A carrier left with no entries at all is billed nothing.
-- **An empty bill fires on a click.** A talisman that costs no aura has nothing to pour, so holding right-click never starts a pour — but it is **always full**, so a plain right-click invokes it.
-- **How it is filled.** Hold right-click with the carrier in hand. This is the same gesture a spirit stone uses to charge: the `BLOCK` pose, a prompt sound every 4 ticks, and an action bar showing the amount stored against the capacity. One tick moves one unit and takes one unit of the holder's own aura, so the bill is both the price and the pouring time. Pouring itself spends no item; only firing does.
-- **How it fires.** A plain right-click and "being filled" go through the same entry point, and the **carrier's mode** decides which of them fires. Under `fire` (the default) filling it fires it immediately; under `store` it only accumulates and waits to be told. A right-click can fire a carrier in either mode — the only way for a `store` carrier, and also the way for a carrier whose bill is empty. A carrier that is not full turns a right-click into a pour rather than an invocation.
-- **It does not have to be in a hand.** A carrier reports being filled from wherever it stands, so a carrier on a display stand fires when something fills it there (`store` carriers excepted). The **actor** is still whoever filled it — they pay, are credited, and answer for their abilities — while the **position** is the stand's.
-- **Where the position goes.** The position enters the ability's formula context as `block_x`, `block_y` and `block_z`, and it is handed to the invocation as its origin: `mxt:area` centres its radius on it and `mxt:ray` / `mxt:cone` start their reach there (the actor's eye position is used only when there is no origin), and behaviours such as `spawn_projectile`, `spawn_particles`, `spawn_effect_cloud`, `spawn_lightning`, `explode`, `play_sound` and `block_action` use it. Projectiles still travel along the **actor's** facing. Position-reading conditions and aura lookups still use the actor's own position.
-- **The use cooldown only gates a hand.** It comes from **Server Config → Talisman → Use Cooldown** (default `20` ticks, range `0..72000`, `0` disables it). One **attempt** starts it, so a click an ability refused still counts, while a blank or uncharged carrier never became an attempt and costs nothing. Inside the window a pour does not fire and the aura for that tick is **not** poured in either, because it would buy an invocation the window is going to refuse. A carrier on a display stand neither reads nor records the window.
-- **Spending depends on where it is.** A hand spends one carrier per invocation, except in creative mode, where nothing is spent. A placed carrier is **always** spent, regardless of the filler's game mode.
-- **Only instant abilities can be carried.** An ability with `cast_time > 0` or a `mxt:channelled` type is refused, because a cast is finished and a channel is re-checked against the abilities the actor *holds*, and a carrier grants nothing. A refused invocation leaves the carrier unspent and its aura unpoured.
+### Pouring
 
-An invocation is an ordinary ability use with one thing changed: the carrier itself is what answers for the grant. Every other gate still applies — the ability's condition, word, cooldown, charges and costs, plus both use events — so a talisman is not a way around them. A carrier that names the same ability twice fires it once.
+- **A big multiplier fires several times in a row**: with 12 a shot in `costs` and `capacity` at 5, the capacity is 60 and one full pour fires 5 times with no pouring in between. A talisman with wear (`durability` / `consume`) exists for exactly this: one pour lasts its whole wear. With the default multiplier of `1` the capacity is one invocation's worth, and every invocation has to be poured for again.
+- **The multiplier is capped by "how many more times it can fire"**: the multiplier that really applies is `min(the written value, the uses left)`, and the uses left are `(wear cap − current damage) / consume`. A carrier written as 5 with only 3 uses left is therefore poured for 3, and filling it costs no extra aura. Conversely, **wear ground off from outside** (`mxt:damage_item`, anything other than a vanilla repair) shrinks the capacity with it, while what has already been poured in does not vanish — it comes back, as the part that was never spent, when the carrier is finally destroyed (see [Wear](#wear)).
+- **Each aura is counted separately**: the carrier stores one pool per aura `costs` names, and one pour only fills the **first entry that is not full**, in the order the inscriptions' `costs` are written; holding on after one entry is full continues with the next.
+- **Both the capacity and the per-invocation amount have to be priced without a holder**: the length of a pour comes from "capacity ÷ the units moved per tick", and the client has to work out the same number to draw the pose, so the aura entries of `costs` are evaluated against an **empty formula context** (the same rule `item_aura.aura` uses for capacity), while the multiplier itself is a constant. An aura entry therefore only takes a constant or an expression that does not depend on the holder; an expression that only has a value with somebody there, such as `"realm_rank * 4"`, resolves to 0 and is treated as "this entry does not count". An aura entry that resolves to 0 is simply an aura this invocation does not want.
+- **No aura entries**: a talisman whose `costs` names no aura entry has nothing to pour, so holding right-click never enters a pour — but it is **"ready" at any moment**, so **a right-click invokes it**, and only when `costs` holds other entries is the holder charged on the spot.
+- **How to pour**: hold the carrier and hold right-click, the same gesture a spirit stone uses to charge (`BLOCK` pose, a prompt sound every 4 ticks, the action bar showing `stored / capacity`). Pouring spends no item; only an invocation takes its price — a carrier with no wear spends one whole item, and one with wear loses wear.
 
-## Example
+### Firing
+
+- **Firing is judged by "can it afford one invocation", not by "is it full"**: once the store covers one pass of the aura entries in `costs`, a right-click is an invocation; below that it is a pour. The moment it is poured **full** (reaching the capacity), a `fire`-mode carrier fires on its own, and that is the only time it does so automatically. That is what the tooltip line says: "Enough spirit power - right-click to invoke" / "Hold right-click to pour spirit power in". A carrier that cannot afford one invocation turns a right-click into a pour rather than an invocation, so the gesture splits in two by "can it afford one invocation".
+- **A bare-handed right-click and "being poured full" go through the same entry point**, and the [carrier mode](#carrier-mode) decides which of them fires and when. Under either mode a **right-click** can fire it: if it did not fire on its own, because of an ability cooldown or anything else, a right-click is the only route left — and for a talisman that is "ready" at any time it is the only route there is.
+- **It does not have to be in a hand**: a carrier is reported by **whoever filled it**, not by the holder — a talisman sitting on a display stand fires all the same when a player or a spirit burst fills it (`store` mode excepted, it only accumulates). The **actor** is still whoever filled it: paying, being recorded and answering for its abilities all land on them, while the **position** is the display stand the carrier sits on.
+
+### Carrier Mode
+
+The mode lives in the `mxt:talisman` component on the stack, **not** in a definition field, so the same inscriptions can behave differently on different carriers.
+
+| Mode | Behaviour |
+| --- | --- |
+| `fire` (default, what you get when it is left out) | Fires on its own the moment it is full. |
+| `store` | Only accumulates, and waits for you to act. |
+
+**Sneak + right-click** switches the mode, with one action bar line to say so; the tooltip reports the current mode too. One special case: while `store` and **already full**, a sneak-use does **not** switch it — it fires directly (stored aura is there to be spent, and "a mode that wants to fire" is the clearest possible "spend it now"), so that talisman is consumed.
+
+### Where the Position Goes
+
+The position enters the ability's formula context as `block_x`/`block_y`/`block_z` (the same way a trigger such as `block_break` gives a position), and it is handed to everything that "happens somewhere" as this invocation's **origin**: `spawn_projectile`, `spawn_particles`, `spawn_effect_cloud`, `spawn_lightning`, `explode`, `play_sound` and `block_action` all use the origin as their position; the **box** of the `mxt:area` target selector (side `2 × radius`, not a sphere) is centred on it, and `mxt:ray` and `mxt:cone` count from it as well (the caster's eye position is used only when there is no origin); a bi-entity action such as `mxt:teleport` that "moves the target to the actor" moves it to the origin as well. The origin defaults to the actor itself, so ordinary casting is unaffected. Projectiles still fire along the **actor's** facing — the position is "where it comes from" and the facing is "who is aiming". The boundary: the `condition` family (aura environment, light level, exposure to the sky, the block underfoot and so on) and anything that reads the environment's aura by position still go by the **actor's** own position.
+
+### Hand-Use Cooldown
+
+Controlled by **Server Config → Talisman → Use Cooldown**, not by the data pack. It is in ticks, range `0..72000`, default `20` (1 second); `0` turns it off.
+
+- **One "attempt" starts it**: a click an ability refused because of its own cooldown or an unpayable cost still counts, since that click really was an attempt to invoke; a blank carrier and one whose store cannot cover a single invocation **never became an attempt** and cost no cooldown — those cases only give the player a line of explanation and can be retried at once.
+- **It only gates the "hand" path**: a pour that fills the carrier and fires it automatically is limited by it just the same. Filling it inside the window does not fire it, and that tick's aura is **not poured in at all** (pouring it in would be paying for an attempt that is bound to be refused), so what you see inside the window is a talisman that does not move, and once the window passes the same pour fires normally.
+- **The display stand path ignores it entirely**: a talisman on a stand is in nobody's hand, and fires the moment it is full — it is neither refused because the filler is inside a window, nor does it record a window for anybody.
+- The cooldown rides vanilla's item cooldown, so the hotbar's grey sweep and the `mxt:on_cooldown` item condition both read it directly. And because every carrier in this mod is the same item `mxt:talisman`, this cooldown is recorded **per player** and per item: the other talismans in hand cannot be pressed inside the window either, which is exactly the "clicking through a stack of talismans within one second" it is there to block.
+- The window is recorded in vanilla's cooldown group, whose name is just an id. A carrier in this mod has no `use_cooldown` component, so the group is the item registry name `mxt:talisman`; to put one family of talismans in a group of its own, add `minecraft:use_cooldown` (with a `cooldown_group`) to the item — the code side needs no change. What actually blocks the click in game is vanilla itself, which looks at the cooldown before it ever asks the item, so inside the window what you see is the hotbar's grey sweep and nothing happening.
+- **Spending splits by "where it is"**: a hand spends one whole item per invocation, but **creative mode spends nothing**; one placed on a display stand is **always spent**, whether or not the filler is in creative mode. **A talisman that declares wear turns both paths into taking wear**, and the creative exception holds there as well (a hand takes no wear, a stand takes it just the same).
+
+### Wear
+
+`durability` is how many points of wear this talisman gives a carrier and `consume` is how many one invocation takes off, and both **add up over the entries inscribed on one carrier**: one declaring 10 points at 1 per invocation and another declaring 5 points at 1 per invocation written together make 15 points at 2 per invocation. An entry that declares no wear fires along with the rest but is not booked.
+
+- The cap lands on the **vanilla components**, so the durability bar, vanilla repair and enchanting, and the whole set of the `mxt:durability` / `mxt:relative_durability` item conditions and the `mxt:damage_item` item action all work as they are; this mod keeps no second durability system.
+- What the framework writes is **vanilla's own set**: `minecraft:max_damage` + `minecraft:max_stack_size: 1` + `minecraft:damage: 0`. All three are needed: without `damage` the stack does not count as damageable (so no durability bar), and a `max_stack_size` above 1 is refused by vanilla as "both damageable and stackable", so a content pack patching its own components has to write all three as well.
+- The moment it is written is **when the carrier is handed over**: a carrier from `/talisman give` has a durability bar the moment you get it. A carrier a pack builds itself (a recipe with a component patch) gets it on its **first invocation**. **A `max_damage` the pack has already written onto the stack wins over the summed definition value**, so one definition can produce a batch of 3-point carriers and a batch of 10-point ones; it only moves the cap, and whether anything is taken off is still decided by the definition.
+- **Wear belongs to a single carrier**: a carrier with wear does not stack (`/talisman give count` hands out that many single carriers), and a stack of several keeps no wear and is still spent as one whole item per invocation.
+- **The uses left are worked out from the wear**: `(cap − current damage) / consume`, rounded down (a partial point of damage does not buy an invocation). **A carrier declaring no wear counts as 1**, and one with wear counts as **at least 1** — one that the wear has not destroyed yet can always fire once more, and that one is the invocation that destroys it. This number is the real cap on the `capacity` multiplier, and the answer to "how much more can still be poured in".
+- **The invocation that takes the wear to or past the cap destroys that carrier**: the aura this invocation owes is **still taken** (it really did fire), and afterwards **the part that was never spent** in the store is returned to that invocation's actor at the price it was poured in for, 1 unit of aura = 1 point of the resource it is counted in. Whatever cannot be taken is lost with the talisman paper and does not fail the invocation. A carrier declaring no wear is still spent as one whole item per invocation and returns the unspent part the same way; its store is **shared by the whole stack**, so in that case it only comes back once the whole stack is used up.
+- The tooltip has a line of its own, "Durability: left / cap", and it can read the summed value from the definitions even before the components are written.
+
+### Cost
+
+`costs` is what **one invocation** pays, in the same shape as an ability's own `costs` (`mxt:resource` / `mxt:aura` / `mxt:item` / `mxt:js`) and settled by the same transaction — there is no second payment path. It splits into two routes: **aura entries come out of the carrier's own store** (the container `capacity` sizes, bought in while pouring at 1 point of the holder's own aura per unit), while **every other entry is charged to the holder when it fires**.
+
+The latter is planned **before** the invocation: anything that cannot be paid **refuses that invocation**, with the action bar saying whether it is "not enough spirit power" or "the required items are missing", and the carrier, its wear and its store all stay untouched. This is a threshold such as "not enough spirit power to use this" **set by the definition**, which is why the mod adds no condition field of its own for it. The plan is read-only, and the real deduction happens **after at least one ability has really fired**; one invocation may write several entries at once, and the `costs` of several inscriptions on one carrier add up. Aura entries are taken **at the amount written**, fractions included — it is the capacity side that rounds up, because one pour only moves whole units.
+
+### Tier
+
+`quality` gives this talisman a tier, which is where the grading of talisman paper / talisman treasures is written. The tier resolved on a carrier goes through the whole ordinary quality module: the tooltip's tier line, `mxt:quality` and a quality's own `condition`, upgrading along the quality chain and a quality's `value_multiplier` all see it as usual. The framework **writes no tier component onto the stack**, so a component still overrides the definition and the chain can still be climbed. On a carrier with several inscriptions, it takes the **first entry in writing order that declares a tier**.
+
+### How an Invocation Resolves
+
+The inscribed abilities each go through the ordinary ability use path: the ability's own condition, word, charges, cooldown and costs, plus both use events, all apply as usual, and the only thing replaced is "this ability has been granted to you" — **the talisman itself is the source of the grant**, which is why carrying one talisman lets you cast magic you do not know. Cooldown, charges and costs are therefore shared between the talisman and the spell, and a talisman is not a back door around them.
+
+**It can only carry abilities that take effect at once**: an ability that needs a cast (`cast_time > 0`) or a standing channel (`mxt:channelled`) is refused — finishing a cast or a channel has to be advanced off the list of abilities the **holder has been granted**, and a carrier never grants anything. On a refusal the carrier is not spent and the aura is not cleared, so you can swap in another talisman or another ability.
+
+**An invocation happens where the talisman is.** That place is both the centre the targets are picked around / the ray's origin (a talisman on a stand goes by the stand) and the default landing place for anything that "puts something out": a bolt, an explosion, particles, a sound or a block action lands at the talisman's feet (or where you stand while holding it), which is especially easy to run into with `mxt:targeted`. To land them **at the target's own position**, wrap that entity action in `mxt:target_action` with `"use_target_position": true` (see [bi-entity action types](../types/action/bientity_action_types.md)); plain damage needs none of this, since `mxt:damage_target` and `mxt:damage` read the entity, not the position.
+
+## Naming and the Item Component
+
+The display name can be written as the optional `name` field; omit it and the translation key is generated from the identifier, `talisman.mxt.<definition namespace>.<path>`: `mxt_test:flame_sigil` → `talisman.mxt.mxt_test.flame_sigil`. The optional `description` is the same, and when it is omitted it is the generated key with `.description` appended.
+
+Example:
 
 ```json
 // data/example/mxt/talisman/flame_sigil.json
 {
   "abilities": ["example:qingxiao_firebolt"],
-  "aura_cost": {"example:qi": 12}
+  "capacity": 10,
+  "costs": [
+    {"type": "mxt:aura", "aura": "example:qi", "amount": 12},
+    {"id": "example:true_essence", "amount": 2}
+  ],
+  "durability": 10,
+  "consume": 1,
+  "quality": "example:fine_talisman_paper"
 }
 ```
 
-The abilities it names are defined by [Ability](./ability.md). The item's own behaviour is documented with the other items; the aura the bill is counted in belongs to an [Aura](./aura.md) definition.
+This talisman takes 12 `example:qi` per invocation and charges the holder another 2 `example:true_essence`; its capacity multiplier is 10 (= 120 units, good for 10 invocations) and its wear is 10 points at 1 per invocation — one full pour uses up exactly its wear. Writing 20 would change nothing: only 10 uses are left, so the multiplier that applies is stuck at 10.
 
+Which talismans are already inscribed is kept in the item component `mxt:talisman`: a list of `talisman` entries in the order they were appended, plus a `mode` field (`"fire"` (the default) or `"store"`), and an empty list is the blank carrier a freshly made one is. The component stores **concrete entries**, so it cannot name a tag. Pouring progress is kept separately in `mxt:spirit_storage`, the storage component shared with spirit stones, recording the units poured so far by **aura**; when it is absent, nothing has been poured. The component and the carrier are described under [Items](/en/player-guide/items).

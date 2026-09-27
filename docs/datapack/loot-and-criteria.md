@@ -5,7 +5,7 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 
 # 战利品与进度条件
 
-除数据包注册表之外，MiXianTu 还注册了一小批原版类型，让内容包可以在普通的战利品表、战利品修饰器和进度中读取并改变玩家的修炼状态。它们以 `"type": "mxt:..."` 的形式写在普通的原版 JSON 里——没有特殊的文件布局。
+除数据包注册表之外，MiXianTu 还注册了一小批原版类型，让内容包可以在普通的战利品表、战利品修饰器和进度中读取并改变玩家的修炼状态。它们以 `"type": "mxt:..."` 的形式写在普通的原版 JSON 里，没有特殊的文件布局。
 
 ## 文件位置
 
@@ -16,7 +16,7 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 
 ## 进度准则
 
-四种准则形状相同：一个可选的 `definition` 过滤器，加上标准的原版玩家谓词。
+四种准则形状相同：一个可选的 `definition` 过滤器，加上标准的原版玩家谓词。准则写在 `criteria` 段的 `trigger` 里，`conditions` 就是下面两个字段。
 
 | 准则 | 触发时机 | `definition` 的取值 |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `player` | `ContextAwarePredicate` | 无 | 作用于获得该进度的玩家的标准原版谓词 |
+| `player` | 原版玩家谓词 | 无 | 作用于获得该进度的玩家 |
 | `definition` | Identifier | 无 | 只对该定义触发；省略时任何定义都会触发该准则 |
 
 ```json
@@ -51,20 +51,41 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 | 条件 | 为真的情形 | 必填字段 |
 | --- | --- | --- |
 | `mxt:has_ability` | 该实体已被授予此技能 | `ability` |
-| `mxt:has_curse` | 该实体带有查询所接受的诅咒（`curse?`、`tags?`、`stacks?`、`remaining_ticks?` 全部可选，且都必须对同一个实例成立） | — |
-| `mxt:realm` | 该实体处于该境界，任意资源链均可 | `realm` |
+| `mxt:has_curse` | 该实体带有查询所接受的诅咒 | — |
+| `mxt:realm` | 该实体**达到过**该境界，任意资源链均可 | `realm` |
 | `mxt:has_spirit_root` | 该实体拥有该灵根 | `spirit_root` |
-| `mxt:has_element` | 该实体的**启用**灵根命名的元素中有一个出现在 `elements` 里 | `elements` |
+| `mxt:has_element` | 该实体**启用**的灵根命名的元素中有一个出现在 `elements` 里 | `elements` |
 | `mxt:has_physique` | 该实体拥有该体质 | `physique` |
+| `mxt:technique` | 该实体学过所列出的功法 | — |
 | `mxt:js` | 一个服务端脚本回调返回 `true` | `id` |
+
+每个条件都有的那个字段：
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `entity` | `EntityTarget` | `this` | 检查战利品上下文中的哪个实体：`this`、`attacker`、`direct_attacker`、`attacking_player`、`target_entity` 或 `interacting_entity` |
+| `entity` | 实体选择 | `this` | 检查战利品上下文中的哪个实体：`this`、`attacker`、`direct_attacker`、`attacking_player`、`target_entity` 或 `interacting_entity` |
 
 当所选实体不在战利品上下文中时，该条件为假。
 
-`mxt:has_spirit_root` 的 `spirit_root` 字段接受条目、`#` 标签或它们的数组，所以"任意火属灵根"写一条标签即可。`mxt:has_element` 问的是更粗的那一层——"是不是火属修士"：`elements` 是一个 `HolderOrTag<element>[]`，之后新加的同类灵根无需改动战利品表；被停用的元素不算，`elements` 至少写一项（空数组在加载期被拒绝）。
+`mxt:has_curse` 的四个过滤字段全部可选，写了的必须**对同一个诅咒实例**同时成立；一个也不写就只问「身上有没有诅咒」。`tags` 里的多个标签是「同时带这些标签」，要「任一」请用 `mxt:or` 包起来。`stacks` 与 `remaining_ticks` 是带 `min` / `max` 的区间对象（两端都可省略，闭区间），其中 `remaining_ticks` 对永不过期的诅咒视为无穷大——它答得出下界，永远答不出上界。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `curse` | 诅咒条目 | 无 | 只认这一条诅咒 |
+| `tags` | 标签数组 | `[]` | 诅咒必须带上的全部标签 |
+| `stacks` | 区间 | 无 | 层数区间 |
+| `remaining_ticks` | 区间 | 无 | 剩余时长区间，单位刻 |
+
+`mxt:has_spirit_root` 的 `spirit_root` 字段接受条目、`#` 标签或它们的数组，所以「任意火属灵根」写一条标签即可。`mxt:has_element` 问的是更粗的那一层——「是不是火属修士」：`elements` 是一个元素引用列表，每一项可以是一个元素或一个 `#` 标签，之后新加的同类灵根无需改动战利品表，`elements` 至少写一项（空数组在加载期被拒绝）。
+
+`mxt:technique` 的两个字段与同名实体条件同形：
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `techniques` | 条目或标签数组 | `[]` | 要问的功法；空表问的是「学过任意一门」 |
+| `match` | `any` / `all` | `any` | `all` 要求列表里每一项都学过；`all` 配空表在加载期被拒 |
+
+它读的是身体持有的授予账本，不是当前包里的定义；功法没有「启用/停用」开关，学过就是学过。
 
 ```json
 {
@@ -75,7 +96,7 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 }
 ```
 
-`mxt:js` 接受一个用 `MxtLoot.condition(...)` 注册的 `id`，以及一个可选的 `params` 对象。与内置条件不同，它没有 `entity` 字段：回调收到完整的原版 `LootContext`，由它自己决定读取哪个实体。
+`mxt:js` 接受一个用 `MxtLoot.condition(...)` 注册的 `id`，以及一个可选的 `params` 对象。与内置条件不同，它没有 `entity` 字段：回调收到完整的原版战利品上下文，由它自己决定读取哪个实体。回调缺失时条件为假，回调抛异常时也为假，两者都会记一条日志。
 
 ```json
 {"condition": "mxt:js", "id": "example:first_clear", "params": {"dungeon": "example:fire_temple"}}
@@ -88,8 +109,8 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 | 函数 | 效果 |
 | --- | --- |
 | `mxt:grant_ability` | 授予实体一个持久技能来源，并刷新它的事件规则订阅 |
-| `mxt:set_artifact_owner` | 把掉落出的法器归属给某个实体，然后运行该法器的 `claim_action`，认主的代价也在这条行为里（**不判** `claim_condition`：那道条件只拦长按认主，战利品表按自己的判断指定主人。代价与效果都会在这条路上跑，而且**没有**长按那条的条件判定——`claim_action` 会落在被指定的主人身上，默认的那份扣血也会） |
-| `mxt:apply_curse` | 对某个实体施加一个诅咒，以 `loot` 作为施加来源 |
+| `mxt:set_artifact_owner` | 把掉落出的法器归属给某个实体，然后运行该法器的 `claim_action` |
+| `mxt:apply_curse` | 对某个实体施加一个诅咒，以 `mxt:loot` 作为施加来源 |
 | `mxt:js` | 用服务端脚本返回的内容替换生成的物品栈 |
 
 ### `mxt:grant_ability`
@@ -97,7 +118,7 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `ability` | Identifier | **必填** | 要授予的技能 |
-| `entity` | `EntityTarget` | `this` | 接受该技能的实体 |
+| `entity` | 实体选择 | `this` | 接受该技能的实体 |
 | `source` | Identifier | `mxt:loot` | 随授予一起记录的来源 id，以便按来源撤销该技能 |
 
 ```json
@@ -112,11 +133,11 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `entity` | `EntityTarget` | `this` | 成为该法器拥有者的实体 |
+| `entity` | 实体选择 | `this` | 成为该法器拥有者的实体 |
 
 如果该物品栈已经属于另一个拥有者，则什么也不会发生：掉落物保持原样，`claim_action` 也不会运行。
 
-归属写成功时，`claim_action` 会跑一遍——和长按认主付的是同一份代价、跑的是同一套效果（认主的代价就是这条行为的默认值），因为两条路都走 `ArtifactService.refine`。**但这条路上不判 `claim_condition`**：那道条件是长按手势自己的门槛，战利品表已经用自己的判断指名了主人。
+归属写成功时，`claim_action` 会跑一遍——和长按认主付的是同一份代价、跑的是同一套效果（认主的代价就是这条行为的默认值），因为两条路走同一段认主结算。**但这条路上不判 `claim_condition`**：那道条件是长按手势自己的门槛，战利品表已经用自己的判断指名了主人。
 
 ```json
 {
@@ -130,7 +151,7 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 | --- | --- | --- | --- |
 | `curse` | Identifier | **必填** | 要施加的诅咒 |
 | `stacks` | Integer `1..256` | `1` | 施加多少层该诅咒 |
-| `entity` | `EntityTarget` | `this` | 接受该诅咒的实体 |
+| `entity` | 实体选择 | `this` | 接受该诅咒的实体 |
 
 ```json
 {
@@ -155,7 +176,7 @@ description: MiXianTu 提供的战利品函数、战利品条件与进度准则�
 }
 ```
 
-回调收到生成的物品栈和 `LootContext`，并返回要保留的物品栈：原样返回入参表示不动掉落物，返回新的物品栈表示替换它，返回 `null` 表示保留原物品。回调缺失或执行失败时，物品栈保持不变，并记录一条警告。
+回调收到生成的物品栈和战利品上下文，并返回要保留的物品栈：原样返回入参表示不动掉落物，返回新的物品栈表示替换它，返回 `null` 表示保留原物品。回调缺失或执行失败时，物品栈保持不变，并记录一条日志。
 
 ## 综合示例
 

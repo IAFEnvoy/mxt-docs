@@ -7,7 +7,7 @@ description: "The public interfaces a Java addon implements: AuraAccess, ItemAur
 
 These are the interfaces a Java addon implements or consumes directly. They are the seams between the framework and your content: aura exchange, item charge, tooltips, costs and the client wheel.
 
-`AuraAccess`, `ItemAuraAccess`, `UseItemAuraAccess` and `WheelMenuEntry` live in **`com.iafenvoy.mxt.api`**: that package holds nothing but interfaces and a package note, and the implementations stay in their own modules. `TooltipAppender` is a NeoForge extension point, `Cost` lives in `data/cost`, and **`Toggable` stays in `data/ability` — it is not part of the public API** (it is the shape the mod itself registers "a skill that needs a key" with, implemented by the three ability types `mxt:active` / `mxt:flight_control` / `mxt:storage`; its predecessor `ToggableArtifactAbility` has been deleted).
+`AuraAccess`, `ItemAuraAccess`, `UseItemAuraAccess` and `WheelMenuEntry` live in **`com.iafenvoy.mxt.api`**: that package holds nothing but interfaces and a package note, and the implementations stay in their own modules. `TooltipAppender` is a NeoForge extension point, `Cost` lives in `data/cost`, and **`Toggable` stays in `data/ability` — it is not part of the public API** (it is the shape the mod itself registers "a skill that needs a key" with, implemented by the five ability types `mxt:active` / `mxt:channelled` / `mxt:targeted` / `mxt:flight_control` / `mxt:storage`; its predecessor `ToggableArtifactAbility` has been deleted). `AbilityApplier`, in the same package, is not public API either: it answers only "which entities does this cast reach (`reach`)" and "which ability runs on each of them (`payload`)", it is implemented by `mxt:targeted` alone today, and its `reach` is asked once **before anything is paid**.
 
 ## Overview
 
@@ -59,7 +59,7 @@ It is split into two interfaces because "storage" and "being poured into" are no
 - **`canPourInto(@Nullable LivingEntity holder, ItemStack stack)`** (every tick, **before the aura is paid**) — whether this tick is worth pouring. The gesture's order is "take the aura, then `insert`, then `onCharged`", so any case where "inserting it would be pointless" would waste aura for nothing; this method lets the item refuse before the payment. The default is `true` (a container that only takes has nothing to object to), and only items that **fire themselves when they are filled** override it — a talisman overrides it as `TalismanService.canFireFrom`, that is, "is this holder's cooldown window still open". Note that this is **not** the "should it fire automatically" question: that is decided by the carrier's own mode (the `mode` of the `mxt:talisman` component, where `fire` fires as soon as it is full and `store` only accumulates), which is a different thing from the pouring gate.
 - **`onCharged(SpiritSource source, ItemStack stack)`** (after one **real** move) — "I was filled", and the item itself decides whether that means full and whether to act. The default does nothing.
 
-**The writer is responsible for reporting**: whoever writes aura into a store (a held pour, an `AuraAccess` block entity, and so on) calls `onCharged(SpiritSource, ItemStack)` **after the real write** (`simulate` does not count), and the item decides for itself "is this full" and what follows from it (a talisman fires here and consumes one carrier item). It is the writer that reports rather than the item judging inside its own `add` because only the writer knows **where this thing is and who paid**: a talisman on a display stand was filled by somebody standing elsewhere (or by a spirit burst). `SpiritSource(level, position, actor, consumedByHand)` carries the position and the actor together — the actor pays, is recorded and answers for abilities; the position is the place of this activation, entering formulas as `block_x`/`block_y`/`block_z` and handed to position-type behaviours as the **origin** (see [The Reverse Direction: Pouring](../datapack/json/item_aura.md#the-reverse-direction-pouring)). And precisely because reporting is opt-in: a writer that meets an item implementing storage only has nothing to report in the first place.
+**The writer is responsible for reporting**: whoever writes aura into a store (a held pour, an `AuraAccess` block entity, and so on) calls `onCharged(SpiritSource, ItemStack)` **after the real write** (`simulate` does not count), and the item decides for itself "is this full" and what follows from it (a talisman fires here and spends either one carrier item or the wear its inscription declares). It is the writer that reports rather than the item judging inside its own `add` because only the writer knows **where this thing is and who paid**: a talisman on a display stand was filled by somebody standing elsewhere (or by a spirit burst). `SpiritSource(level, position, actor, consumedByHand)` carries the position and the actor together — the actor pays, is recorded and answers for abilities; the position is the place of this activation, entering formulas as `block_x`/`block_y`/`block_z` and handed to position-type behaviours as the **origin** (see [The Reverse Direction: Pouring](../datapack/json/item_aura.md#the-reverse-direction-pouring-hold-right-click-to-charge)). And precisely because reporting is opt-in: a writer that meets an item implementing storage only has nothing to report in the first place.
 
 The family fits together like this: storage is "can I be stored into", while being poured into and being held down are gestures an item opts into on top of it, and an implementation only picks the layer it needs:
 
@@ -69,6 +69,7 @@ classDiagram
     class ItemMatcher {
         <<interface>>
         +entries() List~Entry~
+        +priority() int
     }
     class ItemAuraAccess {
         <<interface>>
@@ -99,11 +100,12 @@ classDiagram
     class TechniqueBinding
     class SpiritChargeHold
     class ArtifactHold
+    class TechniqueHold
     UseItemAuraAccess --|> ItemAuraAccess
     HoldBinding --|> ItemMatcher
     SpiritStoneItem ..|> UseItemAuraAccess
     TalismanItem ..|> UseItemAuraAccess
-    TechniqueBinding ..|> HoldBinding
+    TechniqueHold ..|> HoldBinding
     SpiritChargeHold ..|> HoldBinding
     ArtifactHold ..|> HoldBinding
     UseItemAuraAccess ..> SpiritPour : returns

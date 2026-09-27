@@ -36,7 +36,7 @@ Do not invent a `mxt:item`, `mxt:pill` or `mxt:weapon` file. Those registries do
 | `data/example/mxt/technique/azure_breath.json` | What the manual teaches. |
 | `data/example/mxt/item_binding/qi_pill.json`, `root_pellet.json` | Consumption behaviour. |
 | `data/example/mxt/pill_binding/qi_pill.json` | Pill toxicity. |
-| `data/example/mxt/weapon_binding/spirit_sword.json` | Weapon damage, speed and combat actions. |
+| `data/example/mxt/weapon_binding/spirit_sword.json` | Weapon attribute modifiers and combat actions. |
 | `data/example/mxt/technique_binding/azure_manual.json` | How that technique is read, and which item the mod generates as its carrier. |
 
 ## Step 1 — Register the Items
@@ -225,8 +225,10 @@ Both tables can be used on the same item; they carry different fields and neithe
 // data/example/mxt/weapon_binding/spirit_sword.json
 {
   "items": "kubejs:spirit_sword",
-  "attack_damage": 8,
-  "attack_speed": -2.4,
+  "attributes": [
+    {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"},
+    {"attribute": "minecraft:attack_speed", "id": "example:spirit_sword/speed", "amount": -2.4, "operation": "add_value"}
+  ],
   "quality_chain": "example:weapon",
   "use_action": {"type": "mxt:no_op"},
   "attack_action": {
@@ -237,10 +239,10 @@ Both tables can be used on the same item; they carry different fields and neithe
 }
 ```
 
-- `attack_damage` and `attack_speed` are added to the item, on top of whatever its tier already gives.
+- A weapon's own attack damage and attack speed are written as `attributes` entries too (`minecraft:attack_damage` / `minecraft:attack_speed`), and they are **added on top of** the modifiers the item already ships with; changing the base item's own numbers means editing its `minecraft:attribute_modifiers` (a component patch or KubeJS), because this layer never replaces them.
 - `use_action` is an entity action run on right click; `attack_action` is a bi-entity action run on a successful hit, so `mxt:target_action` here applies an extra 3 damage to the target.
 - `tick_action` runs every tick while the weapon is held, which is the place for upkeep, particles or aura drain.
-- `attributes` adds further vanilla attribute modifiers; an entry with a `value` formula is recalculated every tick.
+- `attributes` entries have the vanilla `AttributeModifier` shape; an entry with a `value` formula is recalculated every tick.
 
 The `example:weapon` chain from Step 2 defines which qualities this weapon may carry, and the tier it falls to when no override component is written.
 
@@ -274,13 +276,13 @@ A technique is the logic; `technique_binding` describes how one is **read** — 
 }
 ```
 
-**Whether a stack is a manual comes from its data component, not from this file.** The `carrier_item` above only tells the mod which item to generate as this technique's carrier (one in the creative tab, one under `/picker mxt:technique`); what actually teaches the technique is the `mxt:technique` component on the stack, so take the manual out with the item component syntax:
+**Whether a stack is a manual comes from its data component first, and from this file second.** The `carrier_item` above only tells the mod which item to generate as this technique's carrier (under `/picker mxt:technique`; **the creative tab does not generate carriers**); what actually teaches the technique is the `mxt:technique` component on the stack, so take the manual out with the item component syntax:
 
 ```mcfunction
 give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 ```
 
-Right-clicking the manual attempts to learn `example:azure_breath`. Every learned technique stays active at the same time, and a stack carrying the component claims the interaction even when learning fails, so a player cannot bypass the technique's own `learn_condition`, exclusivity tags or the learning event. Earlier versions bound a technique to an item with an `items` field; that field is gone, and writing it into a new file is silently ignored — the pack loads without an error and the rule simply never applies.
+Right-clicking the manual attempts to learn `example:azure_breath`. Every learned technique stays active at the same time, and a stack carrying the component claims the interaction even when learning fails, so a player cannot bypass the technique's own `learn_condition`, exclusivity tags or the learning event. `items` is the **optional second route**: write it into the declaration (`"items": "kubejs:azure_manual"`) and that item counts as a manual for this technique **without any component**, while the stack's `mxt:technique` component still wins. It was deleted on 2026-09-22 and came back as optional on 2026-09-26.
 
 ## Step 7 — Load and Verify
 
@@ -314,7 +316,7 @@ Then in game:
 | New items do not appear after `/reload` | Item registration happens at startup; restart the game. |
 | Edited bindings do not change anything | `/reload` does not re-read data pack registries; load the world again. |
 | The manual has no effect but also no error | First check whether the stack carries the `mxt:technique` component — a plain item without it teaches nothing. If it does, check whether learning failed instead: `learn_condition`, an already-learned duplicate or an exclusivity conflict. |
-| The `items` field on the manual does nothing | `technique_binding` has no `items` field any more, and writing one is **silently ignored** (the pack loads without an error). Use `carrier_item` plus the `mxt:technique` component on the stack. |
+| The `items` field on the manual does nothing | `items` is the **optional** second route, and the stack's `mxt:technique` component still wins. Every item id in it has to match the id the script really registered (do not drop the `kubejs:` namespace), or nothing claims that stack. |
 
 ## Next
 

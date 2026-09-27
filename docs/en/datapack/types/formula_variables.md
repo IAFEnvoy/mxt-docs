@@ -17,7 +17,7 @@ Reading a name resolves in this order:
 2. **The variable registry**, which resolves the name from the context objects.
 3. **Nothing**, which is a content bug and is reported as described below.
 
-`params` is the highest priority and only affects the one expression that declares it. See [Structured Expressions](./number_provider_types.md#structured-expressions).
+`params` is the highest priority and only affects the one expression that declares it. See [Expression Strings](./number_provider_types.md#expression-strings).
 
 ## Unknown Names and Failures
 
@@ -31,12 +31,7 @@ A misspelled name, a name that the context cannot provide, or a variable that fa
 
 None of them stops the evaluation: the expression continues with `0`, so a bad name cannot abort the ability or the tick that used it.
 
-A formula that is broken in a way the codec *can* see is a decode error instead, and it is handled in both environments the same way:
-
-| Situation | Both environments |
-|-----------|-------------------|
-| The expression is empty, malformed, or its `params` are invalid | The entry fails to decode. The loader collects every failing entry of the load and reports them together, then fails the load |
-| A weighted list has no entries, or a context variable has a blank name | Same: one decode error, collected with the others |
+A formula that is broken in a way the codec *can* see is a decode error instead: an empty or malformed expression, invalid `params`, a weighted list with no entries, or a context variable with a blank name. The loader collects every failing entry of that load and reports them together, then the whole load fails.
 
 ::: warning Unknown names are not silent
 A name that no variable provides never quietly becomes `0`. A development environment prints the whole error at the first evaluation, and production keeps one warning line per distinct message, so a typo can still be found in a server log.
@@ -51,7 +46,7 @@ These two names work in every context, including a context with no objects at al
 | Variable | Description |
 |----------|-------------|
 | `zero` | Always `0`, for switching a term off without editing the expression |
-| `random` | A new random double between `0` and `1`, drawn from the authoritative `RandomSource` of the context |
+| `random` | A new random double between `0` and `1`, drawn from the authoritative random source of the context |
 
 `random` is authoritative because the context carries the random source of the entity or the level it was built from. Never re-roll a value on the client to decide a game result.
 
@@ -127,12 +122,12 @@ These names are provided as explicit context values by the system that starts th
 |----------|----------------|-------------|
 | `element_modifier` | The ability declares a non-empty `element_affinity` | The element affinity multiplier computed for the caster. Layer one of the [damage system](../../technical/damage.md) multiplies this value into the damage that cast deals itself, so a damage formula must **not** write `* element_modifier` by hand — that would be the same number multiplied twice. It is still readable where the value is not damage, such as costs or durations |
 | `damage_multiplier` | The cast belongs to a mastery chain that grants the ability | The `damage_multiplier` of the level the caster stands on, which the [damage system](../../technical/damage.md) also applies to the damage this cast deals. A physique's own `damage_dealt_multiplier` / `damage_taken_multiplier` are **not** put into the formula context: only the pipeline reads them |
-| `aura_radius` | An `aura` ability evaluates its target action | The radius resolved for this pulse |
-| `distance` | An `aura` ability evaluates its target action | Distance in blocks between the caster and the current target |
+| `aura_radius` | `mxt:aura` evaluates its target action | The radius resolved for this pulse |
+| `distance` | `mxt:aura` evaluates its target action | Distance in blocks between the caster and the current target |
 
 ### Trigger Values
 
-An ability with a `triggered` ability type is evaluated when its trigger fires, and the trigger adds these names:
+An ability with the `mxt:triggered` type is evaluated when its trigger fires, and the trigger adds these names:
 
 | Trigger | Variables added | Description |
 |---------|-----------------|-------------|
@@ -171,6 +166,17 @@ Any formula evaluated for a member of a [secret realm](../json/secret_realm.md) 
 
 The names carry the `secret_realm_` prefix because `realm`, `realm_rank` and `level` already mean a cultivation stage. Outside any secret realm they cannot be provided at all, so they are reported as an error instead of silently reading as `0`.
 
+### Lifespan Values
+
+A context built from an entity can read that entity's lifespan ledger through two names, both measured in ticks:
+
+| Variable | Description |
+|----------|-------------|
+| `lifespan_remaining` | Ticks of life left before the lifespan runs out |
+| `lifespan_total` | The ceiling this life was granted |
+
+They read the entity the formula is evaluated for (the context's caster, or the player when the context has no caster). A body with **no ledger** reads `NaN` for both, so a condition can tell "never accounted for" from "accounted for and already spent", which reads `0`. How a ledger comes to exist is on [Lifespan](/en/player-guide/lifespan).
+
 ## Where Each Variable Is Available
 
 Which variables a formula can read is decided by the objects the caller puts into the context. The table below lists the main evaluation sites.
@@ -178,10 +184,10 @@ Which variables a formula can read is decided by the objects the caller puts int
 | Formula | Context objects | Variables available |
 |---------|-----------------|---------------------|
 | Ability cast time, cooldown, charges, channel interval, conditions, target selection | caster | Entity family; `element_modifier` when the ability declares `element_affinity` (the damage system applies that value to the cast's own damage, so read it here only for non-damage numbers); `damage_multiplier` when a mastery chain granting the ability is known; the payload of the trigger that started the ability |
-| Ability `target_condition`, `bi_entity_action` | caster + target | Entity and target families; the same payload |
-| `aura` ability interval and radius | caster | Entity family |
-| Resource entry of an ability's `costs` | caster + the spent value | Entity family + resource family of that value |
-| Ability item cost | caster | Entity family |
+| An ability's `target_condition` and `bi_entity_action` (the four action fields are declared and run by each type that runs actions) | caster + target | Entity and target families; the same event payload |
+| `mxt:aura` interval and radius | caster | Entity family |
+| The `mxt:resource` entry of an ability's `costs` | caster + the spent value | Entity family + resource family of that value |
+| An ability's `mxt:item` cost | caster | Entity family |
 | Resource `default_value`, `min`, `max`, `regen`, use condition, burst amount | caster, plus the resource where the definition is evaluated for one resource | Entity family; resource family where a resource is bound |
 | Resource conversions, realm-stage thresholds, breakthrough threshold | caster + the resource | Entity family + resource family |
 | Cultivate action conditions and amounts | caster, plus a resource context for the per-resource fields | Entity family; resource family where a resource is bound |
@@ -190,7 +196,7 @@ Which variables a formula can read is decided by the objects the caller puts int
 | Item, weapon, pill and technique bindings, item quality, pill toxicity | the user or holder entity | Entity family, plus `target_health` / `target_is_living` on a weapon attack |
 | Forging, formations, contracts, creature profiles, secret realms, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for `entity_tick_action`; + the secret realm family inside an instance) |
 | Tribulation timeline entry duration and conditions | caster | Entity family + `aura_tribulation_modifier` |
-| Formulas evaluated from a `Level` instead of an entity: formation `tick_action` and `deactivate_action`, formation aura bonus, spirit crafting table costs, KubeJS block actions and conditions | nothing | `zero`, `random` only |
+| Formulas evaluated from a Level alone instead of an entity: formation `tick_action` and `deactivate_action`, formation aura bonus, spirit crafting table costs, KubeJS block actions and conditions | nothing | `zero`, `random` only |
 | Client-side previews that use an empty context: item and weapon tooltips, item-aura capacity, currency value checks | nothing | `zero`, `random` only |
 
 ::: info Empty contexts are common

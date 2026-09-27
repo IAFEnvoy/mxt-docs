@@ -11,12 +11,12 @@ description: 读取实体当前生效的元素与已攒下的元素附着，并�
 
 | 方法 | 参数 | 返回值 | 说明 |
 | --- | --- | --- | --- |
-| `list(entity)` | `Entity` | `List<String>` | 该实体**当前生效**的灵根所指的元素 ID，按 ID 排序。停用的元素与关闭的灵根都不算，没有灵根则为空列表。 |
+| `list(entity)` | `Entity` | `List<String>` | 该实体**当前生效**的灵根所指的元素 ID，按 ID 排序。关闭的灵根不算，没有灵根则为空列表。 |
 | `has(entity, element)` | `Entity`、元素 ID | `boolean` | 该实体的灵根是否指向这个元素。 |
-| `amount(entity, element)` | `Entity`、元素 ID | `double` | 这个元素在该实体身上的附着量；没有则为 `0`，元素被停用或不存在也返回 `0`。客户端读同步过来的副本。 |
+| `amount(entity, element)` | `Entity`、元素 ID | `double` | 这个元素在该实体身上的附着量；没有则为 `0`，元素不存在也返回 `0`。客户端读同步过来的副本。 |
 | `attach(entity, element, amount)` | `Entity`、元素 ID、有限数值 | `double` | 走与打击**同一条**管线给实体加上（负数则扣掉）该元素的附着，返回新的附着量。攒够时 [`element_reaction`](/datapack/json/element_reaction) 照常触发。 |
 
-`attach` 与实体行为 `mxt:attach_element` 等价，因此"泡在岩浆里""服丹""诅咒持续喂火"这类来源用脚本写也一样；负数可以用来净化。三个读方法两侧都能用（附着表是同步过来的附件，客户端脚本读的是本地副本，物品悬浮提示那类逻辑正是这么用的）；只有 `attach` 是服务端操作，客户端、未知或被停用的元素、非有限值、`0` 一律返回 `0` 且不改动任何东西。
+`attach` 与实体行为 `mxt:attach_element` 等价，因此"泡在岩浆里""服丹""诅咒持续喂火"这类来源用脚本写也一样；负数可以用来净化。三个读方法两侧都能用（附着表是同步过来的附件，客户端脚本读的是本地副本，物品悬浮提示那类逻辑正是这么用的）；只有 `attach` 是服务端操作，客户端、未知的元素、非有限值、`0` 一律返回 `0` 且不改动任何东西。
 
 ```js
 // kubejs/server_scripts/mxt_element.js

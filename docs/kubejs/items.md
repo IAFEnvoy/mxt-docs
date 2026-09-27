@@ -1,6 +1,6 @@
 ---
 title: KubeJS 物品与绑定
-description: 在 KubeJS 启动脚本里注册真实物品，再用物品、武器、丹药与功法四张绑定表把 MiXianTu 的规则接到它身上。
+description: 在 KubeJS 启动脚本里注册真实物品，再用物品、武器、丹药、工具、图纸与功法六张绑定表把 MiXianTu 的规则接到它身上。
 ---
 
 # KubeJS 物品与绑定
@@ -43,14 +43,16 @@ StartupEvents.registry('item', event => {
 
 ## 用绑定表接上规则
 
-MiXianTu 负责行为、条件、灵气、货币与 Tooltip，绑定表则把一件已注册的物品接到这些规则上。每份文件放在 `kubejs/data/<命名空间>/mxt/<注册表>/` 下，四张表都只引用**已经由 KubeJS、原版或其他模组注册过**的物品：
+MiXianTu 负责行为、条件、灵气、货币与 Tooltip，绑定表则把一件已注册的物品接到这些规则上。每份文件放在 `kubejs/data/<命名空间>/mxt/<注册表>/` 下，六张表都只引用**已经由 KubeJS、原版或其他模组注册过**的物品：
 
 | 绑定表 | 目录 | 接上什么 |
 | --- | --- | --- |
 | 物品绑定 | `mxt/item_binding/` | 任意物品的有序实体行为与 Tooltip 条件。 |
-| 武器绑定 | `mxt/weapon_binding/` | 攻击伤害与攻速、武器行为、属性修饰符。 |
+| 武器绑定 | `mxt/weapon_binding/` | 原版属性修正（攻击力与攻速也写在这里）、武器行为。 |
 | 丹药绑定 | `mxt/pill_binding/` | 可食用物品的服用行为与丹毒。 |
-| 功法绑定 | `mxt/technique_binding/` | 一门功法**怎么读**：长按时长、姿势、音效、品质链与条件，以及本体为它生成的载体物品。 |
+| 工具绑定 | `mxt/tool_binding/` | 认领工具物品，并给出它们解锁的锻打方式。 |
+| 图纸绑定 | `mxt/blueprint_binding/` | 认领图纸物品，并给出它们提供的锻造蓝图。 |
+| 功法绑定 | `mxt/technique_binding/` | 一门功法**怎么读**：长按时长、姿势、音效、品质链与条件，以及本体为它生成的载体物品。手册的身份是堆上的 `mxt:technique` 组件，`items` 是可选的第二条路。 |
 
 给一颗授予灵根的丹药做绑定：
 
@@ -68,14 +70,16 @@ MiXianTu 负责行为、条件、灵气、货币与 Tooltip，绑定表则把一
 }
 ```
 
-给一把武器绑定伤害与攻速：
+给一把武器绑定属性修正（攻击力与攻速也走这里）：
 
 ```json
 // kubejs/data/example/mxt/weapon_binding/firebound_sword.json
 {
   "items": ["kubejs:firebound_sword", "#example:fire_weapons"],
-  "attack_damage": 8,
-  "attack_speed": -2.4,
+  "attributes": [
+    {"attribute": "minecraft:attack_damage", "id": "example:firebound_sword/damage", "amount": 8, "operation": "add_value"},
+    {"attribute": "minecraft:attack_speed", "id": "example:firebound_sword/speed", "amount": -2.4, "operation": "add_value"}
+  ],
   "quality_chain": "example:firebound_weapon"
 }
 ```
@@ -104,7 +108,7 @@ MiXianTu 负责行为、条件、灵气、货币与 Tooltip，绑定表则把一
 }
 ```
 
-前三张表是**拿物品去匹配**的：`items` 接受物品 ID、物品标签或混合数组，所以一份文件能覆盖一整族物品。`technique_binding` 不是：它按**功法 id** 匹配，`carrier_item` 是单个物品 ID。一叠物品之所以是功法手册，靠的是它自己身上的 `mxt:technique` 组件——所以上面那件物品还得由本体生成的那叠载体发到你手上（创造模式物品栏与 `/picker mxt:technique` 给的就是那一叠）。`quality_chain` 是可选的、指向一条 [品质链条](/datapack/json/quality_chain) 的引用：链同时给出成员资格、默认档与升级路径。绑定里写了一个**不存在**的物品 ID 会让数据包加载失败，因此不会留下解析不出来的物品规则。四张表的完整字段见 [物品绑定](/datapack/json/item_binding)、[武器绑定](/datapack/json/weapon_binding)、[丹药绑定](/datapack/json/pill_binding) 与 [功法绑定](/datapack/json/technique_binding)。
+前五张表都是**拿物品去匹配**的：`items` 接受物品 ID、物品标签或混合数组，所以一份文件能覆盖一整族物品（`tool_binding` / `blueprint_binding` 也一样，只是它们给出的分别是锻打方式与蓝图）。`technique_binding` 的声明按**功法 id** 匹配，而它的 `items` 是可选的第二条路：一叠物品之所以是某门功法的手册，**首先看它自己身上的 `mxt:technique` 组件**，没有组件时才看哪条声明的 `items` 认领了它——所以上面那件物品可以靠 `/picker mxt:technique` 给出的带组件载体，也可以直接把 id 写进声明的 `items`。`quality_chain` 是可选的、指向一条 [品质链条](/datapack/json/quality_chain) 的引用：链同时给出成员资格、默认档与升级路径。绑定里写了一个**不存在**的物品 ID 会让数据包加载失败，因此不会留下解析不出来的物品规则。各表的完整字段见 [物品绑定](/datapack/json/item_binding)、[武器绑定](/datapack/json/weapon_binding)、[丹药绑定](/datapack/json/pill_binding)、[工具绑定](/datapack/json/tool_binding)、[图纸绑定](/datapack/json/blueprint_binding) 与 [功法绑定](/datapack/json/technique_binding)。
 
 ## 重载
 

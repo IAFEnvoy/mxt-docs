@@ -19,7 +19,7 @@ A physique is the **element-independent half** of the same identity: it grants v
 | `remove(entity, physique)` | `LivingEntity`, physique ID | `boolean` | Removes that physique together with its attributes, abilities and damage multipliers; `false` when it was not held. |
 | `setEnabled(entity, physique, enabled)` | `LivingEntity`, physique ID, `boolean` | `{changed, failure}` | The same switch as a spirit root. |
 
-Spirit roots and physiques share one `failure` vocabulary: `DISABLED` (the definition does not exist, or is disabled by `mxt:disabled`), `ALREADY_HELD`, `CONDITIONS` (the physique's `holder_condition` is not met), `EXCLUSIVE_CONFLICT`, `ELEMENT_CONFLICT` (the root's `conflicting_elements`), `NOT_HELD` and `SERVER_ONLY` (called on a client). The four readers work on either side, and the state-changing methods are server operations.
+Spirit roots and physiques share one `failure` vocabulary: `DISABLED` (that id is not in the registry, including a definition a `neoforge:conditions` block keeps out), `ALREADY_HELD`, `CONDITIONS` (the physique's `holder_condition` is not met), `EXCLUSIVE_CONFLICT`, `ELEMENT_CONFLICT` (the root's `conflicting_elements`), `NOT_HELD` and `SERVER_ONLY` (called on a client). The four readers work on either side, and the state-changing methods are server operations.
 
 ```js
 // kubejs/server_scripts/mxt_physique.js

@@ -1,6 +1,6 @@
 ---
 title: 常见问题
-description: 关于安装 MiXianTu、它的前置、禁用内容与内容包的常见问题速答。
+description: 关于安装 MiXianTu、它的前置、临时停用内容与内容包的常见问题速答。
 ---
 
 # 常见问题
@@ -13,27 +13,23 @@ description: 关于安装 MiXianTu、它的前置、禁用内容与内容包的�
 
 Jupiter 是必需前置，除此之外所有必需前置都已打包在模组内。KubeJS 只在你希望用脚本注册内容时才需要。JEI 和 Jade 是可选兼容模组，没有它们游戏也能正常运行。具体版本见[基本信息与安装](./installation.md)。
 
-## 如何临时禁用某部分内容？
+## 如何临时停用某部分内容？
 
-把对应条目加入 `mxt:disabled` 标签即可；被禁用的定义会停止参与玩法，而且不必删除任何数据包文件。
-
-每个动态注册表都在固定路径上有自己的禁用标签：
-
-```text
-data/mxt/tags/mxt/<registry>/disabled.json
-```
+把 NeoForge 的资源条件写进**这条定义自己的文件**即可；条件不成立的条目**根本不会进注册表**，因此它既不会被读到，也不会出现在命令补全里：
 
 ```json
 {
-  "replace": false,
-  "values": [
-    "example:old_definition",
-    "othermod:disabled_definition"
+  "neoforge:conditions": [
+    { "type": "neoforge:never" }
   ]
 }
 ```
 
-把 `<registry>` 替换为注册表名，例如 `data/mxt/tags/mxt/item_binding/disabled.json`。`disabled` 中的条目不会被对应服务主动使用，但它们仍留在注册表里，因此其他定义可以安全地继续持有指向它们的 Holder。项目仍未发布，因此旧 JSON 和旧存档不保证保持兼容。其余加载规则见[数据包开发总览](./datapack/overview.md)。
+`neoforge:never` 恒假，所以它是最简单的整包开关；把这段删掉，条目就照旧生效。可用的条件都写在 `neoforge:` 命名空间下：`never` / `always`、`mod_loaded`（`modid`）、`registered`（`registry` 默认 `minecraft:item`、`value`）、`and` / `or`（`values`）、`not`（`value`）与 `feature_flags_enabled`（`flags`）。条件可以写在**任何**注册表条目的文件里，所有动态注册表一视同仁。按标签判断的条件（如 `tag_empty`）**不能用在这里**——注册表解码时标签还没绑定；配方与战利品表那一层可以用。条件成立时 `neoforge:conditions` 在交给定义 Codec 之前被剥掉，其余字段照常读。
+
+**条件不成立不是加载错误**：加载器把该条目记为 `SKIPPED_ELEMENT_MARKER` 跳过，只留一条 DEBUG 日志 `Skipping loading registry entry … as its conditions were not met`，世界照常加载。所以"文件明明在、游戏里却没有"时，那条 DEBUG 日志是唯一的线索——默认的日志级别看不到它。
+
+代价是"不存在"就是不存在：条件不成立的条目等同于"这条定义没写"，指向它的 Holder 引用会跟着解码失败。所以不存在"留着这条定义、但让它不参与玩法、别人还能继续引用它"的中间状态。项目仍未发布，因此旧 JSON 和旧存档不保证保持兼容。其余加载规则见[数据包开发总览](./datapack/overview.md)。
 
 ## 为什么 `/reload` 没有应用我的修改？
 

@@ -1,23 +1,29 @@
 ---
 title: Curios 槽位
+description: "back_weapon、belt_item 与 charm 三个 Curios 槽位的格数、验证器、服务端配置、渲染与资源包偏移。"
 ---
 
 # Curios 槽位
 
 本模组为玩家提供两个 `back_weapon` 槽位、两个 `belt_item` 槽位与四个 `charm` 槽位。全部都是物理槽位，不创建 Curios cosmetic 槽位；背部和腰部物品渲染直接读取物理槽位，**`charm` 里的物品不渲染在角色身上**。
 
-| 槽位 id | 格数 | 验证器 | 接收什么 |
-| --- | :---: | --- | --- |
-| `back_weapon` | 2 | `curios:tag`、`mxt:back_weapon_auto` | 物品标签里的物品，加上自动验证器放行的部分。 |
-| `belt_item` | 2 | `curios:tag`、`mxt:belt_item_auto` | 同上。 |
-| `charm` | 4 | `curios:tag`、`mxt:charm_artifact_auto` | 物品标签里的物品，加上声明了 `curios_equipable: true` 的法器。 |
+| 槽位 id | 格数 | 排序 | 验证器 | 接收什么 |
+| --- | :---: | :---: | --- | --- |
+| `back_weapon` | 2 | 0 | `curios:tag`、`mxt:back_weapon_auto` | 物品标签里的物品，加上自动验证器放行的部分。 |
+| `belt_item` | 2 | 1 | `curios:tag`、`mxt:belt_item_auto` | 同上。 |
+| `charm` | 4 | 200 | `curios:tag`、`mxt:charm_artifact_auto` | 物品标签里的物品，加上声明了 `curios_equipable: true` 的法器。 |
 
 三个槽位都注册给 `minecraft:player`。`back_weapon`/`belt_item` 的 `curios:tag` 标签里已经列了原版剑（腰带另有弓）与本模组自己的 `#mxt:back_equipable`、`#mxt:belt_equipable` 扩展标签；`charm` 用的是 Curios **内置**槽型，本模组不往 `curios:charm` 标签里塞东西。
+
+## 自动验证器
 
 `back_weapon` 和 `belt_item` 都保留 `curios:tag` 验证器，并额外使用一个由本模组注册的自动验证器：
 
 - `mxt:back_weapon_auto`
 - `mxt:belt_item_auto`
+- `mxt:charm_artifact_auto`——只放行定义里声明了 `curios_equipable: true` 的法器，别的都不放。
+
+## 服务端配置
 
 服务端配置的**「饰品栏」标签页**控制自动验证范围，改完由服务端同步给客户端：
 
@@ -47,4 +53,45 @@ title: Curios 槽位
 
 三个验证器都是“额外允许”逻辑，不会覆盖或修改 `curios:tag`。其他模组也可以通过 Curios API 注册自己的 validator，但不能通过数据包创建新的验证算法。
 
-Curios 的槽位界面按钮会控制每个槽位的 `getRenders()` 状态以及槽位整体的可见状态；本模组的背部和腰部渲染会遵守这些状态。服务端配置「饰品栏 → 强制渲染」打开时，仅强制显示本模组的背部和腰部槽位，不影响其他模组槽位。
+## 可见性与渲染
+
+Curios 的槽位界面按钮会控制每个槽位的 `getRenders()` 状态以及槽位整体的可见状态；本模组的背部和腰部渲染会遵守这些状态。服务端配置「饰品栏 → 强制渲染」打开时，仅强制显示本模组的背部和腰部槽位，不影响其他模组槽位。四个 `charm` 槽位完全没有渲染器——法器本身就是一件任意物品、没有自己的模型——所以身上没有东西可画，它们也没有偏移文件。
+
+## 交换快捷键
+
+「与背武器槽交换主手」（`key.mxt.swap_back`）把主手物品与第一个 `back_weapon` 槽位互换；主手物品对该槽位不合法时什么也不做。该快捷键默认不绑定，见[按键与 HUD](./keys-and-hud.md)。
+
+## 资源包渲染偏移
+
+背部与腰部的渲染偏移完全由客户端资源包控制：
+
+- `assets/<namespace>/mxt/back_render/*.json`：背部槽位。
+- `assets/<namespace>/mxt/belt_render/*.json`：腰部槽位。
+
+每个文件是一条规则。`item` 匹配器命中这堆物品、且 `priority` **最大**的那条规则生效；没有规则命中时，带原版 `minecraft:weapon` 组件的物品回退到 `weapon` 预设，其余物品回退到 `default`。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `item` | `ItemMatcher` | **必填** | 这条规则适用的物品或物品标签，匹配方式与绑定表一致。 |
+| `priority` | 整数 | `0` | 规则优先级；命中的规则里数值最大者生效。 |
+| `preset` | `default`、`weapon`、`big_weapon` | `default` | 物品挂在身上的基础摆放。 |
+| `back` | 变换 | 单位变换 | 物品位于背部槽位时额外施加的变换。 |
+| `belt` | 变换 | 单位变换 | 物品位于腰部槽位时额外施加的变换。 |
+
+| 预设 | 背部基础摆放 |
+| --- | --- |
+| `default` | 不额外平移、旋转或缩放。 |
+| `weapon` | 平移 `[0, 10, 0]`、旋转 `[180, 0, 0]`——斜背在背上的武器。 |
+| `big_weapon` | 平移 `[0, 4.8, 0]`，不额外旋转。 |
+
+预设只改变背部的摆放；腰部槽位对每个预设都用默认摆放。
+
+一个变换有三个可选字段：
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `translation` | 3 个浮点 | `[0, 0, 0]` | 偏移量，单位为 1/16 格。 |
+| `rotation` | 3 个浮点 | `[0, 0, 0]` | 旋转角度，按 X、Y、Z 的顺序施加。 |
+| `scale` | 3 个浮点 | `[1, 1, 1]` | 每个轴上的缩放。 |
+
+渲染器先把物品摆到身上，再施加命中的预设与变换，所以资源包只需要描述与默认摆放的差别。这些定义随客户端资源包一起加载与重载。

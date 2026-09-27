@@ -1,62 +1,53 @@
 ---
 title: Pill Binding (pill_binding)
-description: "Adds pill consumption behaviour and pill toxicity rules to an existing edible item through the mxt:pill_binding datapack registry."
+description: "Gives an already registered edible item its pill rules: the action run on eating, the toxicity it adds, the overdose threshold and what happens past it."
 aside: false
 ---
 
-# Pill Binding (pill_binding)
+# Pill Binding (pill_binding) {#pill_binding}
 
-A pill binding maps one existing item to pill-only fields. Like every other binding it only matches already registered items, so the physical pill must come from Minecraft, a content mod, or KubeJS. Pill bindings add a consumption action plus the pill toxicity rules that decide when a consumed pill becomes an overdose; these fields are not mixed with the item, weapon or technique bindings.
+File location: `data/<namespace>/mxt/pill_binding/<path>.json`
 
-## File Location
-
-Pill binding JSON files go in `data/<namespace>/mxt/pill_binding/` within your data pack.
-
-**Purpose**: Pill and pill toxicity rules for existing items.
-
-The filename corresponds to its ID. For example, `data/example/mxt/pill_binding/returning_pill.json` has the ID `example:returning_pill`.
-
-## Fields
+**Purpose**: gives an already registered edible item its pill rules — what eating it does, how much toxicity it builds up, and when that counts as an overdose.
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `items` | `ItemMatcher` | **required** | Matches existing edible items |
-| `on_consume` | `EntityAction` | `mxt:no_op` | The action executed after consumption finishes |
-| `toxicity_gain` | `NumberProvider` | `0` | Pill toxicity added by this pill |
-| `toxicity_threshold` | `NumberProvider` | `Double.MAX_VALUE` | The overdose threshold |
-| `on_overdose` | `EntityAction` | `mxt:no_op` | The action executed when the threshold is exceeded |
-| `toxicity_after_overdose` | `NumberProvider` | `0` | The pill toxicity value after an overdose |
-| `quality_chain` | `Holder<quality_chain>` | none | The quality chain this item belongs to. The chain answers membership (a resolved tier must be on it), the default tier (the chain's `default`) and the upgrade path |
-| `conditions` | `EntityCondition[]` | `[]` | The check performed before consumption; supports inline conditions or described condition objects |
-
-### `items`
-
-The `items` matcher accepts one item ID, one item tag (such as `"#example:pills"`), or a mixed array of both; one binding can therefore cover many physical pills. Any array entry may also be written as a typed object dispatched by the built-in `item_matcher_entry_type` registry (`mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:herb_tag` and the `mxt:spirit_storage` capability matcher); see [Shared Data Types](../types/shared_data_types.md) for the entry types. When multiple bindings match an item, the matcher selects the definition with the lowest `priority` first, and all four binding types currently use priority `0`.
-
-### `quality_chain`
-
-`quality_chain` names one [Quality Chain](./quality_chain.md). The chain answers membership (a tier the pill resolves to must be on the chain, or it cannot be consumed), the default tier when neither an override component nor a settled result exists, and the upgrade path [`/quality upgrade`](/en/player-guide/commands/quality) walks.
-
-The pill cannot be consumed when its current quality is not on the chain, a binding condition fails, or the quality's own `condition` fails. See [Quality](./quality.md).
-
-### `conditions`
-
-`conditions` is optional. Each entry may be an inline `EntityCondition`, or an object with `condition` and an optional translation-key `description`. Described entries are shown in the item tooltip with a green `✓` when true or a red `✗` when false; the description text itself keeps its normal style. The check runs before consumption.
-
-## Example
+| --- | --- | --- | --- |
+| `items` | item ID, `#tag` or a mixed array | **required** | Matches existing edible items; see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher). |
+| `priority` | Int | `0` | Order between several definitions of the same kind matching one item: the larger number goes first (see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher)); equal numbers fall back to registry order. |
+| `on_consume` | `EntityAction` | `mxt:no_op` | The action run once consumption finishes. |
+| `toxicity_gain` | `NumberProvider` | `0` | Pill toxicity added. |
+| `toxicity_threshold` | `NumberProvider` | `Double.MAX_VALUE` | The overdose threshold. |
+| `on_overdose` | `EntityAction` | `mxt:no_op` | The action run when the threshold is reached or passed. |
+| `toxicity_after_overdose` | `NumberProvider` | `0` | The toxicity value after an overdose. |
+| `quality_chain` | `quality_chain` id | none | The quality chain this item sits on (see [quality_chain](./quality_chain.md)). The chain answers membership (a resolved tier must be on it, or the item cannot be used), the default tier (the chain's `default`) and the path upwards. |
+| `conditions` | `EntityCondition[]` | `[]` | The check run before consumption; accepts inline conditions or described condition objects. |
 
 ```json
-// data/example/mxt/pill_binding/returning_pill.json
+// data/example/mxt/pill_binding/qi_pill.json
 {
-  "items": "kubejs:returning_pill",
-  "quality_chain": "example:pill",
-  "conditions": [{"condition": {"type": "mxt:realm", "realm": "example:foundation"}, "description": "condition.example.pill"}],
-  "on_consume": {"type": "mxt:heal", "amount": 4},
+  "items": "example:qi_pill",
+  "on_consume": {"type": "mxt:no_op"},
   "toxicity_gain": 10,
   "toxicity_threshold": 100,
-  "toxicity_after_overdose": 25
+  "toxicity_after_overdose": 25,
+  "on_overdose": {
+    "type": "mxt:apply_effect",
+    "effect": "minecraft:poison",
+    "duration_ticks": 100
+  },
+  "conditions": [
+    {
+      "condition": {"type": "mxt:realm", "realm": "example:foundation"},
+      "description": "condition.example.foundation_required"
+    }
+  ]
 }
 ```
 
-The behaviour id used inside `on_consume` and `on_overdose` comes from the [Entity Action Types](../types/action/entity_action_types.md) list, and the condition ids come from the [Entity Condition Types](../types/condition/entity_condition_types.md) list.
+Eating the stack runs `on_consume` first, then adds `toxicity_gain` to that entity's toxicity and records the new value. When `toxicity_threshold` evaluates to a finite number and the new value is `>=` the threshold, that counts as an overdose: `on_overdose` runs, and toxicity is then **set to** `toxicity_after_overdose` (not cleared), so carrying on eating keeps overdosing. When the threshold does not evaluate to a finite number the stack never overdoses, however much is stacked on.
 
+Every `conditions` entry may also be written as `{condition, description}`: a described condition is marked in the tooltip with a green `✓` or a red `✗`, and every entry must pass before the stack can be eaten.
+
+**A stack of pills can carry two components of its own.** `mxt:pill` uses the same keys as the table above, all optional, and overrides this definition **field by field** — writing only `toxicity_threshold` means "only this stack overdoses later", with every other field still read from the definition; a stack no definition claims at all may also carry just this component, and the remaining fields take the defaults from the table above. `mxt:quality_chain` (single value) wins over the chain written in the definition. `items`, `priority` and `conditions` have no component and come only from the definition.
+
+`items` is the shared matcher: an item ID, a `#tag` or a mixed array all work, and any array entry may also be a matcher object carrying a `type` (`mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:technique`, `mxt:spirit_storage` and `mxt:herb_tag`). A matcher only ever references items that are already registered. When several definitions match one item, **each registry keeps only the single definition matching it with the largest `priority`** (the field defaults to `0`; ten tables accept it — `artifact`, the six bindings `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique`, `spirit_herb`, `item_aura` and `currency`); only two definitions with the same `priority` fall back to registry order, so which one wins is written into the pack rather than decided by file names (the same direction as the `priority` of `aura_zone` and `element_reaction`). **The kind of matcher entry that matched is irrelevant**: any definition that matches is ranked by the number it declares, and naming the item by ID does not move it up. See [`ItemMatcher`](/en/datapack/types/shared_data_types#itemmatcher).

@@ -7,7 +7,7 @@ description: Build a forge-table production line out of striking methods, tool b
 
 The Forge Table does not craft an item, it **hammers** one: you feed it materials, it hands the player a target from a blueprint, and the player pushes a numeric meter into a range with one method at a time. The quality of the piece is then decided by **how many spare strikes** it took. The same blueprint can produce a plain item or a flawless one, and the only difference is the process.
 
-The data splits into four places: `forging_method` is a single strike, `tool_binding` decides which methods a tool unlocks, `forging_blueprint` says *what materials* and *what shape the meter has to end in*, and `blueprint_binding` attaches a blueprint to a real item. The first three are data tables; the fourth only works through an **item component** — which is what makes this tutorial different from the earlier ones.
+The data splits into four places: `forging_method` is a single strike, `tool_binding` claims tool items and lists the methods they unlock, `forging_blueprint` says *what materials* and *what shape the meter has to end in*, and `blueprint_binding` claims blueprint items and lists the blueprints they offer. All four are data tables: a definition claims its items through `items`, and the item needs **no component at all** — a stack only carries a component when you want that particular stack to bring one extra method or blueprint.
 
 This tutorial adds an iron-sword line to the example pack: four methods, one smith's hammer, one blueprint item and three quality tiers.
 
@@ -52,7 +52,7 @@ A method is "what pressing the button does": which way the meter moves, what it 
 | --- | --- | --- | --- |
 | `value_delta` | Integer | **required** | The meter shift. It must not be `0`. |
 | `costs` | `List<Cost>` | `[]` | What one strike costs, paid by the player who strikes, all or nothing as one array; the five shapes are on [Shared Data Types · `Cost`](../datapack/types/shared_data_types.md#cost) and the types on [Trigger and Cost Types](../datapack/types/other/trigger-and-cost.md#cost-type). |
-| `condition` | `EntityCondition` | `mxt:always_true` | When the method may be used. It is tested against the **player** (see [Entity Conditions](../datapack/types/condition/entity_condition_types.md)). |
+| `condition` | `EntityCondition` | `mxt:always` | When the method may be used. It is tested against the **player** (see [Entity Conditions](../datapack/types/condition/entity_condition_types.md)). |
 | `icon` | icon reference | none | What the list draws, and **what the method is called in that list**. |
 | `cooldown` | Integer | `0` | Cooldown in ticks, range `0..72000`. |
 | `sound` | SoundEvent ID | `minecraft:block.anvil.place` | Played at the table, to everyone nearby, **after** a strike that actually happened. |
@@ -67,11 +67,12 @@ The sound is resolved by name at load time, so a typo rejects **the whole method
 
 ## Step 2 — The Tool and the Blueprint Item
 
-Both bindings are just "one item → a set of definitions" lists; the list itself names no item.
+Both bindings claim their items: `items` says which tool or blueprint item (or family of items) the definition governs, and the rest of the file says what it unlocks or offers.
 
 ```json
 // data/example/mxt/tool_binding/smith_hammer.json
 {
+  "items": "example:smith_hammer",
   "methods": [
     "example:heavy_strike", "example:light_strike",
     "example:quench", "example:temper"
@@ -82,30 +83,31 @@ Both bindings are just "one item → a set of definitions" lists; the list itsel
 ```json
 // data/example/mxt/blueprint_binding/sword_manual.json
 {
+  "items": "example:sword_manual",
   "blueprints": ["example:spirit_sword"]
 }
 ```
 
-Items point at them through the `mxt:tool_binding` and `mxt:blueprint_binding` components. The component stores a Holder, so the item does not copy the definition: you can rewrite a binding table without touching the item.
+**That is what makes the tool and blueprint items work**: whichever item a definition's `items` matches works in the matching Forge Table slot, and the item never copies the definition, so a binding table can be rewritten without touching the item.
 
 **Usable methods = the blueprint's `allowed_methods` ∩ the union of every placed tool's `methods`.** When the blueprint declares no `allowed_methods` its side restricts nothing, and the list is the tools' union.
 
-### Attaching the component
+### Adding Something to Individual Stacks
 
-This is the one place in this tutorial where the item side has to cooperate. Two routes:
+In the common case this section needs nothing at all: the definition's `items` already claims the item. There are two ways to attach something to **one stack**:
 
 **For testing, the `/give` component syntax** (no code, and you can change the data tables and retry straight away):
 
 ```text
-/give @s minecraft:iron_ingot[mxt:tool_binding="example:smith_hammer"]
-/give @s minecraft:paper[mxt:blueprint_binding="example:sword_manual"]
+/give @s minecraft:iron_ingot[mxt:forging_methods=["example:heavy_strike","example:light_strike"]]
+/give @s minecraft:paper[mxt:forging_blueprints=["example:spirit_sword"]]
 ```
 
-**A real pack should set it when the item is registered.** The mod's own test items do exactly that: the binding is named after the item's own id and written into the item's properties as a delayed holder component, so every hammer a player crafts carries its binding without a command or a hand-edited component.
+**A real pack does not need this route at all**: naming the tool or blueprint item in the definition's `items` is enough, and nothing changes where the item is registered. (The items themselves come from the content pack, for instance through [KubeJS](./create-items-with-kubejs.md); this tutorial only writes data tables, which is also why the component form above is the quickest way to try things before those items exist.)
 
-::: tip The component's value is a data-table id, not inline content
+::: tip Both routes point at the same definitions
 
-The `example:smith_hammer` in `mxt:tool_binding="example:smith_hammer"` is an entry of the `tool_binding` registry. Point it at an id that does not exist and the item carries a component nothing can resolve — the list stays empty.
+`items` names **items** (`example:smith_hammer`), while a stack's component names **registry entries** (`example:heavy_strike` belongs to the `forging_method` registry). The definition's claim and the stack's list are **unioned**, so the tool slot simply asks whether the stack resolves to at least one method; mistype either id and that entry does not resolve.
 
 :::
 
@@ -235,10 +237,17 @@ The **cancel** button does **not** go through this settlement. It goes through a
 
 ```text
 /give @s mxt:forging_table
-/give @s minecraft:iron_ingot[mxt:tool_binding="example:smith_hammer"]
-/give @s minecraft:paper[mxt:blueprint_binding="example:sword_manual"]
+/give @s example:smith_hammer
+/give @s example:sword_manual
 /mxt registries validate
 /mxt registries list
+```
+
+If those two items are not registered yet, either point the definitions' `items` at vanilla items, or put the component straight onto a vanilla stack:
+
+```text
+/give @s minecraft:iron_ingot[mxt:forging_methods=["example:heavy_strike","example:light_strike","example:quench","example:temper"]]
+/give @s minecraft:paper[mxt:forging_blueprints=["example:spirit_sword"]]
 ```
 
 1. Place the Forge Table and open it. Three slots on the left take blueprints, three on the right take tools, the 4×3 block in the middle is the material input, and the result goes in the output slot on the right.
@@ -261,7 +270,7 @@ One reality you have to know: **a refused request never shows a message.** The r
 
 | Symptom | Cause |
 | --- | --- |
-| The left list is empty | No item carrying an `mxt:blueprint_binding` component is in the blueprint slots. **There is no "list the whole registry" fallback**: three empty slots mean no blueprints. |
+| The left list is empty | Nothing is in the blueprint slots, or what is there is claimed by no `blueprint_binding` definition and carries no `mxt:forging_blueprints` component of its own. **There is no "list the whole registry" fallback**: three empty slots mean no blueprints. |
 | A method is missing from the right list | The intersection is empty: the blueprint's `allowed_methods` does not contain it, or no placed tool unlocks it. |
 | The blueprint fails to load | `input` empty, over 15 entries, the same item twice, an unresolvable id; `meter_min`/`meter_max` that do not cross zero; a quality ladder that is not ascending or does not end at `2147483647`; a `finish_pattern` that is checked but is not six entries long. |
 | The "use blueprint" button is greyed out | Materials short (hover the blueprint to see which line is `✖`), something in the output slot, or a session is already running. |
@@ -277,6 +286,6 @@ One reality you have to know: **a refused request never shows a message.** The r
 
 - [forging_blueprint](../datapack/json/forging_blueprint.md) — the full field table and validation rules.
 - [forging_method](../datapack/json/forging_method.md) and [tool_binding](../datapack/json/tool_binding.md) — the methods and the tools that unlock them.
-- [blueprint_binding](../datapack/json/blueprint_binding.md) — how the component ties an item to a blueprint.
+- [blueprint_binding](../datapack/json/blueprint_binding.md) — how a definition claims blueprint items, and how a stack's own list adds to it.
 - [quality](../datapack/json/quality.md) and [quality_chain](../datapack/json/quality_chain.md) — `forging_modifier`, the chain's order and default tier, and the order qualities are resolved in.
 - [MxtEvents: Events](../kubejs/api/events.md) — read or rewrite a strike's cost, or veto a phase from a script.

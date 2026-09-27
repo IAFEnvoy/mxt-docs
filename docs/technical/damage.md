@@ -82,7 +82,7 @@ flowchart LR
 - **`damage_multiplier` 属于「这次施放」**，由 `AbilityService#withAbilityScaling` 写进公式上下文，值来自 `SkillStageService#damageMultiplier`：它遍历持有者已学的功法，挑出「当前所处水平确实授予了这个能力」的那些，取其中**最大的**倍率——几个功法各给一份倍率不会相乘，因为打出去的只有一击。`skill_stage` 的 `damage_multiplier` 默认 `1.0`，负数或非有限值在加载期就被拒。
 - **`element_modifier` 是灵根的那一半，也属于「这次施放」**：同一个 `withAbilityScaling` 把「匹配灵根的 `element_ability_modifier`」按 `element_affinity_mode`（平均或取最好）算成一个值写进上下文，`elementMultiplier(context)` 直接乘进去。它**不只是**给公式看的变量——内容是写 `"damage": 12` 还是 `"damage": "12 * element_modifier"`，现在后者会乘两次，所以**不要再手写**。能力不带 `element_affinity` 或伤害不是由施放产生（阵法 tick、诅咒、原版攻击）时上下文里没有这个值，读作 `1.0`；灵根把这个倍率写成 `0` 表示「我这门元素打不出东西」，这一层照样乘 `0`（与施放门槛同一套读法）。
 - **`damage_dealt_multiplier` / `damage_taken_multiplier` 属于「这个人」**：它们来自在效 `physique` 定义，第一层读加害者的「打出」倍率、第二层读受击者的「受到」倍率，多条生效体质**相乘**（每一条都是一个独立来源）。求值用的是**持有者自己的**公式上下文，不是对方的——「这个身体挨多少」不能取决于谁在问。写死的数字在加载期校验有限非负，公式算出的负数或非有限值按不贡献处理（与被动属性同一类公式同一条规则）；`0` 合法，等于免疫或打不动。
-- **`conflict_multiplier` 属于「被握着的那个元素」**：攻击者在效灵根的 `conflicting_elements` 列出了**主手物品的元素**时，先乘上那个元素自己的 `conflict_multiplier`（默认 `1.0`）。物品元素按 [weapon_binding](/datapack/json/weapon_binding) 的「物品的元素」读（定义声明的 `element`，或它携带的灵气的 `aura_type`）。同一个元素无论几条灵根与它相冲**只乘一次**（否则两条相冲灵根会把它平方），而且**不要求这一击用的就是那个元素**——跟自己的武器较劲，打什么属性都弱，这正是这条规则的意思。没写这个字段的包完全不受影响。
+- **`conflict_multiplier` 属于「被握着的那个元素」**：攻击者在效灵根的 `conflicting_elements` 列出了**主手物品的元素**时，先乘上那个元素自己的 `conflict_multiplier`（默认 `1.0`）。物品元素按 [weapon_binding](/datapack/json/weapon_binding) 的「物品的元素」读（堆上的 `mxt:element` 组件与定义声明的 `element` 取并集；两者都没有时才回落到它携带的灵气的 `aura_type`）。同一个元素无论几条灵根与它相冲**只乘一次**（否则两条相冲灵根会把它平方），而且**不要求这一击用的就是那个元素**——跟自己的武器较劲，打什么属性都弱，这正是这条规则的意思。没写这个字段的包完全不受影响。
 - **元素倍率属于「双方」**。`overcomeMultiplier` 对攻击方元素集合与防御方元素集合做**双重循环逐对相乘**，每一对由 `Element#overcomeMultiplier` 把该元素 `overcomes` 里所有匹配关系相乘。任一集合为空（无灵根、无元素）或目标不是 `LivingEntity` 时是 `1.0`，也就是「没有关系可算」。
 - **反噬与自伤不读元素边，但保留「这次施放值多少」。** `mxt:damage` 打在施法者自己身上时，加害者是 `null`（`DamageAction#attacker` 里 `caster == entity` 就返回 `null`），于是 `outgoing` 的后两项整段按 `1.0`：克制不参与、「打出」倍率也无从谈起（没有加害者）。即使这一击靠声明的 `damage_type` / `element` 拿到了自己的元素也一样——元素关系是两个实体之间的关系，只有一个实体就无从谈起。`damage_multiplier` 与 `element_modifier` 则照样生效——功法越强、灵根越合，反噬越重，那是这次施放的价值，不是某一击的属性；受击方的第二层（适应与 `damage_taken_multiplier`）也照常结算，因为那是受击者自己的属性。
 - **没有 clamp、没有上下限**：非有限值或 ≤ 0 一律当作「没有伤害」，除此之外原样返回。数值纪律交给数据包（倍率必须有限非负，但 `0.0` 合法，等于免伤/无效）。
@@ -111,7 +111,7 @@ public static double incoming(LivingEntity target, Set<Holder<Element>> attackin
 `DamageElements` 维护的是一张反查表：`Map<伤害类型注册表实例, Map<Holder<DamageType>, List<Holder<Element>>>>`。
 
 - **认领**来自元素的 `damage_types` 字段，可以直接写类型，也可以写标签（标签会展开成注册表里所有匹配的类型）。一个类型被多个元素认领时**全部保留**，并且每个认领都参与相乘——和多个灵根的行为一致——同时打一条日志，因为那多半是数据包写重了。
-- **表的生命期跟着注册表实例走**：数据包重载会换掉注册表实例，表随之重建；缓存最多保留若干份，超出后整体重建。构建时会跳过被 `mxt:disabled` 标签禁用的元素，所以禁用元素要等一次重载才在反查表里生效。
+- **表的生命期跟着注册表实例走，并且在每次数据包加载时整体作废**：键是伤害类型注册表实例，而 `ServerCache` 在数据包加载时显式 `invalidate()`，所以表永远不会比建它的那个包活得更久；缓存最多保留 4 张注册表，超出后整体重建。构建时读的就是表里每个元素定义自己的 `damage_types`，因此改了元素的认领要等一次数据包加载才在反查表里生效。
 - **回落顺序**：伤害类型有人认领就用认领者；没人认领就回落到**攻击者的灵根元素**；连攻击者都没有（摔落、仙人掌、无归属的环境伤害）就是空集，两层都按 `1.0` 结算，`mxt:element` 条件返回 `false`。这就是「无法判定的打击没有属性」的实现方式，而不是给一个默认元素。注意第一层还有一条**与元素集合无关**的规则：加害者为 `null` 时，即使这一击靠声明的类型拿到了元素，`overcomes` 也不参与（见上一节）。
 - **来源还决定它留不留东西**：`DamageElements` 把「元素」与「来源」一起交出来（`Strike(elements, origin)`），来源只有两个取值——`TYPE`（类型被认领）与 `ROOTS`（回落到攻击者灵根）。`DamageEventBridge` 只用**同一个来源的**元素做减免，但**只有 `TYPE` 那次**才交给 `ElementReactionService#applyFromStrike`：身体里的火只决定这一击打多疼，不在目标身上留附着、也不会点燃谁。所以"灵根管伤害、武器管附着"是分开的，而一次攻击要触发元素反应就必须声明自己的元素。
 - **`resolveType` 负责把声明翻译成类型**：`mxt:damage` / `mxt:damage_target` 写了 `damage_type` 就原样用，写了 `element` 就取该元素认领的第一个类型，两个都写时会核对元素**确实**认领了这个类型——不一致时各报一次日志，但**不使加载失败**。
@@ -174,7 +174,8 @@ data/mxt/tags/damage_type/no_bonus.json
 {
   "replace": false,
   "values": [
-    "minecraft:out_of_world"
+    "minecraft:out_of_world",
+    "mxt:lifespan"
   ]
 }
 ```
@@ -184,7 +185,7 @@ data/mxt/tags/damage_type/no_bonus.json
 几件要知道的事：
 
 - **按伤害类型判定，对所有来源一视同仁**：本模组的动作、别的模组打过来的伤害、原版环境伤害，只要类型在标签里就直通。三个执行点是 `deal`（第一层）、`DamageEventBridge`（第二层与元素附着）、`mxt:explode` 的伤害计算器，共用同一份判定。
-- **默认只收虚空伤害 `minecraft:out_of_world`**：掉出世界的每 tick 4 点伤害是按位置的处决，没有「谁更强」可言，任何按比例放大或减免的口径都会让「被虚空杀死」变得可被功法或体质左右。
+- **默认收两条：虚空伤害 `minecraft:out_of_world` 与 `mxt:lifespan`**：掉出世界的每 tick 4 点伤害是按位置的处决，没有「谁更强」可言，任何按比例放大或减免的口径都会让「被虚空杀死」变得可被功法或体质左右；`mxt:lifespan` 是本模组给**寿元耗尽的非玩家生物**用的死因（死亡消息键是 `death.attack.mxt.lifespan`），它是一击必杀，同样不该被功法、体质或元素关系左右。玩家寿元耗尽不会走这条伤害——玩家被转为旁观者。
 - **内容包可以追加**：同一个标签路径写 `"replace": false` 就是往默认值上加，写 `"replace": true` 则整体替换掉默认值（虚空也就不再直通了）。
 - **它不改归属，也不改击杀统计**，只是让这一击不参与加成。
 
@@ -199,7 +200,7 @@ data/mxt/tags/damage_type/no_bonus.json
 附着这一步有三条规则：
 
 - **只有声明过的元素会附着。** 来源取自同一次读取（`DamageElements.Strike` 的 `origin`），只有 `Origin.TYPE`（伤害类型被认领）会被交给附着，`Origin.ROOTS`（回落到攻击者灵根）只参与减免。身体里的火不点燃别人，武器与术法才会。
-- **留多少由受击方携带的装备说话。** 附着量先乘上 `DamageCalculationService#attachmentMultiplier(target)`：目标**携带**的物品（双手与 Curios 槽）声明的 `attachment_multiplier` 相乘，`0.5` 只留一半、`0` 一点也不留。这是"法宝抵消部分元素反应"的着力点——它压的是**攒的速度**，所以反应来得更晚或不发生；反应**自己做什么**（例如它那一下伤害）不归它管，那由反应的 `action` 与第二层决定。
+- **留多少由受击方携带的法器说话。** 附着量先乘上 `DamageCalculationService#attachmentMultiplier(target)`：目标**携带的法器**（双手与 Curios 槽）声明的 `attachment_multiplier` 相乘（**只有法器有这个字段**，`item_binding` / `weapon_binding` 不再提供），`0.5` 只留一半、`0` 一点也不留。这是"法宝抵消部分元素反应"的着力点——它压的是**攒的速度**，所以反应来得更晚或不发生；反应**自己做什么**（例如它那一下伤害）不归它管，那由反应的 `action` 与第二层决定。
 - **留多少也看这一击是哪种伤害类型。** 量不是只由元素决定：元素认领伤害类型时，每个类型（或标签）可以写自己的 `damage_attachment`（见 [element](/datapack/json/element) 的「认领的类型就是分组」）。管线在**分类这一击的同一次读取**里就把量一起算好（`Strike` 带元素、来源与附着量），所以"泡岩浆比挨火球攒得慢"是数据包里的一行。
 
 放在这里同样是为了覆盖面：一次岩浆浴和别的模组的火球，和自己家的火球一样会给目标叠上火（只要它们的伤害类型被某个元素认领）。

@@ -27,6 +27,7 @@ The identifiers used here and on the sub-pages — `id`, `resource`, `ability`, 
 | `MxtPhysiques` | Query, grant, remove and switch physiques on and off. | [MxtPhysiques](/en/kubejs/api/physiques) |
 | `MxtQuality` | Read the quality a stack resolves to and its chain, write the override component, or climb one tier. | [MxtQuality](/en/kubejs/api/quality) |
 | `MxtSouls` | Reclaim the transferable soul of an entity. | [MxtSouls](/en/kubejs/api/souls) |
+| `MxtLifespan` | Read the lifespan ledger (ticks left and the ceiling), rewrite or adjust it, and make a body be reborn on the spot. | [MxtLifespan](/en/kubejs/api/lifespan) |
 | `MxtTriggers` | Publish custom trigger signals and subscribe scripts to them. | [MxtTriggers](/en/kubejs/api/triggers) |
 | `MxtLoot` | Register script loot conditions and loot functions. | [MxtLoot](/en/kubejs/api/loot) |
 | `MxtEvents` | Every MiXianTu server lifecycle event. | [MxtEvents](/en/kubejs/api/events) |
@@ -77,7 +78,7 @@ Each kind of callback is registered on its own page: [MxtActions](/en/kubejs/api
 
 Java records returned by the service APIs always use Java accessors, for example `result.committed()`, rather than assuming that JavaScript fields exist. A failure usually does not throw: check the return values such as `failure()`, `committed()`, `advanced()` and `applied()`. An exception is only thrown when an API parameter is invalid, an identifier is invalid, JSON cannot be decoded by the matching codec, or a mutable setter is called on the wrong event phase.
 
-An operation that only makes sense on the server refuses to run from a client script, so a script cannot desync a client: `MxtCosts.consume` and the state-changing methods of `MxtAbilities`, `MxtCultivation`, `MxtCurses`, `MxtAura`, `MxtSouls`, `MxtElements`, `MxtSpiritRoots`, `MxtPhysiques`, `MxtQuality` and `MxtTriggers` return their failure result unchanged — for `MxtSpiritRoots` and `MxtPhysiques` that is a result whose `failure` is `SERVER_ONLY` (`MxtElements.attach` answers `0`) — and `MxtCosts.consume`, `MxtTriggers.subscribe` and `MxtTriggers.subscribeOnce` also write a single warning to the log instead of throwing. `MxtAura.addBox` is the exception: it needs a `ServerLevel` and throws otherwise.
+An operation that only makes sense on the server refuses to run from a client script, so a script cannot desync a client: `MxtCosts.consume` and the state-changing methods of `MxtAbilities`, `MxtCultivation`, `MxtCurses`, `MxtAura`, `MxtSouls`, `MxtLifespan`, `MxtElements`, `MxtSpiritRoots`, `MxtPhysiques`, `MxtQuality` and `MxtTriggers` return their failure result unchanged — for `MxtSpiritRoots`, `MxtPhysiques` and `MxtLifespan` that is a result whose `failure` is `SERVER_ONLY`, while `MxtElements.attach` answers `0` — and `MxtCosts.consume`, `MxtTriggers.subscribe` and `MxtTriggers.subscribeOnce` also write a single warning to the log instead of throwing. `MxtAura.addBox` is the exception: it needs a `ServerLevel` and throws otherwise.
 
 `MxtActions.execute*` is deliberately not guarded, because the built-in actions decide their own side: an action whose JSON opts into client execution, such as a velocity action with its `client` flag, is meant to run where it is called.
 

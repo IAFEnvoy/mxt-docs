@@ -1,89 +1,54 @@
 ---
 title: Contract Type (contract_type)
-description: Define the owner and creature conditions, price, follow and combat behaviour, and the separate release and death behaviour of a contract between a player and a spirit beast.
+description: Defines the two sides conditions, the behaviour at each of four moments, the signing price and the two caps of a contract.
 aside: false
 ---
 
-# Contract Type (contract_type)
+# Contract Type (contract_type) {#contract_type}
 
-A Contract Type defines the rules of a contract between a player and a creature: who may be an owner, which creatures may be contracted, how the spirit beast follows and fights, what signing costs, and what happens when the contract is released or the creature dies.
+File location: `data/<namespace>/mxt/contract_type/<path>.json`
 
-::: warning Marked for possible removal
+A `contract_type` describes one contract from the moment it is signed to the moment it is released: what each side has to satisfy, what runs at each of the four moments, what signing costs, how many one owner may hold at once, and how long a recall has to wait.
 
-`ContractType` carries a `//TODO::May be removed`. Eligibility is a code fact (the creature implements `Contractable`) and the owner is answered by the creature itself (vanilla `OwnableEntity`), so this registry only holds the two conditions, the action of each moment, the signing price and the two caps; if the creature ever declares all of that itself, the type field of `ContractAttachment`, the bind and release paths of `ContractService` and the `/contract` command would go with it. **Declaring one is fully supported today** — just do not treat it as a foundation that cannot move.
-
-:::
-
-## File Location
-
-Contract Type JSON files go in `data/<namespace>/mxt/contract_type/` within your data pack.
-
-**Purpose**: Contract lifecycle. **Marked as possibly removable.**
-
-The filename corresponds to its ID. For example, `data/example/mxt/contract_type/master_servant.json` has the ID `example:master_servant`.
-
-## Fields
-
-**Who may sign is a code fact**: the target creature must implement `com.iafenvoy.mxt.api.Contractable` (see [Special Public Interfaces](../../java/interfaces)), and no data pack can grant an entity that eligibility. It is also a vanilla `OwnableEntity`, so **the creature answers who owns it** (the framework stores no owner). What a data pack can do is narrow the list with an **entity type tag** named after the contract type itself - `#<namespace>:contract/<path>`, stored at `data/<namespace>/tags/entity_type/contract/<path>.json`. A tag that is absent, or written empty, places no restriction.
+**Who may sign is a code fact**: the target creature has to support contracts itself (see [Special Public Interfaces](../../java/interfaces)), and no data pack can hand an entity that eligibility. Who owns it is answered by the creature as well - the mod stores no owner. A data pack gets three levers: narrow either side with the `*_condition` fields below, charge a price with `costs`, and narrow the list with an **entity type tag** - the tag reuses the contract type's own id, written `#<namespace>:contract/<path>` (file `data/<namespace>/tags/entity_type/contract/<path>.json`). **A tag that is absent, or written empty, places no restriction.**
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | Text Component | `contract_type.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `contract_type.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
-| `owner_condition` | Entity Condition | `mxt:always_true` | The owner condition. |
-| `creature_condition` | Entity Condition | `mxt:always_true` | The spirit beast condition, checked after the eligibility interface. |
-| `follow_action` | Entity Action | `mxt:no_op` | Run every tick **while the order in force is "follow"**; only for a creature that implements `ContractOperations` (see [Special Public Interfaces](/en/java/interfaces)). |
-| `combat_action` | BiEntity Action | `mxt:no_op` | Run after damage this spirit beast dealt is resolved. |
-| `release_action` | Entity Action | `mxt:no_op` | Run when the contract is **released** (by its owner) while the creature lives. |
-| `death_action` | Entity Action | `mxt:no_op` | Run when the **creature dies** and the contract ends with it. A release and a death are two fields, never one. |
-| `costs` | `Cost[]` | `[]` | The signing price, paid by the **owner**; it is charged after every condition and the `Pre` event, so a refusal never costs anything. |
-| `max_owned` | int | `0` | How many contracts of this type one owner may hold at once; `0` means no limit. |
-| `recall_cooldown` | int | `0` | The recall cooldown in ticks; `0` means no limit. It gates the "recall" order given from the bell's wheel or from the command. |
+| --- | --- | --- | --- |
+| `name` | Text Component | `contract_type.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `contract_type.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is only stored and read, nothing draws it. |
+| `owner_condition` | `EntityCondition` | `mxt:always` | The owner condition. |
+| `creature_condition` | `EntityCondition` | `mxt:always` | The spirit beast condition, checked after eligibility. |
+| `follow_action` | `EntityAction` | `mxt:no_op` | The action run every tick **while the order in force is "follow"**. |
+| `combat_action` | `BiEntityAction` | `mxt:no_op` | Run after damage this spirit beast dealt has been resolved. |
+| `release_action` | `EntityAction` | `mxt:no_op` | Run when the contract is **released**, while the spirit beast is still alive. |
+| `death_action` | `EntityAction` | `mxt:no_op` | Run when the **spirit beast dies** and the contract ends with it. |
+| `costs` | `Cost` array | `[]` | The signing price, paid by the **owner**; the spirit beast pays nothing. |
+| `max_owned` | int | `0` | How many contracts of this type one owner may hold at once; `0` = no limit. |
+| `recall_cooldown` | int | `0` | Recall cooldown in ticks; `0` = no limit. |
 
-**Orders are not a data pack field here**: the orders an owner can give (follow / wander / stay / recall) are answered by **the creature's own code**, and a content mod may add one of its own. The order in force lives on the beast's contract record, and an old save or an id that no longer resolves reads as follow. See the [command](/en/player-guide/commands/contract) and [Special Public Interfaces](/en/java/interfaces).
+`follow_action` only runs for a creature that answers an order list, and it runs after that creature's own follow behaviour; switch the order to wander or stay and it stops - all it covers is the follow tick.
 
-`owner_condition` is checked against the player and `creature_condition` against the creature that is being contracted. `combat_action` is a BiEntity Action, so it receives both the actor and the target entity; the other lifecycle fields are ordinary Entity Actions. Reasons for a refusal (a failed condition, an unpayable price, a cooldown that has not elapsed) all read from one table of translation keys, `contract.mxt.failure.<lowercase enum name>`, shared by the scroll, the bell, the bag and the command.
+Release and death are two fields, and one action answers one moment only: `release_action` covers an owner releasing the contract or an administrator forcing a release, `death_action` covers the spirit beast dying.
 
-## Example
+`costs` may draw on the owner's resource accounts, inventory and script channel. Payment sits after every condition and after the `Pre` event, so a price that cannot be paid signs nothing and deducts nothing.
 
-```json
-{
-  "follow_action": { "type": "mxt:apply_effect", "effect": "minecraft:speed", "duration_ticks": 40 },
-  "combat_action": {
-    "type": "mxt:target_action",
-    "action": { "type": "mxt:set_on_fire", "ticks": 40 }
-  },
-  "release_action": { "type": "mxt:apply_effect", "effect": "minecraft:weakness", "duration_ticks": 200 },
-  "death_action": { "type": "mxt:set_on_fire", "ticks": 100 },
-  "costs": [{ "id": "example:qi", "amount": 5 }],
-  "recall_cooldown": 100
-}
-```
+`max_owned` is counted per owner, and a release or a death frees the slot. `recall_cooldown` starts from a stamp on the contract record and gates the "recall" order, whether it comes from the Beast Taming Bell's wheel or from the command.
 
-A contract type with an explicit owner condition:
+**Orders are not a data pack field here**: the orders an owner can give a spirit beast (follow / wander / stay / recall) are answered by the creature itself, and a content mod may add one of its own; the order in force is kept on the beast's contract record, and an id that does not resolve reads as follow. See the [command](/en/player-guide/commands/contract) and [Special Public Interfaces](../../java/interfaces).
+
+Every refusal reason reads from one table of text keys, `contract.mxt.failure.<lowercase enum name>`; the Contract Scroll, the Beast Taming Bell, the Spirit Beast Bag and the command all print from that same table.
 
 ```json
+// data/example/mxt/contract_type/familiar.json
 {
-  "owner_condition": {
-    "type": "mxt:has_realm",
-    "resource": "example:spirit_power"
-  },
-  "creature_condition": {
-    "type": "mxt:always_true"
-  },
-  "follow_action": { "type": "mxt:apply_effect", "effect": "minecraft:speed", "duration_ticks": 40 },
-  "combat_action": {
-    "type": "mxt:target_action",
-    "action": { "type": "mxt:set_on_fire", "ticks": 40 }
-  },
-  "release_action": { "type": "mxt:apply_effect", "effect": "minecraft:weakness", "duration_ticks": 200 },
-  "death_action": { "type": "mxt:set_on_fire", "ticks": 100 }
+  "owner_condition": { "type": "mxt:realm", "realm": "example:foundation", "comparison": "at_least" },
+  "creature_condition": { "type": "mxt:health", "comparison": ">=", "compare_to": 20 },
+  "follow_action": { "type": "mxt:no_op" },
+  "combat_action": { "type": "mxt:no_op" },
+  "release_action": { "type": "mxt:no_op" },
+  "death_action": { "type": "mxt:no_op" },
+  "costs": [{ "id": "example:qi", "amount": 50 }],
+  "max_owned": 1,
+  "recall_cooldown": 600
 }
 ```
-
-::: info
-
-The condition and action types above are examples; the complete list is in the [Action Types](../types/action/entity_action_types.md) and [Condition Types](../types/condition/entity_condition_types.md) references.
-
-:::
-

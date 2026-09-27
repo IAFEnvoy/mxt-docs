@@ -1,46 +1,26 @@
 ---
 title: Trigger Rule (trigger)
-description: "Datapack event rules: react to a published signal by running a condition and an action on its actor."
+description: "Datapack event rules: a published signal, a condition on its actor, and an action."
 aside: false
 ---
 
-# Trigger Rule (trigger)
+# Trigger Rule (trigger) {#trigger}
 
-A `trigger` entry is a standalone event reaction. When a signal is published, every rule whose trigger matches it evaluates its condition against the actor and, if the condition holds, runs its action. That is the whole feature: no ability has to own the reaction, so a content pack can turn any published signal into an effect — for example "when a block is broken, add `1` to a resource".
+File location: `data/<namespace>/mxt/trigger/<path>.json`
 
-::: info Trigger rules, trigger matchers and signals
-Three things share the word *trigger* and they are not the same thing:
-
-- **A rule** (this page, `mxt/trigger`) is data: signal matcher + condition + action.
-- **A trigger matcher** is the intrinsic [`mxt:trigger_type`](../../java/registries.md) registry: how a signal is matched. The built-in matchers are one per signal (`mxt:tick`, `mxt:attack`, `mxt:block_break`, …) and `mxt:js` lets a script match anything it likes. Abilities use the same matchers for the triggers they own.
-- **A signal** is the runtime notification itself. MiXianTu publishes one per event (`mxt:tick`, `mxt:hurt`, `mxt:breakthrough`, …) and scripts can publish their own through the KubeJS runtime API.
-:::
-
-## File Location
-
-Trigger rule files go in `data/<namespace>/mxt/trigger/` within your datapack.
-
-**Purpose**: Datapack event rules: a signal, a condition and an action.
-
-The filename corresponds to its ID. For example, `data/example/mxt/trigger/qi_from_mining.json` has the ID `example:qi_from_mining`.
-
-## Fields
+A standalone event reaction rule: when a signal is published, every rule whose trigger matches it evaluates its condition against the signal's actor and, if the condition holds, runs its action. It is not attached to any ability, so a content pack can turn any published signal into an effect — for example "add `1` to a resource when a block is broken".
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `trigger` | `Trigger` | **required** | Which signal this rule reacts to, written like an ability trigger: `{"type": "mxt:block_break"}` for a built-in signal, or a scripted matcher that inspects the whole signal. |
-| `condition` | `EntityCondition` | `mxt:always_true` | Evaluated against the signal's actor with the event's formula context. One condition or an array, which requires all of them. |
-| `action` | `EntityAction` | `mxt:no_op` | Runs for the actor once the condition holds. One action or an array, which runs in order. |
-| `chance` | `NumberProvider` | `1` | The probability rolled once per matching signal: `≤0` never runs, `≥1` always runs, and anything in between is rolled with the entity's random. When it does not resolve to a number (a non-finite value) it counts as `1`, which keeps the behaviour from before the field existed. |
+| --- | --- | --- | --- |
+| `trigger` | `Trigger` | **required** | The signal this rule answers, written like an ability trigger: a built-in signal is `{"type": "mxt:block_break"}`, and the scripted matcher (`mxt:js`) can inspect the whole signal. |
+| `condition` | `EntityCondition` | `mxt:always` | Evaluated against the signal's actor with the formula context the event provides; an array means all of them have to hold. |
+| `action` | `EntityAction` | `mxt:no_op` | Run on that actor once the condition holds; an array runs in order. |
+| `chance` | `NumberProvider` | `1` | The probability rolled once each time the signal matches: `≤0` never runs, `≥1` always runs, and anything in between is rolled with the entity's random. |
 | `cooldown` | `NumberProvider` | `0` | How many ticks to wait after running before this rule may run again, **recorded on the actor per rule id** (it is saved, and dying does not clear it). `0` means no throttling. |
 
-A rule needs an actor. Signals published without one reach subscriptions but never a rule, because both the condition and the action belong to one entity. `chance` and `cooldown` are per actor too: **the same rule held by two entities rolls its own chance and keeps its own cooldown for each of them**.
+A rule needs an actor. A signal published without one only reaches subscriptions and never triggers a rule, because the condition and the action both belong to one entity. `chance` and `cooldown` are per actor as well: **when two entities hold the same rule, each rolls its own chance and keeps its own cooldown**. A `chance` that does not resolve to a number (a non-finite value) counts as `1`.
 
-`chance` / `cooldown` are new on 2026-09-25: before them, "a signal that fires every tick triggers the same action every tick" could only be built by hand out of an `mxt:chance` condition plus the `mxt:storage_cooldown` condition and the `mxt:modify_storage` action. That workaround **still works** (it records into the `mxt:cooldown` store and reads back), and these two fields are the direct spelling of the same thing: `cooldown` needs no `components` declared on the rule and no `mxt:modify_storage` written by the author.
-
-The condition and the action receive the event context as their parent context, so the formula values the publisher put into it are readable: a rule reacting to `mxt:hurt` can size its effect with `damage`, and a script that publishes a custom signal with `MxtTriggers` can read its own payload the same way.
-
-## Example
+The parent context the condition and the action receive is the event context, so the formula values the publisher wrote into it are readable: a rule answering `mxt:hurt` can size its numbers with `damage`, and a custom signal a script publishes with `MxtTriggers.publish` works the same way.
 
 ```json
 // data/example/mxt/trigger/qi_from_mining.json
@@ -60,12 +40,20 @@ The condition and the action receive the event context as their parent context, 
 }
 ```
 
+Rules are indexed by the signal their trigger names while the server cache is built, so publishing a signal costs one lookup. A rule whose action publishes a signal the rule itself answers is skipped while it is running, which keeps it from recursing; a rule that throws is only logged and does not affect the other rules or the subscriptions of that signal.
+
+Subscriptions are indexed in layers — signal → owner → module:identifier: an identifier is unique only inside the entity that holds it, so two entities holding the same definition never displace each other. Publishing first tests the owner for emptiness, then takes that owner's snapshot of subscriptions — a one-shot subscription removes itself while running, which is what the snapshot is for. When the publishing actor is a fake player the whole signal is ignored.
+
+Validation happens while the cache is built and **collects every** problem instead of stopping at the first one: `/mxt registries validate` lists them all at once (each with its `data/<namespace>/mxt/<registry>/<path>` path), and `/mxt trigger rules <signal>` tells you whether a signal has any rule answering it. A rule that declares a `condition` but leaves out `action` counts as a problem too — the default action is a no-op, so such a rule never does anything.
+
+Three things share the word *trigger* and have to be told apart: **a rule** (this page, the datapack registry `mxt/trigger`), **a trigger matcher** (the built-in registry `mxt:trigger_type`, which decides how a signal is matched; the built-ins match by signal type, and `mxt:js` is the other one), and **a signal** (the runtime notification itself, published by the mod for each kind of event and publishable from a script).
+
 ## Ported Vanilla Triggers
 
-A second family of matchers carries vanilla's own advancement triggers: each one mirrors one vanilla trigger and keeps its id, and **the decision is made by vanilla's own instance code, so the `conditions` fields are word for word the ones vanilla writes** — a `conditions` object copied out of an advancement works here unchanged. Where vanilla's `player_killed_entity` takes `entity` and `killing_blow`, so does `mxt:player_killed_entity`.
+The second family of matchers carries vanilla's advancement triggers over: each one mirrors one vanilla trigger, keeps the vanilla id, and hands the decision to vanilla's own instance code, so its `conditions` fields are word for word what vanilla writes and a `conditions` block from an advancement can be copied over as it is. Vanilla's `player_killed_entity` writes `entity` and `killing_blow`; here it is the same two fields.
 
 | Signal / `type` | Vanilla trigger | `conditions` fields |
-|-----------------|-----------------|---------------------|
+| --- | --- | --- |
 | `mxt:consume_item` | `minecraft:consume_item` | `player`, `item` |
 | `mxt:brewed_potion` | `minecraft:brewed_potion` | `player`, `potion` |
 | `mxt:tame_animal` | `minecraft:tame_animal` | `player`, `entity` |
@@ -97,41 +85,22 @@ A second family of matchers carries vanilla's own advancement triggers: each one
 | `mxt:filled_bucket` | `minecraft:filled_bucket` | `player`, `item` |
 | `mxt:item_durability_changed` | `minecraft:item_durability_changed` | `player`, `item`, `durability`, `delta` |
 
-Fields like `player`, `entity` and `victim` keep vanilla's shape: either a list of loot conditions (`[{"condition": "minecraft:entity_properties", "entity": "this", "predicate": {...}}]`, all of which must hold) or a plain entity predicate (`{"type": "minecraft:zombie"}`). Since they are loot conditions, MiXianTu's own conditions work inside them too, for example `{"condition": "mxt:realm", "realm": "mxt:foundation"}`.
+Fields such as `player`, `entity` and `victim` keep vanilla's shape: either a list of loot conditions (`[{"condition": "minecraft:entity_properties", "entity": "this", "predicate": {...}}]`, where several entries all have to hold) or a plain entity predicate (`{"type": "minecraft:zombie"}`). Since they are loot conditions, the mod's own conditions fit in them too, for example `{"condition": "mxt:realm", "realm": "mxt:foundation"}`.
 
-Two differences from vanilla advancements are deliberate, three are a matter of timing:
+What differs from vanilla advancements: these signals are published by the mod's own hooks, so they are **repeatable and runtime only**, and like the built-in signals they serve rules, ability triggers and cultivation breakthrough conditions alike; the criterion vanilla fires at that same moment is a one-shot boolean on one player's one advancement, and it is persisted. A signal is only published for the player it originally served (vanilla's advancement triggers only ever see a `ServerPlayer`), so a field holding an entity predicate always has the context it needs.
 
-- MiXianTu's own hooks publish these signals, so they are **repeatable and runtime only**, and like the built-in signals they serve rules, ability triggers and breakthrough conditions alike. The criterion vanilla fires at the same moment is a one-shot boolean owned by one player and one advancement, and it is persisted.
-- A signal is published for the player vanilla would have called with (vanilla's advancements only ever see `ServerPlayer`), so a field that describes an entity always has the context it needs to be evaluated.
-- `mxt:changed_dimension` is published **before** the transfer, because NeoForge only offers the pre-transfer event while vanilla does its bookkeeping afterwards; `mxt:tame_animal` is published **before** the taming is written back, so a predicate reading the tamed flag itself (`nbt`, `flags`) sees the old value.
-- `mxt:effects_changed` is published at the end of the tick, so `effects` describes the set after the change; several changes in one tick are reported once.
-- `mxt:fishing_rod_hooked` only covers the loot roll — vanilla fires a second time for a hooked entity and NeoForge has no event for it — and the event names the hook rather than the rod, so the rod is looked for in the player's hands.
+Three more differences are about timing:
 
-The damage signals publish `damage` for matching and additionally offer `original_damage`, `blocked` (`1`/`0`) and `blocked_damage` to formulas; `mxt:consume_item` offers `use_duration` and `mxt:levitation` offers `duration` (the ticks it has lasted).
+- `mxt:changed_dimension` is published **before** the transfer (vanilla does its bookkeeping after the transfer is done, and NeoForge only offers the pre-transfer event); `mxt:tame_animal` is published **before** the taming lands (vanilla fires after the tamed flag is written back), so a predicate reading the tame state itself (`nbt`, `flags`) sees the old value.
+- `mxt:effects_changed` is published at the end of a tick, so `effects` describes the effect set after the change; several changes in one tick are merged into one.
+- `mxt:fishing_rod_hooked` only covers the loot roll (vanilla fires a second time for a hooked entity, and NeoForge has no matching event), and the event carries the hook rather than the rod, so the rod is worked out from the player's hands.
 
-Eleven of them are triggers vanilla itself polls - `ServerPlayer` compares something every tick or when a fall starts - so they are ported by copying that comparison and keep vanilla's cadence: `mxt:location` once every 20 ticks; `mxt:using_item` once per tick while an item is in use; `mxt:levitation` once per tick while the effect lasts; `mxt:ride_entity_in_lava` once per tick while the vehicle is in lava; `mxt:fall_from_height` records where the fall started and reports it on landing; `mxt:fall_after_explosion` asks the same question when the fall starts and reads vanilla's public `currentImpulseImpactPos` and `currentExplosionCause`, so like vanilla it only answers for real impulses such as a wind charge; `mxt:nether_travel` records where the nether was entered and reports the trip back to the overworld; `mxt:inventory_changed` reports the slots that differ from the previous tick; `mxt:slept_in_bed` reports the moment sleep starts.
+Damage signals publish `damage` for matching and additionally offer `original_damage`, `blocked` (`1`/`0`) and `blocked_damage` to formulas; `mxt:consume_item` offers `use_duration`, and `mxt:levitation` offers `duration` (the ticks it has lasted so far).
 
-`mxt:enter_block` is the one approximation in that family: vanilla tests the blocks the movement of that tick passed through - which is why standing still in water keeps firing - while this reports the blocks the player's box started overlapping (fluids count, blocks without collision of their own such as grass or a torch do not). Walking into something is the same moment, but standing still does not repeat; use `mxt:tick` or a cooldown when a continuous effect is wanted.
+Eleven of them are triggers vanilla **polls itself** (a `ServerPlayer` compares something every tick or when it lands), so porting one means copying that comparison, and the cadence matches vanilla: `mxt:location` once every 20 ticks; `mxt:using_item` once per tick while an item is in use; `mxt:levitation` once per tick while the effect lasts; `mxt:ride_entity_in_lava` once per tick after the vehicle enters lava; `mxt:fall_from_height` records where the fall started and publishes on landing; `mxt:fall_after_explosion` asks the same question at the start of the fall and reads the vanilla public fields the mod can read, `currentImpulseImpactPos` and `currentExplosionCause`, so it only holds for an explosion that really carries impulse, such as a wind charge, exactly as in vanilla; `mxt:nether_travel` records the position on entering the nether and publishes on the return to the overworld; `mxt:inventory_changed` and `mxt:slept_in_bed` publish when an inventory slot changes and at the moment sleep starts.
 
-The last two are recognised from that same inventory comparison: `mxt:filled_bucket` is an empty bucket being replaced by a non-empty item, and `mxt:item_durability_changed` is the damage value of one item going up (a repair does not fire, exactly as in vanilla). The decision still runs vanilla's instance, which is handed the stack **as it was**: that is why a damage taken shows up as a negative `delta` (`{"max": -1}`) and `durability` is the **remaining** durability after the change. The price is that these two are wider than vanilla - taking a filled bucket out of a chest, or editing the inventory with a command, looks the same as filling one.
+`mxt:enter_block` is the one **approximation** in this family: vanilla tests the **path of movement** of that tick against the inside shape of blocks, which is why standing still in water repeats every tick; the mod tests the blocks the player's collision box has **newly** covered — fluids count, grass and torches that have no collision do not. Walking in is the same moment, but standing still does not repeat. For a continuous effect use `mxt:tick`, or add a cooldown.
 
-Two vanilla triggers are deliberately left out: `summoned_entity` needs the player who placed the last block, which only exists inside the block code (`FinalizeSpawnEvent` and `BlockEvent.EntityPlaceEvent` each hold half of it, and joining them would credit the wrong player), and `cured_zombie_villager` names its cause in `ZombieVillager`'s private `conversionStarter` field, which `LivingConversionEvent` does not expose.
+`mxt:filled_bucket` watches for an empty bucket being replaced by a non-empty item, and `mxt:item_durability_changed` for the damage value of one item going up (a repair does not fire, as in vanilla). The decision still runs vanilla's instance, which is handed the stack **as it was before the change**, so under vanilla's algorithm a damage taken comes out as a negative `delta` (write `{"max": -1}`), and `durability` is the **remaining** durability after the change. The price is that these two are **wider** than vanilla: taking a filled bucket out of a chest, or changing the inventory with a command, also counts as a bucket having been filled.
 
-::: info How a rule is dispatched
-Rules are indexed by the signal their trigger names while the server cache is built, so publishing a signal costs one map lookup and rules of other signals are not touched. A rule that publishes a signal its own action reacts to is skipped while it is already running, which keeps a self-triggering rule from recursing; a rule that throws is logged and does not stop the other rules or the subscriptions of that signal.
-
-Subscriptions — the same signals waited for by an ability, by a breakthrough condition or by a server script — are indexed per owner as well, so two entities that hold the same definition never displace each other's subscription.
-:::
-
-::: tip Checking a rule without waiting for the event
-`/mxt registries validate` lists every problem the last build found, each naming the file it comes from, and a rule that declares a `condition` but forgets its `action` is one of them — the default action does nothing, so such a rule could never react. `/mxt trigger rules <signal>` shows which rules answer a signal, and `/mxt trigger publish <signal>` fires one by hand.
-:::
-
-::: tip Adding a resource is not the only action
-`action` is the shared entity action list, so a rule can grant an ability, apply a curse, play a sound, run a sequence, or use `mxt:chance` and `mxt:if_else` to make the reaction conditional. See [Entity Action Types](../types/action/entity_action_types.md).
-:::
-
-::: tip Growing a technique's mastery
-A rule is the natural place to grow the resource a [cultivation technique](./technique.md#advancement) measures its mastery with — that is what makes the technique advance without any code. The reverse direction works too: a technique that reaches a new level publishes `mxt:technique_stage`, so a rule can react to the promotion itself, with `stage` (the rank reached) available as a formula value.
-:::
-
+Two more vanilla triggers are **deliberately not ported**: `summoned_entity` needs to know who placed the block, which only exists inside the block code (`FinalizeSpawnEvent` and `BlockEvent.EntityPlaceEvent` each hold half of it, and joining the two would credit the wrong player), and the player that caused a `cured_zombie_villager` is `ZombieVillager`'s private `conversionStarter` field, which `LivingConversionEvent` does not expose.

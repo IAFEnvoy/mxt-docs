@@ -28,6 +28,7 @@ export const sections = [
       { page: 'player-guide/index', zh: '总览', en: 'Overview' },
       { page: 'player-guide/keys-and-hud', zh: '按键与 HUD', en: 'Keys and HUD' },
       { page: 'player-guide/items', zh: '物品与方块', en: 'Items and Blocks' },
+      { page: 'player-guide/lifespan', zh: '寿元', en: 'Lifespan' },
       {
         // The page itself is the group's entry; one sub-page per root command. `alpha`
         // tells the sidebar and the index list to sort the pages A→Z and to pin `/mxt`
@@ -47,6 +48,7 @@ export const sections = [
           { page: 'player-guide/commands/formation', zh: '/formation', en: '/formation' },
           { page: 'player-guide/commands/friend', zh: '/friend', en: '/friend' },
           { page: 'player-guide/commands/hud', zh: '/hud', en: '/hud' },
+          { page: 'player-guide/commands/lifespan', zh: '/lifespan', en: '/lifespan' },
           { page: 'player-guide/commands/lightning', zh: '/lightning', en: '/lightning' },
           { page: 'player-guide/commands/physique', zh: '/physique', en: '/physique' },
           { page: 'player-guide/commands/picker', zh: '/picker', en: '/picker' },
@@ -158,18 +160,19 @@ export const sections = [
           { page: 'datapack/types/number_provider_types', zh: '数值提供器', en: 'Number Providers' },
           { page: 'datapack/types/shared_data_types', zh: '共享数据类型', en: 'Shared Data Types' },
           {
-            page: 'datapack/types/other_types',
-            zh: '其他类型族',
-            en: 'Other Type Families',
+            // One page per family, so the group has no landing page of its own.
+            text: { zh: '其他类型族', en: 'Other Type Families' },
             items: [
-              { page: 'datapack/types/other/trigger-and-cost', zh: '触发器与消耗类型', en: 'Trigger and Cost Types' },
-              { page: 'datapack/types/other/ability-and-curse', zh: '技能、状态与诅咒类型', en: 'Ability, State and Curse Types' },
-              { page: 'datapack/types/other/resource-bar', zh: '资源条与灵气类型', en: 'Resource Bar and Aura Types' },
-              {
-                page: 'datapack/types/other/formation-and-matcher',
-                zh: '阵法、时间线与匹配器类型',
-                en: 'Formation, Timeline and Matcher Types'
-              }
+              { page: 'datapack/types/other/trigger-and-cost', zh: '触发器与消耗', en: 'Trigger and Cost' },
+              { page: 'datapack/types/other/ability', zh: '技能类型', en: 'Ability Types' },
+              { page: 'datapack/types/other/data-storage', zh: '数据存储', en: 'Data Storage' },
+              { page: 'datapack/types/other/ability-selector', zh: '技能目标选择器', en: 'Ability Target Selector' },
+              { page: 'datapack/types/other/curse', zh: '诅咒类型', en: 'Curse Types' },
+              { page: 'datapack/types/other/resource-bar', zh: '资源条与灵气', en: 'Resource Bar and Aura' },
+              { page: 'datapack/types/other/aura-maximum', zh: '环境上限', en: 'Aura Maximum' },
+              { page: 'datapack/types/other/formation-action', zh: '阵法功能', en: 'Formation Actions' },
+              { page: 'datapack/types/other/timeline-entry', zh: '天劫节拍', en: 'Timeline Entries' },
+              { page: 'datapack/types/other/item-matcher', zh: '物品匹配器', en: 'Item Matcher' }
             ]
           }
         ]
@@ -201,6 +204,7 @@ export const sections = [
           { page: 'kubejs/api/physiques', zh: 'MxtPhysiques', en: 'MxtPhysiques' },
           { page: 'kubejs/api/quality', zh: 'MxtQuality', en: 'MxtQuality' },
           { page: 'kubejs/api/souls', zh: 'MxtSouls', en: 'MxtSouls' },
+          { page: 'kubejs/api/lifespan', zh: 'MxtLifespan', en: 'MxtLifespan' },
           { page: 'kubejs/api/triggers', zh: 'MxtTriggers', en: 'MxtTriggers' },
           { page: 'kubejs/api/loot', zh: 'MxtLoot', en: 'MxtLoot' },
           { page: 'kubejs/api/events', zh: 'MxtEvents', en: 'MxtEvents' }
@@ -231,7 +235,8 @@ export const sections = [
       { page: 'technical/index', zh: '总览', en: 'Overview' },
       { page: 'technical/damage', zh: '伤害系统', en: 'Damage System' },
       { page: 'technical/identification', zh: '敌我识别系统', en: 'Foe Identification' },
-      { page: 'technical/aura', zh: '灵气计算', en: 'Aura Calculation' }
+      { page: 'technical/aura', zh: '灵气计算', en: 'Aura Calculation' },
+      { page: 'technical/ability', zh: '技能施放', en: 'Ability Casting' }
     ]
   }
 ]

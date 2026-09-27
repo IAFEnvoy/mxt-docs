@@ -1,39 +1,35 @@
 ---
 title: Skill Stage (skill_stage)
-description: "Defines one level of a skill mastery chain: which skill it belongs to, the next level, and its damage multiplier."
+description: "One level of a skill mastery chain: its chain identity, next level, mastery requirement and damage multiplier."
 aside: false
 ---
 
-# Skill Stage (skill_stage)
+# Skill Stage (skill_stage) {#skill_stage}
 
-A `skill_stage` defines one level of a skill mastery chain — how well a holder has mastered a technique or another skill. It is written like [`realm_stage`](./realm_stage.md): the entry names the chain it belongs to and points at the next level, and a definition enters that chain through the level it declares as its default.
+File location: `data/<namespace>/mxt/skill_stage/<path>.json`
 
-## File Location
-
-Skill stage files go in `data/<namespace>/mxt/skill_stage/` within your datapack.
-
-**Purpose**: One level of a skill mastery chain.
-
-The filename corresponds to its ID. For example, `data/example/mxt/skill_stage/sword_art_1.json` has the ID `example:sword_art_1`.
-
-## Fields
+A `skill_stage` is one level of a skill mastery chain. The chain identity is a free identifier (the `skill` field) rather than a registry entry, so several techniques can share one chain; which level a chain is entered at is decided by the definition that references it, and a technique uses `default_stage`. The mastery requirement and the damage multiplier of a level are both written on the level itself.
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | Text Component | `skill_stage.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `skill_stage.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
-| `skill` | `Identifier` | **required** | The mastery chain this level belongs to. Every level of one chain writes the same `skill`; several techniques may share a single chain. |
-| `next_stage` | `Holder<skill_stage>` | none | The next level of the chain; the highest level omits it. |
-| `mastery` | `NumberProvider` | `0` | How much mastery reaching this level takes. A technique whose `mastery_resource` holds at least this much may advance here, once its own `condition` also holds. `0` means the level asks for no mastery. |
-| `damage_multiplier` | Double | `1.0` | The damage multiplier of this level. It must be a finite, non-negative number. |
+| --- | --- | --- | --- |
+| `name` | Text Component | `skill_stage.mxt.<namespace>.<path>` | Display name; omitted, it is the default key in the previous column. |
+| `description` | Text Component | `skill_stage.mxt.<namespace>.<path>.description` | Description; omitted, it is the default key in the previous column. It is stored and read, but no screen draws it. |
+| `skill` | Identifier | **required** | Identifier of the skill chain this level belongs to. |
+| `next_stage` | Next level ID | none | The next level on the chain; the highest level omits it. |
+| `mastery` | `NumberProvider` | `0` | The mastery needed to reach this level. |
+| `damage_multiplier` | Double | `1.0` | The damage multiplier of this level. |
 
-`mastery` belongs to the level, not to a technique: a chain measures the same climb for everyone who shares it. It is a `NumberProvider`, so it may be a formula, but a decreasing requirement anywhere in a chain is rejected.
+Every level of one chain writes the same `skill`.
 
-::: info Where `damage_multiplier` is read
-Casting an ability puts the multiplier of the level the caster stands on, in a chain whose `configuration` grants that ability, onto the cast's formula context as `damage_multiplier`; the [damage system](../../technical/damage.md) then multiplies the damage that cast deals by it. When several techniques grant the same ability, the highest of their levels speaks — they do not stack. The multiplier therefore belongs to the abilities a chain grants rather than to everything the holder does, and it applies to damage such a cast deals to its own caster as well (a stronger technique has a heavier backlash). A chain that grants nothing has nothing to scale.
-:::
+`mastery` belongs to the level rather than to a technique: everyone sharing a chain faces the same climb. It may be a formula, but a chain in which a level asks for less than the one before it is refused. Reaching a level takes both of two things: the technique's `mastery_resource` is at least this value, and the `condition` the technique configures for that level holds. Writing `0` means the level asks for no mastery.
 
-## Example
+`damage_multiplier` must be a finite, non-negative number. Casting an ability takes the multiplier of the level the caster currently stands on in a chain that grants it and writes that into the cast's formula context as the formula variable `damage_multiplier` (when several techniques grant the same ability, the highest wins); the first layer of the damage pipeline reads and multiplies it when it settles the attacker's side. It therefore only scales **damage dealt by the abilities this chain grants** (an ability's backlash onto its own caster included), and it does not buff everything the holder deals; damage produced by non-cast paths such as curses, timelines or item bindings has no such value in its context and is untouched.
+
+The shape is the same as `realm_stage`: a chain identity plus a one-way `next` pointer. The difference is that the chain identity is a free identifier rather than a registry entry, so several techniques can share one chain.
+
+`next_stage`, like `next_realm`, is only an entry reference, and the chain order is derived at runtime from the chain itself: when the server starts or a datapack is reloaded, the level no other level points at becomes the first level of its chain, and the rest are numbered along `next_stage` (the first level is `0`), which is what lets any two levels be compared. Several first levels under one `skill`, a `next_stage` pointing at a level of another `skill`, a cycle, or a pointer to an entry that does not exist — any of these makes the rebuild fail, and as with realm chains a failed rebuild refuses the chain rather than keeping one that is not fully ordered. The rebuild also refuses a chain whose `mastery` decreases: advancement only ever compares against the next level, so a later level must not ask for less than the one before it. Parsing can only reject problems inside the entry itself, such as an illegal `damage_multiplier`.
+
+**Reading the current level** uses the entity condition `mxt:skill_stage` (see [Entity Condition Types](../types/condition/entity_condition_types.md)): `stage` names one level, `comparison` takes `exact` (the default), `at_least` or `at_most` (the same set of values as `mxt:realm`, compared by the in-chain index), and the optional `technique` narrows the question to one technique — leave it out and every learned technique is asked, one hit being enough. It reads **the level the holder has reached** (the technique's `default_stage` while it never advanced), so an `at_least` that held once does not become false again through later changes; a technique without a `default_stage`, or one whose chain order could not be rebuilt, always answers no.
 
 ```json
 // data/example/mxt/skill_stage/sword_art_1.json
@@ -44,25 +40,3 @@ Casting an ability puts the multiplier of the level the caster stands on, in a c
   "damage_multiplier": 1.1
 }
 ```
-
-```json
-// data/example/mxt/skill_stage/sword_art_2.json
-{
-  "skill": "example:sword_art",
-  "mastery": 10,
-  "damage_multiplier": 1.25
-}
-```
-
-::: info Skill chains
-`skill` is the chain identity rather than a reference to one owner, so several techniques — or a technique and another system — can share one mastery chain instead of each defining its own. Which level a chain is entered at is decided by the definition that references it: a technique names its entry level in `default_stage` and annotates each level through `configuration`, whose `ability` entries are minimum requirements and whose `condition` is the requirement to reach that level.
-:::
-
-::: info Chain order
-`next_stage`, like `next_realm`, is only a holder reference, so the order is derived at runtime rather than while an entry is decoded: when the server starts or a datapack is reloaded, the level no other level follows becomes the first level of its chain and the rest are numbered down the links, which is what lets two levels be compared. A skill with more than one first level, a link to a level of another `skill`, a cycle, or a link to a stage that does not exist makes that rebuild fail — as with realm chains, a partially ordered chain is rejected rather than indexed. The rebuild also rejects a chain whose `mastery` drops from one level to the next: a level must never be harder to leave than to reach the one after it, because advancement only ever compares against the next level. Parsing can only reject problems inside the entry itself, such as a non-finite or negative `damage_multiplier`.
-:::
-
-::: info Who advances a level
-Reaching a level is driven by the technique that owns the climb, not by the chain: a technique with a `mastery_resource` advances its holder to the next level once that resource reaches the level's `mastery` and the level's `condition` holds. An advanced level publishes `mxt:technique_stage`, and the abilities of every level reached so far are granted. See [Cultivation Technique](./technique.md#advancement).
-:::
-

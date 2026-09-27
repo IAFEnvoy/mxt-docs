@@ -1,42 +1,41 @@
 ---
 title: Tool Binding (tool_binding)
-description: A tool binding lists the forging methods an existing tool item unlocks at the Forge Table.
+description: A tool binding claims an existing tool item and lists the forging methods that item unlocks at the Forge Table.
 aside: false
 ---
 
-# Tool Binding (tool_binding)
+# Tool Binding (tool_binding) {#tool_binding}
 
-A tool binding attaches a set of forging methods to an existing tool item, so that placing the tool on the Forge Table makes those methods available.
+File location: `data/<namespace>/mxt/tool_binding/<path>.json`
 
-## File Location
-
-Tool binding JSON files go in `data/<namespace>/mxt/tool_binding/` within your data pack.
-
-**Purpose**: Forging methods provided by tool items.
-
-The filename corresponds to its ID. For example, `data/example/mxt/tool_binding/smith_hammer.json` has the ID `example:smith_hammer`.
-
-## Fields
+A tool binding gives an **existing tool item** a set of forging methods: it decides which methods the tool puts into the Forge Table's method list. It creates no items and changes nothing about the item itself.
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `methods` | `Holder<forging_method>[]` | **required** | The forging methods this tool unlocks. A definition that leaves it empty or repeats a method fails to load. |
+| --- | --- | --- | --- |
+| `items` | item ID, `#tag` or a mixed array | **required** | Which tool items this definition claims; see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher). |
+| `priority` | Int | `0` | When several definitions match the same item, the larger number wins. |
+| `methods` | array of `forging_method` IDs | **required** | The forging methods this tool unlocks; must not be empty or repeat an entry. |
 
-## Usage
+`items` **must not be empty**: this table can only be reached by matching an item, so a definition that claims no item could never be read and is refused at load.
 
-A tool item references this registry through the `mxt:tool_binding` item component. The component stores a `Holder`, so the item itself does not copy the definition.
+Once tools sit in the three right-hand slots of the Forge Table, the methods they unlock appear in the method list. **Available methods = the blueprint's `allowed_methods` ∩ the union of the `methods` of every placed tool.** With no session (no blueprint picked yet) or a blueprint that declares no `allowed_methods`, the blueprint side restricts nothing and the list is just the union of the tools. The tool slots are **not locked** while a session runs, so adding a hammer halfway through widens the method list immediately.
 
-Once tools are placed in the three slots on the right of the Forge Table, the methods they unlock appear in the method list. **Available methods = the blueprint's `allowed_methods` ∩ the union of the `methods` of every placed tool.** When there is no session yet (no blueprint selected) or the blueprint declares no `allowed_methods`, the blueprint side restricts nothing and the list is simply the union of the tools.
+**Two routes for one tool**: it is claimed by the `items` of some definition (an item may also have a definition written for it alone), or the **stack** itself carries the `mxt:forging_methods` item component (an array of `forging_method` IDs, needing no definition file at all). The two are **unioned**, so a second hammer, or one method stuffed onto a single stack, only ever adds — it never replaces or removes anything. The tool slot asks exactly one thing: does this stack resolve to at least one method?
 
-The tool slots are **not locked** while a session is running, so adding another hammer mid-session immediately widens the method list.
-
-## Example
+This definition lives at `data/example/mxt/tool_binding/smith_hammer.json`:
 
 ```json
 {
-  "methods": ["mxt_test:heavy_strike", "mxt_test:light_strike", "mxt_test:draw_out", "mxt_test:flatten", "mxt_test:quench"]
+  "items": "example:smith_hammer",
+  "methods": [
+    "example:heavy_strike", "example:light_strike",
+    "example:quench", "example:temper"
+  ]
 }
 ```
 
-The method IDs it lists are defined by [Forging Method](./forging_method.md), and the other half of the intersection comes from [Forging Blueprint](./forging_blueprint.md).
+A one-off tool with no definition file writes the list straight onto the stack:
 
+```mcfunction
+/give @s minecraft:iron_ingot[mxt:forging_methods=["example:heavy_strike","example:light_strike"]]
+```

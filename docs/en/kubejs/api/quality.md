@@ -20,7 +20,7 @@ Resolution is a fixed five-step order: the **override component** on the stack, 
 | `clear(entity, stack)` | `Entity`, `ItemStack` | `boolean` | Removes the override component so the stack falls back to its definition default; `false` when there was no override. |
 | `upgrade(entity, stack)` | `LivingEntity`, `ItemStack` | `{changed, failure, from, to}` | Moves **one tier** up the chain: the step's `condition` first, then its `costs` paid through the global cost transaction (atomic), so a step that cannot be paid moves nothing and writes no tier. |
 
-`failure` on `upgrade` is one of `SERVER_ONLY`, `EMPTY` (nothing in hand), `NO_QUALITY`, `NO_CHAIN` (no chain at all), `AMBIGUOUS_CHAIN` (several chains hold that tier, so there is no single way up), `NOT_MEMBER` (the tier is not on the chain it belongs to), `AT_TOP`, `NO_STEP` (that step declares no cost, so it cannot be taken), `DISABLED` (the next tier is disabled by `mxt:disabled`), `CONDITION_FAILED`, `INSUFFICIENT_RESOURCE` or `INSUFFICIENT_COST`. On success `from` and `to` are the quality IDs before and after the step, and both are `null` on failure.
+`failure` on `upgrade` is one of `SERVER_ONLY`, `EMPTY` (nothing in hand), `NO_QUALITY`, `NO_CHAIN` (no chain at all), `AMBIGUOUS_CHAIN` (several chains hold that tier, so there is no single way up), `NOT_MEMBER` (the tier is not on the chain it belongs to), `AT_TOP`, `NO_STEP` (that step declares no cost, so it cannot be taken), `CONDITION_FAILED`, `INSUFFICIENT_RESOURCE` or `INSUFFICIENT_COST`. On success `from` and `to` are the quality IDs before and after the step, and both are `null` on failure.
 
 ```js
 // kubejs/server_scripts/mxt_quality.js

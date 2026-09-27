@@ -4,7 +4,7 @@ title: 特殊公开接口
 
 # 特殊公开接口
 
-本页的实现型接口里，`AuraAccess`、`ItemAuraAccess`、`UseItemAuraAccess`、`WheelMenuEntry` 位于 **`com.iafenvoy.mxt.api`**：该包只有接口与包注释，实现仍留在各自的模块包里。`TooltipAppender` 是 NeoForge 的扩展点、`Cost` 在 `data/cost`；**`Toggable` 留在 `data/ability`——它不算对外 API**（它是本体登记"需要按键的技能"的形状，`mxt:active` / `mxt:flight_control` / `mxt:storage` 三个技能类型实现它；它的前身 `ToggableArtifactAbility` 已经删除）。
+本页的实现型接口里，`AuraAccess`、`ItemAuraAccess`、`UseItemAuraAccess`、`WheelMenuEntry` 位于 **`com.iafenvoy.mxt.api`**：该包只有接口与包注释，实现仍留在各自的模块包里。`TooltipAppender` 是 NeoForge 的扩展点、`Cost` 在 `data/cost`；**`Toggable` 留在 `data/ability`——它不算对外 API**（它是本体登记"需要按键的技能"的形状，`mxt:active` / `mxt:channelled` / `mxt:targeted` / `mxt:flight_control` / `mxt:storage` 五个技能类型实现它；它的前身 `ToggableArtifactAbility` 已经删除）。同一个包里的 `AbilityApplier` 同样不是对外 API：它只回答"这次施放够得着哪些实体（`reach`）+ 每个目标身上跑哪条技能（`payload`）"，今天只有 `mxt:targeted` 实现它，而且它的 `reach` 在**付款之前**被问一次。
 
 ## `AuraAccess`
 
@@ -28,7 +28,7 @@ title: 特殊公开接口
 - **`canPourInto(holder, stack)`**（每 tick，**付灵气之前**）——这一 tick 值不值得灌。手势的顺序是"先扣灵气、再 `insert`、最后 `onCharged`"，所以只要有"插进去也没意义"的情况就会白花灵气；这个方法让物品在付钱前否掉。默认 `true`（只进不出的容器没有二话可说），只有**会因被灌满而自焚发动**的物品覆写它——符箓覆写成 `TalismanService.canFireFrom`，即"这个持有者的冷却窗口还开着吗"。注意它**不是**"要不要自动发动"那条：那由载体自己的模式决定（`mxt:talisman` 组件的 `mode`，`fire` 灌满即发动／`store` 只积累），跟灌注闸门不是一回事。
 - **`onCharged(source, stack)`**（一次**真实**移动之后）——"我被灌了"，由物品自己决定是不是满了、要不要动手。默认什么都不做。
 
-**写入者负责汇报**：任何往存储里写入灵气的一方（长按灌注、`AuraAccess` 方块实体等）在**真实写入之后**调用 `onCharged(SpiritSource, stack)`（`simulate` 不算），由物品自己判断"这是不是满了"以及随之而来的行为（符箓在这里发动并消耗一件本体）。之所以由写入者汇报、而不是让物品在自己的 `add` 里判断，是因为只有写入者知道**这东西在哪、谁付的账**：展示架上的一张符，是被站在别处的人（或一枚灵爆）填满的。`SpiritSource(level, position, actor, consumedByHand)` 同时带着位置与行为者——行为者出账、被记录并为能力作答；位置是这次激发的地点，既以 `block_x`/`block_y`/`block_z` 进公式，也作为**原点**交给位置类行为；`consumedByHand` 说明这次是不是"手上的消耗"（展示架、机器等摆着的存储为 `false`）（见 [灌注与激发](/datapack/json/talisman)）。也正因为汇报是"选择加入"的：写入方遇到只实现存储的物品时，本就没有什么可汇报的。
+**写入者负责汇报**：任何往存储里写入灵气的一方（长按灌注、`AuraAccess` 方块实体等）在**真实写入之后**调用 `onCharged(SpiritSource, stack)`（`simulate` 不算），由物品自己判断"这是不是满了"以及随之而来的行为（符箓在这里发动，并消耗一件本体或按铭刻的耐久扣除）。之所以由写入者汇报、而不是让物品在自己的 `add` 里判断，是因为只有写入者知道**这东西在哪、谁付的账**：展示架上的一张符，是被站在别处的人（或一枚灵爆）填满的。`SpiritSource(level, position, actor, consumedByHand)` 同时带着位置与行为者——行为者出账、被记录并为能力作答；位置是这次激发的地点，既以 `block_x`/`block_y`/`block_z` 进公式，也作为**原点**交给位置类行为；`consumedByHand` 说明这次是不是"手上的消耗"（展示架、机器等摆着的存储为 `false`）（见 [灌注与激发](/datapack/json/talisman)）。也正因为汇报是"选择加入"的：写入方遇到只实现存储的物品时，本就没有什么可汇报的。
 
 这一族接口连起来是这样——存取是"能不能被存"，被灌与长按是"额外选择加入的手势"，实现者只需挑自己那一层：
 
@@ -38,6 +38,7 @@ classDiagram
     class ItemMatcher {
         <<interface>>
         +entries() List~Entry~
+        +priority() int
     }
     class ItemAuraAccess {
         <<interface>>
@@ -68,11 +69,12 @@ classDiagram
     class TechniqueBinding
     class SpiritChargeHold
     class ArtifactHold
+    class TechniqueHold
     UseItemAuraAccess --|> ItemAuraAccess
     HoldBinding --|> ItemMatcher
     SpiritStoneItem ..|> UseItemAuraAccess
     TalismanItem ..|> UseItemAuraAccess
-    TechniqueBinding ..|> HoldBinding
+    TechniqueHold ..|> HoldBinding
     SpiritChargeHold ..|> HoldBinding
     ArtifactHold ..|> HoldBinding
     UseItemAuraAccess ..> SpiritPour : 返回

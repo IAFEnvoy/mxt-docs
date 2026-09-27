@@ -1,36 +1,56 @@
 ---
 title: aura_zone（灵气区域）
+description: 定义一份环境灵气模板：每种灵气的库存、匹配的维度与群系、波动、规则、粒子、客户端雾效与 HUD 条。
 aside: false
 ---
 
 # aura_zone（灵气区域） {#aura_zone}
 
-文件位置：`data/<namespace>/mxt/aura_zone/<path>.json`
+一个 `aura_zone` 是环境灵气模板：这一带每种灵气的初始量、上限、恢复与颜色，它匹配哪些维度与群系，怎么随时间波动，套哪些修炼规则，以及客户端看到的雾效、粒子与 HUD 条。模板本身不存数量，可消耗的灵气记在区块附件上，所以同一个位置的所有系统读的是同一份库存。
+
+## 文件位置
+
+灵气区域文件放在数据包的 `data/<namespace>/mxt/aura_zone/`。
 
 **用途**：环境灵气模板。
 
+文件名对应它的 ID。例如 `data/example/mxt/aura_zone/spirit_land.json` 的 ID 是 `example:spirit_land`。
+
+## 字段
+
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `aura` | `Map<Holder<aura>, AuraValue>` | `{}` | 每种灵气独立的环境库存定义；`AuraValue` 包含数量、上限、恢复速度和颜色。 |
+| `aura` | 灵气 id 到数值的映射 | `{}` | 这个模板里有哪几种灵气，各自的初始量、上限、恢复与颜色。 |
 | `distribution` | Enum | `equal` | 同区块多玩家灵气不足时的共享分配方式：`random`、`equal`、`realm_weighted`。 |
-| `cultivate_condition` | `EntityCondition` | `mxt:always_true` | 当前环境允许修炼的条件；与当前境界条件同时检查。 |
-| `dimensions` | `HolderOrTag<LevelStem>[]` | `[]` | 维度匹配。 |
-| `biomes` | `HolderOrTag<Biome>[]` | `[]` | 群系匹配。 |
-| `fluctuation` | Object | static/0 | 昼夜或月相波动。 |
-| `rules` | Object | 全部关闭 | 修炼压制、天劫、灵植和炼丹环境规则。 |
+| `cultivate_condition` | `EntityCondition` | `mxt:always` | 当前环境允许修炼的条件；与当前境界条件同时检查。 |
+| `dimensions` | 维度 id 或 `#标签` 的数组 | `[]` | 维度匹配。 |
+| `biomes` | 群系 id 或 `#标签` 的数组 | `[]` | 群系匹配。 |
+| `fluctuation` | 对象 | `static` / `0` | 昼夜或月相波动。 |
+| `rules` | 对象 | 全部关闭 | 修炼压制、天劫、灵植和炼丹环境规则。 |
 | `element_fit_bonus` | Double | `0` | 灵根元素适配奖励：这里存在该灵根自己的灵气时加这么多。 |
-| `element_conflict_penalty` | Double | `0` | 元素冲突惩罚：乘在"对立浓度"上——对立浓度是本区域内所有与灵根元素有 `overcomes`/`adapted_to` 关系的**其它**元素的浓度之和，所以空区域不再被当成对立区域。 |
-| `noise` | Object | 关闭 | 带 seed 的二维噪声分布。 |
+| `element_conflict_penalty` | Double | `0` | 元素冲突惩罚：乘在「对立浓度」上。 |
+| `noise` | 对象 | 关闭 | 带 seed 的二维噪声分布。 |
 | `particle` | `ParticleEffect` | 无 | 服务端控制的可选粒子。 |
-| `client_render` | Object | 白色、64、0.35 | 客户端雾色和雾强度。 |
-| `client_hud` | Object | 两条均隐藏 | 当前库存与感知浓度条。 |
+| `client_render` | 对象 | 白色、`64`、`0.35` | 客户端雾色和雾强度。 |
+| `client_hud` | 对象 | 两条均隐藏 | 当前库存与感知浓度条。 |
 | `priority` | Integer | `0` | 同层级（群系或维度）内多个模板重叠时的选择优先级。 |
 
-`fluctuation` 字段为 `enable`、`cycle_type`（`day`、`moon`、`static`）、`amplitude` 和 `offset_tick`。`rules` 字段为 `cultivate_suppress`、`tribulation_modify`、`spirit_plant_bonus`、`alchemy_env_bonus` 和 `natural_spawn_herb`。其中 `alchemy_env_bonus` 已经接上消费者（该区域内的丹药配方视为满足 `minimum_aura`，见下表），`spirit_plant_bonus` 与 `natural_spawn_herb` 仍等待灵植生长系统（见 `mxt:spirit_herb`）。
+**对立浓度**是本区域内所有与灵根元素有 `overcomes` / `adapted_to` 关系的**其它**元素的浓度之和，所以空区域不会被当成对立区域。
 
-自然环境以每个资源的 `amount` 为初始库存，噪声和波动作用于该资源；`AuraValue.max` 省略时默认为初始值。可用固定数值、`{ "type": "mxt:fixed", "value": 100 }`、`{ "type": "mxt:initial_multiplier", "multiplier": 2 }` 或 `{ "type": "mxt:unlimited" }`。方块灵气会额外提高对应资源的有效容量，不占用环境上限。环境优先级为群系 < 维度 < 永久区域 < 阵法覆写。`priority` 只在同一层级内部比较：重叠的群系模板之间、或重叠的维度模板之间，`priority` 最大者生效；`priority` 相同时按模板 ID 升序取首个，因此重叠定义的选择结果稳定可复现。维度绑定仍然优先于群系绑定，较高的群系 `priority` 不会越过维度层。多个玩家共享同一块区块的各资源库存：`random` 随机分配，`equal` 平均分配，`realm_weighted` 按境界权重分配。
+## `aura` 的每一项
 
-嵌套对象字段：
+`aura` 的每个值都是同一个形状，[block_aura](./block_aura.md) 也用它：
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `amount` | Double | `0` | 该灵气的初始库存，必须非负；方块那边是每个方块贡献的基础量。 |
+| `max` | 上限 | `initial_multiplier`、倍率 `1` | 该灵气的上限，四种写法见下。 |
+| `regen_per_tick` | Double | `0` | 每 tick 补回多少。 |
+| `color` | `RGBColor` | `#FFFFFF` | 颜色，只用于环境渲染。 |
+
+自然环境以每个灵气的 `amount` 为初始库存，噪声和波动作用于它；`max` 省略时等于初始值。`max` 有四种写法：固定数值、`{ "type": "mxt:fixed", "value": 100 }`、`{ "type": "mxt:initial_multiplier", "multiplier": 2 }` 或 `{ "type": "mxt:unlimited" }`。裸数字是 `mxt:fixed` 的简写；`mxt:initial_multiplier` 把初始库存乘上 `multiplier`，所以不写 `max` 就等于"上限跟着初始库存走"；`mxt:unlimited` 表示没有上限，修炼速度那一侧改用 `concentration / (concentration + 1)` 换算，而不是 `concentration / maximum`。这个分派器来自固有注册表 `mxt:aura_maximum_type`，数据包只能选择既有算法。
+
+这里填的是**环境基础**上限。方块灵气会额外提高对应灵气的有效容量，不占用这个上限；阵法也能再往上加。`element_fit_bonus` 与 `element_conflict_penalty` 必须是有限数，`client_hud` 两条的 `maximum` 必须有限且大于 `0`，不满足就是加载错误。
 
 ## `fluctuation`
 
@@ -41,15 +61,25 @@ aside: false
 | `amplitude` | Double | `0` | 波动幅度。 |
 | `offset_tick` | Long | `0` | 周期采样偏移。 |
 
+波动只影响查询到的环境浓度，不改写区块库存；库存按 `regen_per_tick × 经过的刻数` 补回，补回周期由服务端配置「灵气 → 方块灵气周期」决定（默认每 10 tick）。
+
 ## `rules`
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `cultivate_suppress` | Boolean | `false` | 是否禁止或中止修炼。 |
 | `tribulation_modify` | Double | `0` | 天劫难度修正，正值提高难度。 |
-| `spirit_plant_bonus` | Double | `0` | 灵植生长倍率修正；**仍无消费者**——本模组没有灵植种植/生长系统（生长、采集与生成按设计留给内容模组，见 `mxt:spirit_herb`）。 |
-| `alchemy_env_bonus` | Boolean | `false` | 这一带算不算"炼丹有利环境"。开启后，位置落在该区域的丹药配方**直接视为满足** `minimum_aura`（它是个开关、没有可缩放的量，所以只能顶替要求，而不是把池子放大）；关掉时仍按配方自己的最低值逐项比较。 |
-| `natural_spawn_herb` | Boolean | `false` | 是否允许自然刷新灵药；**仍无消费者**，与 `spirit_plant_bonus` 同属尚未实现的灵植生长系统。 |
+| `spirit_plant_bonus` | Double | `0` | 灵植生长倍率修正。 |
+| `alchemy_env_bonus` | Boolean | `false` | 这一带算不算「炼丹有利环境」。 |
+| `natural_spawn_herb` | Boolean | `false` | 是否允许自然刷新灵药。 |
+
+`rules.cultivate_suppress` 会中止正在进行的修炼。`tribulation_modify` 注入公式变量 `aura_tribulation_modifier`。`alchemy_env_bonus` 开启后，位置落在该区域内的丹药配方**直接视为满足** `minimum_aura`——它是开关、没有可缩放的量，所以只能顶替要求，而不是把池子放大；关闭时仍按配方自己的最低值逐项比较。
+
+::: warning 制作中
+
+`spirit_plant_bonus` 与 `natural_spawn_herb` 目前没有消费者：本模组不提供灵植的种植与生长系统，生长、采集与生成按设计留给内容模组，[spirit_herb](./spirit_herb.md) 的 `age` / `growth_rate` / `drop_chance` 也在等同一套系统。灵植的两个分类标签（`element_tags` / `material_tags`）与这两个字段无关，它们已经由 `mxt:herb_tag` 接上。
+
+:::
 
 ## `noise`
 
@@ -60,6 +90,8 @@ aside: false
 | `scale` | Double | `640` | 采样尺度；越大越平缓。 |
 | `amplitude` | Double | `0` | 噪声幅度。 |
 
+区块第一次加载时，以 `max(0, (该灵气的 amount + 柏林噪声) / 10 - 5)` 初始化，负值归零；`noise.seed` 完全由数据包控制，便于整合包复现分布。`noise.scale` 越大，空间变化越平缓；内置环境使用约 `640` 至 `960`。常规环境建议把 `noise.amplitude` 保持在 `5`，对应未截断前约 `-5` 至 `5` 的噪声扰动。
+
 ## `client_render`
 
 | 字段 | 类型 | 默认 | 说明 |
@@ -67,6 +99,8 @@ aside: false
 | `fog_color` | `RGBColor` | `#FFFFFF` | 雾颜色；支持 `#RRGGBB` 或 `0..16777215` 整数。 |
 | `render_distance` | Integer | `64` | 雾效影响距离，范围 `8..256`。 |
 | `fog_strength` | Float | `0.35` | 覆盖原版雾的比例，范围 `0..1`。 |
+
+`client_render` 只负责客户端雾效，粒子不在其中。`fog_strength` 控制雾色和雾距离覆盖原版值的比例，`0` 为不覆盖，`1` 为完全覆盖。雾效强度还会按环境浓度缩放，因此低浓度区域会更淡。
 
 ## `particle`
 
@@ -77,11 +111,19 @@ aside: false
 | `speed` | Float | `0` | 原版粒子速度参数。 |
 | `force` | Boolean | `false` | 是否强制发送给客户端。 |
 | `spread` | Vec3 | `[0.5,0.5,0.5]` | 三轴扩散范围。 |
-| `offset_x/y/z` | Float | `0,0.5,0` | 生成位置偏移。 |
+| `offset_x` / `offset_y` / `offset_z` | Float | `0,0.5,0` | 生成位置偏移。 |
+
+`particle` 是灵气区域顶层的可选粒子效果，用原版粒子类型解析，粒子类型要写成对象：
+
+```json
+"particle": { "type": "minecraft:glow" }
+```
+
+字段省略时才不发送粒子。`count`、`speed`、`spread`、`offset_*` 与 `force` 会原样传给原版粒子发送 API；`count: 0` 保留原版的特殊定向粒子语义。灵气粒子按同步周期刷新，默认每 `5` tick。
 
 ## `aura_zone.client_hud`
 
-`stored_aura` 和 `sensed_concentration` 均可省略；每一项字段如下：
+`stored_aura` 和 `sensed_concentration` 均可省略，也可以只写其中一条；每一项字段如下：
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
@@ -91,15 +133,24 @@ aside: false
 | `anchor` | `left` / `right` | `left` | HUD 左列或右列。 |
 | `order` | Integer | `0` | 同侧排序。 |
 
-服务端按服务端配置里的「灵气 → 同步周期」（默认每 5 tick）同步当前位置的最终浓度与环境浓度，客户端只使用同步快照绘制 HUD 和雾效。
+`stored_aura` 显示区块附件里的实际库存，`sensed_concentration` 显示当前位置的环境模板浓度。两条都用 Origins 风格的 71x8 贴图：`maximum` 是满条对应的浓度，必须大于零；`bar_index` 选择贴图行和图标；`inverted` 可选，默认 `false`。`anchor` 为 `left` 或 `right`，`order` 控制同侧灵气条从下到上的顺序，灵气条会自动排在同侧资源条上方。资源条上下文另提供 `mxt:environment_concentration` 与 `mxt:actual_concentration`，分别对应环境值和全部来源的实际值。
 
-`mxt:aura_zone` 是原版同步的数据包注册表。文件位置为：
+## 环境怎么定下来
 
-```text
-data/<命名空间>/mxt/aura_zone/<名称>.json
-```
+环境解析优先级固定为：**群系绑定 < 维度绑定 < 永久人工区域 < 活跃阵法**。后一级整份替换前一级的灵气类型、元素值、规则和显示模板。普通区块的可消耗灵气仍保存于区块附件，因此同一位置所有系统共享同一份灵气库存。
 
-环境解析优先级固定为：群系绑定 < 维度绑定 < 永久人工区域 < 活跃阵法。后一级替换前一级的灵气类型、元素值、规则和显示模板。普通区块的可消耗灵气仍保存于区块附件，因此同一位置所有系统共享同一份灵气库存。
+- `dimensions` 和 `biomes` 可以同时填写；维度匹配优先于群系匹配。列表为空仅表示该模板不会参与静态绑定，仍可被人工区域或阵法引用。
+- `priority` 只在同一层级内部比较。多个群系模板同时命中、或多个维度模板同时命中时，`priority` 最大者生效；`priority` 相同时按模板 ID 升序取首个，因此重叠定义的选择结果在每次加载后稳定可复现。维度绑定始终优先于群系绑定，较高的群系 `priority` 不会越过维度层。
+- `cultivate_condition` 是此环境允许修炼的实体条件，默认为 `mxt:always`。例如 `mxt:aura_range` 可要求当前最终浓度处于 `min..max`；环境条件通过后，各 `realm_stage.cultivate_condition` 按资源链独立判断，不满足的链仅跳过自身恢复与转换。
+- 同一区块内到期修炼的玩家共享区块附件中的灵气库存。`distribution` 控制当库存不足时的分配方式：`random` 随机排序后优先满足；`equal`（默认）按最大最小公平方式均分并重分未使用份额；`realm_weighted` 按当前境界的 `aura_share_weight` 加权分配并重分未使用份额。共享区块内有重叠动态灵气域时，以稳定排序后的首个请求者所处环境的策略为准。
+- 修炼获得的修为与 `aura_gains` 会同时乘以当前位置浓度倍率。有限上限使用 `concentration / maximum`，无上限环境使用 `concentration / (concentration + 1)`；分配到的灵气不足请求量时还会额外按实际配额比例降低本次收益。
+- 这里没有「环境类型」字段：一处环境有什么灵气就是它 `aura` 的键；要求某处能修炼或能炼丹就写 `condition`（`cultivate_action` 的 `start_condition` / `condition`）或 `minimum_aura`（炼丹），两者都按灵气 id 或 `#标签` 说话。
+- `block_aura` 不占用环境基础上限：它会同时为当前区块增加等量可储存灵气容量。环境上限为 100、方块总贡献为 30 时，该区块有效上限为 130。实际位置查询采用有界子区块算法：距离当前子区块 3 个子区块以内按方块真实位置计算，外围按子区块中心近似，并使用 `1 / max(1, 距离平方)` 衰减；同一来源子区块会按当前访问玩家数粗略平分，区块库存仍由玩家共享。
+- 方块灵气缓存和区块库存更新周期由服务端配置「灵气 → 方块灵气周期」控制，默认每 10 tick 更新一次，允许范围为 1 至 1200 tick。
+- 推荐的自然灵气模板将每种灵气的 `amount` 设为 `0`，并启用正负噪声。经 `/ 10 - 5` 处理后，大面积区域没有自然灵气；方块贡献会在此基础上按区块内方块数量累加，可将灵石矿脉配置为远高于自然值。
+- `aura` 的键是 `mxt:aura` 注册表中的灵气 ID。每种灵气独立存储数量、上限、恢复速度和环境颜色；它的元素标记是同一份 `mxt:aura` 定义里的 `aura_type`（可选的 `mxt:element`）。
+
+## 示例
 
 ```json
 {
@@ -171,29 +222,9 @@ data/<命名空间>/mxt/aura_zone/<名称>.json
 }
 ```
 
-- `dimensions` 和 `biomes` 可以同时填写；维度匹配优先于群系匹配。列表为空仅表示该模板不会参与静态绑定，仍可被人工区域或阵法引用。
-- `priority` 只在同一层级内部比较。多个群系模板同时命中、或多个维度模板同时命中时，`priority` 最大者生效；`priority` 相同时按模板 ID 升序取首个，因此重叠定义的选择结果在每次加载后稳定可复现。维度绑定始终优先于群系绑定，较高的群系 `priority` 不会越过维度层。
-- 区块第一次加载时，以 `max(0, (该灵气的 amount + 柏林噪声) / 10 - 5)` 初始化；`noise.seed` 完全由数据包控制，便于整合包复现分布。
-- `max` 是区块环境基础上限。省略时等于该区块的初始环境灵气；数值是固定上限的简写；也可使用 `{ "type": "mxt:fixed", "value": 200 }`、`{ "type": "mxt:initial_multiplier", "multiplier": 2 }` 或 `{ "type": "mxt:unlimited" }`。该分派器来自固有注册表 `mxt:aura_maximum_type`，数据包只能选择既有算法。
-- `cultivate_condition` 是此环境允许修炼的实体条件，默认为 `mxt:always_true`。例如 `mxt:aura_range` 可要求当前最终浓度处于 `min..max`；环境条件通过后，各 `realm_stage.cultivate_condition` 按资源链独立判断，不满足的链仅跳过自身恢复与转换。
-- 同一区块内到期修炼的玩家共享区块附件中的灵气库存。`distribution` 控制当库存不足时的分配方式：`random` 随机排序后优先满足；`equal`（默认）按最大最小公平方式均分并重分未使用份额；`realm_weighted` 按当前境界的 `aura_share_weight` 加权分配并重分未使用份额。共享区块内有重叠动态灵气域时，以稳定排序后的首个请求者所处环境的策略为准。
-- 修炼获得的修为与 `aura_gains` 会同时乘以当前位置浓度倍率。有限上限使用 `concentration / maximum`，无上限环境使用 `concentration / (concentration + 1)`；分配到的灵气不足请求量时还会额外按实际配额比例降低本次收益。
-- `block_aura.aura_per_block` 不占用环境基础上限：它会同时为当前区块增加等量可储存灵气容量。环境上限为 100、方块总贡献为 30 时，该区块有效上限为 130。实际位置查询采用有界子区块算法：距离当前子区块 3 个子区块以内按方块真实位置计算，外围按子区块中心近似，并使用 `1 / max(1, 距离平方)` 衰减；同一来源子区块会按当前访问玩家数粗略平分，区块库存仍由玩家共享。
-- 方块灵气缓存和区块库存更新周期由服务端配置「灵气 → 方块灵气周期」控制，默认每 10 tick 更新一次，允许范围为 1 至 1200 tick。
-- `noise.scale` 越大，空间变化越平缓；内置环境使用约 `640` 至 `960`。常规环境建议将 `noise.amplitude` 保持为 `5`，对应未截断前约 `-5` 至 `5` 的噪声扰动。
-- `aura` 的键是 `mxt:aura` 注册表中的灵气 ID。每种灵气独立存储数量、上限、恢复速度和环境颜色；它的元素标记是同一份 `mxt:aura` 定义里的 `aura_type`（可选的 `mxt:element`）。
-- **没有"环境类型"字段了**。"这地方算不算某种地方"原先是靠 `aura_kinds` 这套裸字符串标记表达的，现已整条删除：一处环境有什么灵气就是它 `aura` 的键，要求某处能修炼/能炼丹就写 `condition`（`cultivate_action` 的 `start_condition`/`condition`）或 `minimum_aura`（炼丹），两者都按灵气 ID 或 `HolderOrTag` 说话。
-- `fluctuation.cycle_type` 支持 `day`、`moon`、`static`。波动只影响查询到的环境浓度；区块库存按 `regen_per_tick × 经过的刻数` 补回，补回周期由服务端配置「灵气 → 方块灵气周期」决定（默认每 10 tick）。
-- `rules.cultivate_suppress` 会中止正在进行的修炼。`tribulation_modify` 注入公式变量 `aura_tribulation_modifier`。`alchemy_env_bonus` **已接入**：开启后，位置落在该区域内的丹药配方直接视为满足 `minimum_aura`（它是开关、没有可缩放的量，所以顶替要求而不是放大池子）。`spirit_plant_bonus` 与 `natural_spawn_herb` 仍是制作中字段——本模组没有灵植种植/生长系统（生长、采集与生成按设计留给内容模组），灵植定义里的 `age`/`growth_rate`/`drop_chance` 也在等同一套系统；`element_tags`/`material_tags` 已经由物品匹配条目 `mxt:herb_tag` 消费。
-- `client_hud` 可整体省略。`stored_aura` 显示区块附件中的最终灵气库存，`sensed_concentration` 显示当前位置的环境模板浓度；两者也都可以单独省略。资源条上下文另提供 `mxt:environment_concentration` 与 `mxt:actual_concentration`，分别对应环境值和全部来源的实际值。
-- `particle` 是灵气区域顶层的可选粒子效果，使用原版 `ParticleTypes.CODEC` 解析粒子类型。`count`、`speed`、`spread`、`offset_*` 与 `force` 会原样传给原版粒子发送 API；字段省略时才不发送粒子，`count: 0` 保留原版的特殊定向粒子语义。
-- `client_render` 只负责客户端雾效，粒子不再放在其中。`fog_strength` 控制雾色和雾距离覆盖原版值的比例，`0` 为不覆盖，`1` 为完全覆盖，默认值为 `0.35`。
-- 服务端按服务端配置里的「灵气 → 同步周期」向玩家同步当前位置的实际浓度和环境浓度，默认每 5 tick 一次。网络同步中的 `actual` 包含环境、区块库存、方块和阵法等全部来源，`environment` 只包含环境模板；`stored_aura` 仍显示实际库存，`sensed_concentration` 和雾效只显示环境模板计算值。环境波动不会直接改写库存显示，但方块贡献、修炼消耗和库存回复仍会改变实际浓度。雾效强度还会按环境浓度缩放，因此低浓度区域会更淡。灵气粒子仍按每 5 tick 刷新。
-- `realm_stage.breakthrough_particle` 是可选的突破境界粒子；字段省略时不发送。标准预设为 `minecraft:end_rod`、`count: 20`、`speed: 0.03`、`spread: [0.6, 1.0, 0.6]`、`offset_y: 0.8`。
-- 两个 HUD 条均使用 Origins 风格的 71x8 贴图。`maximum` 是满条对应的浓度，必须大于零；`bar_index` 选择贴图行和图标，`inverted` 可选且默认为 `false`。`anchor` 为 `left` 或 `right`，`order` 控制同侧灵气条从下到上的顺序；灵气条会自动排在同侧资源条上方。
-- 推荐的自然灵气模板将每种灵气的 `amount` 设为 `0`，并启用正负噪声。经 `/ 10 - 5` 处理后，大面积区域没有自然灵气；`block_aura.aura_per_block` 会在此基础上按区块内方块数量累加，可将灵石矿脉配置为远高于自然值。
+## 客户端看到什么
 
-自然世界基础灵气使用 `max(0, (该灵气的 amount + noise) / 10 - 5)` 计算，负值会归零；灵石等方块的灵气贡献仍会在此基础上累加。
+服务端按服务端配置「灵气 → 同步周期」向玩家同步当前位置的实际浓度与环境浓度，默认每 5 tick 一次。同步里的 `actual` 包含环境、区块库存、方块和阵法等全部来源，`environment` 只包含环境模板；`stored_aura` 仍显示实际库存，`sensed_concentration` 和雾效只显示环境模板计算值。环境波动不会直接改写库存显示，但方块贡献、修炼消耗和库存回复仍会改变实际浓度。客户端只负责画，不决定扣除与收益。
 
 ## 阵法联动
 
@@ -228,13 +259,11 @@ const area = MxtAura.addBox(
 MxtAura.remove(player.level, area)
 ```
 
-人工区域会保存到世界。`priority` 越大，同类人工区域重叠时越优先。
-
-KubeJS 事件名为 `MxtEvents.auraZone`，事件的 `kind` 是 `enter`、`leave`、`tick` 或 `override`；`override` 可取消以拒绝阵法环境覆盖。
+人工区域会保存到世界。`priority` 越大，同类人工区域重叠时越优先。KubeJS 事件名为 `MxtEvents.auraZone`，事件的 `kind` 是 `enter`、`leave`、`tick` 或 `override`；`override` 可取消以拒绝阵法环境覆盖。
 
 ## 其他系统字段
 
-炼丹配方可使用：
+炼丹配方可以使用：
 
 ```json
 {
@@ -242,7 +271,7 @@ KubeJS 事件名为 `MxtEvents.auraZone`，事件的 `kind` 是 `enter`、`leave
 }
 ```
 
-妖兽档案可使用：
+妖兽档案可以使用：
 
 ```json
 {
@@ -251,5 +280,12 @@ KubeJS 事件名为 `MxtEvents.auraZone`，事件的 `kind` 是 `enter`、`leave
 }
 ```
 
-服务端可用 `/mxt aura query` 查询脚下最终环境；站在灵石矿石上时，可用 `/mxt aura vein` 查询相连矿脉数量与等级。
+服务端查脚下的灵气用这几条：
 
+| 命令 | 作用 |
+| --- | --- |
+| `/mxt aura query` | 列出这个位置的全部灵气与各自的量。 |
+| `/mxt aura query <灵气 id>` | 只看点名的那一条灵气。 |
+| `/mxt aura query element <元素 id>` | 只看元素标记是它的那些灵气；几条灵气可以带同一个元素标记，所以这个问法是问元素。 |
+| `/mxt aura vein` | 站在灵石矿石上时，查相连矿脉的方块数与等级。 |
+| `/mxt aura cache clear [半径]` | 清掉方块灵气查询缓存，半径 `0..32`，不写按 `3` 清；需要 gamemaster 权限。 |

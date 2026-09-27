@@ -27,6 +27,7 @@ KubeJS 适合注册具体物品、方块、配方和内容对象；MiXianTu 负�
 | `MxtPhysiques` | 查询、授予、移除与开关体质。 |
 | `MxtQuality` | 读物品堆解析出的品质与所属链条，写覆盖组件或沿链条升一档。 |
 | `MxtSouls` | 回收实体可转移的魂魄。 |
+| `MxtLifespan` | 读寿元账本（剩余刻数与上限），改写或增减它，也能让身体当场转世。 |
 | `MxtTriggers` | 发布自定义触发器信号，并让脚本订阅信号。 |
 | `MxtLoot` | 注册脚本战利品条件与战利品函数。 |
 | `MxtEvents` | 所有 MXT 服务端生命周期事件。 |
@@ -96,7 +97,7 @@ MxtActions.entity('example:heal', (entity, params, context) => {
 ## 接下来
 
 - [物品与绑定](/kubejs/items) —— 四张绑定表的字段与示例。
-- [KubeJS API 参考](/kubejs/api-reference) —— 17 个全局对象，一个对象一个页面。
+- [KubeJS API 参考](/kubejs/api-reference) —— 18 个全局对象，一个对象一个页面。
 - [综合示例](/kubejs/examples) —— 把几个对象组合起来用的完整脚本。
 - [用 KubeJS 创建物品](/tutorial/create-items-with-kubejs) —— 分步教程。
 - [物品一览](/player-guide/items) —— 本体自己提供的物品。

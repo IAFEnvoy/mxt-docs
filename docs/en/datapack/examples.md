@@ -1,41 +1,46 @@
 ---
 title: Datapack Examples
-description: "Complete JSON examples for MiXianTu data packs: resources, item aura, cultivation actions, item bindings and physiques, each with the registry it belongs to."
+description: "Data pack files you can copy outright: switching a definition off, resources and aura, cultivation actions, item bindings and physiques."
 ---
 
 # Datapack Examples
 
-The examples below chain the common systems into a minimal loop: resources, realms, the aura environment, cultivation actions and item fuel all come from the data pack, while the physical items are still registered by KubeJS or another mod.
+Every block below carries its own full path above it, so copy the directories along with the file.
 
-Read [Datapack Overview](./overview.md) first if you are not yet familiar with file locations, IDs and the `mxt:disabled` tag.
-
-## Example Layout
-
-A small data pack with these files looks like this:
+## Layout
 
 ```text
 data/example/mxt/resource/spirit_power.json
 data/example/mxt/element/common.json
 data/example/mxt/realm_stage/qi_condensation.json
-data/example/tags/mxt/resource/disabled.json
+data/example/mxt/aura/qi.json
 ```
 
-## Disabling a Definition
+`resource/spirit_power.json` is the value definition that `type` points at in the `item_aura` example below. Element definitions and realm stages (`element/common.json`, `realm_stage/qi_condensation.json`) belong to two other pages and are written the same way as the ones here.
 
-This is a tag file, not a registry entry. It belongs to the `mxt:disabled` tag of the target registry — here `resource` — and each listed ID stops being used by the matching service while staying resolvable for other definitions.
+## Switching a Definition Off
+
+Written in **the definition's own file**: when `neoforge:conditions` does not hold, the entry never enters the registry.
 
 ```json
+// data/example/mxt/resource/old_resource.json
 {
-  "replace": false,
-  "values": ["example:old_resource"]
+  "neoforge:conditions": [
+    { "type": "neoforge:mod_loaded", "modid": "example_addon" }
+  ],
+  "default_value": 0.0
 }
 ```
 
-Do not replace vanilla tags with a custom `tags` key: tag files always live under `data/<namespace>/tags/...`. See [Disabling a Definition](./overview.md#disabling-a-definition) for the fixed path and the full rules.
+When the condition holds, `neoforge:conditions` is stripped before the definition decoder sees it, and the remaining fields are read as usual. The conditions available, and the price of there being no middle state, are on [Datapack Development Overview](./overview.md#disabling-a-definition).
 
-## Resource: Qi
+Do not invent a `tags` key in place of the vanilla tags; tag files live under `data/<namespace>/tags/...`, and **a tag cannot switch an entry off** (tags are not bound yet when a registry entry is decoded).
 
-Registry: `resource` — [Resource](./json/resource.md), plus its cultivation behaviour in [Aura (aura)](./json/aura.md).
+## Aura, Elements and Common Bindings
+
+These examples chain the common systems into one minimal loop: resources, realms, the aura environment, cultivation actions and item fuel all come from the data pack; the items you can actually hold are still registered by KubeJS or another mod, and the data pack only claims them.
+
+Resource definition. `max` is an expression, one entry in `bars` adds an on-screen bar for this resource, `renderer` uses the `mxt:boss_bar` atlas, and `bar_index` picks which cell of that atlas.
 
 ```json
 // data/example/mxt/resource/qi.json
@@ -44,7 +49,6 @@ Registry: `resource` — [Resource](./json/resource.md), plus its cultivation be
   "max": "100 + realm_rank * 20 + absorbed_aura * 0.1",
   "bars": [
     {
-      "context": "mxt:self_hud",
       "anchor": "left",
       "order": 10,
       "renderer": {"type": "mxt:boss_bar", "bar_index": 1},
@@ -54,20 +58,18 @@ Registry: `resource` — [Resource](./json/resource.md), plus its cultivation be
 }
 ```
 
+Aura definition. `resource` says which value this aura is recorded on, and `first_realm` is the entry realm of its cultivation chain.
+
 ```json
 // data/example/mxt/aura/qi.json
 {
   "resource": "example:qi",
-  "first_realm": "example:foundation",
-  "regen": 0.25
+  "regen": 0,
+  "first_realm": "example:foundation"
 }
 ```
 
-The maximum is a formula that reads the realm rank and the aura the player has absorbed, and the inline bar draws the current and maximum value on a boss bar. The value stores nothing about cultivation: the `aura` definition points back at it through `resource`, adds a passive regeneration and enters the realm chain at `example:foundation`.
-
-## Item Aura: Spirit Stone
-
-Registry: `item_aura` — [Item Aura](./json/item_aura.md).
+Item aura. `items` claims the items, `type` points at a value definition, and `consume_speed` and `release_speed` decide how fast aura flows in and out while right-click is held; `exhausted_action` runs when the reserve bottoms out.
 
 ```json
 // data/example/mxt/item_aura/spirit_stone.json
@@ -81,32 +83,22 @@ Registry: `item_aura` — [Item Aura](./json/item_aura.md).
 }
 ```
 
-`items` uses an [item matcher](./overview.md#holders-tags-and-matchers), so an item tag works here as well as a single item ID. `type` is the **aura** the item carries, not the stored value: the value itself is read from that aura's `resource`.
-
-## Cultivation Action: Meditation
-
-Registry: `cultivate_action` — [Cultivate Action](./json/cultivate_action.md).
+Cultivation action. `aura_costs` takes only `mxt:aura` entries and pays from the shared aura pool under the cultivator; `tick_interval` is how many ticks apart `tick_action` runs.
 
 ```json
 // data/example/mxt/cultivate_action/meditation.json
 {
-  "start_condition": {"type": "mxt:aura_range", "aura": {"example:spirit_power": {"min": 90, "max": 100000}}},
-  "condition": {"type": "mxt:aura_range", "aura": {"example:spirit_power": {"min": 90, "max": 100000}}},
   "absorb_amount": "1 + level * 0.1",
   "aura_costs": [{"type": "mxt:aura", "aura": "example:spirit_power", "amount": 1}],
-  "aura_gains": [{"id": "example:qi", "amount": "2 + level * 0.1"}],
   "tick_interval": 20,
   "tick_action": {"type": "mxt:no_op"}
 }
 ```
 
-There is no environment-kind field: where the action may be practised is said with `start_condition`, checked once when it starts, and `condition`, checked before every tick. Both read the environment and can demand a concentration, a dimension, a block or a biome. The amount absorbed scales with the player's level.
-
-## Item Binding: Granting a Spirit Root
-
-Registry: `item_binding` — [Item Binding](./json/item_binding.md).
+Item binding. `items` names an item and a tag at once; `actions` run when the item is used, and this one grants a spirit root.
 
 ```json
+// data/example/mxt/item_binding/root_pellet.json
 {
   "items": ["kubejs:root_pellet", "#example:root_pellets"],
   "actions": [
@@ -116,13 +108,10 @@ Registry: `item_binding` — [Item Binding](./json/item_binding.md).
 }
 ```
 
-`kubejs:root_pellet` must already be registered, for example by a KubeJS startup script ([KubeJS](../kubejs/index.md)); the binding only attaches the action to it.
-
-## Physique: Innate Sword Bone
-
-Registry: `physique` — [Physique](./json/physique.md).
+Physique. `holder_condition` decides who may hold it, `attribute_modifiers` use vanilla attributes, and `granted_abilities` references ability ids.
 
 ```json
+// data/example/mxt/physique/innate_sword_bone.json
 {
   "holder_condition": {
     "type": "mxt:has_spirit_root",
@@ -135,13 +124,10 @@ Registry: `physique` — [Physique](./json/physique.md).
 }
 ```
 
-The entity condition decides who may hold the physique, the attribute modifiers are applied while it is held, and `granted_abilities` lists the abilities it grants.
-
-## Item Binding: Granting a Physique
-
-Registry: `item_binding` — [Item Binding](./json/item_binding.md).
+Now bind the same kind of pill again, this time granting the physique above. One item can only match one binding; on a conflict the highest `priority` wins.
 
 ```json
+// data/example/mxt/item_binding/body_pill.json
 {
   "items": "kubejs:body_pill",
   "actions": [
@@ -149,12 +135,3 @@ Registry: `item_binding` — [Item Binding](./json/item_binding.md).
   ]
 }
 ```
-
-This is the other half of the pair: the pill grants the `example:innate_sword_bone` physique whose own condition is checked when it is applied.
-
-## Where to Go Next
-
-- [Tutorials](../tutorial/index.md) — the same content built up step by step, with verification steps.
-- [Registry List](./json/index.md) — every registry with its directory and purpose.
-- [Types Reference](./types/index.md) — the actions and conditions used above.
-- [KubeJS Examples](../kubejs/examples.md) — register the items these bindings refer to.

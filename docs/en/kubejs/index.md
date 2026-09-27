@@ -27,6 +27,7 @@ The KubeJS bridge is optional. It exposes **one global object per domain** inste
 | `MxtPhysiques` | Query, grant, remove and switch physiques on and off. |
 | `MxtQuality` | Read the quality a stack resolves to and its chain, write the override component, or climb one tier. |
 | `MxtSouls` | Reclaim the transferable soul of an entity. |
+| `MxtLifespan` | Read the lifespan ledger (ticks left and the ceiling), rewrite or adjust it, and make a body be reborn on the spot. |
 | `MxtTriggers` | Publish custom trigger signals and subscribe scripts to them. |
 | `MxtLoot` | Register script loot conditions and loot functions. |
 | `MxtEvents` | Every MiXianTu server lifecycle event. |
@@ -96,7 +97,7 @@ MxtActions.entity('example:heal', (entity, params, context) => {
 ## Next
 
 - [Items and Bindings](./items.md) — the fields and examples of the four binding tables.
-- [KubeJS API Reference](./api-reference.md) — 17 global objects, one page each.
+- [KubeJS API Reference](./api-reference.md) — 18 global objects, one page each.
 - [Examples](./examples.md) — complete scripts that combine several objects.
 - [Create Items with KubeJS](../tutorial/create-items-with-kubejs.md) — the step-by-step walkthrough.
 - [Items](../player-guide/items.md) — the items the mod itself provides.

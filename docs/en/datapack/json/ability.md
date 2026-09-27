@@ -1,44 +1,71 @@
 ---
 title: Ability (ability)
-description: Defines an active, passive or triggered ability with its costs, cooldown, conditions and behaviour.
+description: "Defines an active, passive or triggered ability: its costs, cast time, charges, condition, element affinity and the behaviour it runs."
 aside: false
 ---
 
-# Ability (ability)
-
-An `ability` defines an active, passive or triggered ability, including its costs, cooldown, availability condition and the behaviour it executes.
+# Ability (ability) {#ability}
 
 ## File Location
 
-Ability files go in `data/<namespace>/mxt/ability/` within your datapack.
+`data/<namespace>/mxt/ability/<path>.json`
 
-**Purpose**: Active, passive and triggered abilities. **An artifact ability and an ability are the same concept** : the ability type is one shared table, and an artifact, a technique, a command or a script can all grant the same kind of ability.
+An ability is always exactly one `mxt:ability` entry, and this is the only place it is defined. Its identity is its own registry id: when `name` / `description` are omitted, the default keys are built from that id's namespace and path, with nothing appended after the path.
 
-## Fields
+A host writes only its id or a `#tag`. An [artifact](./artifact.md)'s `abilities`, a technique's or a talisman's `granted_abilities`, spirit roots and physiques, commands and scripts all reference it, without exception, and none of them may copy an ability into the host definition: **an ability written inline inside a host is not recognised**, and it makes that whole host definition fail to parse.
+
+Active, passive and triggered abilities all live on this page. An artifact ability and an ability are the same concept: the ability types are one shared table, and what an artifact, a technique, a command or a script grants is the same kind of ability.
+
+## Common Fields
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
+| --- | --- | --- | --- |
 | `name` | Text Component | `ability.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `ability.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
-| `type` | `AbilityType` | **required** | The built-in ability type, written **at the top level** (`{"type": "mxt:active", ...}`) rather than nested inside an `ability` object. The possible values are under [Ability Types](#ability-types). |
-| `costs` | `List<Cost>` | `[]` | Costs paid before the ability executes, all or nothing as one array. `mxt:item` and `mxt:js` entries need a player, so an ability carrying one can only be used by a player; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
-| `cast_time` | `NumberProvider` | `0` | Cast time. |
-| `cooldown` | `NumberProvider` | `0` | Cooldown. **Every type supports it** (not just active abilities): each payment writes the real length and the starting tick into the `mxt:cooldown` state, so it does not have to be declared again in `components`. |
-| `icon` | [Icon Reference](../types/shared_data_types.md#icon-reference) | none | Optional wheel icon for active abilities; it must define exactly one of `texture` (a 16x16 GUI texture) or `item`, because an icon with neither or both is rejected. |
-| `components` | `List<DataStorage>` | `[]` | State kinds the ability declares: `mxt:cooldown`, `mxt:charges`, `mxt:toggle`, `mxt:timer`, `mxt:resource` and `mxt:target_lock`. A kind's class is the slot it fills, the declared fields carry its parameters, and the values live in this ability's own holder inside `mxt:ability_holder`, addressed by the ability's id. See [Data Storage Types](/en/datapack/types/other/ability-and-curse#data-storage-type). |
-| `modifiers` | `List<AttributeEntry>` | `[]` | Passive vanilla attribute modifiers; an entry contains `attribute`, `id`, `amount` and `operation`, plus an optional `value` formula. |
-| `damage_condition` | `DamageCondition` | `mxt:always_true` | Restriction on damage triggers. |
-| `condition` | `EntityCondition` | `mxt:always_true` | Condition for the ability to be usable. For the passive types `mxt:modifier` and `mxt:aura` it is not a one-off gate: it is re-evaluated every tick, and the passive effect is dropped while it fails. |
-| `entity_action` | `EntityAction` | `mxt:no_op` | Behaviour executed on the caster. |
-| `target_selector` | `AbilityTargetSelector` | `mxt:self` | Which entities `bi_entity_action` applies to: `mxt:self` selects only the caster; `mxt:area` takes `radius` (required, capped at `128`) and `include_actor` (default `false`); `mxt:ray` is a cylinder along the look (`length` required, `radius` default `0.5`) and `mxt:cone` is a cone along the look (`length` and the half-angle `angle` are required), both also taking `include_actor`; all three area-like selectors accept `limit` (default `0`, meaning no cap) and `order` (`nearest` / `farthest` / `random`, default `nearest`) to keep only the nearest three; and `mxt:js` asks a server script. See [Ability Target Selector Types](/en/datapack/types/other/ability-and-curse#ability-target-selector-type) for the fields. |
-| `target_condition` | `BiEntityCondition` | `mxt:always_true` | Target relation condition. |
-| `bi_entity_action` | `BiEntityAction` | `mxt:no_op` | Behaviour executed on the caster and the target. |
-| `element_affinity` | `HolderOrTag<element>[]` | `[]` | Element affinity markers of the ability. A non-empty list is both the **cast gate** — with no matching spirit root the ability is not allowed — and the source of `element_modifier`: layer one of the [damage pipeline](../../technical/damage.md) multiplies it straight into the damage this cast deals (the `element_ability_modifier` of the matching spirit roots, combined per `element_affinity_mode`), so a damage formula must **not** write `* element_modifier` by hand. |
-| `element_affinity_mode` | `average` / `max` | `average` | How the `element_ability_modifier` of several matching spirit roots becomes the single `element_modifier` formula value: `average` takes the mean (the old behaviour) and `max` takes the best matching root. |
-| `hidden` | bool | `false` | Stays out of the wheel and out of tooltips, but is still granted and still works: it is how an ability says "I only want the effect, I do not want a cell". |
-| `item_action` | `ItemAction` | `mxt:no_op` | The behaviour run on **the item stack that carries this ability**, for an ability's own item cost or payoff. The `on_fail` of `mxt:upkeep` is the specialised spelling of the same thing (see that type). |
+| `description` | Text Component | `ability.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; today it is only stored and read, nothing draws it yet. |
+| `type` | Ability type id | **required** | Written at the **top level** (`{"type": "mxt:active", ...}`), not nested inside an `ability` object. For the values see [Ability Types](/en/datapack/types/other/ability). |
+| `costs` | `Cost` list | `[]` | Costs deducted before the ability executes, **all or nothing** as one array; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
+| `cast_time` | `NumberProvider` | `0` | Cast time. Above `0` a press only books a due tick, and the action fields actually run on that tick. |
+| `icon` | Icon reference | none | The wheel icon: **a bare string** is a 16x16 GUI texture, **an object** is an item stack template `{"id": ...}` (optionally with `count` / `components`). The two branches are told apart by parse order (the texture branch is tried first), and an item has to be written in the object form; see [Shared Data Types · Icon Reference](../types/shared_data_types.md#icon-reference). |
+| `charges` | `{maximum, recharge_ticks}` | none | The declaration of a charge pool; both fields are `NumberProvider`s and both are required: how many uses at most, and how many ticks one comes back after. |
+| `condition` | `EntityCondition` | `mxt:always` | Whether the ability can be used. Every type reads it, see [Condition](#condition) below. |
+| `element_affinity` | List of aura ids or `#tags` | `[]` | Element affinity markers of the ability; a non-empty list is both the cast gate (with no matching spirit root the cast is not allowed) and the source of `element_modifier` for the damage this cast deals. |
+| `element_affinity_mode` | `average` / `max` | `average` | How `element_modifier` is computed when several spirit roots match: `average` takes the mean, `max` takes the best one. |
+| `hidden` | bool | `false` | Skips this ability **in an artifact's tooltip** only; everywhere else it still works and is still granted. |
 
-### Example
+The table above is the part **every type reads**. Keys that only some types read are not here; they are documented on the [Ability Types](/en/datapack/types/other/ability) page: `cooldown` (default `0`, read only by the types that pay), `damage_condition` (default `mxt:always`, read only by `mxt:triggered`) and the four action fields (`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`). In JSON they are still written beside `type`; a key that is listed nowhere is read by nobody even when it is written.
+
+Numeric fields on abilities all use `NumberProvider`, so they take expressions. An ability has to pass its condition and pay all of its costs before its behaviour runs.
+
+### Condition {#condition}
+
+Every type reads `condition`, and reads it every beat: it is both the gate for counting as in effect and the switch for whether this beat runs the action fields. Types test it at different moments, though: a pulse of `mxt:interval` / `mxt:aura` only runs on a beat where it holds, and a `mxt:modifier` contributes its attributes only while it holds (recomputed every tick, withdrawn the moment it fails).
+
+### How `costs` and `cast_time` Behave
+
+`costs` go through the one shared cost plan: the whole array is validated first and then deducted as a whole; anything that cannot be paid refuses the whole array and rolls back what was already written. The `amount` of a `mxt:resource` entry is evaluated with the caster context plus **the spent value's own formula context** (the resource family's variables, such as `realm_rank` and `absorbed_aura`); see [Formula Variables](../types/formula_variables.md).
+
+`cast_time` is read by the cast pipeline only: a press books nothing but a due tick, and the action fields run on that tick. A positive value on an item-carried ability (one that needs no grant) is refused outright, with the failure reason `CARRIED_NOT_INSTANT`; a positive value on a child of `mxt:composite` makes the whole composite refuse with `INVALID_FORMULA`. `mxt:composite` itself never reads this field.
+
+### Element Affinity
+
+A non-empty `element_affinity` is the first gate: with no matching spirit root the cast is not allowed, with the failure reason `ELEMENT_AFFINITY`. It is also the source of `element_modifier` in the first layer of the [damage pipeline](/en/technical/damage), combined into the damage this cast deals from the `element_ability_modifier` of the matching spirit roots — the mean or the best one, per `element_affinity_mode`. So a damage formula must **not** write `* element_modifier` by hand.
+
+### `hidden`
+
+`hidden` is skipped **in an artifact's tooltip** and nowhere else: listing the abilities an artifact grants skips it, and that is the only place. It **takes no part in the wheel's filter**: the wheel's candidate pool reads the grant ledger (sorted by id) and filters on **being pressable**, `hidden` is not one of those conditions, so it never costs the wheel a cell. To keep a pressable ability off the wheel, do not put its id in the wheel layout; a type that is not pressable never enters the pool in the first place.
+
+### Keys That Hold One Object
+
+A few keys hold **one object rather than a type-dispatched entry** (plain fields under one key):
+
+| Field | Shape | Notes |
+| --- | --- | --- |
+| `charges` | `{maximum, recharge_ticks}` | Both required (`NumberProvider`): how many uses at most, and how many ticks one comes back after. |
+| `modifiers[]` | `attribute` + a flattened `id` / `amount` / `operation`, plus an optional `value` | `value` is a formula override: when written the modifier is evaluated from it, otherwise from `amount` (recomputed every tick). |
+
+The remaining count of `charges` is state (`mxt:charges.remaining`) and is not written in the definition. **Only a payment on the cast pipeline spends one**: validation refuses with `NO_CHARGES` while fewer than 1 remains, and one is taken once the payment is booked. A key going through the **shared gate** (`mxt:flight_control` / `mxt:storage`) spends no charge. It is the only state parameter left on an ability definition.
+
+A `modifiers` `amount` that is not finite is **not a load error**: the attribute service skips that entry at runtime.
 
 ```json
 {
@@ -49,95 +76,165 @@ Ability files go in `data/<namespace>/mxt/ability/` within your datapack.
   ],
   "cooldown": 100,
   "condition": {"type": "mxt:sneaking"},
-  "entity_action": {"type": "mxt:damage", "amount": "4 + level"}
+  "entity_action": {"type": "mxt:spawn_particles", "particle": {"type": "minecraft:crit"}},
+  "target_selector": {"type": "mxt:ray", "length": 6, "limit": 1},
+  "target_condition": {"type": "mxt:not_owner"},
+  "bi_entity_action": {"type": "mxt:damage", "amount": "6 + level"}
 }
 ```
 
-Numeric fields of abilities uniformly use `NumberProvider`. An ability must pass its condition and all its costs before its behaviour is executed. The `amount` of a `mxt:resource` entry in `costs` is additionally evaluated with the spent value's own formula context (the resource family, so `realm_rank` and `absorbed_aura` are available there); see [Formula Variables](../types/formula_variables.md).
+(This ability carries its own action fields; see [The Four Action Fields](#action-fields-by-type) below.)
 
-## Components and the Shared State Store
+## State Storage {#state-kinds-by-type}
 
-`components` is the list of **state kinds** a definition declares, dispatched by the built-in `mxt:data_storage_type` registry. A kind is itself the storable object: **its own class is the slot**, so one host holds at most one value per kind and nothing else has to name a slot. What is stored in the attachment is that object itself — declared fields and state fields are encoded together, and persistence dispatches on the value's own `type`, so the store never has to know any shape.
+Which **state kinds** an ability can store is decided by its `type`; a datapack does not declare it. The only state parameter you can write in the definition is `charges` (the pool's `maximum` and `recharge_ticks`); everything else is produced at runtime.
 
-| `type` | Declared fields | State field |
-|--------|-----------------|-------------|
-| `mxt:empty` | none | none — it declares no state of its own |
-| `mxt:cooldown` | `ticks` (**required**) | `duration`: the length the last use got; the tick it was written is when that cooldown started. **Rarely worth writing**: the `cooldown` field writes this state itself, and a declaration only makes sense when the declared length should differ from the field (a declared `ticks` wins over the field). |
-| `mxt:charges` | `maximum`, `recharge_ticks` (**required**) | `remaining`: charges left; without it a value reads as full. The runtime refills them: once `recharge_ticks` have passed since the last write, one charge comes back in the holder's tick, at most one step at a time and nothing written while full. |
-| `mxt:toggle` | `default` (default `false`) | `state`: the current flag |
-| `mxt:timer` | `duration` (**required**) | `ends_at`: the tick the timer ends at |
-| `mxt:resource` | `resource` (**required**) | `amount`: the amount kept for that resource |
-| `mxt:target_lock` | `range` (**required**) | `target`: the locked entity's UUID, as a string |
+State lives in the ability's own attachment, one per ability. It is saved with the world and synced to clients. Each record is addressed by **two dimensions**: the ability's own id plus the state kind. Two different ability ids never affect each other, and neither do two entities holding the same ability. One address holds exactly one record, and writing replaces it.
 
-Values are stored **with the attachment that owns them**: an ability's state lives in `mxt:ability_holder`, addressed by the holder's id plus the kind's class — the attachment is the host, so no host class has to be recorded, saved data keeps the id only, and the kind comes back from the value's own `type` dispatch. Two different ability ids never affect each other, and neither do two entities holding the same ability. The attachment records the tick of every write, which is where a reader gets "when this state started". What is written is the kind instance itself, encoded by its own `type` dispatch, so the store itself never learns anything about a family's shape.
+Content supplies those two dimensions as `family` and `id` (`family` is the registry the host lives in, which today means `mxt:ability`). Six kinds are writable:
 
-**Revoking an ability's last grant source clears every piece of state it owned**, so a re-granted ability does not come back with the charges it had before. Content writes state with the `mxt:modify_storage` entity action (`family`, `id`, `value`), where `value` is a whole storage object such as `{"type":"mxt:charges","maximum":3,"recharge_ticks":100,"remaining":2}` — that `type` dispatch is what reads it; a kind the host never declared is refused with a warning. The runtime cursors register in the same table but belong to the runtime and are refused outright by `mxt:modify_storage`: abilities keep three of them (`mxt:cast_deadline`, `mxt:channel_pulse`, `mxt:aura_pulse`) and a tribulation two (`mxt:entry_began`, `mxt:idle_countdown`, which live in that attachment's own single slot rather than in this id-addressed store).
+| State kind | State fields |
+| --- | --- |
+| `mxt:toggle` | `default`, `state` |
+| `mxt:timer` | `ends_at` |
+| `mxt:resource` | `resource`, `amount` |
+| `mxt:target_lock` | `target` (the UUID as a string) |
+| `mxt:charges` | `remaining`, `last_change` |
+| `mxt:cooldown` | `duration`, `started_at` |
 
-Reading state takes six entity conditions, addressed exactly like `mxt:modify_storage` (`family` = the datapack registry, `id` = the host) and likewise seeing only the kinds the host **declared**, so all six kinds can be asked about from content: `mxt:storage_toggle` (`expected`, default `true`, reads `state`, falling back to the declared `default` when nothing was ever written), `mxt:storage_timer` (`remaining` is a `{min?, max?}` window and `ended` reads `ends_at`; a timer with no `ends_at` is not running, so it reads as `0` left and `ended` true), `mxt:storage_resource` (`amount` is a window; without one it only asks whether anything was ever stored), `mxt:storage_target` (`locked` defaults to `true` and asks whether a target is locked, while `max_distance` additionally requires that UUID to still be findable in the actor's dimension and within range), `mxt:storage_charges` (`remaining` is a window over the charges left; never having spent one reads as full, namely the declared `maximum`), and `mxt:storage_cooldown` (`remaining` is a window and `ready` asks whether it is over; the length is the last real cooldown, falling back to the declared `ticks` for a write that carried no `duration`, and the start is the moment of the write — the runtime reads the same anchor; never having written one means not cooling down, so `0` left and `ready` true). `mxt:storage_cooldown` is the one that does **not** require the host to have declared the kind: the `cooldown` field alone is enough (the length is the value written, or `0` with no declaration), so an ability that only writes `cooldown` can still be read by the condition. Conditions are also evaluated on the client (item tooltips), where there is no server datapack registry and everything reads as false.
+**Only a kind the host declared can be written**, and revoking an ability's last grant source clears every piece of state under it. The declaration table, the action and the conditions that write and read it, and how cooldown and charges behave are on [Ability Casting](/en/technical/ability). Which types declare which kinds is on [Ability Types](/en/datapack/types/other/ability).
 
 ## Ability Types {#ability-types}
 
-The top-level `type` belongs to the extensible built-in table `mxt:ability_type`, with twelve built-ins: `empty`, `active`, `triggered`, `modifier`, `aura`, `channelled`, `composite`, `word`, `mount`, `flight_control`, `storage` and `upkeep`. **Artifact abilities and abilities share this one table** — `mxt:storage`, `mxt:upkeep` and today's `mxt:mount` / `mxt:flight_control` used to be a table of their own, `mxt:artifact_ability_type` (deleted whole), and are now ordinary ability types that any source (an artifact, a technique, a command, a script) can grant.
+The top-level `type` comes from the extensible built-in table `mxt:ability_type`, with fourteen built-ins: `empty`, `active`, `triggered`, `modifier`, `aura`, `interval`, `channelled`, `targeted`, `composite`, `word`, `mount`, `flight_control`, `storage` and `upkeep`. An artifact, a technique, a spirit root, a physique, an ability book, a command and a script all grant the same kind of ability.
 
-Two of them change when behaviour is executed:
+**Types and the fields each one reads are on [Ability Types](/en/datapack/types/other/ability)**, one section per type. This page keeps only what the types share: who runs the action fields and when, and how a targeted cast reads.
 
-| Type | Exclusive Fields | Behaviour Execution Timing |
-|------|------------------|----------------------------|
-| `mxt:channelled` | `tick_interval` (default `1`), `upkeep_costs` (default `[]`) | Executes `entity_action` and the target behaviour once on activation, then once per `tick_interval` after the upkeep resources have been deducted successfully, until it is released or the upkeep fails. It is the only behaviour entry point of a sustained effect. |
-| `mxt:composite` | `abilities` (**required**), `all_required` (default `true`) | Does not execute behaviour itself; with `all_required: false` only the first ability in the list is executed, while with `true` the costs of every ability are submitted in list order and then the behaviour of each child ability is executed in turn. |
+`cooldown` and `damage_condition` are written beside `type`, but only some types read them:
 
-Three types **need an item to carry them** (they are how an item-side ability such as an artifact's is written; granted by an ability book the syntax is legal but there is no item to work with, so using them is refused with "no carrier"):
+- **`cooldown`** (`NumberProvider`, default `0`): the cooldown length, written into the `mxt:cooldown` state. Types that pay read it: `mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` / `mxt:word` / `mxt:targeted` / `mxt:flight_control` / `mxt:storage`. **A type that never pays reads nothing even when it is written**: `mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:empty`, and `mxt:composite` itself (only its children pay) — those write one only when a command, a script or an already saved wheel cell force-casts them.
+- **`damage_condition`** (`DamageCondition`, default `mxt:always`): **only `mxt:triggered` reads it**. When that type subscribes to the `mxt:hurt` signal it tests this condition first and skips the signal while it fails. Written on any other type it is a key nobody reads; to pick a damage situation, use `condition` or a condition inside an action.
 
-| Type | Exclusive Fields | Meaning |
-|------|------------------|---------|
-| `mxt:mount` | `speed` (required `NumberProvider`), `seats` (default `1`, at most `4`), `sit` (default `false` = standing), `display` (how the mount is drawn; default = laid flat, blade forward, twice the authored size), `width` / `height` (default `0.35` / `0.12`), `step_height` (default `0`), `seat_offsets`, `mount_action` (`on_mount` / `on_dismount` / `tick`), `trail` (particles left behind) | **The mount (data)**: what an artifact becomes once a flying skill has taken it. It is **never activated**: it reads only its own fields, its top-level `costs` (the **fuel of every tick**: the carried artifact's own store is spent first and only the remainder falls to the driver; fractions are allowed) and its `condition` (re-read every tick; unmet means it lands). **Any other top-level field is a load error** (`cooldown` / `components` / `cast_time` / `entity_action` / `target_selector` / `target_condition` / `bi_entity_action` / `modifiers` / `damage_condition` / `element_affinity` / `element_affinity_mode` / `item_action`, each named in the message). Hitting a block or the ground ends the flight. `seats` counts **the driver too** - the driver must be a player, while any other seat is open to anyone, who boards by right-clicking the mount - and `sit` is one pose for the whole vehicle. The driver steers with the movement keys: jump climbs, the descend key (`X` by default, rebindable) sinks, sprint multiplies the horizontal speed by 1.5, and forward and backward **follow the look by default** (look up to climb, look down to dive; **Server Config → Flight → Fly Where You Look**, on by default, while off keeps all four directions level), with sneaking still dismounting as in vanilla. Movement is computed on the server alone. The three `mount_action` hooks **all run on the driver** (`on_mount` the moment the flight starts, `on_dismount` the moment it ends and before the seat is given up, `tick` every tick once the fuel is paid), while `trail` is emitted by **the mount itself** (`particle` (the **object form** `{"type": "minecraft:end_rod"}`; a bare id string is a load error, `Not a JSON object`) / `interval` / `count` / `speed` / `spread` / `offset_x` / `offset_y` / `offset_z` / `moving_only`, with spread and offset in blocks). |
-| `mxt:flight_control` | `hand` (`main` / `off` / `either`, default `either` = main hand first), `speed_multiplier` (default `1`) | **The skill that flies (needs a key)**: a press looks for a mount declared by the main hand and then the off hand, takes that artifact **into the mount entity** and rides it; pressing again lands, and **landing is free**. A technique usually grants it (`granted_abilities`), and so can a spirit root, a physique, an ability book, a command or a script; **without it there is no cell on the wheel at all**. The one-off price of taking off is its own `costs` and its cooldown its own `cooldown`. |
-| `mxt:storage` | `slots` (required `NumberProvider`) | The carrier's own container: the slot count is **rounded up to whole rows of nine** and cut at six rows (54 slots at most), and the contents live in the `mxt:artifact_storage` item component, reachable by the owner and the server alone. It needs a key too: the wheel cell opens the box and has no state. |
-| `mxt:upkeep` | `interval` (default `20`), `on_fail` (default `mxt:no_op`), `owner_only` (default `true`) | **A periodic price**: while carried, this ability's `costs` are settled **all together** (all or nothing) every `interval` ticks. When they cannot be paid, `on_fail` runs on the holder and that stack. The clock is the **world's**: only ticks divisible by `interval` settle. It does **not** need a key and does not go on the wheel. |
+### What Each Type Reads {#fields-per-type}
 
-The other six and how they relate to the behaviour fields:
+Each type reads its own few keys **out of the same JSON object**; `type` is a flat dispatch, not a nested object. **A key that is not listed is read by nobody even when written.** The two easiest ones to trip over:
 
-| Type | Exclusive Fields | Meaning |
-|------|------------------|---------|
-| `mxt:active` | none | Castable from the wheel; **it has no `slot` field** (removed 2026-09-25): which cell a skill occupies is the **player's own twelve-cell layout** and was never part of the skill's definition. An old pack writing `"slot": "..."` is a **load error that names `slot`** (this is the "known key this type never reads" case, not silent ignoring) - delete the line. |
-| `mxt:triggered` | `triggers` (default `[]`), `chance` (default `1`) | Runs its behaviour whenever one of its triggers fires, subject to `chance`. Every entry of `triggers` is a `trigger_type` entry: besides the built-in signals, `mxt:js` waits for a **custom** signal a server script publishes; see [`trigger_type`](/en/datapack/types/other/trigger-and-cost#trigger-type). |
-| `mxt:modifier` | none | A passive ability: it never runs `entity_action`; its `modifiers` apply for as long as the ability is granted, and its `condition` is re-evaluated every tick so the modifiers disappear while the condition fails. |
-| `mxt:aura` | `interval` (default `20`), `radius` (default `4`) | A periodic ability applied to the entities inside `radius` every `interval` ticks, re-evaluating `condition` on each round. |
-| `mxt:word` | `effect` (**required**), `requires_operator` (default `true`), `amount` (default `0`) | A terminal payload: `effect` is a **code whitelist** with exactly two values, `self_heal` and `purge_self_curses` (`amount` only means anything for the first), and a datapack **cannot add a third** - word magic is not an arbitrary command string; for anything else use an ordinary ability type with an `entity_action` (such as `mxt:heal`). Target behaviour is never executed again. |
-| `mxt:empty` | none | Does nothing, and is the registry's default entry. |
+- **`cooldown` and `damage_condition` are not common fields**: they are written beside `type`, but only the types listed just above read them.
+- **The four action fields are not common fields either**: only the types that run actions read them, see the next section.
+
+### The Four Action Fields {#action-fields-by-type}
+
+`entity_action`, `target_selector`, `target_condition` and `bi_entity_action` are written at the **top level of the ability**, beside `type`, with the defaults `mxt:no_op` / `mxt:self` / `mxt:always` / `mxt:no_op`. They are not common fields: only the types that run actions read them, and written on any other type they neither error nor take effect.
+
+The order within one chain is always: `entity_action` (runs first) → `target_selector` picks targets → every target is tested by `target_condition` → only a target that passes runs `bi_entity_action`. One target failing does not affect the others, and an action that throws only logs a line rather than stopping the remaining targets. The fields `target_selector` itself takes are on [Ability Target Selectors](/en/datapack/types/other/ability-selector).
+
+Five types run this set, each at **its own moment**:
+
+| Type | When it runs the four keys |
+| --- | --- |
+| `mxt:active` | On the press (with a `cast_time`, the tick it finishes). |
+| `mxt:triggered` | Once the trigger fires, the chance passes and the costs are paid. |
+| `mxt:channelled` | Once on activation, then once per `tick_interval` after each upkeep deduction succeeds. |
+| `mxt:aura` | A pulse that comes due on `interval` **finds entities by radius one by one**, and each entity only runs `target_condition` + `bi_entity_action` (a pulse reads neither `target_selector` nor `entity_action`); fired one-off (a command, a script, a talisman) it runs the whole set once through the ordinary path. |
+| `mxt:interval` | Runs the whole set on its own `interval`; fired one-off by a command or a script it runs once through the ordinary path. |
+
+`mxt:word` carries a terminal payload of its own (its own `effect` field) and does not read these four keys; `mxt:composite` delegates to its children and does not read them either; `mxt:targeted` does not read them either (it only picks targets and runs the payload's one-target half); `mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` do not read them either.
 
 ```json
 {
-  "type": "mxt:modifier",
-  "condition": {"type": "mxt:sneaking"},
-  "modifiers": [{"attribute": "minecraft:armor", "id": "example:guard", "amount": 2, "operation": "add_value"}]
+  "type": "mxt:active",
+  "costs": [{"id": "example:qi", "amount": 10}],
+  "cooldown": 40,
+  "entity_action": {"type": "mxt:spawn_particles", "particle": {"type": "minecraft:flame"}},
+  "target_selector": {"type": "mxt:ray", "length": 16},
+  "target_condition": {"type": "mxt:not_owner"},
+  "bi_entity_action": {"type": "mxt:set_on_fire", "ticks": 60}
 }
 ```
 
+### Targeted Casts (`mxt:targeted`) {#targeted}
+
+A press of `mxt:targeted` runs one full cast: its own `costs` / `cast_time` / `condition` / `cooldown` / `charges` / element affinity are paid and tested once, exactly as `mxt:active` does. It reads only three keys: `target_selector` (**required**, the distance and the shape are written here), `ability` (**required**, the payload ability run on every target, **concrete ids only, never a `#tag`**) and `cooldown` (default `0`, the length written into `mxt:cooldown`). The field table is on [Ability Types · `mxt:targeted`](/en/datapack/types/other/ability).
+
+It does **not read** its own top-level `entity_action` / `target_condition` / `bi_entity_action`. Every entity the `target_selector` picks is tested first by **the payload ability's own** `target_condition` (running caster → target), and only a target that passes runs **the payload's** `bi_entity_action`; **the actor is always whoever pressed**, so damage and effects are credited to them, the same rule as `mxt:aura`'s per-target pulse. The payload's own `costs` / `cast_time` / `cooldown` / `charges` / `condition` / element affinity are not read at all, and neither are its `entity_action` or its `target_selector`, so it has to be **one of the five types that run the four action fields**. The price and the cooldown are all charged to this `mxt:targeted` ability itself, once per cast.
+
+**Landing on nobody is decided before anything is paid**, so a press that reaches no one costs nothing: a `target_selector` that picks no entity, or whose picks are all filtered out by the payload's `target_condition`, is `NO_TARGET` (no target matches); a payload type with no one-target half at all is `NOT_APPLICABLE` (the named ability cannot act on a target). Written as a child of `mxt:composite`, these two are decided during the **draft preview** as well, so nothing is paid there either. With `cast_time > 0` this step is decided on the tick the cast finishes, and a failed one reports "Cast failed: `<reason>`" on the action bar.
+
+**Where the effects land**: an action in the payload that **acts on the target** (entity-facing ones such as `mxt:damage_target` / `mxt:heal_target` / `mxt:apply_effect`) is unaffected; an action that **places something** (ones that land by where this cast happens, such as `mxt:spawn_lightning`, `mxt:explode`, `mxt:spawn_particles`, `mxt:spawn_effect_cloud`, `mxt:play_sound`, `mxt:block_action`) lands at the **activation's own place** by default. A wheel press, a command or a script has no place, so those land at each target's own position; **a talisman or a display stand does have one** (the talisman, the stand), so they all land at the talisman's feet. To make them land **at the target's own position** in every case, wrap such actions in `mxt:target_action` with `"use_target_position": true`:
+
 ```json
-{
-  "type": "mxt:channelled",
-  "tick_interval": 20,
-  "upkeep_costs": [{"id": "example:qi", "amount": 1}],
-  "entity_action": {"type": "mxt:add_resource", "resource": "example:qi", "amount": 2}
-}
+{"type": "mxt:target_action", "use_target_position": true,
+ "action": {"type": "mxt:spawn_lightning", "visual_only": true, "color": 11962854}}
 ```
+
+The default of `mxt:target_action` still follows the activation's place; to place something on the **caster**, use `mxt:actor_action`.
+
+An area skill and a raycast skill are one type written two ways: what changes is the `target_selector`, not the type, and both have to state their own distance.
 
 ```json
 {
-  "type": "mxt:composite",
-  "abilities": ["example:meditate_channel"],
+  "type": "mxt:targeted",
+  "target_selector": {"type": "mxt:area", "radius": 8, "limit": 5},
+  "ability": "example:flame_mark",
+  "costs": [{"id": "example:qi", "amount": 12}],
   "cooldown": 100
 }
 ```
 
-A top-level ability that should be a channelled ability released from the wheel must use `mxt:channelled` as a child ability of `mxt:composite`: `mxt:active` and `mxt:channelled` are mutually exclusive single `type`s, and only the child abilities of a composite ability become the active channel.
+`example:flame_mark` carries the `target_condition` and the `bi_entity_action` itself (it is the payload of this cast), and whoever presses the `mxt:targeted` ability pays and is recorded as the origin of the behaviour.
 
-### An Ability Is Defined in One Place {#ability-single-definition}
+### Keys, Commands and Scripts
 
-An ability is always exactly one `mxt:ability` entry, and **`data/<namespace>/mxt/ability/<path>.json` is the only place it is defined**; its identity is its own registry id (when `name` / `description` are omitted the default keys follow the same four-segment rule above, with no suffix on the path any more). A host (an [artifact](./artifact.md)'s `abilities`, a talisman's or a technique's `granted_abilities`, and so on) writes only its **id** or a **`#tag`**, never a `key`, and never a copy of the ability: **the "ability written inline inside a host definition" shape is gone**, and an old definition written that way fails to parse as a whole.
+**Only five types are pressable**: `mxt:active` / `mxt:channelled` / `mxt:targeted` / `mxt:storage` / `mxt:flight_control`. The first three go through the full cast pipeline and pay for themselves; `mxt:flight_control` and `mxt:storage` first pass the **shared gate**, which tests in order granted → cooldown → condition → costs, and **writes no charge and runs no effect**.
 
-Numeric fields of an ability all take a NumberProvider or expression. The type goes on the **top-level** `type` (not inside a nested `ability` object), behaviour goes in `entity_action` / `bi_entity_action`, and resources or items are declared through `costs`:
+**The wheel pool only takes pressable types**: the candidate pool reads the grant ledger, sorts by id and then filters on being pressable. So `mxt:triggered` / `mxt:aura` / `mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:composite` / `mxt:word` / `mxt:empty` all **never enter the wheel pool**, and `hidden` is not one of that filter's conditions either. The dispatch on a wheel press is: a pressable type goes to activation, and **everything else falls back to one ordinary cast** — a path that only serves **an already saved wheel cell / layout**, since a layout is written to disk and may name an ability that is not pressable, so the server still honours it.
+
+**Commands and KubeJS are a different road**: `/mxt ability cast` and the KubeJS cast entry point cast any type directly, and an item-carried ability goes the same way; those runs go through the cast pipeline as usual (condition, costs, `cast_time`, cooldown, charges).
+
+Ability behaviour is handled on the server; the client wheel only sends which kind and which id was chosen, and the grant, the conditions, the costs and the cooldown are all decided by the server.
+
+The order one ability activation runs in:
+
+```mermaid
+sequenceDiagram
+    participant C as Client wheel
+    participant S as Server
+    participant H as The ability's state attachment
+    participant R as The ability's own costs
+
+    C->>S: send a use request
+    S->>H: read this ability's cooldown state
+    H-->>S: the duration and the started_at it began on
+    S->>S: evaluate condition and the element affinity gate
+    S->>R: deduct resources or items per costs
+    alt cooldown, condition, gate or costs fail
+        S-->>C: refused, no behaviour runs
+    else all pass
+        S->>S: run this activation's own four action fields
+        S->>H: write the real cooldown length and its start tick
+        S-->>C: the cast result
+    end
+    opt the ability is mxt:channelled
+        S->>R: deduct upkeep_costs every tick_interval
+        S->>S: run those four action fields once after the deduction succeeds
+        S-->>C: the channel ends on release or after an upkeep failure
+    end
+    opt the ability is mxt:interval
+        S->>H: tick its own state every tick
+        S->>S: run the four action fields when world time divides interval and it counts as in effect
+    end
+```
+
+For a top-level ability to be a channelled ability you can release from the wheel, make `mxt:channelled` a child of `mxt:composite`: `mxt:active` and `mxt:channelled` are mutually exclusive single `type`s, and only a composite's children become the active channel. `mxt:composite`'s own `costs` / `cooldown` / `charges` all take no effect, and the money and the cooldown are booked under **the child's own id**.
+
+```json
+{
+  "type": "mxt:composite",
+  "abilities": ["example:meditate_channel"]
+}
+```
+
+`example:iron_palm` is an `mxt:active` ability carrying its own action fields:
 
 ```json
 {
@@ -145,36 +242,4 @@ Numeric fields of an ability all take a NumberProvider or expression. The type g
   "costs": [{"type": "mxt:resource", "resource": "mxt:spirit_power", "amount": 10}],
   "entity_action": {"type": "mxt:damage", "amount": "8 + level"}
 }
-```
-
-::: info Server-authoritative
-Ability behaviour is handled on the server; the client wheel only sends which kind and which id was chosen (`WheelActionC2SPayload(kind, id)`), and the server decides the grant, the conditions, the costs and the cooldown.
-:::
-
-Expanding that rule into a timeline, one cast runs in this order.
-
-```mermaid
-sequenceDiagram
-    participant C as Client wheel
-    participant S as Server
-    participant H as mxt:ability_holder
-    participant R as the ability's own costs
-
-    C->>S: send a use request
-    S->>H: read this ability's cooldown state
-    H-->>S: the write tick is where that cooldown started
-    S->>S: evaluate condition and the element affinity gate
-    S->>R: deduct resources or items per costs
-    alt cooldown, condition, gate or costs fail
-        S-->>C: refused, no behaviour runs
-    else all pass
-        S->>S: run entity_action and the target behaviour
-        S->>H: write the real cooldown length and its start
-        S-->>C: the cast result
-    end
-    opt the ability is mxt:channelled
-        S->>R: deduct upkeep_costs every tick_interval
-        S->>S: run the behaviour once after the deduction succeeds
-        S-->>C: the channel ends on release or upkeep failure
-    end
 ```

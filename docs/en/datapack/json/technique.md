@@ -1,103 +1,91 @@
 ---
 title: Technique (technique)
-description: Defines a cultivation technique that modifies cultivation speed and grants passive attributes and abilities.
+description: "Defines a learnable cultivation technique: its grade, learning condition, cultivation multiplier, the levels of the mastery chain it enters, and the passive attributes and abilities it grants."
 aside: false
 ---
 
-# Technique (technique)
+# Technique (technique) {#technique}
 
-A `technique` defines a learnable cultivation technique: its grade, learning condition, cultivation multiplier, passive attributes and granted abilities.
+File location: `data/<namespace>/mxt/technique/<path>.json`
 
-## File Location
-
-Cultivation technique files go in `data/<namespace>/mxt/technique/` within your datapack. The registry is `mxt:technique`; earlier versions called it `cultivation_technique`.
-
-**Purpose**: Cultivation technique definitions: learnable, granting abilities and cultivation modifiers by level.
-
-The filename corresponds to its ID. For example, `data/example/mxt/technique/vital_breath.json` has the ID `example:vital_breath`.
-
-## Fields
+A technique is something that can be learned. Once learned it stays in effect: `granted_abilities` hands out abilities right away and `passive_modifiers` keeps feeding attributes, while the climbing part runs on a ledger of its own — a technique points at the entry of a mastery chain, the holder advances along that chain level by level, and every level unlocks its own abilities. All learned techniques are active at the same time.
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | Text Component | `technique.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `technique.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
-| `quality` | `Holder<quality>` | none | The technique's own **grade**, as one [quality](./quality.md) entry. It does two jobs: the technique panel reads it — a row starts with "technique name + level", the name is tinted with the grade's `color`, and the row tooltip's "Grade" line reads its name and colour — and it is the **default tier of the technique's carrier item** (an `mxt:item_quality` override component on the stack wins). Omitted, no grade is shown and the carrier gets no default tier. |
-| `learn_condition` | `EntityCondition` | `mxt:always_true` | Learning condition. |
-| `exclusive_tags` | `Identifier[]` | `[]` | Mutual exclusion tags of the technique. |
+| --- | --- | --- | --- |
+| `name` | Text Component | `technique.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `technique.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is only stored and read, nothing draws it yet. |
+| `quality` | Quality ID | none | This technique's own grade, one [quality](./quality.md) entry. |
+| `icon` | Icon reference | none | The icon the technique shows in interfaces such as the technique panel. |
+| `learn_condition` | `EntityCondition` | `mxt:always` | Learning condition. |
+| `exclusive_tags` | Identifier array | `[]` | Mutual exclusion tags for this technique. |
 | `cultivation_modifier` | `NumberProvider` | `1` | Cultivation multiplier. |
-| `passive_modifiers` | `List<AttributeEntry>` | `[]` | Passive attributes; uses vanilla `AttributeModifier`s, `value` is an optional dynamic formula. |
-| `granted_abilities` | `HolderOrTag<ability>[]` | `[]` | Abilities granted after learning; always active. |
-| `default_stage` | `Holder<skill_stage>` | none | The entry level of this technique's mastery chain; a technique that defines no mastery omits it. |
-| `mastery_resource` | `Holder<resource>` | none | The stored value that measures this technique's mastery. With it, the technique advances on its own as that value grows; without it, the technique never advances. |
-| `configuration` | `Map<Holder<skill_stage>, StageConfiguration>` | `{}` | What each level of the shared chain means to this technique. See the entry fields below. |
+| `passive_modifiers` | Array of attribute modifier entries | `[]` | Passive attributes. |
+| `granted_abilities` | Array of ability IDs or `#tags` | `[]` | Abilities granted on learning; always active. |
+| `default_stage` | Skill stage ID | none | The entry level of this technique's mastery chain. |
+| `mastery_resource` | Value ID | none | The stored value that measures this technique's mastery. |
+| `configuration` | Map of skill stage ID to entry object | `{}` | This technique's own annotation of each level on the shared chain; entry fields are in the table below. |
 
-A `configuration` entry is this technique's own annotation of one level of the chain:
+Each `configuration` entry describes one level:
 
-| Entry field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `condition` | `EntityCondition` | **required** | The requirement to **reach** that level. A level that needs nothing writes `mxt:always_true`; an array requires all of them. |
-| `ability` | `HolderOrTag<ability> or array` | `[]` | The abilities that level grants. They are a **minimum** requirement: they stay active on later levels, so levels add to each other instead of replacing each other. One ability, a `#` tag, or an array of either. |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `condition` | `EntityCondition` | **required** | The condition for **reaching** that level. Write `mxt:always` when a level needs nothing; an array means all of them have to hold. |
+| `ability` | Ability ID, `#tag`, or an array of either | `[]` | The abilities that level grants. They are a **minimum**: they stay active on later levels, so abilities accumulate. One ability, a `#` tag, or an array of either. |
 
-The levels themselves belong to the chain, so one chain can be shared by several techniques while each technique decides what the levels grant and what they cost. The entry level is where a holder starts, so it needs no entry at all; if one is written anyway, its `ability` still counts at that level while its `condition` is decoded but never gates anything, because nothing advances *into* the entry level. Every level after the entry level **must** be configured, and a configured level the technique can never reach from its `default_stage` is rejected - a chain cannot be climbed through a level that nothing describes.
+`quality` does two jobs: a technique panel row starts with "technique name + level", the name is tinted with the grade's `color`, and the row tooltip's "Grade" line reads its name and colour; it is also the **default tier of the technique's carrier item**, and an `mxt:item_quality` override component on the stack wins over it. Omit `quality` and no grade is shown and the carrier gets no default tier.
 
-`granted_abilities` and `configuration` are independent: the first list is active as soon as the technique is learned, the second grows as the holder's level in the chain advances. `configuration` needs `default_stage` to name the chain it belongs to, so writing it without `default_stage` is rejected while the datapack loads; an unconfigured step or an unreachable key is rejected when the server cache is built.
+`passive_modifiers` uses vanilla AttributeModifiers; `value` is an optional dynamic formula.
 
-## Advancement
+A technique that defines no mastery may omit `default_stage`.
 
-Advancement is driven by data, not by the technique file alone. `mastery_resource` says *what* measures mastery; the level's own `mastery` (see [`skill_stage`](./skill_stage.md)) says *how much* is needed; the level's `condition` says what else must hold; and something outside the technique decides how the value grows.
+Without `mastery_resource` a technique never advances.
 
-A learned technique advances one level at a time, at most once per level per check, while all of these hold:
+The levels themselves belong to the chain, so one chain can be shared by several techniques while each technique decides what its levels grant and what they ask for. The entry level (`default_stage`) is where a holder starts, so it **needs** no entry; write one anyway and its `ability` still counts at that level while its `condition` is only decoded and never gates anything, because nothing ever advances *into* the entry level. Every level after the entry level **must** be configured, and a configured level the technique can never reach from its `default_stage` is rejected while the chain is rebuilt — a chain cannot be climbed through a step that nothing describes.
 
-- `mastery_resource` is set,
-- the holder's stored value for that resource is at least the next level's `mastery`, and
+`granted_abilities` and `configuration` are independent: the first list is active as soon as the technique is learned, the second accumulates as the holder's level advances. `configuration` needs `default_stage` to name the chain it belongs to, so writing it without `default_stage` errors while the datapack is parsed; a missing intermediate level or an unreachable key is rejected while the chain is rebuilt.
+
+Advancement is driven by data rather than by the technique file alone: `mastery_resource` decides **what** measures mastery, the level's own `mastery` decides **how much** is needed, the level's `condition` decides **what else** has to hold, and whatever content lives outside the technique decides how the value grows (a trigger rule, a cultivation profile, or a script).
+
+A learned technique advances level by level on the server's periodic check, at most one level per check, and only while all of these hold:
+
+- `mastery_resource` is set;
+- the holder's stored value for that resource is at least the next level's `mastery`;
 - the next level's `condition` passes.
 
-Abilities are then recalculated from the new level: `granted_abilities` plus every `ability` of the levels reached so far, since `ability` is a minimum requirement. Advancing publishes [`mxt:technique_stage`](./trigger.md) so other content can react. Because the levels live on the chain and the mastery value lives on a resource, a content pack can grow mastery however it likes — a [trigger rule](./trigger.md) that adds to the resource, an [aura definition](./aura.md), or a script:
+Advancing recalculates ability grants from the new level: `granted_abilities` plus the `ability` of every level reached so far, since `ability` is a minimum requirement. Advancing publishes the `mxt:technique_stage` signal for other content to react to — it carries the rank just reached as the formula variable `stage`, plus `technique` as an extension value. Because the levels live on the chain and the mastery value lives on a resource, a content pack decides for itself how mastery grows:
 
 ```json
 // data/example/mxt/trigger/mastery_from_combat.json
 {
-  "trigger": {"type": "mxt:kill"},
-  "action": {"type": "mxt:add_resource", "resource": "example:sword_mastery", "amount": 1}
+  "trigger": { "type": "mxt:kill" },
+  "action": { "type": "mxt:add_resource", "resource": "example:sword_mastery", "amount": 1 }
 }
 ```
 
-A technique with `configuration` but no `mastery_resource` never advances on its own; `mastery_resource` without `default_stage` is rejected, because there would be no chain to climb.
+A technique with `configuration` but no `mastery_resource` never advances on its own; the other way round, `mastery_resource` without `default_stage` is rejected while parsing, because there would be no chain to climb.
 
-::: info Multiple Techniques
-Every learned cultivation technique is active at the same time.
-:::
-
-## Example
+**Reading technique state.** The entity condition `mxt:technique` asks which techniques a body has **learned**: `techniques` takes an entry, a `#` tag or an array, an empty list meaning "learned any technique at all", and `match` is `any` (the default, where one hit is enough) or `all` (every written entry has to hold, and an empty list is rejected at load time rather than quietly turning into "always true"); `mxt:skill_stage` then asks how far they have climbed. What it reads is **learned**, not "currently active" — techniques have no on/off switch, spirit roots and physiques do; to say "no technique", wrap one in `mxt:not`. A loot table uses the same `mxt:technique` name with an extra `entity` target field and the same shape otherwise (see [Loot and Advancement Criteria](../loot-and-criteria.md)). It asks the grant ledger a body carries, so a technique the current pack no longer provides still answers. See [Entity Condition Types](../types/condition/entity_condition_types.md) for the field details.
 
 ```json
+// data/example/mxt/technique/azure_breath.json
 {
-  "quality": "example:earth",
-  "learn_condition": {"type": "mxt:has_realm", "aura": "example:qi"},
-  "exclusive_tags": ["example:fire_technique"],
-  "cultivation_modifier": 1.5,
-  "passive_modifiers": [
-    {"attribute": "minecraft:max_health", "id": "example:technique/vital_breath", "amount": 2, "operation": "add_value"}
-  ],
-  "granted_abilities": ["example:vital_breath_active"],
-  "default_stage": "example:vital_breath_1",
+  "granted_abilities": ["example:azure_guard"],
+  "default_stage": "example:azure_breath_1",
   "configuration": {
-    "example:vital_breath_1": {
-      "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
-      "ability": "example:vital_breath_bolt"
+    "example:azure_breath_1": {
+      "condition": { "type": "mxt:has_realm", "aura": "example:qi" },
+      "ability": "example:azure_bolt"
     },
-    "example:vital_breath_2": {
-      "condition": {"type": "mxt:realm", "realm": "example:foundation", "comparison": "at_least"},
-      "ability": ["example:vital_breath_bolt", "#example:vital_breath_mastery"]
+    "example:azure_breath_2": {
+      "condition": { "type": "mxt:realm", "realm": "example:foundation", "comparison": "at_least" },
+      "ability": ["example:azure_bolt", "#example:azure_mastery"]
     },
-    "example:vital_breath_3": {
+    "example:azure_breath_3": {
       "condition": [
-        {"type": "mxt:realm", "realm": "example:core_formation", "comparison": "at_least"},
-        {"type": "mxt:health", "comparison": ">=", "compare_to": 20}
+        { "type": "mxt:realm", "realm": "example:core_formation", "comparison": "at_least" },
+        { "type": "mxt:health", "comparison": ">=", "compare_to": 20 }
       ]
     }
   }
 }
 ```
-

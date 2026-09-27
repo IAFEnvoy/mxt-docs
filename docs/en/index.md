@@ -52,11 +52,11 @@ The **status** column says how far along a module is (it follows the code, and i
 
 | Module | Status | Description |
 | --- | :--: | --- |
-| Datapack Core | ✅ | Gameplay rules are described by datapacks: conditions, effects, number calculation, item matching and trigger timing can all be freely combined, and a single entry can be disabled at any time. |
+| Datapack Core | ✅ | Gameplay rules are described by datapacks: conditions, effects, number calculation, item matching and trigger timing can all be freely combined, and a single entry can be kept out of the registry at load time with a condition. |
 | Wheel and Character UI | ✅ | Abilities (artifact skills included) and spirit power share one wheel: the main wheel's twelve cells are yours to arrange, the pages behind it follow what you carry and the Beast Taming Bell in hand, and holding `R` uses the cell you point at. |
 | Resources | ✅ | Numeric resources such as cultivation progress and spirit power can be defined; they regenerate by rule, are consumed by abilities and cultivation, and are drawn as resource bars on the HUD. |
 | Aura | ✅ | The world has different aura concentrations per dimension, biome and block, changing over time and with formations; players can query the concentration at their position and see the result through particles, fog and the HUD. |
-| Cultivation and Realms | ✅ | Players meditate to accumulate cultivation progress, faster where aura is dense, and break through to the next realm once the datapack's requirements are met. |
+| Cultivation and Realms | ✅ | Players meditate to gather cultivation progress, faster where aura is dense, and break through to the next realm once the datapack requirements are met; realms and packs grant lifespan, and running out means death or rebirth as configured. |
 | Elements | ✅ | Defines elements and the overcoming and adaptation relations between them, read by spirit roots, aura and other gameplay. |
 | Spirit Roots and Physiques | ✅ | Spirit roots and physiques can be granted to players, affecting cultivation, ability strength or passive attributes; exclusions are defined by datapacks, and a held one can be switched off without being given up. |
 | Techniques | 🚧 | Learning a cultivation technique grants active moves or passive bonuses, and exclusion tags stop certain techniques from being learned together; a manual is an item with the `mxt:technique` component, and the mod generates a jade slip per technique. |
@@ -69,8 +69,8 @@ The **status** column says how far along a module is (it follows the code, and i
 | Forging | ✅ | At a Forge Table, several materials are hammered into a result following a blueprint; different tools unlock different methods, and the quality of the result depends on the process and the number of steps. |
 | Alchemy | 🚧 | An alchemy recipe describes the inputs, aura, temperature, furnace tier and duration that settle into a result or a failure; pills apply their effect, and too many accumulate toxicity. |
 | Spirit Herbs | 🔲 | Defines binding and quality for spirit herb items, which serve as materials for alchemy and gathering gameplay. |
-| Item Binding | 🚧 | Brings existing items into gameplay: attach passive behavior, weapon damage and attack speed to any item, or bind abilities that fire on right-click use and on attack. |
-| Talismans | 🚧 | A Talisman Brush inscribes ability definitions onto a carrier (one carrier can hold several); holding right-click until it is full fires every inscribed ability and spends one carrier, then starts the item cooldown. |
+| Item Binding | 🚧 | Brings existing items into gameplay: attach passive behavior and vanilla attribute modifiers to any item, or bind abilities that fire on right-click use and on attack. |
+| Talismans | 🚧 | A Talisman Brush inscribes ability definitions onto a carrier (one carrier can hold several); holding right-click until it is full fires them, spends a carrier or the wear a definition declares, and starts the item cooldown. A definition may also declare a price and a tier. |
 | Quality | ✅ | Items carry a quality shown in their tooltip; a quality chain fixes the ladder, its default tier and each step's price, definitions declare a default and a stack component overrides it. |
 | Artifacts | 🚧 | Items become artifacts via `artifact`: `items` claims them, `spirit_capacity` sets a per-aura ceiling, and `abilities` names what carrying it grants by ability id or tag. Storage and the flying skill are ordinary ability types with a wheel cell each, and the flying skill comes from a grant rather than from the artifact, which only declares the mount data. |
 | Economy | ✅ | Items can be defined as currency with a value, supporting exchange and change; players can trade directly with each other, or use trade stations and cheques to settle transactions. |

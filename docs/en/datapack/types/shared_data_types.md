@@ -1,61 +1,50 @@
 ---
 title: Shared Data Types
-description: Complex data types reused by many MiXianTu definitions, including costs and gains, attribute entries, holder and tag selectors, and item matchers.
+description: "Complex values shared by many registries: Cost, AuraGain, AttributeEntry, icon references, holders and tags, and ItemMatcher."
 ---
 
 # Shared Data Types
 
-These are complex values that are referenced by many definitions, actions and conditions across the mod. They have no `type` field of their own unless stated, and they are written inline wherever a field table names them.
+These values belong to no single registry; many fields take them. Check the shape here before you write a field.
 
----
+## Basic Types
 
-## Icon Reference
+| Type | JSON Shape | Description |
+| --- | --- | --- |
+| `String` | `"fire"` | A plain string. |
+| `Boolean` | `true` | A boolean. |
+| `Integer` | `20` | An integer; the field table states the range. |
+| `Long` | `100000` | A long integer; the field table states the range. |
+| `Double` | `1.5` | A double; `NaN` and infinity are rejected at load. |
+| `Identifier` | `"example:fire"` | A namespaced resource ID. |
+| Registry Entry Reference | `"example:resource"` | Points at one registry entry; write the entry's own id. |
+| Tag Reference | `"#example:fire"` | A vanilla tag; the `#` is required. |
+| Entry or Tag | A string or an array of strings | One id, one `#tag`, or both mixed in one array. |
+| `ItemMatcher` | An ID, a tag or a mixed array | The `items` field of the item binding tables; it matches existing items and never creates one. |
+| `Text Component` | A string or a text object | Accepts translation key strings and vanilla text components. |
+| `ItemStackTemplate` | `{"id":"minecraft:stone"}` or `"minecraft:stone"` | An item stack template: write either a bare item ID or an object (`id` is required, `count` and `components` are optional). Datapack registries are parsed **before item components are bound**, so every item stack inside a datapack definition uses this. |
+| `ItemStack` | `{"id":"minecraft:amethyst_shard"}` | A vanilla item stack, **always written as an object** (`id` is required, `count` and `components` are optional); a bare item ID string is not accepted. It requires item components to be bound, so it is only used for attachments and save state — use `ItemStackTemplate` in datapack definitions. |
+| `NumberProvider` | A number, a string or an object | A constant, an exp4j expression or a built-in number provider; see [Number Provider Types](./number_provider_types). |
+| `EntityAction` | An object or an array of objects | Runs an action on an entity; an array runs in order. |
+| `BiEntityAction` | An object or an array of objects | Runs an action on a source entity and a target entity. |
+| `BlockAction` | An object or an array of objects | Runs an action on a block position. |
+| `ItemAction` | An object or an array of objects | Runs an action on an item stack. |
+| `EntityCondition` | An object or an array of objects | An array means every condition has to pass. |
+| `Weighted` | `{"value": …, "weight": 3}` | One entry of a weighted list; the whole mod has only this one shape: `value` is required, `weight` is optional (default `1`). An entry whose weight is `≤0` counts as `0` (it is never picked). When every weight in a table is `0`, behaviour splits by use: `mxt:choice`'s `actions` picks one entry **uniformly** and a table written wrong still runs; `mxt:weighted_list`'s `distribution` picks nothing and evaluates to `0` after one warning (a weight sum that overflows the integer range does the same). Used by `mxt:choice`'s `actions` and `mxt:weighted_list`'s `distribution`. `secret_realm`'s `entry` array is the one exception: there the `weight` sits directly on the landing object (which also carries `pos`, a random radius and so on), and **a negative weight is rejected at load** rather than counted as `0`; `0` still means the entry is never picked. |
 
-Every icon field in the mod takes the same value: **either** a GUI texture **or** an item. Definitions that carry one are [ability](../json/ability.md), [resource](../json/resource.md), [forging method](../json/forging_method.md) and [technique](../json/technique.md).
+## `Cost`
 
-| Form | Type | Description |
-|------|------|-------------|
-| A JSON string | Identifier | A 16x16 GUI texture, for example `example:textures/gui/icon/sword.png` |
-| A JSON object | `ItemStackTemplate` | An item stack template such as `{"id": "minecraft:iron_ingot"}`, optionally with `count` and `components` |
+Every field that **consumes** something takes the same array, and each entry is one of the five shapes below, dispatched on `type`:
 
-The texture branch is tried first, and it is a plain `Identifier`, so **any bare string is a texture**. An item therefore always has to be written as an object with an `id`, because a bare item ID would be read as the path of a texture instead.
+| Shape | Fields | Description |
+| --- | --- | --- |
+| `{"id": "example:qi", "amount": 5}` | `id`, `amount` | The shorthand, equivalent to `mxt:resource`; the definition id goes in `id`. |
+| `{"type": "mxt:resource", ...}` | `resource`, `amount` | Spends a value; the value definition id goes in `resource`. |
+| `{"type": "mxt:aura", ...}` | `aura`, `amount` | Spends an aura; the aura id goes in `aura`. What is charged depends on the channel: the payer pays **the value that aura is measured in**, while a shared aura pool or a block's own store pays that aura itself. |
+| `{"type": "mxt:item", ...}` | `items`, `amount` | Spends items; `items` is an item/tag matcher list (an item id, a `#tag`, or a typed matcher entry, see [`ItemMatcher`](#itemmatcher) below). |
+| `{"type": "mxt:js", ...}` | `id`, `params` | Hands the cost to a server script; `id` is the callback id registered with `MxtCosts.register`, and `params` may be omitted. |
 
-```json
-"icon": "example:textures/gui/icon/sword.png"
-```
-
-```json
-"icon": {"id": "minecraft:iron_ingot"}
-```
-
-An item icon is stored as a template rather than a ready-made stack, because a datapack registry is parsed before item components are bound. The client materialises it when it draws, so an icon that needs components still shows them.
-
-### `SpriteIcon`
-
-**A resource bar's artwork is a different kind of icon** (`SpriteIcon`, since 2026-09-25): `sprite_location` on `mxt:boss_bar` and `background_sprite` / `fill_sprite` on `mxt:textured_bar` take it, because a whole resource bar cannot be drawn out of a single 16x16. It is **not** the icon reference above (`ability.icon` / `resource.icon` is one 16x16 texture or one item, drawn in a single cell, with no `region`, no `width` / `height` and no `{"sprite": ...}`), and a `SpriteIcon` cannot be written as an item either — the two names look alike but mean different things, so do not mix them up. Two forms:
-
-| Form | Type | Description |
-|------|------|-------------|
-| A JSON string | Identifier | Keeps the field's original meaning: `sprite_location` is a **texture path** (default `mxt:textures/gui/resource_bar.png`, a 25-cell sheet) and `background_sprite` / `fill_sprite` are **GUI atlas sprites**. |
-| A JSON object | `SpriteIcon` | `{"sprite": ...}` is a GUI atlas sprite; `{"texture": ...}` is a texture and may carry a `region` (`u` / `v` / `texture_width` / `texture_height`, defaulting to origin `0,0` and a whole `256x256` image). Both forms may carry `width` / `height`, the **target** size it is drawn at, which **has to be written as a pair** (omitted means the bar's own width and height) — except on `fill_sprite`, see below. |
-
-`sprite_location` on `mxt:boss_bar` accepts **textures only** (it cuts background, fill and icon cells out of the sheet, which a sprite has no concept of), while both fields of `mxt:textured_bar` accept either form. A sprite cannot declare a `region` — the atlas already knows where it is. `width` / `height` is a **target size** (how large to draw it, not a crop) and belongs to the background side only: `background_sprite` and `mxt:boss_bar`'s sheet may carry it, while **`fill_sprite` may not declare `width` / `height`** — the fill is cut by the bar's own progress, so a fixed size would freeze the bar at one width. All of these are **load-time errors** and are refused outright: a sprite in `mxt:boss_bar`'s `sprite_location`, a `region` on a sprite, `width` / `height` on `fill_sprite`, and a `width` or `height` written without its partner. A bare string behaves **exactly as it always did**.
-
----
-
-## Cost
-
-Every field that **consumes** something takes the same array, and each entry is one `Cost` (this type used to be called `ResourceCost`; **no JSON key was renamed** — what changed is that it also accepts aura, item and script entries), written in one of five shapes:
-
-| Shape | Description |
-|-------|-------------|
-| `{"id": "example:qi", "amount": 5}` | The shorthand, identical to `mxt:resource`; the definition id lives in `id`. |
-| `{"type": "mxt:resource", "resource": "example:qi", "amount": "5 + level"}` | Spends a value; the definition id lives in `resource`. |
-| `{"type": "mxt:aura", "aura": "example:fire_qi", "amount": 2}` | Spends an aura; the aura id lives in `aura`. What is charged depends on the channel: the value that aura is measured in when the payer pays, and that aura itself when a shared aura pool or a block's own store pays. |
-| `{"type": "mxt:item", "items": ["minecraft:emerald", "#c:gems"], "amount": 2}` | Spends items; `items` is an item/tag matcher list (a bare item id, a `#tag`, or the typed matcher entries, see [`ItemMatcher`](#itemmatcher)). |
-| `{"type": "mxt:js", "id": "my_cost", "params": {}}` | Delegates to a server script; `id` is the callback registered with `MxtCosts.register` and `params` is optional. |
-
-`amount` is always a `NumberProvider` and has to evaluate to a finite positive number at use time, or that entry cannot be paid. `mxt:resource` and `mxt:aura` ask two different questions: the first names a **value**, the second names an **aura identity**. When the payer pays, it comes out of the **value account** — it takes the value that aura is measured in, the same account a `mxt:resource` entry would use (a payer holds values, not auras); when a shared aura pool or a block's own store pays, it takes that aura itself.
+`amount` is always a number provider and has to evaluate to a **finite positive number** at use time, or that entry cannot be paid. `mxt:resource` and `mxt:aura` ask two different questions: the first names a **value**, the second names an **aura identity**.
 
 ```json
 "costs": [
@@ -68,84 +57,90 @@ Every field that **consumes** something takes the same array, and each entry is 
 
 Rules:
 
-- **A whole array is paid all-or-nothing.** If any single entry cannot be paid, nothing at all is taken — not even the entries that could be paid.
-- **Two entries in the same array that name the same store are a load error** (the same value id twice, or the same aura twice). Two entries that merely reach the same value by different routes are **not** an error: a `mxt:resource` entry and an `mxt:aura` entry whose aura is measured in that same value have their amounts **added together**, because that is the only answer which does not depend on the order they were written in.
-- The payer is a **living entity** (a player, a mob, a summoned creature), not necessarily a player. Whether an entry can be paid depends on which channels the place offers:
+- **A whole array is all or nothing**: if any one entry cannot be paid, nothing is taken — not even the entries that could have been paid.
+- **Two entries in the same array that point at the same store are a load error** (the same value id written twice, or the same aura written twice). Two entries that merely reach the same value by different routes are **not** an error: a `mxt:resource` entry and a `mxt:aura` entry measured in that value have their amounts **added**, because that is the only answer that does not depend on the order they were written in.
+- The payer is a **living entity** (a player, a mob and a summoned creature all count), not necessarily a player. Whether an entry can be paid depends on which channels the place offers:
 
 | Shape | Where it is taken from |
-|-------|------------------------|
+| --- | --- |
 | `mxt:resource` | The payer's own value account. |
-| `mxt:aura` | That aura's measured value: out of the payer's value account when the payer pays; out of the **shared aura pool** when the ground pays (`cultivate_action.aura_costs`), scaled first by the pool's allocation for the chunk and then charged all-or-nothing; and that aura itself, in whole units rounded up, out of a **block entity's own store** when the Spirit Crafting Table pays (a recipe's `aura`). |
-| `mxt:item` | Needs a player's inventory. A non-player payer (or a formation with no owner) simply cannot pay it — that is a refusal, not an error. |
-| `mxt:js` | Needs a player, and runs **last**, after every other channel has been paid. A script cost is not staged, so scripts have to be idempotent about it. |
+| `mxt:aura` | The value that aura is measured in: out of the payer's own value account when the payer pays; when the ground pays from a **shared aura pool** (`cultivate_action.aura_costs`), the amount is first scaled by the pool's allocation for several players cultivating in the same chunk and then charged from the pool all or nothing; when a **block entity's own store** pays (a spirit crafting recipe's `aura`), that aura itself is taken in whole units, rounded up. |
+| `mxt:item` | Needs a player's inventory. A payer that is not a player (or a formation with no owner) simply **cannot pay** — that is not a broken definition. |
+| `mxt:js` | Needs a player, and runs **last**, after every other channel has finished paying. A script cost is not staged, so the script itself has to stay idempotent about it. |
 
-The from-the-ground (shared aura pool) channel and the from-a-block-entity's-store channel both have real users now: `cultivate_action.aura_costs` is paid from the shared aura pool at the cultivator's position (first scaled by the pool's allocation when several players cultivate in the same chunk, then charged all-or-nothing), and the `aura` of a spirit crafting recipe (`mxt:spirit_shaped` / `mxt:spirit_shapeless`) is paid from the Spirit Crafting Table's own store in whole units (rounded up).
+A missing channel is only ever reported as "cannot pay", never as a broken definition. **An entry that cannot be decoded fails the load of the whole definition** (an unknown `type` and a missing required field both do): the `costs` array does not use the lenient list rule, so there is no "log a warning and drop this entry".
 
-A missing channel is reported as "cannot pay", never as a broken definition. An entry that cannot be decoded now **fails the load** of the definition instead of being logged and dropped.
+**12** fields take this array: `ability.costs` (**shared by every ability type**, which is why the per-tick fuel of `mxt:mount` and the per-period cost of `mxt:upkeep` are written here too), the `upkeep_costs` of `mxt:channelled`, `realm_stage.costs`, `cultivate_action.costs` and `cultivate_action.aura_costs`, `formation.activation_costs` and `formation.maintenance_costs`, `forging_method.costs`, `contract_type.costs` (the price of signing a contract, paid by the owner), `talisman.costs` (an `mxt:aura` entry comes out of the carrier's own store, every other entry is charged to the holder), the `costs` of each `quality_chain` step, and the `aura` of a spirit crafting recipe (`mxt:spirit_shaped` / `mxt:spirit_shapeless`). `cultivate_action.aura_costs` and a spirit crafting recipe's `aura` accept **only `mxt:aura` entries** (any other type is a load error), and both fields also accept the `{"<aura id>": NumberProvider}` map form.
 
-The **10** fields that take this array are `ability.costs` (**shared by every ability type**, which is why the per-tick fuel of `mxt:mount` and the per-period price of `mxt:upkeep` are written here too), the `upkeep_costs` of `mxt:channelled`, `realm_stage.costs`, `cultivate_action.costs` and `cultivate_action.aura_costs`, `formation.activation_costs` and `formation.maintenance_costs`, `forging_method.costs`, `contract_type.costs` (the price of signing a contract, paid by the owner), and the `aura` of a spirit crafting recipe (`mxt:spirit_shaped` / `mxt:spirit_shapeless`). Those last two accept **only `mxt:aura` entries** (any other type is a load error), and their older `{"<aura id>": NumberProvider}` map form is still read for compatibility, while serialization always emits the array form.
+**These deliberately are not `Cost`, so do not "fix" them**: `talisman.capacity` is a **multiplier** (a double `≥ 1`) saying how many invocations' worth of aura the carrier holds, rather than what is taken — the aura side of that capacity comes from the aura entries in the same talisman's `costs`; `alchemy`'s `minimum_aura` and `creature_profile.minimum_aura` are requirements that are never consumed. The currency system has nothing to do with this shape: `currency`'s `exchanges[].cost` is an integer price (`1..99`) saying how many currency items one exchange takes, and `quality.value_multiplier` is a value modifier; neither is a `Cost`.
 
-**These deliberately are not `Cost`, so do not "fix" them**: `talisman.aura_cost` is still a `{"<aura id>": NumberProvider}` map, and it is the **requirement** "how much of this aura the carrier has to be filled with before it fires" (it is also the pour capacity), not a payment; `alchemy`'s `minimum_aura` and `creature_profile.minimum_aura` are requirements that are never consumed. The currency system has nothing to do with this shape: `currency`'s `exchanges[].cost` is an integer price (`1..99`) saying how many currency items an exchange takes, and `quality.value_multiplier` is a value modifier; neither is a `Cost`.
+## `AuraGain`
 
----
+`cultivate_action.aura_gains` uses `AuraGain`: the field names are the same, `id` and `amount`, but `id` points at an aura and `amount` allows `0` (finite and non-negative is enough). It is a different type, unrelated to `Cost`, and it never enters the cost transaction.
 
-## Aura Gain
+This list is **lenient**: an entry that cannot be decoded is dropped with an `Ignoring invalid list element` warning, and the remaining entries still apply.
 
-An aura gain names one aura and the amount of it to hand over, and it is the shape the `aura_gains` field of a [cultivate action](../json/cultivate_action.md) uses. Gains are less strict than costs: `0` is allowed, but a negative result is rejected.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `Holder<aura>` | The aura registry entry |
-| `amount` | `NumberProvider` | The gain; it must evaluate to a finite, non-negative number |
+To add to any value, use the **`mxt:add_resource` action** rather than this array; it takes `resource` and `amount`, and `amount` may be negative:
 
 ```json
-"aura_gains": [
-  {"id": "example:qi", "amount": 10},
-  {"id": "example:insight", "amount": "level * 0.5"}
-]
+{"type": "mxt:add_resource", "resource": "example:qi", "amount": 2}
 ```
 
-A plain counter is raised with the `mxt:add_resource` entity action instead, which takes a `resource` and an `amount` and needs no aura definition behind the value.
+## `AttributeEntry`
 
-::: tip
-A cost of `0` or less is invalid, so a cost entry can never be used to grant anything. Use a gain for that.
-:::
-
----
-
-## AttributeEntry
-
-Vanilla attribute modifiers use the vanilla attribute holders such as `minecraft:attack_damage`.
+An attribute modifier entry. Attribute IDs are vanilla ones such as `minecraft:attack_damage`.
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `attribute` | `Holder<Attribute>` | **required** | Vanilla attribute ID |
-| `id` | `Identifier` | **required** | Unique ID of the vanilla `AttributeModifier` |
-| `amount` | `Double` | **required** | Base value used when there is no dynamic `value` |
-| `operation` | Enum | **required** | `add_value`, `add_multiplied_base` or `add_multiplied_total` |
-| `value` | `NumberProvider` | none | When present, the value is recomputed every tick on the server and replaces `amount` |
+| --- | --- | --- | --- |
+| `attribute` | Identifier | **required** | The vanilla attribute ID to modify. |
+| `id` | Identifier | **required** | Unique ID of this attribute modifier. |
+| `amount` | Double | **required** | Base value used when there is no dynamic `value`. |
+| `operation` | Enum | **required** | `add_value`, `add_multiplied_base` or `add_multiplied_total`. |
+| `value` | Number Provider | none | When written, it is recomputed every tick on the server with the entity context and replaces `amount`. |
+
+## Icon Reference
+
+Every icon field in the mod takes the same value, written **inline**: a texture is a string and an item is an object. The definitions that carry this field are `ability`, `resource`, `forging_method` and `technique`.
+
+| Form | Type | Description |
+| --- | --- | --- |
+| String | Identifier | A 16x16 GUI texture, for example `example:textures/gui/icon/sword.png`. |
+| Object | `ItemStackTemplate` | An item: write the full item stack template `{"id": ...}`, optionally with `count` and `components`. |
+
+The two forms are told apart by **parse order**: the texture is tried first, then the item. Because both accept a **string**, a bare string is taken by the texture branch, so **an item always has to be written as an object** `{"id": ...}` — a bare string only ever gives you a texture of that path, not an item.
 
 ```json
-{
-  "attribute": "minecraft:max_health",
-  "id": "example:body_tempering",
-  "amount": 4,
-  "operation": "add_value",
-  "value": "2 + caster_minecraft_max_health * 0.1"
-}
+"icon": "example:textures/gui/icon/sword.png"
 ```
 
-A dynamic `value` is evaluated with the entity alone, without a resource context, so it can read the `caster_` family but not `realm_rank` or `absorbed_aura`.
+```json
+"icon": { "id": "minecraft:iron_ingot" }
+```
 
----
+```json
+"icon": { "id": "minecraft:diamond_sword", "count": 1, "components": { "minecraft:custom_name": "Azure Sky" } }
+```
 
-## Holders, Tags and Mixed Arrays
+An item icon stores a **template** rather than a ready-made stack, because datapack registries are parsed before item components are bound; the client materialises it when it draws, so an icon that needs components still shows correctly.
 
-Fields that cross registries are resolved into holders during datapack load instead of being looked up at runtime.
+### SpriteIcon
 
-### Single Value and Tag
+**A resource bar's artwork is a different icon** (`SpriteIcon`): `mxt:boss_bar`'s `sprite_location` and `mxt:textured_bar`'s `background_sprite` / `fill_sprite` take it, because a whole resource bar cannot be drawn out of a single 16x16. It is **not** the icon reference above (`ability.icon` / `resource.icon` is one 16x16 texture or one item, drawn in a single cell, with no `region` / `width` / `height` and no `{"sprite": ...}`), and it cannot be written as an item either. The two names look alike but mean different things, so do not mix them up. Two forms:
 
-A single entry is written as an ID, and a tag reference keeps its required `#` prefix:
+| Form | Type | Description |
+| --- | --- | --- |
+| String | Identifier | Keeps the field's original meaning: `sprite_location` is a **texture path** (default `mxt:textures/gui/resource_bar.png`, a 25-cell sheet) and `background_sprite` / `fill_sprite` are **GUI atlas sprites**. |
+| Object | A texture or a sprite | `{"sprite": ...}` is a GUI atlas sprite; `{"texture": ...}` is a texture and may carry a `region` (`u` / `v` / `texture_width` / `texture_height`, defaulting to origin `0,0` and a whole `256×256` image). Both may carry `width` / `height`, the **target** size it is drawn at, which has to be written as a pair (omitted means the bar's own width and height). |
+
+`mxt:boss_bar`'s `sprite_location` accepts **textures only** (it cuts the sheet into a background, a fill and an icon cell, and a sprite has no concept of that), while both fields of `mxt:textured_bar` accept either form. A sprite cannot declare a `region` — the atlas already knows where it is. `width` / `height` is the **target size it is drawn at**, not a crop, and only the background side reads it: `background_sprite` and `mxt:boss_bar`'s sheet texture may carry it, while **a size written on `fill_sprite` is never read** — the fill is cut by the bar's own progress, so a fixed size has no meaning there; those two keys are only decoded and take no part in drawing.
+
+These are **load-time errors** and are refused outright: a sprite in `mxt:boss_bar`'s `sprite_location`, a `region` on a sprite, and a `width` / `height` written without its partner.
+
+## Holders, Tags and Matchers
+
+Fields that cross registries are all resolved into entry references during datapack load; the registry is not queried again at runtime.
+
+### Single Values and Tags
 
 ```json
 {
@@ -156,7 +151,7 @@ A single entry is written as an ID, and a tag reference keeps its required `#` p
 
 ### Mixed Arrays
 
-Fields that accept both IDs and tags can be written as an array:
+A field that accepts both IDs and tags can be written as an array directly:
 
 ```json
 {
@@ -167,68 +162,34 @@ Fields that accept both IDs and tags can be written as an array:
 }
 ```
 
-Every array entry stays a `Holder` or a `TagKey`; duplicate values do not change the meaning. `AutoIgnoreListCodec` allows invalid optional entries in a list to be ignored, and each field table states whether that codec is used.
+Every entry in the array stays an entry reference or a tag; duplicate values do not change the meaning on their own. **Lists are lenient**: a bad entry in a lenient list is dropped with an `Ignoring invalid list element` warning and the rest of the same list still applies; each field table states whether a field follows that rule.
 
----
+### `ItemMatcher`
 
-## ItemMatcher
-
-The `items` field of `item_binding`, `weapon_binding`, `pill_binding`, `technique_binding`, `spirit_herb`, `item_aura` and `currency` accepts three forms. The matcher type IDs behind them are listed in [Other Type Families](/en/datapack/types/other/formation-and-matcher#item-matcher-entry-type).
-
-A single item ID:
+The `items` field of `artifact`, `item_binding`, `weapon_binding`, `pill_binding`, `tool_binding`, `blueprint_binding`, `spirit_herb`, `item_aura` and `currency` accepts the three forms below (`technique_binding`'s `items` is the optional second route, see [Technique Binding](../json/technique_binding.md)):
 
 ```json
 "items": "minecraft:apple"
 ```
 
-A single item tag:
-
 ```json
 "items": "#minecraft:logs"
 ```
-
-A mixed array:
 
 ```json
 "items": ["minecraft:apple", "#minecraft:logs", "othermod:token"]
 ```
 
-Array entries may also be typed objects, which is how a wildcard, a regular expression, a spirit herb tag (`mxt:herb_tag`) or the capability matcher `mxt:spirit_storage` is written. See [Other Type Families](/en/datapack/types/other/formation-and-matcher#item-matcher-entry-type) for the registered entry types and their fields.
+A matcher only references items that are already registered. When several definitions match the same item, the one with the **highest** declared `priority` is picked (the field defaults to `0`; ten tables accept it: `artifact`, the six `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` bindings, `spirit_herb`, `item_aura` and `currency`); only two definitions with the **same** `priority` fall back to registry order, so which one wins is fixed by the data pack itself and has nothing to do with file names (the same direction as `priority` on `aura_zone` and `element_reaction`). **This is independent of which kind of matcher entry matched**: any definition that hits joins the ranking with the number it declares, and naming an item does not move it up.
 
-```json
-"items": [
-  "minecraft:apple",
-  {"type": "mxt:wildcard", "pattern": "minecraft:*_sword"},
-  {"type": "mxt:spirit_storage"}
-]
-```
+Every entry in the array may also be written as an object with a `type`, dispatched by the built-in `item_matcher_entry_type` registry:
 
-A matcher only references items that are already registered; it never creates items. When several definitions match, they are selected by `priority` from low to high, and for the current data classes that priority is fixed at `0`.
-
----
-
-## Weighted Entry
-
-Every weighted list in the mod uses the same entry shape: `value` is the entry itself, and `weight` is an optional relative weight (`1` when omitted).
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `value` | any | **required** | The entry that can be picked |
-| `weight` | Integer | `1` | Relative weight; larger weights are picked more often, a weight of `0` or less is never picked, and a list whose weights are all `0` is picked from uniformly |
-
-| Used by | Field |
-|---------|-------|
-| `mxt:choice` (entity, item, block, bi-entity) | `actions` |
-| `mxt:weighted_list` | `distribution` |
-
-`secret_realm`'s `entry` array is the one exception: there the `weight` sits directly on the landing object, because that object also carries `pos`, a random radius and so on. Its weight is also validated at load, so a negative weight is a load error rather than a `0`, while `0` still means the entry is never picked.
-
-```json
-{
-  "type": "mxt:choice",
-  "actions": [
-    {"value": {"type": "mxt:no_op"}, "weight": 3},
-    {"value": {"type": "mxt:spawn_lightning", "damage": 4}, "weight": 1}
-  ]
-}
-```
+| `type` | Fields | Matches |
+| --- | --- | --- |
+| `mxt:item` | `item` | A single item; the expanded form of the shorthand. |
+| `mxt:tag` | `tag` | An item tag; the expanded form of the shorthand. |
+| `mxt:wildcard` | `pattern` | A `*`/`?` wildcard over item IDs, for example `{"type": "mxt:wildcard", "pattern": "mxt:*_spirit_stone"}`. |
+| `mxt:regex` | `pattern` | A regular expression over item IDs, for example `{"type": "mxt:regex", "pattern": "mxt:(medium\|high)_spirit_stone"}`. |
+| `mxt:technique` | none | An item whose stack carries the `mxt:technique` component, that is, a stack of technique manuals: it goes by which technique **that stack** teaches rather than by the item id, so the same jade slip can be any technique. **It only asks the component**: an item claimed by some `technique_binding`'s `items` but carrying no component does not match. |
+| `mxt:spirit_storage` | none | Every item that can be infused with aura by holding right-click (see [Item Aura Datapack](/en/datapack/json/item_aura)). This is the only entry that matches by **capability** rather than by ID, so items of the same kind added later are covered automatically. |
+| `mxt:herb_tag` | `element`, `material` | Matches an item that **is a spirit herb** (it hits some `mxt:spirit_herb` definition) and whose definition carries the queried tag: `element` looks at `element_tags`, `material` looks at `material_tags`, writing both requires both to pass, and writing neither is rejected at load. Both sides write element registry references (an entry or a `#tag`) and are expanded **in both directions** into element sets before the intersection is taken — a herb aligned with the fire tag matches a query for the warm-elements tag and the other way round, so which side the tag is written on does not affect the result. A tag is a property of the herb rather than of the item, so content can say "any fire-aligned spirit herb" without knowing which items will later be bound to that herb (for example `{"type": "mxt:herb_tag", "element": "example:fire"}` or `{"type": "mxt:herb_tag", "element": "#example:fire_like"}`). It can be nested inside `mxt:item_matcher` in an entity condition, for example with `mxt:has_equipped_item` to test "holding a fire-aligned spirit herb". |

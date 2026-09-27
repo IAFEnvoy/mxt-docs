@@ -45,6 +45,7 @@ MxtAbilities.selector('example:nearest_three', (actor, context, params) => {
 
 ```json
 {
+  "type": "mxt:interval",
   "target_selector": {"type": "mxt:js", "id": "example:nearest_three", "params": {"range": 12}},
   "bi_entity_action": {"type": "mxt:heal", "amount": 4}
 }

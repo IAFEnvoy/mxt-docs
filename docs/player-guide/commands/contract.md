@@ -23,7 +23,7 @@ title: /contract
 
 `bind`（以及契约卷轴）按固定顺序问，**收钱排在最后**：
 
-1. 它已经有契约了？→ 它不能被契约？→ 这份契约类型被 `#mxt:disabled` 停用了？
+1. 它已经有契约了？→ 它不能被契约？
 2. 接口的 `acceptsContract` → `owner_condition` → `creature_condition` → 每人上限 `max_owned`；
 3. `Pre` 事件（可取消，**此时一分钱没花**）；
 4. `costs` 付款 → 写记录 → 写主人索引 → 生物的 `onContractBound`。
@@ -50,4 +50,4 @@ title: /contract
 
 ## 失败原因
 
-卷轴、御兽铃、灵兽袋与这组命令打的是**同一张**文案表，键是 `contract.mxt.failure.<小写枚举名>`：`already_bound`、`disabled`、`not_contractable`、`owner_conditions`、`creature_conditions`、`limit_reached`、`insufficient_cost`、`not_bound`、`not_owner`、`recall_cooldown`、`cancelled`、`unsupported_behavior`（这只生物不认这条命令）、`behavior_refused`（它认，但拒绝了这次）。
+卷轴、御兽铃、灵兽袋与这组命令打的是**同一张**文案表，键是 `contract.mxt.failure.<小写枚举名>`：`already_bound`、`not_contractable`、`owner_conditions`、`creature_conditions`、`limit_reached`、`insufficient_cost`、`not_bound`、`not_owner`、`recall_cooldown`、`cancelled`、`unsupported_behavior`（这只生物不认这条命令）、`behavior_refused`（它认，但拒绝了这次）。

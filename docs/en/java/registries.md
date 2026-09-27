@@ -5,7 +5,7 @@ description: How MiXianTu registers built-in MapCodec types, which codec each de
 
 # Registries and Data Tables
 
-MiXianTu has two kinds of registries. Built-in registries hold the `MapCodec` implementations that a datapack selects with the `type` field, and are populated in Java code. Dynamic data tables are native datapack registries whose entries live in JSON files: Minecraft reads them while the world loads, and they are synchronised to the client by the registry system. Because they are read at world load, `/reload` does not re-read them — see [Loading, Reloading and Syncing](../datapack/overview.md#loading-reloading-and-syncing).
+MiXianTu has two kinds of registries. Built-in registries hold the `MapCodec` implementations that a datapack selects with the `type` field, and are populated in Java code. Dynamic data tables are native datapack registries whose entries live in JSON files: Minecraft reads them while the world loads, and they are synchronised to the client by the registry system. Because they are read at world load, `/reload` does not re-read them — see [Loading, Syncing and Debugging](../datapack/overview.md#loading-syncing-and-debugging).
 
 ## Built-In Type Registries
 
@@ -24,7 +24,7 @@ The registry instances are declared in `MxtRegistries`, and their keys are decla
 | `MxtRegistries.ABILITY_TARGET_SELECTOR_TYPE` | `mxt:ability_target_selector_type` | Ability target selector codecs. |
 | `MxtRegistries.COST_TYPE` | `mxt:cost_type` | Cost type codecs. |
 | `MxtRegistries.CURSE_TYPE` | `mxt:curse_type` | Curse type codecs. |
-| `MxtRegistries.DATA_STORAGE_TYPE` | `mxt:data_storage_type` | Storage kind codecs, dispatched by a host's `components` entry; the built-in ones are registered in `MxtDataStorages`. |
+| `MxtRegistries.DATA_STORAGE_TYPE` | `mxt:data_storage_type` | Storage kind codecs; which kinds a host declares is decided by its own type (`AbilityType.createComponents`), and the built-in ones are registered in `MxtDataStorages`. |
 | `MxtRegistries.TRIGGER_TYPE` | `mxt:trigger_type` | Ability trigger codecs. |
 | `MxtRegistries.NUMBER_PROVIDER_TYPE` | `mxt:number_provider_type` | Number provider codecs. |
 | `MxtRegistries.AURA_MAXIMUM_TYPE` | `mxt:aura_maximum_type` | Aura maximum codecs. |
@@ -71,17 +71,17 @@ Every table the mod declares is listed — with its file directory, its purpose 
 
 ## Reading Data Tables
 
-`MxtDatapackRegistries` is the supported entry point for both the server and the synchronised client copy. Every read skips entries that carry the mod's `mxt:disabled` tag.
+`MxtDatapackRegistries` is the supported entry point for both the server and the synchronised client copy. Every read is a plain registry read: it filters nothing. Switching a definition off is load-time work — a `neoforge:conditions` block in the definition file keeps the entry out of the registry entirely — so an entry in the registry is an entry you can use (see [Disabling a Definition](../datapack/overview.md#disabling-a-definition)).
 
 | Member | Description |
 |--------|-------------|
 | `registries()` | Every registry key owned by the mod, in registration order. |
-| `get(key, id)` / `get(key, holder)` | Reads an enabled value by ID or by holder. |
-| `holder(key, id)` | Resolves an enabled entry while keeping its stable holder reference. |
-| `holders(key)` | Streams all enabled entries of a registry. |
-| `holders(access, key)` / `holders(provider, key)` | Streams enabled entries from a `RegistryAccess` or a `HolderLookup.Provider`, which is how the client reads the synchronised copy. |
-| `get(access, key, id)` / `get(access, key, holder)` | Reads an enabled value from a client-synchronised lookup. |
-| `isDisabled(key, id)` / `isDisabled(key, holder)` | Checks whether an entry carries the `mxt:disabled` tag. |
+| `get(key, id)` | Reads a definition value by ID. |
+| `holder(key, id)` | Resolves an entry while keeping its stable holder reference. |
+| `holders(key)` | Streams every entry of a registry. |
+| `holders(access, key)` / `holders(provider, key)` | Streams entries from a `RegistryAccess` or a `HolderLookup.Provider`, which is how the client reads the synchronised copy. |
+| `get(access, key, id)` | Reads a value from a client-synchronised lookup. |
+| `holderOrEmpty(key, id)` | The same as `holder(key, id)`, but gives empty instead of throwing when no server is running. |
 | `isTagged(key, id, tagId)` / `isTagged(key, holder, tagId)` | Checks a native datapack tag on one entry. |
 | `size(key)` / `registry(key)` | The underlying `Registry`; only available while a server is running. |
 

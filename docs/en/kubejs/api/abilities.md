@@ -15,7 +15,7 @@ description: Cast an ability, and grant, revoke or query the abilities an entity
 | `selector(id, callback)` | Callback ID, `(actor, context, params) => Entity[]` | `void` | Registers the datapack type `mxt:js` ability target selector. |
 | `grant(entity, ability, source)` | `Entity`, ability ID, source ID (`namespace:path`) | `boolean` | Grants the ability under that source; `true` when the source was not holding it yet. An unknown ability answers `false` (not an error), and nothing is changed on a client. |
 | `revoke(entity, ability, source)` | `Entity`, ability ID, source ID | `boolean` | Drops that one source, and `true` when it was really holding it. **The ability itself only leaves once the last source lets go**, which is also when its cooldowns and its stored state go. |
-| `has(entity, ability)` | `Entity`, ability ID | `boolean` | Whether it is held; read from the attachment, so a disabled or deleted definition still answers honestly. |
+| `has(entity, ability)` | `Entity`, ability ID | `boolean` | Whether it is held; read from the attachment, so a definition the current pack no longer provides still answers honestly. |
 | `list(entity)` | `Entity` | `List<String>` | Every ability the entity holds right now, sorted by ID. |
 | `sources(entity, ability)` | `Entity`, ability ID | `List<String>` | Which sources are keeping it granted right now, sorted; empty when it is not held. |
 
@@ -45,6 +45,7 @@ MxtAbilities.selector('example:nearest_three', (actor, context, params) => {
 
 ```json
 {
+  "type": "mxt:interval",
   "target_selector": {"type": "mxt:js", "id": "example:nearest_three", "params": {"range": 12}},
   "bi_entity_action": {"type": "mxt:heal", "amount": 4}
 }

@@ -15,6 +15,7 @@ title: /mxt
 | `/mxt cultivate status` | 查看修炼状态。 |
 | `/mxt breakthrough <aura>` | 尝试突破到这门**灵气**（`mxt:aura` 条目，补全给的就是它）所通往的境界。缺哪一种修炼资源由境界自己声明，失败时会点名。 |
 | `/mxt realm set <realm>`、`/mxt realm chain <realm>` | 设置自己的线性境界；`chain` 打印这一档所在的整条境界链。见 [`/realm`](/player-guide/commands/realm)。 |
+| `/mxt lifespan get`、`/mxt lifespan set`、`/mxt lifespan add`、`/mxt lifespan reincarnate` | 读与改写寿元账本，并让目标当场转世（写节点与 `reincarnate` 需要 gamemaster 权限）。见 [`/lifespan`](/player-guide/commands/lifespan)。 |
 | `/mxt contract list`、`/mxt contract info <target>` | 列出主人名下的灵兽与读一只灵兽的契约记录。见 [`/contract`](/player-guide/commands/contract)。 |
 | `/mxt contract bind <player> <target> <contract_type>`、`/mxt contract break <target>`、`/mxt contract recall <target>`、`/mxt contract behavior <target> <behavior>` | 签订、解除、召回与下行为命令（都需要 gamemaster 权限），与卷轴、御兽铃共用同一条流程。见 [`/contract`](/player-guide/commands/contract)。 |
 | `/mxt secret_realm list` | 列出当前所有秘境实例：维度键、序号、定义、在场人数与上限、主人、地形是否已布置、维度当前是否加载。 |
@@ -36,7 +37,7 @@ title: /mxt
 | --- | --- |
 | `list` | 列出所有实例。`loaded=false` 表示这份实例正在休眠——通常是因为它被认领过、人都走光了，地形留在存档里等着主人再来。 |
 | `info <dimension>` | 只看一份，参数写维度键，例如 `mxt:secret_realm/trial_realm/0`。 |
-| `enter <definition>` | 自己进去。走完整流程：停用检查、进入条件、找一份没满的实例或新开一份（受 `max_instances` 限制）、生成维度与结构、落到入口。 |
+| `enter <definition>` | 自己进去。走完整流程：存在性检查、进入条件、找一份没满的实例或新开一份（受 `max_instances` 限制）、生成维度与结构、落到入口。 |
 | `exit` | 回进入时的位置。定义里的 `exit_condition` 对这条命令同样生效（和自己用令牌离开一样）。 |
 | `destroy <dimension>` | 结束一份实例并**删除它的地形**。被锁在里面的玩家会被送回；`mxt:existing` 型秘境只清空成员，不动那个真实维度。 |
 

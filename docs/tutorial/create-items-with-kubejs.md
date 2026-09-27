@@ -36,7 +36,7 @@ actions, conditions, quality, aura, tooltips
 | `data/example/mxt/technique/azure_breath.json` | 手册传授什么。 |
 | `data/example/mxt/item_binding/qi_pill.json`、`root_pellet.json` | 消耗行为。 |
 | `data/example/mxt/pill_binding/qi_pill.json` | 丹药毒性。 |
-| `data/example/mxt/weapon_binding/spirit_sword.json` | 武器伤害、速度和战斗行为。 |
+| `data/example/mxt/weapon_binding/spirit_sword.json` | 武器属性修正与战斗行为。 |
 | `data/example/mxt/technique_binding/azure_manual.json` | 这门功法怎么被读，以及本体生成的载体用哪件物品。 |
 
 ## 第 1 步 —— 注册物品
@@ -225,8 +225,10 @@ ServerEvents.recipes(event => {
 // data/example/mxt/weapon_binding/spirit_sword.json
 {
   "items": "kubejs:spirit_sword",
-  "attack_damage": 8,
-  "attack_speed": -2.4,
+  "attributes": [
+    {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"},
+    {"attribute": "minecraft:attack_speed", "id": "example:spirit_sword/speed", "amount": -2.4, "operation": "add_value"}
+  ],
   "quality_chain": "example:weapon",
   "use_action": {"type": "mxt:no_op"},
   "attack_action": {
@@ -237,10 +239,10 @@ ServerEvents.recipes(event => {
 }
 ```
 
-- `attack_damage` 和 `attack_speed` 会加到物品上，叠加在它所属档位已经给出的数值之上。
+- 武器自己的攻击力与攻速也写成 `attributes` 条目（`minecraft:attack_damage` / `minecraft:attack_speed`），它们是**加法叠加**在物品自身的修正之上；想改掉底材自带的数值要改物品的 `minecraft:attribute_modifiers`（组件补丁或 KJS），这一层不替换它。
 - `use_action` 是右键时执行的实体行为；`attack_action` 是命中成功时执行的双实体行为，所以这里的 `mxt:target_action` 会对目标额外造成 3 点伤害。
 - `tick_action` 在手持该武器时每 tick 执行，是放置维护、粒子或灵气抽取的地方。
-- `attributes` 追加更多原版属性修正；带 `value` 公式的条目每 tick 重新计算。
+- `attributes` 里的条目和原版 `AttributeModifier` 同形；带 `value` 公式的条目每 tick 重新计算。
 
 第 2 步里的 `example:weapon` 链定义这把武器可以携带哪些品质，以及没写覆盖组件时的默认档。
 
@@ -274,13 +276,13 @@ ServerEvents.recipes(event => {
 }
 ```
 
-**这一叠是不是手册，看的是堆上的组件，不是这张表。** 上面的 `carrier_item` 只是让本体替这门功法生成载体（创造模式物品栏与 `/picker mxt:technique` 各一份），真正教功法的是堆上的 `mxt:technique` 组件，所以手册要用物品组件语法取出来：
+**这一叠是不是手册，先看堆上的组件，然后才看这张表。** 上面的 `carrier_item` 只是让本体替这门功法生成载体（在 `/picker mxt:technique` 里；**创造模式物品栏不生成载体**），真正教功法的是堆上的 `mxt:technique` 组件，所以手册要用物品组件语法取出来：
 
 ```mcfunction
 give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 ```
 
-右键手册会尝试学习 `example:azure_breath`。所有已学会的功法会同时保持生效，而在堆上带组件时即使学习失败也会占用这次交互，所以玩家无法绕过功法自己的 `learn_condition`、互斥标签或学习事件。旧版本用 `items` 字段把物品绑到功法上，这个字段已经不存在了——写在新文件里会被静默忽略、加载不报错，那条规则只是不再生效。
+右键手册会尝试学习 `example:azure_breath`。所有已学会的功法会同时保持生效，而在堆上带组件时即使学习失败也会占用这次交互，所以玩家无法绕过功法自己的 `learn_condition`、互斥标签或学习事件。`items` 则是**可选的第二条路**：把它写进声明（`"items": "kubejs:azure_manual"`），那件物品**不带组件**也算这门功法的手册，而堆上的 `mxt:technique` 组件依然优先。它曾在 2026-09-22 被删除，2026-09-26 以可选的形式回来。
 
 ## 第 7 步 —— 加载与验证
 
@@ -314,7 +316,7 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 | 新物品在 `/reload` 后不出现 | 物品注册发生在启动阶段；请重启游戏。 |
 | 改过的绑定没有任何变化 | `/reload` 不会重新读取数据包注册表；请重新加载世界。 |
 | 手册没有效果也没有报错 | 先确认那一叠上有没有 `mxt:technique` 组件——没有组件的普通物品什么都不教。有组件时再看学习是否失败：`learn_condition`、是否已经学过同一门功法，或互斥冲突。 |
-| 手册的 `items` 字段没起作用 | `technique_binding` 已经没有 `items` 字段了，写了会被**静默忽略**（加载不报错）。改用 `carrier_item` 加堆上的 `mxt:technique` 组件。 |
+| 手册的 `items` 字段没起作用 | `items` 是**可选**的第二条路，而且堆上的 `mxt:technique` 组件优先。写进去的物品 id 必须与脚本注册的真实 id 一致（`kubejs:` 命名空间别漏），否则它认领不到那一堆。 |
 
 ## 下一步
 

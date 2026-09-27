@@ -1,19 +1,17 @@
 ---
 title: Damage Condition Types
-description: Every built-in damage condition type registered by the mod, with the JSON fields that each type accepts.
+description: Every built-in damage condition type registered by the mod, and the JSON fields each type accepts.
 ---
 
 # Damage Condition Types
 
-A **damage condition** inspects an incoming damage source and its damage amount, and returns `true` or `false`. The source and the amount are supplied by whatever data table declares the condition, so the condition itself only describes what to check about the damage it is given.
+A **damage condition** inspects an incoming hit: its source and its amount, and returns `true` or `false`. The source and the amount come from the data table that declares the condition, so the condition itself only describes what to check about those two.
 
-Damage conditions are a Java (built-in) registry, so their `type` ids are fixed and a data pack cannot add new ones. `type` selects the built-in type and its value is one of the ids tabulated on this page, written with the `mxt` namespace. A data pack never adds or removes entries in this registry. Only Java code or the KubeJS bridge can introduce custom condition types — see the [KubeJS API](../../../kubejs/api-reference.md).
-
-In the table below, a field name followed by `?` is optional; every other listed field must be present. The `Fields` column lists the JSON keys taken directly from the type's codec.
+It is a Java (built-in) registry, so `type` has to be one of the ids listed below, written with the `mxt` namespace. A data pack can neither add entries to this registry nor remove them. Custom types take Java or the KubeJS bridge — see the [KubeJS API](../../../kubejs/api-reference.md).
 
 ## Common Structure
 
-A condition is a JSON object whose `type` field names the built-in type. All remaining keys are the fields declared by that type.
+A condition is a JSON object: `type` names the built-in type, and every other key is a field of that type:
 
 ```json
 {
@@ -22,7 +20,7 @@ A condition is a JSON object whose `type` field names the built-in type. All rem
 }
 ```
 
-Because conditions are used as values inside other data tables, the same structure usually appears nested under a field such as `damage_condition`:
+A condition is usually a value nested inside another data table, under a field such as `damage_condition`:
 
 ```json
 "damage_condition": {
@@ -32,7 +30,7 @@ Because conditions are used as values inside other data tables, the same structu
 }
 ```
 
-Anywhere a damage condition is expected, an array of conditions is also accepted. The array is shorthand for `mxt:and` and passes only when every entry passes:
+Anywhere a damage condition is accepted, an array is accepted too. The array is shorthand for `mxt:and` and passes only when every entry passes:
 
 ```json
 "damage_condition": [
@@ -42,37 +40,211 @@ Anywhere a damage condition is expected, an array of conditions is also accepted
 ```
 
 ::: info Damage Registries
-`damage_type` accepts the id of a registered damage type, for example `minecraft:fall`, and `damage_type_tag` accepts a damage type tag such as `minecraft:is_fire`. Both follow the standard vanilla damage type registry, so data packs that add damage types or tags are visible here.
+`damage_type` accepts the id of a registered damage type, for example `minecraft:fall`; `damage_type_tag` accepts a damage type tag such as `minecraft:is_fire`. Both read the vanilla damage type registry, so damage types and tags added by data packs are visible here.
 :::
 
 ::: tip Datapack Visual Editor
-The [Datapack Visual Editor](https://datapack.mcdev.tech/) shows the field list of every type interactively, which is handy for checking a field name without reading the table here.
+The [Datapack Visual Editor](https://datapack.mcdev.tech/) lists a type's fields interactively, which is handy for checking a field name without digging through the tables on this page.
 :::
+
+## Meta Conditions
+
+These do not inspect the damage itself; they assemble other damage conditions, or hand back a constant result.
+
+### `mxt:always`
+
+Always `true`. No fields.
+
+```json
+{ "type": "mxt:always" }
+```
+
+### `mxt:never`
+
+Always `false`. No fields.
+
+```json
+{ "type": "mxt:never" }
+```
+
+### `mxt:js`
+
+Hands the decision to a damage condition handler registered through the KubeJS bridge. The script callback receives the damage source, the damage amount, `params` and the evaluation context.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `id` | String | **required** | The id written to `MxtConditions.damage(id, callback)`. |
+| `params` | JSON object | `{}` | Arguments passed to the handler unchanged. |
+
+```json
+{
+  "type": "mxt:js",
+  "id": "example:on_fire_hit",
+  "params": { "threshold": 4 }
+}
+```
+
+### `mxt:and`
+
+Passes only when every nested condition passes.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `conditions` | Damage condition array | **required** | The nested conditions to check one by one. |
+
+```json
+{
+  "type": "mxt:and",
+  "conditions": [
+    { "type": "mxt:fire" },
+    { "type": "mxt:amount_range", "min": 1, "max": 100 }
+  ]
+}
+```
+
+### `mxt:or`
+
+Passes when at least one nested condition passes.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `conditions` | Damage condition array | **required** | The nested conditions to check one by one. |
+
+```json
+{
+  "type": "mxt:or",
+  "conditions": [
+    { "type": "mxt:fire" },
+    { "type": "mxt:magic" }
+  ]
+}
+```
+
+### `mxt:not`
+
+Negates the result of the nested condition.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `condition` | Damage condition | **required** | The condition to negate. |
+
+```json
+{
+  "type": "mxt:not",
+  "condition": { "type": "mxt:projectile" }
+}
+```
+
+### `mxt:chance`
+
+Passes randomly with the given probability.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `chance` | Double | **required** | Probability of passing, from `0` to `1`; out of range is refused at load. |
+
+```json
+{ "type": "mxt:chance", "chance": 0.25 }
+```
+
+When the damage source carries an entity, `mxt:chance` draws from that entity's own random stream, so the roll follows it instead of opening a second generator. When the source has no entity at all, it falls back to a new unseeded random source, and that case is not reproducible between client and server.
 
 ## Condition Types
 
-| Type | Fields | Description |
-|------|--------|-------------|
-| `mxt:always_true` | — | Always passes. |
-| `mxt:js` | `id`, `params?` | Calls a damage condition handler that was registered through the KubeJS bridge. |
-| `mxt:and` | `conditions` | Requires every nested damage condition to pass. |
-| `mxt:or` | `conditions` | Passes when at least one nested damage condition passes. |
-| `mxt:not` | `condition` | Negates a nested damage condition. |
-| `mxt:chance` | `chance` | Passes randomly with the given probability between `0` and `1`. |
-| `mxt:constant` | `value` | Always returns the given boolean value. |
-| `mxt:amount_range` | `min`, `max` | Checks that the damage amount lies between `min` and `max`. |
-| `mxt:directness` | `direct?` | Checks whether the damage source has a direct entity independent of its owner; `direct` defaults to `true`, and `false` requires the opposite. |
-| `mxt:damage_type` | `damage_type` | Matches one concrete registered damage type. |
-| `mxt:damage_type_tag` | `tag` | Matches the damage source against a damage type tag. |
-| `mxt:fire` | — | Matches damage that belongs to the vanilla fire damage tag. |
-| `mxt:magic` | — | Matches vanilla damage sources that are classified as magic. |
-| `mxt:projectile` | `projectile?`, `projectile_condition?` | Matches projectile damage, optionally restricted to one projectile entity type and filtered by an [entity condition](entity_condition_types.md) on the projectile. |
-| `mxt:element` | `elements` | Matches the strike by the elements it is made of. `elements` is a `HolderOrTag<element>[]`, and the condition passes when any element the strike belongs to is listed. The strike's elements are exactly the ones the damage pipeline reads — the damage type's claimants, falling back to the attacker's spirit roots only when nobody claims it — so the condition can never disagree with the multiplier the target actually took, and it answers for a lava tick once an element claims `minecraft:lava`. `elements` needs at least one entry: an empty array is refused at load rather than turning into a condition that never passes. |
+### `mxt:amount_range`
 
-::: info Difference Between `mxt:fire` and a Damage Tag
-`mxt:fire` takes no fields and is equivalent to `mxt:damage_type_tag` with the vanilla fire damage tag. Use the tag form when you want to point at a different tag without writing a new type.
-:::
+Checks whether the damage amount lies between `min` and `max`.
 
-::: info Chance and Randomness
-`mxt:chance` draws from the damage source entity's own random stream when the source has one, so the roll follows that entity rather than a fresh generator. When the source has no entity at all it falls back to a new unseeded random source, so that case is not reproducible across sides.
-:::
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `min` | `NumberProvider` | **required** | Lower bound of the range. |
+| `max` | `NumberProvider` | **required** | Upper bound of the range. |
+
+```json
+{ "type": "mxt:amount_range", "min": 4, "max": 20 }
+```
+
+### `mxt:directness`
+
+Checks whether the damage source has a direct entity independent of its owner.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `direct` | Boolean | `true` | `true` requires a direct entity; writing `false` requires the opposite. |
+
+```json
+{ "type": "mxt:directness", "direct": false }
+```
+
+### `mxt:damage_type`
+
+Matches one concrete registered damage type.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `damage_type` | Damage type id | **required** | The one damage type to match. |
+
+```json
+{ "type": "mxt:damage_type", "damage_type": "minecraft:fall" }
+```
+
+### `mxt:damage_type_tag`
+
+Matches the damage source against a damage type tag.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tag` | Damage type tag | **required** | The tag to match, written without `#`. |
+
+```json
+{ "type": "mxt:damage_type_tag", "tag": "minecraft:is_fire" }
+```
+
+### `mxt:fire`
+
+Matches damage that belongs to the vanilla fire damage tag. No fields.
+
+```json
+{ "type": "mxt:fire" }
+```
+
+It is equivalent to `mxt:damage_type_tag` with the vanilla fire damage tag. To point at a different tag without writing a new type, use the tag form.
+
+### `mxt:magic`
+
+Matches vanilla damage sources that are classified as magic. No fields.
+
+```json
+{ "type": "mxt:magic" }
+```
+
+### `mxt:projectile`
+
+Matches projectile damage, optionally restricted to one projectile entity type and filtered by an entity condition on that projectile.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `projectile` | Entity type id | no restriction | Only matches this projectile. |
+| `projectile_condition` | Entity condition | `mxt:always` | Filters the projectile that dealt the damage with an [entity condition](entity_condition_types.md). |
+
+```json
+{
+  "type": "mxt:projectile",
+  "projectile": "minecraft:arrow",
+  "projectile_condition": { "type": "mxt:glowing" }
+}
+```
+
+### `mxt:element`
+
+Matches the hit by its **elements**.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `elements` | Element id, `#` tag, or an array of them | **required** | Passes when one of the listed elements is among the hit's elements; at least one entry. |
+
+```json
+{ "type": "mxt:element", "elements": ["#example:fire", "example:metal"] }
+```
+
+The hit's elements are the ones the damage pipeline reads: the damage type's claimants, falling back to the attacker's spirit roots only when nobody claims it. So the elements a condition names always agree with the multiplier the target actually takes, and once an element claims `minecraft:lava`, lava damage answers this condition too. `elements` needs at least one entry: an empty array is refused at load rather than turning into a condition that never passes.

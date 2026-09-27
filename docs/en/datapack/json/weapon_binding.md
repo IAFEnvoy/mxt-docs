@@ -1,72 +1,53 @@
 ---
 title: Weapon Binding (weapon_binding)
-description: "Adds weapon attack damage, attack speed, attributes and combat actions to an existing item through the mxt:weapon_binding datapack registry."
 aside: false
 ---
 
-# Weapon Binding (weapon_binding)
+# Weapon Binding (weapon_binding) {#weapon_binding}
 
-A weapon binding maps one existing item to weapon-only fields. Like every other binding it only matches already registered items, so the physical weapon must come from Minecraft, a content mod, or KubeJS. Weapon bindings provide attack damage, attack speed and vanilla attribute modifiers, together with use, attack and tick actions; these fields are not mixed with the item, pill or technique bindings.
+File location: `data/<namespace>/mxt/weapon_binding/<path>.json`
 
-## File Location
-
-Weapon binding JSON files go in `data/<namespace>/mxt/weapon_binding/` within your data pack.
-
-**Purpose**: Weapon attributes and actions for existing items.
-
-The filename corresponds to its ID. For example, `data/example/mxt/weapon_binding/firebound_sword.json` has the ID `example:firebound_sword`.
-
-## Fields
+A weapon binding gives **items that are already registered** a set of weapon attributes and behaviours: `attributes` are the vanilla attribute modifiers it contributes, and the three actions are right-click, hit and held-tick. It creates no items and replaces none of the item's own numbers.
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `items` | `ItemMatcher` | **required** | Matches existing weapon items |
-| `attack_damage` | `NumberProvider` | `0` | The attack damage granted by the binding |
-| `attack_speed` | `NumberProvider` | `0` | The attack speed granted by the binding |
-| `attributes` | `List<AttributeEntry>` | `[]` | Additional vanilla attribute modifiers; an optional `value` updates the item's attribute component every tick |
-| `use_action` | `EntityAction` | `mxt:no_op` | The right-click use action |
-| `attack_action` | `BiEntityAction` | `mxt:no_op` | The action executed on a successful hit |
-| `tick_action` | `EntityAction` | `mxt:no_op` | The action executed while the weapon is held in the main hand |
-| `quality_chain` | `Holder<quality_chain>` | none | The quality chain this item belongs to. The chain answers membership (a resolved tier must be on it), the default tier (the chain's `default`) and the upgrade path |
-| `conditions` | `EntityCondition[]` | `[]` | The conditions checked before use, attack and attribute application; supports inline conditions or described condition objects |
-| `element` | `HolderOrTag<element>[]` | `[]` | What this weapon **is made of**: an entry names one element and a `#tag` names a set of them. This is the first source of "the element of an item", explained below. |
-| `attachment_multiplier` | Double | `1.0` | What this weapon is worth as a ward: while it is carried (both hands and the Curios slots), every strike that leaves an element on the carrier leaves this fraction of it — `0.5` for half, `0` for none. Several carried items multiply, and the default is a no-op. See the buildup step on [The damage system](/en/technical/damage). |
+| --- | --- | --- | --- |
+| `items` | item ID, `#tag` or a mixed array | **required** | Which weapon items this definition claims; see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher). |
+| `priority` | Int | `0` | When several definitions of the same kind match the same item, the larger number goes first (see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher)); equal numbers fall back to registry order. |
+| `attributes` | `AttributeEntry[]` | `[]` | The vanilla attribute modifiers this weapon contributes; an optional `value` updates the item's attribute component every tick. **A weapon's own attack damage and attack speed go here too** (`minecraft:attack_damage` / `minecraft:attack_speed`, with `operation` set to `add_value`). |
+| `use_action` | `EntityAction` | `mxt:no_op` | Right-click use behaviour. |
+| `attack_action` | `BiEntityAction` | `mxt:no_op` | Behaviour on a hit. |
+| `tick_action` | `EntityAction` | `mxt:no_op` | Held-tick behaviour. |
+| `quality_chain` | `quality_chain` ID | none | The quality chain this item sits on (see [quality_chain](./quality_chain.md)). The chain also answers membership (a resolved tier has to be on it, or the item cannot be used), the default tier (the chain's `default`) and the upgrade path. |
+| `conditions` | `EntityCondition[]` | `[]` | Conditions checked before use, attacks and attribute application; supports inline conditions or described condition objects. |
+| `element` | element ID or `#element tag`, an array is allowed | `[]` | What element this weapon **is**: one entry is one element, a `#` tag is a set of them. The `mxt:element` component on the stack is unioned with it. |
 
-**The element of an item** has exactly one reading, which asks two questions in order. First the **declarations**: whichever of `weapon_binding`, [item_binding](./item_binding.md) or [artifact](./artifact.md) claims the stack and writes `element` (the three registries are unioned, tags expand to every element they hold, and anything disabled by `mxt:disabled` is left out). Only when none of them declares anything does it read the **aura the item carries**: the single aura in its `mxt:spirit_storage`, or — for a store that is empty or names several — the aura its `mxt:item_aura` definition declares, and then that aura's `aura_type`. The `mxt:item_element` condition is this same reading.
-
-### `items`
-
-The `items` matcher accepts one item ID, one item tag (such as `"#example:fire_weapons"`), or a mixed array of both; one binding can therefore cover many physical weapons. Any array entry may also be written as a typed object dispatched by the built-in `item_matcher_entry_type` registry (`mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:herb_tag` and the `mxt:spirit_storage` capability matcher); see [Shared Data Types](../types/shared_data_types.md) for the entry types. When multiple bindings match an item, the matcher selects the definition with the lowest `priority` first, and all four binding types currently use priority `0`.
-
-### `attributes`
-
-Each entry uses the vanilla `AttributeModifier` shape: `attribute`, `id`, `amount` and `operation`, plus an optional dynamic `value` formula. An entry that declares `value` is recalculated on the server every tick from the entity context and replaces `amount`. The weapon's own `attack_damage` and `attack_speed` are installed as main-hand `ADD_VALUE` modifiers on top of the item's existing ones, so an item whose binding conditions or quality gate currently fail keeps its vanilla attributes. See [Shared Data Types](../types/shared_data_types.md).
-
-### `quality_chain`
-
-`quality_chain` names one [Quality Chain](./quality_chain.md). The chain answers membership (a tier the weapon resolves to must be on the chain, or it cannot be used), the default tier when neither an override component nor a settled result exists, and the upgrade path [`/quality upgrade`](/en/player-guide/commands/quality) walks.
-
-The weapon cannot be used when its current quality is not on the chain, a binding condition fails, or the quality's own `condition` fails. See [Quality](./quality.md).
-
-### `conditions`
-
-`conditions` is optional. Each entry may be an inline `EntityCondition`, or an object with `condition` and an optional translation-key `description`. Described entries are shown in the item tooltip with a green `✓` when true or a red `✗` when false. The check blocks right-click use, block interaction, attacks, weapon tick effects, and binding-added weapon attributes.
-
-## Example
+**A weapon's own attack damage and attack speed go in `attributes` too** (`minecraft:attack_damage` / `minecraft:attack_speed`, with `operation` set to `add_value`): they are **added on top of** the modifiers the item already ships with and **never replace** the item's own numbers. If you want "this weapon's base damage is exactly 8", change the item's own `minecraft:attribute_modifiers` (recipe components, `mxt:merge_components` or KJS), or start from a base item that carries no attack modifiers at all. Each entry says which attribute it belongs to, which vanilla modifier it uses and how much it moves the number; the modifier itself uses the vanilla attribute modifier shape.
 
 ```json
-// data/example/mxt/weapon_binding/firebound_sword.json
+// data/example/mxt/weapon_binding/frost_blade.json
 {
-  "items": ["kubejs:firebound_sword", "#example:fire_weapons"],
-  "attack_damage": 8,
-  "attack_speed": -2.4,
-  "quality_chain": "example:firebound_weapon",
-  "conditions": [{"type": "mxt:realm", "realm": "example:foundation"}],
-  "use_action": {"type": "mxt:add_resource", "resource": "example:qi", "amount": 5},
-  "attack_action": {"type": "mxt:target_action", "action": {"type": "mxt:damage", "amount": 3}},
-  "tick_action": {"type": "mxt:no_op"}
+  "items": "example:frost_blade",
+  "attributes": [
+    {
+      "attribute": "minecraft:attack_damage",
+      "id": "example:frost_blade/damage",
+      "amount": 5,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:attack_speed",
+      "id": "example:frost_blade/speed",
+      "amount": -1.5,
+      "operation": "add_value"
+    }
+  ],
+  "attack_action": {"type": "mxt:no_op"},
+  "element": ["mxt:water"]
 }
 ```
 
-The behaviour ids used by `use_action` and `tick_action` come from the [Entity Action Types](../types/action/entity_action_types.md) list, `attack_action` uses the [BiEntity Action Types](../types/action/bientity_action_types.md) list, and the condition ids come from the [Entity Condition Types](../types/condition/entity_condition_types.md) list.
+**A weapon has exactly two components**: `mxt:quality_chain` (single value — the component wins over the definition) and `mxt:element` (a list — unioned with what the definition declares). `attributes`, the three actions (`use_action` / `attack_action` / `tick_action`) and `conditions` **exist only in a definition**: for a stack whose numbers you want to change, write the vanilla `minecraft:attribute_modifiers` (KubeJS or recipe components), or write a definition for it and name that stack through `items`.
 
+**The element of an item** has exactly one reading, which asks two things in order: first the **declarations** — the `mxt:element` component on the stack, plus whichever of `weapon_binding`, [item_binding](./item_binding.md) or [artifact](./artifact.md) claims this stack and whether it writes `element` (the three registries are unioned, each taking its single highest-`priority` matching definition, and tags expand into sets of elements); only when none of them declares anything does it read the **aura the item carries** — the single aura in its `mxt:spirit_storage`, or (when that store is empty or holds several) the aura its `mxt:item_aura` definition declares, then that aura's `aura_type`. The `mxt:item_element` condition reads exactly this.
+
+`items` is the shared matcher: one item ID, one `#tag` or a mixed array all work, and any array entry may also be a matcher object carrying a `type` (`mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:technique`, `mxt:spirit_storage` and `mxt:herb_tag`). A matcher only references items that are already registered. When several definitions match one item, they are ranked by the `priority` each declares, **highest first** (the field defaults to `0`; ten tables accept it: `artifact`, the six bindings `item` / `weapon` / `pill` / `tool` / `blueprint` / `technique`, `spirit_herb`, `item_aura` and `currency`); only two definitions with the **same** `priority` fall back to registry order, so which one wins is written in the pack and never decided by file names (the same direction as `aura_zone` and `element_reaction`). **Which kind of matcher entry matched is irrelevant**: a definition that matches is ranked by the number it declares, and naming the item by id does not move it up. See [`ItemMatcher`](/en/datapack/types/shared_data_types#itemmatcher).

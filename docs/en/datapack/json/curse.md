@@ -1,63 +1,119 @@
 ---
 title: Curse (curse)
-description: Defines a referenceable curse that can be applied, stacked, ticked, expired and cleansed.
 aside: false
 ---
 
 # Curse (curse)
 
-A `curse` defines a referenceable curse: how long it lasts, how it stacks, and which behaviour runs when it is applied, ticks, expires and is cleansed.
+File location: `data/<namespace>/mxt/curse/<path>.json`
 
-## File Location
-
-Curse files go in `data/<namespace>/mxt/curse/` within your datapack.
-
-**Purpose**: Curse definitions that can be referenced.
-
-The filename corresponds to its ID. For example, `data/example/mxt/curse/burning.json` has the ID `example:burning`.
-
-## Fields
+A `curse` describes a lasting state that can be put on an entity: how long it lasts, how often it fires, how it stacks, and which behaviour each stage runs. The definition never decides who may cleanse it — that is declared on the antidote side, see [`mxt:remove_curses_by_tag`](#cleansing-tags-live-on-the-antidote-side).
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
+| --- | --- | --- | --- |
 | `name` | Text Component | `curse.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `curse.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
+| `description` | Text Component | `curse.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; today it is only stored and read, nothing draws it yet. |
 | `type` | `CurseType` | **required** | `mxt:timed`, `mxt:permanent`, `mxt:triggered` or `mxt:empty`. |
 | `duration_ticks` | `NumberProvider` | `0` | Duration of a timed curse; the unit is ticks. |
 | `tick_interval` | `NumberProvider` | `20` | Interval of the periodic behaviour. |
 | `max_stacks` | Integer | `1` | Maximum number of stacks, range `1..256`. |
 | `stacking_mode` | Enum | `ignore` | `ignore`, `refresh_duration`, `add_stacks_refresh_duration`, `add_stacks_keep_duration` or `replace`. |
-| `application_condition` | `EntityCondition` | `mxt:always_true` | Whether the curse may be applied. |
-| `display_condition` | `EntityCondition` | `mxt:always_true` | Whether the character panel **lists** this curse; while it fails, no row is left behind at all. Use `mxt:never` to keep a curse hidden, or a query of the curse's own state to reveal it later. |
-| `on_apply` | `EntityAction` | `mxt:no_op` | Behaviour on application; it runs only when an instance is **created**, so stacking onto, or refreshing, a curse that is already held does not repeat it. |
-| `on_tick` | `EntityAction` | `mxt:no_op` | Periodic behaviour. For `mxt:triggered` this is the effect a matching signal runs. |
+| `application_condition` | `EntityCondition` | `mxt:always` | Whether the curse may be applied. |
+| `display_condition` | `EntityCondition` | `mxt:always` | Whether the character information panel lists this curse. |
+| `on_apply` | `EntityAction` | `mxt:no_op` | Behaviour on application. |
+| `on_tick` | `EntityAction` | `mxt:no_op` | Periodic behaviour. |
 | `on_expire` | `EntityAction` | `mxt:no_op` | Behaviour on **natural expiry**. |
 | `on_cleanse` | `EntityAction` | `mxt:no_op` | Behaviour when the curse is **cleansed**. |
 
-## Types
+`on_apply` runs **only when an instance is created**: stacking onto, or refreshing, a curse that is already held does not run it again.
 
-| Type | Expiry | What drives the periodic behaviour |
-|------|--------|------------------------------------|
-| `mxt:timed` | After `duration_ticks`, which **must be positive**: a constant is checked at load, an expression is judged when it is evaluated, and a duration that cannot be honoured rejects that one application instead of throwing. | `tick_interval` |
-| `mxt:permanent` | Never (`duration_ticks` is not read). | `tick_interval` |
-| `mxt:triggered` | After `duration_ticks` when one is given, never otherwise. | The **trigger system**: while the curse is held, every signal matched by one of its `triggers` runs `on_tick` once for the holder; `tick_interval` is not read. `"triggers": [{"type": "mxt:hurt"}]` is "act once per hit". |
-| `mxt:empty` | Never. | Nothing: the type runs **no behaviour at all**, so it exists only as a marker. |
+While `display_condition` fails, no row is left behind at all. Use `mxt:never` to keep a curse hidden, or query the curse's own state with `mxt:has_curse` to reveal it only once it reaches, say, two stacks.
 
-Loading also rejects a `mxt:timed` curse whose constant duration is not positive and an `mxt:triggered` curse with an empty `triggers` list.
+### `mxt:timed`: Timed
 
-A duration handed in by a reference (`mxt:apply_curse`, `/mxt curse apply`, `MxtCurses.applyFor`) may **shorten** a curse but never outlast what the definition declares; a definition that never expires may be made timed, never the other way round.
+It expires after `duration_ticks`. **The duration has to be positive**: a constant is checked at load time, a formula is judged at the moment it is evaluated, and a duration that cannot be honoured rejects that one application instead of throwing. The periodic behaviour runs on `tick_interval`.
 
-A curse owns behaviour for exactly two moments of its own life: natural expiry and being cleansed. Every other removal reason - explicit removal, an administrator, being overwritten by `replace` - is an outside decision, so the definition carries no behaviour for it and the caller decides what to run. Both moments receive the formula context of whoever started that transaction.
+### `mxt:permanent`: Permanent
 
-## Disabled and deleted definitions
+It never expires and `duration_ticks` takes no part. The periodic behaviour runs on `tick_interval`.
 
-A definition carrying the `#mxt:disabled` tag, and one that was removed from the data pack, both **freeze** the instances that already exist: they stop ticking, never expire, and refuse to be cleansed - an effect must not be quietly turned into a default - while the character panel keeps listing them. The only way off is an explicit removal (`mxt:remove_curse`, `/mxt curse remove`, `MxtCurses.remove`, reason `explicit`). Bringing the definition back restores the instance, because a data pack reload reschedules every holder.
+### `mxt:triggered`: Triggered
 
-Within one tick the held curses run in the attachment's own order - the order they were applied in, persisted with them - rather than by definition id.
+Given a `duration_ticks` it expires on time, without one it never expires. The periodic behaviour is not driven by `tick_interval` but by **signals**: when a signal matched by any `Trigger` in `triggers` arrives, `on_tick` runs once on the holder.
 
-## Cleansing
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `triggers` | Array | `[]` | The signals that make this curse act; written exactly like an ability trigger. |
 
-A curse never declares what may cleanse it. The **cure** side names the `mxt:curse` tags it removes, and the tag files list the curses:
+```json
+{
+  "type": "mxt:triggered",
+  "triggers": [{"type": "mxt:hurt"}],
+  "on_tick": {"type": "mxt:damage", "amount": 1}
+}
+```
+
+That is "act once per hit". Loading rejects an `mxt:triggered` curse with an empty `triggers` list.
+
+### `mxt:empty`: Placeholder
+
+It never expires and runs **no behaviour at all**: `on_apply` / `on_tick` / `on_expire` / `on_cleanse` never run. It exists only as a placeholder or a marker.
+
+Loading also rejects an `mxt:timed` curse whose constant duration is not positive.
+
+## Duration Overrides Only Tighten
+
+A duration handed in by a reference can shorten a curse, but never outlast what the definition itself declares. The three places that hand in a duration are `mxt:apply_curse`'s `duration_ticks`, `/mxt curse apply <target> <curse> <stacks> <duration>` and KubeJS `MxtCurses.applyFor`. A definition that never expires on its own (`mxt:permanent` / `mxt:empty` / `mxt:triggered` with no duration) can be overridden into a timed one, not the other way round: a timed curse is never overridden into a permanent one. For a longer curse, write a longer `duration_ticks` in the definition.
+
+## Execution Order
+
+Within one tick the held curses are handled in **the attachment's own order**, that is the order they were applied in. That order is saved with the attachment, so it is stable across relogs. It is not re-sorted by definition id.
+
+## Sources Are a Set, Not a Single Entry
+
+Every curse has a **source ledger** recording who keeps it alive — the same ledger ability grants use, under the same rule: **while at least one source still holds it, the curse exists**. One source letting go only drops its own share; the instance really leaves once the last one is gone, and that is when the removal event fires.
+
+The built-in sources are all identifiers:
+
+| Source | Where it comes from |
+| --- | --- |
+| `mxt:ability` | `mxt:apply_curse` |
+| `mxt:loot` | A loot function |
+| `mxt:command` | `/mxt curse apply` |
+| `mxt:equipment/<slot>/<item id>` | An equipment slot |
+| `mxt:curios_equipment` | A Curios slot |
+
+A KubeJS caller passes its own source, written as `namespace:path`. `/mxt curse remove`, `mxt:remove_curse` and an antidote all do a **whole-instance removal**, so they wipe every source at once.
+
+## Viewing and Manipulating
+
+- `/mxt curse list [target]` lists the curses a holder carries: name, stacks, remaining time or "never expires", and every source.
+- `/mxt curse apply <target> <curse> [stacks] [duration]`, `/mxt curse remove <target> <curse>` (reason `explicit`, whole instance) and `/mxt curse cleanse <target> <tag>` (reason `cleansed`, the same road an antidote takes) need administrator permission.
+- On the KubeJS side `MxtCurses` has `apply`, `applyFor`, `remove`, `release` (drops one source only), `has`, `stacks`, `remainingTicks` and `sources`.
+
+An item carrying `mxt:curse_container` also lists the curses it carries in its tooltip.
+
+## A Definition That Is Gone Freezes
+
+When a whole definition leaves the data pack (its file was deleted, or a `neoforge:conditions` block keeps it out), the instances already held **stay exactly where they are**: they no longer tick, trigger or expire, and they refuse to be cleansed — an effect must not be quietly "purified" into a default one. The character information panel keeps listing them, unless `display_condition` says otherwise.
+
+The only way off is an **explicit removal**: `/mxt curse remove`, KubeJS `remove`, or unequipping the item that carries it (reason `explicit`). **`mxt:remove_curse` and an antidote cannot take it off** — they go through `cleansed`, and a frozen instance simply does not answer them. Once the definition is back the instance recovers on its own, because reconciliation is scheduled again on `/reload`.
+
+## Only Two Moments Run Behaviour
+
+A curse's own life has exactly two moments that run behaviour — **natural expiry** and **being cleansed** — one field each. Every other removal reason (explicit removal, an administrator, being overwritten by `replace`) is an outside decision, so the definition carries no behaviour for it and the caller decides what to run.
+
+The formula context those two moments receive is the context of whoever started that transaction.
+
+## Cleansing: Tags Live on the Antidote Side
+
+The definition has no cleanse-tag field of its own, so **"who may remove me" is not decided by the curse**. It is the other way round: the **antidote** declares the `mxt:curse` tags it can remove, and the tag files list the curses under those tags. The action is `mxt:remove_curses_by_tag`:
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tags` | `#tag[]` | **required** | The curse tags this action removes, written `"#namespace:tag"` (the same form as `mxt:entity_tag`). |
+
+Matching **any one** of the listed tags is enough to remove it.
 
 ```json
 { "type": "mxt:remove_curses_by_tag", "tags": ["#example:cleanse/poison"] }
@@ -68,50 +124,47 @@ A curse never declares what may cleanse it. The **cure** side names the `mxt:cur
 { "values": ["example:dan_toxicity", "example:soul_scorch"] }
 ```
 
-`tags` takes tag IDs in the usual `"#namespace:path"` form, and a curse carrying **any one** of them is removed. Removal goes through the same transaction as expiry under the `cleansed` reason, so every curse it removes runs its own `on_cleanse` and fires a `CurseRemoveEvent` whose reason is `cleansed`; `mxt:remove_curse` removes one named curse under that same reason. Put the action in a pill's `on_consume`, in an ability's `entity_action` or in an item's `use_action` and you have an antidote: curses need no cooperation, they only have to be listed in that tag.
+It removes under the `cleansed` reason, through the same transaction, so every curse it takes off runs its own `on_cleanse`. Removing **one named curse** under that same reason is `mxt:remove_curse`.
 
-## Carried Curses
+Put this action in a pill's `on_consume`, in an ability's `entity_action` or in an item's `use_action` and you have an antidote pill. Nothing on the curse side has to cooperate: a newly written curse can be removed by it as long as it is listed in that tag.
 
-Any item can carry curses through the `mxt:curse_container` component. Entries are `mxt:apply_curse` entries - `curse`, `stacks?` and `duration_ticks?` - and the item itself is the source:
+## Querying: `mxt:has_curse`
+
+The entity condition and the loot condition share the name and the shape (the loot one has an extra `entity` target field). Every field is optional, and **one and the same instance** has to satisfy all of them:
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `curse` | Curse ID | none | Must be this one definition. |
+| `tags` | `#tag[]` | `[]` | This one instance must carry **all** of the listed tags. |
+| `stacks` | `{min?, max?}` | none | Stack count window, inclusive on both ends. |
+| `remaining_ticks` | `{min?, max?}` | none | Remaining time window, the unit is ticks. |
+
+`tags` wants **all** of them; for "any one of them", combine several `mxt:has_curse` with `mxt:or`.
+
+Nothing written at all means "carries any curse", which combined with `mxt:not` reads as "carries no curse". Either end of a window may be omitted, so one field expresses "at least", "at most" and an exact range. Formulas inside a window are evaluated with the caller's own context.
+
+An instance that never expires counts as **infinite** in `remaining_ticks`, so it satisfies a `min` and never satisfies a `max`.
+
+```json
+{"type": "mxt:has_curse", "tags": ["#example:cleanse/poison"], "stacks": {"min": 2}, "remaining_ticks": {"min": 1}}
+```
+
+## Items That Carry Curses: `mxt:curse_container`
+
+Any item can carry the `mxt:curse_container` component, declaring **which curses it carries**. Entries have the same shape as `mxt:apply_curse` (`curse`, `stacks`, `duration_ticks`), except that the source is the equipment itself:
 
 ```json
 give @s minecraft:diamond_chestplate[mxt:curse_container={curses:[{"curse":"example:soul_scorch","stacks":2}]}]
 ```
 
-Three moments, all routed through the ordinary curse transaction, so a carried curse obeys its own application condition, stacking and duration:
+One shared reconciliation handles all three moments, and all of them go through the ordinary curse transaction, so the application condition, the stacking and the duration are judged as usual:
 
-- **Equipping applies it, or joins it.** The six equipment slots (main hand, off hand, head, chest, legs, feet) and the Curios slots all count; the source is `mxt:equipment/<slot>/<item id>`, or `mxt:curios_equipment` for Curios. A curse another source already holds is not applied again - the stack simply adds its own source to the ledger, so it does not disturb the stacks or the remaining time.
-- **Unequipping releases only its own source.** The curse stays while any other source still holds it, and only a release that empties the ledger removes the instance, under the `explicit` reason (so no definition behaviour runs).
-- **It heals itself while carried.** A curse that expired, was cleansed, or was removed outright is applied again within 20 ticks - equipment changes reconcile at once, Curios and self-healing on the slow cadence. A `mxt:timed` curse is therefore enough for "wearing this keeps cursing you"; `mxt:permanent` is not required.
+- **Equipping applies or joins it**: all six equipment slots (main hand, off hand, head, chest, legs, feet) and the Curios slots count, with `mxt:equipment/<slot>/<item id>` and `mxt:curios_equipment` as their sources. If that curse is **already** held by another source, equipping does not apply it again — it only adds its own source to the ledger, so neither the stacks nor the remaining time are refreshed by it.
+- **Unequipping releases only its own share**: taking an item off just releases that item's source, the curse stays while any other source still holds it, and only a release that really empties the ledger removes the instance, under the `explicit` reason, so no definition behaviour runs.
+- **It heals itself while carried**: after the curse expires, is cleansed or is removed outright, the carrier gets it again within **at most 20 ticks** as long as the item is still worn. An equipment slot change triggers a reconciliation at once; Curios and the self-healing use the slow 20-tick reconciliation. So `mxt:timed` is enough for "wearing this keeps cursing you" — there is no need to write `mxt:permanent`.
 
-## Sources
+Read that component with the item condition `mxt:curse_container`: `curse` accepts an entry, a `#tag` or an array, and writing none of them means "any curse"; the optional `stacks` is a `{min?, max?}` window, compared against the stack count that entry **is going to apply** (its formula is evaluated with the current context). It asks **what the item has sealed inside it**, which is a different question from the entity condition `mxt:has_curse` (what the holder **already has on them**), so an unequipped piece of armour still answers it.
 
-A curse is kept alive by its **sources**, through the same `SourceLedger` ability grants use: it exists while at least one source holds it, one source letting go only drops its own share, and the last one leaving is what removes it (that is when a removal event fires). Sources are identifiers: `mxt:ability` (from `mxt:apply_curse`), `mxt:loot`, `mxt:command`, `mxt:equipment/<slot>/<item id>`, `mxt:curios_equipment`, and whatever a script passes. `/mxt curse remove` and `mxt:remove_curse` are whole-instance removals, so they take every source with them.
+## Display
 
-The character panel's "Curses" line lists only instances whose `display_condition` passes, with the stack count and a tooltip naming the source and the remaining time. Carried curses are also written on the item itself: `mxt:curse_container` lists what the stack carries in its tooltip.
-
-## Commands
-
-`/mxt curse list [target]` prints a holder's curses (name, stacks, remaining ticks or "never expires", and the sources still holding each one) and needs no permission; `/mxt curse apply|remove|cleanse` need gamemaster permission and go through the same transactions content uses, `apply` reporting a refused definition as `DISABLED` or `UNKNOWN`. KubeJS exposes the same ground through `MxtCurses`: `apply`, `applyFor`, `remove`, `release`, `has`, `stacks`, `remainingTicks` and `sources`.
-
-## Querying
-
-`mxt:has_curse` - an entity condition, and a loot condition with an extra `entity` target - asks whether one held instance satisfies **every** filter given: `curse`, `tags` (all of them), `stacks` and `remaining_ticks`, the last two as `{min?, max?}` windows. A curse that never expires counts as infinite remaining time, so it answers a `min` but never a `max`. Name no filter at all and the query asks whether any curse is held, which combined with `mxt:not` reads as "carries no curse".
-
-## Example
-
-```json
-{
-  "type": "mxt:timed",
-  "duration_ticks": 600,
-  "tick_interval": 20,
-  "max_stacks": 3,
-  "stacking_mode": "add_stacks_refresh_duration",
-  "application_condition": {"type": "mxt:always_true"},
-  "on_apply": {"type": "mxt:no_op"},
-  "on_tick": {"type": "mxt:damage", "amount": 1},
-  "on_expire": {"type": "mxt:no_op"},
-  "on_cleanse": {"type": "mxt:no_op"}
-}
-```
-
+The "Curses" line of the character information panel lists only the instances that pass `display_condition`; a hidden one leaves not even a row. That row shows the stack count (`×N`), and the tooltip gives **every source** plus the remaining time.

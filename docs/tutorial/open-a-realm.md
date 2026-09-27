@@ -74,7 +74,7 @@ description: 写一份秘境模板：用什么维度生成、边界怎么划、�
   {
     "pos": [0, 80, 0],
     "yaw": 0, "pitch": 0,
-    "enter_condition": {"type": "mxt:always_true"},
+    "enter_condition": {"type": "mxt:always"},
     "enter_denied_message": {"text": "你还没有资格踏入此地"}
   },
   {
@@ -165,7 +165,7 @@ description: 写一份秘境模板：用什么维度生成、边界怎么划、�
 | 进不去，报 `NO_FREE_INSTANCE` | `max_instances` 满了（含休眠的认领实例）；先 `destroy` 掉不用的，或把它调大。 |
 | 进不去，报 `MISSING_STRUCTURE` | `structures[].nbt` 指向的结构文件不存在或路径不对。 |
 | 进不去，报 `CONDITION_NOT_MET` | 选中的落点 `enter_condition` 不成立；写了 `enter_denied_message` 就会显示那句话。 |
-| 进不去，报 `DISABLED` | 定义被 `#mxt:disabled` 停用，或者 id 根本不在注册表里。 |
+| 进不去，报 `DISABLED` | 那个 id 不在当前注册表里（含被 `neoforge:conditions` 挡掉的定义）。 |
 | 进不去，报 `ALREADY_TRAVELLING` | 这个玩家已经处在一次进出流程里。 |
 | 一进去就往下掉 | 用了 `mxt:void` 又没放结构：空列的地表高度就是世界底部。 |
 | 地形没了 | 实例是 `owned: false`，最后一人离开即删除；要保留就写 `true`。 |

@@ -1,6 +1,6 @@
 ---
 title: KubeJS Items and Bindings
-description: Register real items in a KubeJS startup script, then attach MiXianTu rules to them with the item, weapon, pill and technique binding tables.
+description: Register real items in a KubeJS startup script, then attach MiXianTu rules to them with the item, weapon, pill, tool, blueprint and technique binding tables.
 ---
 
 # KubeJS Items and Bindings
@@ -43,14 +43,16 @@ Editing a startup script needs a **game restart**: startup scripts run before th
 
 ## Attaching Rules with Binding Tables
 
-MiXianTu owns behaviour, conditions, aura, currency and tooltips; the binding tables connect a registered item to those rules. Each file lives under `kubejs/data/<namespace>/mxt/<registry>/`, and all four tables only reference items that KubeJS, vanilla or another mod has already registered:
+MiXianTu owns behaviour, conditions, aura, currency and tooltips; the binding tables connect a registered item to those rules. Each file lives under `kubejs/data/<namespace>/mxt/<registry>/`, and all six tables only reference items that KubeJS, vanilla or another mod has already registered:
 
 | Table | Directory | Attaches |
 | --- | --- | --- |
 | Item binding | `mxt/item_binding/` | Ordered entity actions and tooltip conditions for any item. |
-| Weapon binding | `mxt/weapon_binding/` | Attack damage and speed, weapon actions and attribute modifiers. |
+| Weapon binding | `mxt/weapon_binding/` | Vanilla attribute modifiers (attack damage and speed go here too), weapon actions. |
 | Pill binding | `mxt/pill_binding/` | Consumption behaviour and toxicity for an edible item. |
-| Technique binding | `mxt/technique_binding/` | How one technique is read: hold length, pose, sound, quality chain and conditions, plus the item the mod generates as its carrier. |
+| Tool binding | `mxt/tool_binding/` | Claims tool items and lists the forging methods they unlock. |
+| Blueprint binding | `mxt/blueprint_binding/` | Claims blueprint items and lists the forging blueprints they offer. |
+| Technique binding | `mxt/technique_binding/` | How one technique is read: hold length, pose, sound, quality chain and conditions, plus the item the mod generates as its carrier. A manual's identity is the stack's `mxt:technique` component; `items` is the optional second route. |
 
 Bind a pill that grants a spirit root:
 
@@ -68,14 +70,16 @@ Bind a pill that grants a spirit root:
 }
 ```
 
-Bind a weapon's damage and attack speed:
+Bind a weapon's attribute modifiers (attack damage and attack speed go here too):
 
 ```json
 // kubejs/data/example/mxt/weapon_binding/firebound_sword.json
 {
   "items": ["kubejs:firebound_sword", "#example:fire_weapons"],
-  "attack_damage": 8,
-  "attack_speed": -2.4,
+  "attributes": [
+    {"attribute": "minecraft:attack_damage", "id": "example:firebound_sword/damage", "amount": 8, "operation": "add_value"},
+    {"attribute": "minecraft:attack_speed", "id": "example:firebound_sword/speed", "amount": -2.4, "operation": "add_value"}
+  ],
   "quality_chain": "example:firebound_weapon"
 }
 ```
@@ -104,7 +108,7 @@ Bind a cultivation technique to its carrier item:
 }
 ```
 
-The first three tables match the item themselves: `items` accepts an item ID, an item tag or a mixed array, so one file can cover a whole family of items. `technique_binding` does not — it is matched by technique id, and `carrier_item` is a single item ID. What makes a stack a manual is its own `mxt:technique` component, so the item above still has to be handed out as a stack that carries it (the mod's creative tab and `/picker mxt:technique` offer exactly that generated stack). `quality_chain` is an optional reference to a [quality chain](../datapack/json/quality_chain.md): the chain answers membership, the default tier and the upgrade path. When a binding names an item ID that does not exist, the data pack fails to load, so no unresolvable item rule is created. The full field list of each table is in [Item Binding](../datapack/json/item_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md).
+The first five tables match the item themselves: `items` accepts an item ID, an item tag or a mixed array, so one file can cover a whole family of items (the same holds for `tool_binding` / `blueprint_binding`, which just hand out forging methods and blueprints instead). A `technique_binding` declaration is matched by technique id, and its `items` is the optional second route: what makes a stack a manual is its own `mxt:technique` component, and only without one does the `items` of a declaration decide — so the item above can either be handed out as the generated carrier from `/picker mxt:technique`, or its id can be written into the declaration's `items` directly. `quality_chain` is an optional reference to a [quality chain](../datapack/json/quality_chain.md): the chain answers membership, the default tier and the upgrade path. When a binding names an item ID that does not exist, the data pack fails to load, so no unresolvable item rule is created. The full field list of each table is in [Item Binding](../datapack/json/item_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md), [Tool Binding](../datapack/json/tool_binding.md), [Blueprint Binding](../datapack/json/blueprint_binding.md) and [Technique Binding](../datapack/json/technique_binding.md).
 
 ## Reloading
 

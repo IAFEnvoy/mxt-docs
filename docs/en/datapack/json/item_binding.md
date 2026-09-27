@@ -1,27 +1,18 @@
 ---
 title: Item Binding (item_binding)
-description: "Maps existing items to an ordered list of generic actions through the mxt:item_binding datapack registry."
+description: "Claims existing items for the mxt:item_binding datapack registry and hands them an ordered list of actions, a use gate, an optional quality chain and an element."
 aside: false
 ---
 
 # Item Binding (item_binding)
 
-An item binding maps existing items to an ordered list of generic actions, run after vanilla consumption finishes. The mod does not create logical datapack items: physical items must be registered by Minecraft, a content mod, or KubeJS, and datapacks only attach MXT gameplay rules to those existing item IDs.
-
-```text
-KubeJS / mod item registry
-        -> mxt:item_binding -> actions
-        -> mxt:weapon_binding
-        -> mxt:pill_binding
-```
-
-`mxt:item_binding` is the generic entry point of the three bindings. The other two carry fields of their own, and no field is shared between them. Technique manuals are not bound to items at all: the stack itself carries the `mxt:technique` component (see [technique_binding](./technique_binding.md)).
+An item binding turns items that already exist into carriers of data pack behaviour: it claims them through `items` and gives them an ordered list of `actions`, a use gate, an optional quality chain and an element.
 
 ## File Location
 
 Item binding JSON files go in `data/<namespace>/mxt/item_binding/` within your data pack.
 
-**Purpose**: Bindings from existing items to action arrays.
+**Purpose**: Bindings from existing items to arrays of actions. This table does not create items; it only claims them.
 
 The filename corresponds to its ID. For example, `data/example/mxt/item_binding/root_pellet.json` has the ID `example:root_pellet`.
 
@@ -29,76 +20,48 @@ The filename corresponds to its ID. For example, `data/example/mxt/item_binding/
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `items` | `ItemMatcher` | **required** | The item IDs, item tags, or mixed array of both this binding matches |
-| `actions` | `List<EntityAction>` | `[]` | The ordered actions executed after vanilla consumption finishes |
-| `quality_chain` | `Holder<quality_chain>` | none | The quality chain this item belongs to. The chain answers membership (a resolved tier must be on it), the default tier (the chain's `default`) and the upgrade path |
-| `conditions` | `EntityCondition[]` | `[]` | Binding use conditions; each entry may be an inline condition, or a `{condition, description}` object carrying a translation-key `description`. Described conditions are marked in the tooltip with a green `✓` or a red `✗` |
-| `element` | `HolderOrTag<element>[]` | `[]` | What this item **is made of**: an entry names one element and a `#tag` names a set of them. This is the first source of "the element of an item" — a declaration wins, and only when none is written does the item fall back to the `aura_type` of the aura it carries; the full reading is on [weapon_binding](./weapon_binding.md). |
-| `attachment_multiplier` | Double | `1.0` | What this item is worth as a ward: while it is carried (both hands and the Curios slots), every strike that leaves an element on the carrier leaves this fraction of it — `0.5` for half, `0` for none. Several carried items multiply, and the default is a no-op. |
+| `items` | Item id, `#tag` or a mixed array | **required** | Which items this definition claims; see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher) |
+| `priority` | Int | `0` | When several definitions match one item, the higher number goes first; only equal numbers fall back to registry order |
+| `actions` | `EntityAction[]` | `[]` | The actions run in order on the tick the item's use cycle finishes |
+| `quality_chain` | Quality chain id | none | The quality chain this family of items sits on; see [quality_chain](./quality_chain.md) |
+| `conditions` | `EntityCondition[]` | `[]` | The use gate; every entry must pass |
+| `element` | Element id, `#tag` or a mixed array | `[]` | What element this item **is**; the reading is below |
 
-### `items`
+## Usage
 
-Every binding uses the `items` matcher. It accepts one item ID, one item tag (such as `"#example:herbs"`), or a mixed array of both, so one binding can cover many physical items. Any array entry may also be written as an object whose `type` is dispatched by the built-in `item_matcher_entry_type` registry, which adds wildcard, regular expression and capability matchers on top of the two shorthand forms. When multiple bindings match an item, the matcher selects the definition with the lowest `priority` first; all four binding types currently use priority `0`, so registry order decides the tie.
+**A binding table only matches items that are already registered, and it never creates one.** Technique manuals do not come through this table: whether a stack is a manual follows its own `mxt:technique` component, or the optional `items` of [technique_binding](./technique_binding.md). `weapon_binding` and `pill_binding` carry fields of their own and share none of them with this table. A weapon's attributes and its attack / use / tick actions belong in `weapon_binding`.
 
-::: info Matcher Forms
-```json
-"items": "minecraft:apple"
-```
-
-```json
-"items": "#minecraft:logs"
-```
-
-```json
-"items": ["minecraft:apple", "#minecraft:logs", "othermod:token"]
-```
-
-```json
-"items": [{"type": "mxt:wildcard", "pattern": "mxt:*_spirit_stone"}]
-```
-
-| `type` | Field | Matches |
-|--------|-------|---------|
-| `mxt:item` | `item` | One item; the expanded form of the bare ID shorthand |
-| `mxt:tag` | `tag` | One item tag; the expanded form of the `#` shorthand |
-| `mxt:wildcard` | `pattern` | Item IDs through `*` and `?` wildcards |
-| `mxt:regex` | `pattern` | Item IDs through a full regular expression |
-| `mxt:spirit_storage` | none | Every item implementing `ItemAuraAccess`, the capability matcher that covers items added later |
-| `mxt:herb_tag` | `element?`, `material?` | A spirit herb whose `element_tags` / `material_tags` carry the given ids; at least one field is required |
-
-The matcher only references already registered items. See [Shared Data Types](../types/shared_data_types.md) for the full `ItemMatcher` description and [Other Type Families](/en/datapack/types/other/formation-and-matcher#item-matcher-entry-type) for the entry types.
+::: warning
+`actions` does **not** hook right-click. It runs on the tick the item's **use cycle finishes** — the moment a piece of food is swallowed. An item that right-clicking never raises into a use cycle never gets here, and none of its actions run.
 :::
 
-### `quality_chain`
+`items` is the shared matcher: one item id, one `#tag` or a mixed array all work, and a single entry does not have to be wrapped in an array. Any array entry may also be a matcher object carrying a `type` (`mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:technique`, `mxt:spirit_storage` and `mxt:herb_tag`). A matcher only ever references items that are already registered.
 
-`quality_chain` names one [Quality Chain](./quality_chain.md) rather than a `#` tag. The chain answers three things at once: **membership** (a tier the item resolves to must be on the chain, or the item cannot be used), the **default tier** an item falls to when neither an override component nor a settled result exists, and the **upgrade path** [`/quality upgrade`](/en/player-guide/commands/quality) walks.
+**Loading ends one of two ways.** An array is a forgiving list: an entry that fails to decode is dropped on its own, with an `Ignoring invalid list element` line in the log, and the rest of the array still applies — a mistyped item id only makes that one entry miss. **A single entry does not take that road**: if it fails to decode, the whole definition fails to load. An empty array loads fine, it just matches nothing.
 
-An item cannot be used when its current quality is not on the chain, a binding condition fails, or the quality's own `condition` fails. See [Quality](./quality.md).
+`priority` is the only "who wins" rule. When several definitions match one item, the one with the **highest** declared `priority` wins; the field defaults to `0`, and only two definitions carrying the **same** number fall back to registry order, so which one wins is written in the pack and never decided by file names. **The kind of matcher entry that matched is irrelevant**: any matching definition is ranked by the number it declares, and naming the item by id does not move it up. Ten tables accept the field: `artifact`, the six bindings `item` / `weapon` / `pill` / `tool` / `blueprint` / `technique`, `spirit_herb`, `item_aura` and `currency` (the same direction as `aura_zone` and `element_reaction`). See [`ItemMatcher`](/en/datapack/types/shared_data_types#itemmatcher).
 
-A quality carries `name` / `description` / `color` fields of its own, and the two text fields are generated from the id when omitted: `example:refined` in `mxt:quality` reads as `quality.mxt.example.refined`, its description as `quality.mxt.example.refined.description`.
-
-### `conditions`
-
-`conditions` is optional on every binding. Each entry may be an inline `EntityCondition`, or an object with `condition` and an optional translation-key `description`. Described entries are shown in the item tooltip with a green `✓` when true or a red `✗` when false; the description text itself keeps its normal style.
-
-Every matching binding condition and the current quality's condition must pass before the item can be used. The check blocks right-click use, block interaction, attacks, data-driven item effects, weapon tick effects, technique learning, and binding-added weapon attributes.
-
-## Example
-
-A pellet that grants a spirit root when consumed and is restricted to one quality chain:
+**Per-stack extras go through components; everything else comes from the definition.** An item claimed by this table may carry two components of its own: `mxt:quality_chain` (single value — the component wins over the definition's `quality_chain`) and `mxt:element` (a list — **unioned** with the `element` the definition declares). `actions` and `conditions` have **no** component and come only from the definition. To change one stack, write a definition that names it through `items`, or handle it while the item is registered, with KubeJS or vanilla components.
 
 ```json
-// data/example/mxt/item_binding/root_pellet.json
 {
-  "items": ["kubejs:root_pellet", "#example:root_pellets"],
-  "actions": [
-    {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
-  ],
-  "quality_chain": "example:root_pellet"
+  "items": ["minecraft:iron_sword", "#minecraft:swords"],
+  "actions": [{"type": "mxt:grant_spirit_root", "spirit_root": "mxt:fire_root"}],
+  "conditions": [
+    {"type": "mxt:always"},
+    {
+      "condition": {"type": "mxt:realm", "realm": "example:foundation"},
+      "description": "condition.example.foundation_required"
+    }
+  ]
 }
 ```
 
-A pill that first checks for an existing fire spirit root and then swaps it for a water spirit root:
+A `conditions` entry may be a plain condition, or a `{condition, description}` object whose `description` is a translation key. Every entry must pass. A described condition is marked in the item tooltip with a green `✓` or a red `✗`, and the description text keeps its normal style. This layer is the **use gate**: while it fails, the item cannot be used at all — right-click, right-click on a block, attacks and the use cycle are all stopped, with the reason in the action bar. `actions` asks once more right before it runs, so an action does not fire when a condition stops passing in the meantime.
+
+When `actions` contains `mxt:grant_spirit_root`, the item tooltip gains a line naming the spirit root it grants; the advanced tooltip also prints that root's entry id.
+
+Holding a spirit root or a physique, granting one and removing one are all data pack primitives: `mxt:has_spirit_root` / `mxt:has_physique` for conditions, `mxt:grant_spirit_root` / `mxt:remove_spirit_root` / `mxt:grant_physique` / `mxt:remove_physique` for actions. The definition below only applies to a player who already holds a fire root, and swaps that fire root for a water root:
 
 ```json
 {
@@ -116,17 +79,11 @@ A pill that first checks for an existing fire spirit root and then swaps it for 
 }
 ```
 
-The same binding type also attaches context-free permanent bonuses, such as granting a physique:
+`quality_chain` points at one [quality chain](./quality_chain.md), and the chain answers three things in one place: membership (the tier an item resolves to must be on the chain, or the item cannot be used), the default tier (the chain's `default`) and the path upwards. The `mxt:quality_chain` component on the stack wins over what is written here.
 
-```json
-// data/example/mxt/item_binding/body_pill.json
-{
-  "items": "kubejs:body_pill",
-  "actions": [
-    {"type": "mxt:grant_physique", "physique": "example:innate_sword_bone"}
-  ]
-}
-```
+**The element of an item** has exactly one reading, which asks two questions in order:
 
-The behaviour id used inside `actions` comes from the [Entity Action Types](../types/action/entity_action_types.md) list, and the condition ids come from the [Entity Condition Types](../types/condition/entity_condition_types.md) list.
+1. **Declarations**: the stack's own `mxt:element` component, plus whichever of `weapon_binding`, this table and [artifact](./artifact.md) claims the stack and writes `element`. Each registry takes its single highest-`priority` matching definition, and every result is **unioned**; each declaration is expanded through the element registry, so a `#tag` stands for every element under it.
+2. **The aura the item carries**: only when nothing was declared at all — the **single** aura in its `mxt:spirit_storage`, or (when that store is empty or holds several) the aura its `mxt:item_aura` definition declares, and then that aura's `aura_type`. An artifact's `spirit_capacity` **does not count**: that says what an item can hold, not what it is.
 
+The full reading is on [weapon_binding](./weapon_binding.md), and the `mxt:item_element` item condition reads exactly this.

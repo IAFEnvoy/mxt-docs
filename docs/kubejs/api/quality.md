@@ -20,7 +20,7 @@ description: 读一栈物品解析出的品质与它所属的链条，或写覆�
 | `clear(entity, stack)` | `Entity`、`ItemStack` | `boolean` | 摘掉覆盖组件，回到定义默认档；本来就没有覆盖时返回 `false`。 |
 | `upgrade(entity, stack)` | `LivingEntity`、`ItemStack` | `{changed, failure, from, to}` | 在链条上**推一档**：先过那一步的 `condition`，再用全局消耗事务付清 `costs`（原子），付不出就一点不动、也不写档。 |
 
-`upgrade` 的 `failure` 取值：`SERVER_ONLY`、`EMPTY`（手上没有物品）、`NO_QUALITY`、`NO_CHAIN`（不属于任何链条）、`AMBIGUOUS_CHAIN`（这一档同时属于多条链，无法确定往哪升）、`NOT_MEMBER`（这一档不在所属链条上）、`AT_TOP`、`NO_STEP`（这一步没有声明代价，不能升）、`DISABLED`（下一档被 `mxt:disabled` 停用）、`CONDITION_FAILED`、`INSUFFICIENT_RESOURCE`、`INSUFFICIENT_COST`。成功时 `from` / `to` 是升级前后的品质 ID（失败时都是 `null`）。
+`upgrade` 的 `failure` 取值：`SERVER_ONLY`、`EMPTY`（手上没有物品）、`NO_QUALITY`、`NO_CHAIN`（不属于任何链条）、`AMBIGUOUS_CHAIN`（这一档同时属于多条链，无法确定往哪升）、`NOT_MEMBER`（这一档不在所属链条上）、`AT_TOP`、`NO_STEP`（这一步没有声明代价，不能升）、`CONDITION_FAILED`、`INSUFFICIENT_RESOURCE`、`INSUFFICIENT_COST`。成功时 `from` / `to` 是升级前后的品质 ID（失败时都是 `null`）。
 
 ```js
 // kubejs/server_scripts/mxt_quality.js

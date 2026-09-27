@@ -31,16 +31,16 @@ data/example/
 │   ├── ability/qi_bolt.json                 An active ability
 │   ├── ability/qi_recovery.json             A triggered ability
 │   ├── ability/spark.json                   An ability a talisman inscribes
-│   ├── talisman/flame_sigil.json            The talisman: abilities + aura bill
+│   ├── talisman/flame_sigil.json            The talisman: abilities + capacity + costs
 │   ├── formation/spirit_gathering_array.json Structure, upkeep, buff module
 │   ├── formation/ward_array.json            Protection + attack modules
 │   ├── secret_realm/trial_realm.json      A pocket world template
 │   ├── tribulation/heavenly_gate.json       The trial a breakthrough starts
 │   ├── forging_method/light_strike.json     One strike: meter shift, cost, cooldown
 │   ├── forging_method/heavy_strike.json
-│   ├── tool_binding/smith_hammer.json       Which methods a placed tool unlocks
+│   ├── tool_binding/smith_hammer.json       Claims the hammer; lists its methods
 │   ├── forging_blueprint/spirit_sword.json  Materials, target band, quality ladder
-│   ├── blueprint_binding/sword_manual.json  Which blueprint the item offers
+│   ├── blueprint_binding/sword_manual.json  Claims the manual; lists its blueprint
 │   ├── quality/common.json             Quality tiers
 │   ├── quality/refined.json
 │   ├── quality/flawless.json
@@ -80,6 +80,6 @@ data/example/
 
 ## Where to Go Next
 
-- [Datapack Overview](../datapack/overview.md) — file locations, IDs, holder references, the disabled tag and error reporting, if you have not read it yet.
+- [Datapack Overview](../datapack/overview.md) — file locations, IDs, holder references, load-time conditions and error reporting, if you have not read it yet.
 - [Datapack Examples](../datapack/examples.md) — the same shapes as short, isolated snippets.
 - [KubeJS API Reference](../kubejs/api-reference.md) — the script objects used in the third tutorial.

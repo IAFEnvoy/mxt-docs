@@ -1,40 +1,37 @@
 ---
 title: Blueprint Binding (blueprint_binding)
-description: A blueprint binding lists the forging blueprints an existing item offers to the Forge Table.
+description: A blueprint binding claims an item that already exists as a blueprint, so the blueprints it offers show up at the Forge Table.
 aside: false
 ---
 
-# Blueprint Binding (blueprint_binding)
+# Blueprint Binding (blueprint_binding) {#blueprint_binding}
 
-A blueprint binding attaches a set of forging blueprints to an existing blueprint or book item, so that placing the item on the Forge Table offers those blueprints to the player.
+File location: `data/<namespace>/mxt/blueprint_binding/<path>.json`
 
-## File Location
-
-Blueprint binding JSON files go in `data/<namespace>/mxt/blueprint_binding/` within your data pack.
-
-**Purpose**: Forging blueprints provided by blueprint items.
-
-The filename corresponds to its ID. For example, `data/example/mxt/blueprint_binding/sword_manual.json` has the ID `example:sword_manual`.
-
-## Fields
+A blueprint binding treats **items that already exist** as blueprints: the definition writes `items`, and a blueprint sitting in the left-hand slots of the Forge Table offers the blueprints listed in `blueprints`. It creates no items — the blueprints themselves are defined in [forging_blueprint](./forging_blueprint.md).
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `blueprints` | `Holder<forging_blueprint>[]` | **required** | The blueprints this item provides. It must not be empty or contain duplicates. |
+| --- | --- | --- | --- |
+| `items` | item ID, `#tag` or a mixed array | **required** | The blueprint items this definition claims; see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher). |
+| `priority` | Int | `0` | When several definitions match the same item, the larger number wins; equal numbers fall back to registry order. |
+| `blueprints` | array of `forging_blueprint` IDs | **required** | The blueprints this item offers; must not be empty or repeat an entry. |
 
-## Usage
+`items` **must not be empty**, for the same reason as [tool_binding](./tool_binding.md): this table can only be reached by matching an item, so a definition that claims no item could never be read and is refused at load.
 
-A blueprint or book item references this registry through the `mxt:blueprint_binding` item component.
+Only once blueprint items sit in the three left-hand slots of the Forge Table do the blueprints they offer appear in the blueprint list; **with the three slots empty the blueprint list is empty**, and there is no branch that falls back to the whole registry. A session cannot start until a blueprint slot holds an item.
 
-Once blueprint items are placed in the three slots on the left of the Forge Table, the blueprints they provide appear in the blueprint list. **If those three slots are empty, the blueprint list is empty** — there is no branch that falls back to the whole registry. A session cannot be started without an item in a blueprint slot.
-
-## Example
+**Two routes for one blueprint item**: it is claimed by the `items` of some definition, or the **stack** itself carries the `mxt:forging_blueprints` item component (an array of `forging_blueprint` IDs). A single sheet of paper that prints exactly one blueprint therefore needs no definition file at all. The two are **unioned**.
 
 ```json
+// data/example/mxt/blueprint_binding/sword_manual.json
 {
-  "blueprints": ["mxt_test:iron_sword"]
+  "items": "example:sword_manual",
+  "blueprints": ["example:spirit_sword"]
 }
 ```
 
-The blueprint IDs it lists are defined by [Forging Blueprint](./forging_blueprint.md).
+A one-off blueprint with no definition file writes the list straight onto the stack:
 
+```mcfunction
+/give @s minecraft:paper[mxt:forging_blueprints=["example:spirit_sword"]]
+```

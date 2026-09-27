@@ -19,7 +19,7 @@ description: 查询、授予、移除与开关体质；体质是修炼身份中�
 | `remove(entity, physique)` | `LivingEntity`、体质 ID | `boolean` | 移除该体质及其属性、能力与伤害倍率；本来没持有则为 `false`。 |
 | `setEnabled(entity, physique, enabled)` | `LivingEntity`、体质 ID、`boolean` | `{changed, failure}` | 与灵根同义的开关。 |
 
-灵根与体质共用同一套 `failure` 词表：`DISABLED`（定义不存在或被 `mxt:disabled` 停用）、`ALREADY_HELD`、`CONDITIONS`（体质 `holder_condition` 不满足）、`EXCLUSIVE_CONFLICT`、`ELEMENT_CONFLICT`（灵根 `conflicting_elements`）、`NOT_HELD`、`SERVER_ONLY`（在客户端调用）。四个读方法两侧都能用，改变状态的方法是服务端操作。
+灵根与体质共用同一套 `failure` 词表：`DISABLED`（注册表里没有这个 id，含被 `neoforge:conditions` 挡掉的定义）、`ALREADY_HELD`、`CONDITIONS`（体质 `holder_condition` 不满足）、`EXCLUSIVE_CONFLICT`、`ELEMENT_CONFLICT`（灵根 `conflicting_elements`）、`NOT_HELD`、`SERVER_ONLY`（在客户端调用）。四个读方法两侧都能用，改变状态的方法是服务端操作。
 
 ```js
 // kubejs/server_scripts/mxt_physique.js

@@ -1,34 +1,37 @@
 ---
 title: Item Aura (item_aura)
-description: "Define an existing item as aura fuel that is consumed and released into the current realm's resource bar while cultivating, and that can be poured into by hand."
+description: Turn an existing item into cultivation fuel; read the same definition the other way round and it is what describes holding right-click to pour aura into that item.
 aside: false
 ---
 
-# Item Aura (item_aura)
+# Item Aura (item_aura) {#item_aura}
 
-An Item Aura defines an existing item as aura fuel used during cultivation: while it is held, the item is consumed tick by tick and its aura is released into the resource bar bound to the current realm stage. The same definition is also what describes the item when the direction is reversed and a holder pours aura into it by hand.
+`item_aura` turns an **existing item** into cultivation fuel: while cultivating, the whole stack is consumed tick by tick and the aura is released into the resource bar bound to the current realm stage. Read the same definition the other way round and it is what describes the holder holding right-click to pour aura into that item.
 
 ## File Location
 
-Item Aura JSON files go in `data/<namespace>/mxt/item_aura/` within your data pack.
+Item Aura files go in `data/<namespace>/mxt/item_aura/` within your data pack.
 
-**Purpose**: Cultivation fuel provided by held items.
+**Purpose**: Cultivation fuel provided by a held item.
 
 The filename corresponds to its ID. For example, `data/example/mxt/item_aura/spirit_stone.json` has the ID `example:spirit_stone`.
 
 ## Fields
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `items` | `ItemMatcher` | **required** | The existing items that can act as aura fuel while held. A single item ID, an item tag, or a mixed array of both. |
-| `type` | `Holder<aura>` | **required** | The aura this item consumes and releases — an entry of the `mxt:aura` registry, such as `mxt:common`, not the stored value it is counted in (that value is named by the `resource` field of the aura definition) and not an `mxt:element` either. Which element it belongs to is read from that aura's own `aura_type`. |
-| `aura` | `NumberProvider` | **required** | When a stack of items is processed for the first time, the aura total per item multiplied by the stack count is written into its `mxt:item_aura.remain`. It must evaluate to a positive number at actual runtime; spirit stone storage counts in whole units, and the fractional part does not count towards capacity. For items that implement `ItemAuraAccess`, `aura` acts as the charging maximum of each item instead. |
-| `consume_speed` | `NumberProvider` | **required** | Fuel value consumed per tick, stacked by the stack count; the total consumption time stays the same. It must evaluate to a positive number at actual runtime. The pouring direction reads the same value the other way round: it is also the whole units injected into the item per tick. |
-| `release_speed` | `NumberProvider` | **required** | Fuel amount released per tick into the resource bar of the current realm stage, stacked by the stack count. It must evaluate to a positive number at actual runtime. The pouring direction reads the same value the other way round: it is also the amount deducted from the holder's aura pool per tick. |
-| `result_stack` | `ItemStackTemplate` | none | An additional return item given when the current item is fully exhausted; when it is not configured, the original item is simply removed. For items that implement `ItemAuraAccess`, `result_stack` does not take part in processing: such items keep themselves and are simply drained. |
-| `exhausted_action` | Entity Action | `mxt:no_op` | The behaviour when the current fuel is exhausted. |
+| --- | --- | --- | --- |
+| `items` | `ItemMatcher` | **required** | The existing items that can act as aura fuel while held: a single item ID, an item tag, or a mixed array. |
+| `priority` | Int | `0` | Order between several definitions matching one item: the higher number goes first (see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher)); ties fall back to registry order. It decides which aura is poured and burned. |
+| `type` | Aura ID | **required** | The **aura** this item consumes and releases (an `mxt:aura` registry entry, such as `mxt:common`). |
+| `aura` | `NumberProvider` | **required** | When a stack of items is processed for the first time, the aura total per item multiplied by the stack count is written into its `mxt:item_aura.remain`; for an item that can be poured into, it is the per-item charging maximum. |
+| `consume_speed` | `NumberProvider` | **required** | Fuel value consumed per tick, multiplied by the stack count; the total consumption time therefore stays the same. |
+| `release_speed` | `NumberProvider` | **required** | Fuel amount released per tick into the resource bar of the current realm stage, multiplied by the stack count. |
+| `result_stack` | `ItemStackTemplate` | none | An extra item returned when the current item is fully exhausted; leave it out and the original item is simply removed. |
+| `exhausted_action` | `EntityAction` | `mxt:no_op` | The behaviour that runs when the current fuel is exhausted. |
 
-Every entry must fill in `type`, which is the aura the item consumes and releases (an `mxt:aura` entry such as `mxt:common`). It is not the stored value the aura is counted in — the aura definition's `resource` field points back at that — and it is not an `mxt:element` either: the element is the aura's own `aura_type`, and it only takes part in the type checks of spirit roots, creature preferences and environment rendering. The aura exchange interface handles one aura at a time; recipes or behaviours that need several kinds of aura should call the interface separately for each of them.
+`type` names the **aura**, not the value it is counted in (the value is what the aura definition's `resource` points back at), and not an `mxt:element` either: the element is that aura definition's `aura_type`, and it only takes part in the type checks of spirit roots, creature preferences and environment rendering. One read or write handles a single aura; recipes or behaviours that need several auras have to handle them separately.
+
+`aura`, `consume_speed` and `release_speed` must all evaluate to a **positive number** at actual runtime; spirit stone storage counts in whole units, and the fractional part does not count towards capacity.
 
 ## Example
 
@@ -39,6 +42,7 @@ Every entry must fill in `type`, which is the aura the item consumes and release
   "aura": 100,
   "consume_speed": 1,
   "release_speed": 2,
+  "result_stack": { "id": "mxt:empty_spirit_stone", "count": 1 },
   "exhausted_action": {
     "type": "mxt:apply_effect",
     "effect": "minecraft:fire_resistance",
@@ -47,7 +51,7 @@ Every entry must fill in `type`, which is the aura the item consumes and release
 }
 ```
 
-A definition whose speeds are formulas:
+The speeds can also be written as formulas:
 
 ```json
 {
@@ -64,42 +68,41 @@ A definition whose speeds are formulas:
 }
 ```
 
-## Runtime Behaviour
+## Burning: How the Stack Is Spent While Cultivating
 
-The aura fuel value is hidden server-side state. When processing starts, the system takes the whole matching stack out of the player's inventory and puts it into the entity `mxt:float_holding_item` attachment; the `mxt:item_aura` component is then written only onto that stack, and the component has just one field, `remain`. On every server tick the definition matched at that time is used to subtract `consume_speed × stack count` from `remain` and to charge `release_speed × stack count` into the resource bar bound to the current realm stage, and the resource bar is still clamped by its own maximum. The total consumption time therefore does not change with the stack count.
+The aura fuel value is hidden server-side state. When processing starts, the system takes the whole matching stack out of the player's inventory and puts it into the entity's `mxt:float_holding_item` attachment; the `mxt:item_aura` component is then written onto that one stack only, and the component has just one field, `remain`. Every server tick after that, the definition matched at that time subtracts `consume_speed × stack count` and charges `release_speed × stack count` into the resource bar bound to the current realm stage, still clamped by that bar's own maximum. Both sides are multiplied by the stack count, so the **total consumption time does not change with the stack count**: one stack and one item at a time take the same number of ticks.
 
-When the attachment is empty, valid items in the player's inventory that carry the `mxt:item_aura` component are resumed first, and the stack with the smallest `remain` is always chosen; only when there is no half-exhausted item is a whole new matching stack taken, in the order main hand, then off hand, then inventory, and the `aura` computed from the stack count is written into the component. When cultivation is interrupted, or the player logs out or dies, the stack in the attachment is returned unchanged; when `remain` runs out, an `ItemAuraAccess` item is returned as a whole stack in an empty charging state, while other items are removed and the optional `result_stack` is given for the original stack count, after which `exhausted_action` runs.
+When the attachment is empty, the system first resumes a stack from the inventory that carries the `mxt:item_aura` component and still matches a valid definition, always picking the stack with the **smallest** `remain`; only when there is no half-exhausted stack does it take a whole new matching stack, in the order main hand, off hand, then inventory, and write the `aura` computed from the stack count into the component. Interrupting cultivation, logging out or dying returns the stack in the attachment unchanged; only when `remain` runs out is anything settled: ordinary fuel is removed and `result_stack` is given for the original count, while an item with its own storage (the ones that can be poured into, a spirit stone for instance) is drained and **returned unchanged**, so `result_stack` does not apply to it. `exhausted_action` runs after that settlement.
 
-`float_holding_item` can be used by other mechanics to hold items temporarily. The aura fuel service only consumes items that both carry the `mxt:item_aura` component and still match a valid `item_aura` definition; attachment items that do not qualify are not moved, modified or deleted.
+`mxt:float_holding_item` can also be used by other mechanics to hold items temporarily, so the aura service only touches items that carry the `mxt:item_aura` component **and** still match a valid definition; an attachment item that does not qualify is not moved, modified or deleted. The client renders no fuel bar, and never deducts or consumes items on its own.
 
 ::: info
 
-The client does not currently render a fuel bar, and does not deduct or consume items on its own.
+An item that can be poured into (a spirit stone is one) has its own storage component, `mxt:spirit_storage`; its content and capacity are described under "The Reverse Direction: Pouring" below.
 
 :::
 
-## The Reverse Direction: Pouring
+## The Reverse Direction: Pouring (Hold Right-Click to Charge)
 
-An item that implements `UseItemAuraAccess` can be charged by **holding right click**: the holder's own aura is poured into it, reading the other two fields of this definition the other way round. The spirit stone is such an item — it implements the pouring interface to join the gesture, while its shape is still described by this definition, so leaving `SpiritPour` empty means "follow the definition".
+An item that can be poured into takes the holder's own aura when **right-click is held**, reading this definition's two speed fields the other way round:
 
 | Direction | Item side | Holder side |
-|-----------|-----------|-------------|
-| Release (while cultivating) | `−consume_speed × stack` per tick | `+release_speed × stack` per tick |
-| Pour (while holding right click) | `+consume_speed × stack` per tick | `−release_speed × stack` per tick |
+| --- | --- | --- |
+| Burn (while cultivating) | `−consume_speed × stack` per tick | `+release_speed × stack` per tick |
+| Pour (while holding right-click) | `+consume_speed × stack` per tick | `−release_speed × stack` per tick |
 
-Both directions use the same pair of numbers, so pouring in and burning out cancel exactly: a pour does not create aura, it only stores the holder's aura in the item for a while. The gesture, the pose (`BLOCK`) and the sound are driven by the hold module, shared with reading a technique manual, so an item needs no code beyond implementing the interface.
+Both sides use the same pair of numbers, so pouring aura in and burning it out cancel exactly: a pour creates no aura, it only stores the holder's aura in the item for a while (a spirit stone is a battery). The gesture, the pose (`BLOCK`) and the sound (an amethyst chime) come from the hold module, the same mechanism reading a technique manual uses.
 
-- Which aura is poured is the `type` of the `item_aura` definition that matches the item — the same one it burns; when several definitions match, the first one in registry order is taken. An item that has already stored something goes by the aura it recorded itself: `mxt:spirit_storage` files amounts under the **aura** key (`{amounts:{"mxt:common":100}}`, shared with the talisman carrier), so re-typing a definition later cannot silently reinterpret spirit stones already in the world — they simply stop matching the new `type`, and can then neither be filled nor burned.
-- Whole-unit pouring: the store itself holds **fractional** amounts (a flying artifact burns its per-tick fuel at that precision), but the gesture moves whole units, so a tick injects `max(1, floor(consume_speed × stack))`. That is the one place a declared rate is not applied exactly; a speed that evaluates to zero or to something illegal means the item is not poured at all, and the click only reports that it cannot take anything.
-- Gesture length: `ceil(capacity / intake per tick)`, capped at 200 ticks. An item whose capacity dwarfs its intake is not filled in one gesture and needs several; a full item is never armed again, and the click reports that it is full. The length is derived from the **capacity** rather than from the deficit, so it does not change as the item fills.
-- An item without the component counts as full (the existing reading of `SpiritStoneItem`), so a freshly crafted spirit stone is already full; pouring really only affects stones that have been drained and empty ones taken from the creative menu. The store component is one table of aura → stored units (`{amounts:{...}}`); an item may hold a single aura (a spirit stone, which reads its **only** record) or several (a talisman carrier, billed line by line). An empty table means drained, and the capacity is always answered by the item itself — a spirit stone takes it from the definition, a talisman carrier from its bill.
-- Cost and failure: payment goes through `ResourceService` (the same way a spirit vessel stores aura and the release direction works; it does not pass the resource use gate), and whether a whole unit can be afforded is decided before paying, so a tick never takes payment and stores nothing. When no whole unit can be paid for, that tick injects nothing, pays nothing and reports insufficient aura on the action bar.
-- Feedback: the action bar shows the item's own `stored / capacity (percentage)`, in the same colours as the tooltip; the tooltip, the display stand and the `mxt:spirit_storage_not_full` condition read that same value.
-- Environment aura takes no part in pouring: a pour only moves the holder's own pool. An item that can be burned but does not implement the interface (a spirit crystal that is only fuel) does not gain right-click charging, and conversely whether an item can be charged is decided by the interface together with the definition.
-- An item may also declare its own pour. `item_aura` is the shared language of "one item", scaled by the stack count; an item whose capacity depends on **what is written on this particular stack** answers for itself in `UseItemAuraAccess.pour` (one entry per aura — how much is stored and how much fits, in pouring order), with the numbers given for the whole stack and not multiplied by the count. A talisman carrier is such an item: its capacity is the `aura_cost` total of the inscriptions, measured per aura. Such an item does **not** need an `item_aura` definition, and so does not incidentally become cultivation fuel. The rate and cost of a pour are still the gesture's — a self-described store is poured at one unit per tick, one for one, while an item with a definition has those two speeds used in reverse — the item only has to say clearly what it is.
-- What happens when it is full is up to the item, but the writer reports it: whoever writes aura into a store (the hold-to-pour gesture, aura-access blocks such as the display stand) calls `UseItemAuraAccess.onCharged(source, stack)` after a real write, and the item decides whether it is full and whether to act. The report carries a `SpiritSource(level, position, actor, consumedByHand)`: the actor pays and is asked for the ability, while the position is **where this thing is** — a talisman on a display stand is filled by someone standing elsewhere, or by a spirit burst, so the position cannot be read from the holder; `consumedByHand` says whether spending it counts as a hand's spending or as a placed store's, which is the only thing the talisman's two rule sets are told apart by. That is where a talisman invokes: it writes the position into the ability's formula (`block_x`/`block_y`/`block_z`) and hands it to positional behaviours as the origin of this invocation.
+- **Which aura is poured**: decided by the `type` of the `item_aura` definition the item matches — the same one it burns; when several definitions match, the one with the **highest** declared `priority` wins (the field defaults to `0`; ten tables accept it — `artifact`, the six bindings `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique`, `spirit_herb`, `item_aura` and `currency`), and only two definitions with the **same** `priority` fall back to registry order (the same direction as the `priority` of `aura_zone` and `element_reaction`); **which kind of matcher entry matched is irrelevant**: any definition that hits is ranked by the number it declares, and naming the item does not move it up (see [`ItemMatcher`](/en/datapack/types/shared_data_types#itemmatcher)). An item that has already stored something goes by **the record it made itself**: `mxt:spirit_storage` files amounts under the **aura** key (the same component a talisman uses), so re-typing the definition's `type` later cannot silently reinterpret the spirit stones already in the world — they simply stop matching the new `type` and can be neither filled nor burned.
+- **Whole-unit pouring**: the storage itself records **fractional** numbers (a flying artifact burns its per-tick fuel at that precision), but the pour gesture moves whole units, so a tick injects `max(1, floor(consume_speed × stack))`. That is the only place a declared rate is not applied exactly; a speed that evaluates to zero or is illegal means the item does not become a pour at all (the right-click only reports that it cannot take anything).
+- **Gesture length**: `ceil(capacity / intake per tick)`, capped at 200 ticks. An item whose capacity is far larger than its intake is not filled in one gesture; repeat the gesture. A full item is never armed again (the right-click reports that it is full). The length is derived from the **capacity** rather than the deficit, so it does not change as the item fills within one gesture.
+- **An item without the component counts as full**, so a freshly crafted spirit stone is already full, and pouring really only affects stones that have been drained and empty ones taken from the creative menu. The storage component's shape is one table of aura → stored amount (`{amounts:{"mxt:common":100}}`, the keys being `mxt:aura` registry entries and the values fractional numbers); an item may hold a single aura (a spirit stone, which reads its **only** record) or several (a talisman carrier, read entry by entry against its capacity); an empty table means drained. Capacity is always answered by the item itself (a spirit stone takes the definition's `aura`, a talisman works it out from the `capacity` multiplier).
+- **Price and failure**: payment, storing aura in a spirit vessel and the burn direction all take the same route (they do not pass the resource use gate), and how many whole units can be afforded is decided before paying, so a tick can never take payment and put nothing in. When no whole unit can be paid for, that tick injects nothing and pays nothing, and the action bar reports insufficient aura.
+- **Feedback**: the action bar shows the item's own `stored / capacity (percentage)`, in the same colours as the tooltip; the tooltip, the display stand and the `mxt:spirit_storage_not_full` condition read that same value.
+- Environment aura takes no part in pouring: a pour only moves the holder's own pool. An item that can be burned but **cannot be poured into** (a spirit crystal that is only fuel, for instance) does not gain right-click charging from that; conversely, whether an item "can be charged" is decided by the item and the definition together.
+- **An item may also declare its own pouring**. `item_aura` is the shared language of "one item", with capacity scaled by the stack count; an item whose capacity depends on **what is written on this particular stack** answers for itself (one entry per aura — how much is stored and how much fits, in pouring order), with the numbers given for the whole stack and no longer multiplied by the count. A talisman carrier is such an item: its capacity is the inscribed definition's `capacity` multiplier times one invocation's aura amount (the multiplier that applies is further capped by the carrier's remaining uses), measured per aura. Such an item does **not** need an `item_aura` definition, and so does not incidentally become cultivation fuel. The **rate and price of a pour are still the gesture's** (a self-described store is poured at 1 unit per tick, 1:1; with a definition, the definition's two speeds are used in reverse), and the item only has to say clearly what it is.
+- **What happens once it is full is up to the item, but the writer reports it**: whoever writes aura into a store (the hold-to-pour gesture, writers such as the display stand) reports only **after a real write**, and the item decides whether it is full and whether to act. The report carries both the **actor** and **where this write happened**: the actor pays and answers for the ability, while the position is **where this thing is** — a talisman on a display stand is filled by someone standing elsewhere or by a spirit burst, so the position cannot be read off the holder; it also has to say whether this counts as a **hand's spending** or a **placed store's spending**, which is exactly what tells the talisman's two rule sets apart (cooldown only counts the hand path, spending is split by position). That is where a talisman invokes, writing the position into the ability's formula (`block_x`/`block_y`/`block_z`) **and handing it to positional behaviours as this invocation's origin** (projectiles, particles, explosions, sounds, movement, block behaviours; see [Pouring and Invocation](/en/datapack/json/talisman) for the details).
 
-## Disabling an Entry
+## Disabling a Definition
 
-Like other datapack registries, an entry can be disabled through `data/mxt/tags/mxt/item_aura/disabled.json`.
-
+As in every other datapack registry, whether this definition takes effect is answered at load time by its own `neoforge:conditions`; see [Disabling a Definition](../overview.md#disabling-a-definition).

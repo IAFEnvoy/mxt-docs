@@ -25,6 +25,7 @@ Three things up front:
 | Ask how much aura a position has | [`AuraService`](#auraservice) | `runtime.world` |
 | Read or write one value on an entity | [`ResourceService`](#resourceservice) | `runtime.resource` |
 | Add cultivation progress, break through, set a realm | [`CultivationService`](#cultivationservice) | `runtime.cultivation` |
+| Read or write a body's lifespan, have it reborn | [`LifeSpanService`](#lifespanservice) | `runtime.cultivation` |
 | Execute an ability, accept one key press | [`AbilityService`](#abilityservice) | `runtime.ability` |
 | Deal a hit yourself | [`DamageCalculationService`](#damagecalculationservice) | `runtime.damage` |
 | Add a kind of functional module to a formation | [`FormationActionType`](#formationactiontype) | `data.formation` |
@@ -42,32 +43,31 @@ Reading a value by id / holder (it reads the **server** registry):
 
 | Method | Purpose | Notes |
 | --- | --- | --- |
-| `get(ResourceKey<? extends Registry<T>> key, Identifier id)` | Gets the definition value by id | Already skips entries disabled by `mxt:disabled`; a missing entry gives `Optional.empty()` |
-| `get(key, Holder<T> holder)` | Gets the value from a holder | Only looks at the disabled tag the holder itself carries; it does not query the registry |
+| `get(ResourceKey<? extends Registry<T>> key, Identifier id)` | Gets the definition value by id | A missing entry gives `Optional.empty()` |
 | `holder(key, Identifier id)` | Gets a holder by id | Reads the **server** registry |
-| `holders(key)` | Iterates every holder of the whole registry | Disabled entries are filtered out |
+| `holders(key)` | Iterates every holder of the whole registry | |
 
 Explicitly passing a registry accessor (**use these on the client**):
 
 | Method | Purpose | Notes |
 | --- | --- | --- |
 | `holder(HolderLookup.Provider access, key, Identifier id)` | The **only correct entry point** for getting a holder by id on the client | Does not touch `ServerLifecycleHooks` |
-| `holders(Provider access, key)` / `holders(RegistryAccess access, key)` | Iterates the whole registry | Disabled entries are filtered out |
-| `get(Provider access, key, Identifier id)` / `get(Provider access, key, Holder<T> holder)` | Gets a value | Same as above |
+| `holders(Provider access, key)` / `holders(RegistryAccess access, key)` | Iterates the whole registry | |
+| `get(Provider access, key, Identifier id)` | Gets a value | Same as above |
 
-Disabled (`mxt:disabled`) and tags:
+**This layer filters nothing.** Whether an entry is in the registry is the whole answer, and switching a definition off is load-time work (`neoforge:conditions`, see [Disabling a Definition](../datapack/overview.md#disabling-a-definition)): an entry a condition blocks is simply not in the registry. So a holder you read is a holder you may act on, and there is no such state as "I read a definition that was switched off".
 
-| Method | Purpose | Notes |
-| --- | --- | --- |
-| `isDisabled(key, Identifier id)` | Whether this id is disabled | **A missing entry also returns `false`** — it answers "has it been switched off", not "does it exist" |
-| `isDisabled(key, Holder<T> holder)` | Whether the holder is disabled | A pure tag check; it does not query the registry |
-| `isTagged(key, Identifier id, Identifier tagId)` / `isTagged(key, Holder<T> holder, Identifier tagId)` | Whether it is in a tag | It follows the same "a missing entry returns `false`" reading |
-
-Raw lookups and size:
+Tags:
 
 | Method | Purpose | Notes |
 | --- | --- | --- |
-| `rawHolder(key, Identifier id)` | A raw lookup that **ignores the disabled tag** | Its only use is telling "disabled" from "deleted"; with no server it gives empty rather than throwing |
+| `isTagged(key, Identifier id, Identifier tagId)` / `isTagged(key, Holder<T> holder, Identifier tagId)` | Whether it is in a tag | A missing entry returns `false` |
+
+Lenient lookup and size:
+
+| Method | Purpose | Notes |
+| --- | --- | --- |
+| `holderOrEmpty(key, Identifier id)` | The same as `holder(key, id)`, but **gives empty instead of throwing when no server is running** | For readers that also run on the client (for example `CurseService.definitionState`) |
 | `registry(key)` | Gets the vanilla `Registry<T>` itself | Throws `IllegalStateException` when no server is running |
 | `size(key)` | The number of entries in that registry | The same server assertion as `registry(...)` |
 | `registries()` | Every registry key this class has registered | |
@@ -75,8 +75,7 @@ Raw lookups and size:
 Key points:
 
 - The class **caches no registry instance**. To cache, key by **registry instance** (`/reload` does not replace the instance, only a world load does), see `DamageElements`.
-- Apart from `rawHolder`, **every read filters `mxt:disabled`**.
-- Storing a `Holder` in an attachment bypasses this filter (`RegistryFixedCodec` does not understand tags), so a place that reads a holder and then acts on it has to add `isDisabled(...)` itself.
+- A `Holder` an attachment still stores while the current pack no longer provides it (the entry is blocked by `neoforge:conditions`, or its file was deleted) **does not disappear on its own between two world loads**: attachments are decoded while the world loads, a reference whose definition cannot be found at that moment is dropped by the tolerant list codec (entering the world again clears it), and `/reload` does not decode attachments again, so the old reference is still there for the rest of the session. To ask "is it still there", look the id up in the registry yourself (`Elements.of`, `activeSpiritRoots` and `SecretRealmService.enter` all do), rather than taking a holder you hold for proof that it still exists.
 - `newDatapackRegistries(NewRegistry)` is called by the startup event and is **not for business code**; the registries and codecs are registered in `MxtResourceKeys`.
 
 ### `DefinitionText` {#definitiontext}
@@ -133,19 +132,22 @@ Package `com.iafenvoy.mxt.util.matcher`. The matcher behind "which definition ap
 | Member | Purpose | Notes |
 | --- | --- | --- |
 | `List<Entry> entries()` | The list of match entries | An implementation must supply them all |
-| `default int priority()` | Sort weight | `0` by default |
+| `int priority()` | Sort weight | **No default implementation** — every implementation returns the `priority` it decoded from JSON; a matcher without that field returns `DEFAULT_PRIORITY` |
+| `DEFAULT_PRIORITY` | The value used when a definition writes no `priority` (`0`) | The three item conditions, the `mxt:item` cost and the two framework hold declarations have no such field and use it too; **the rank is not split by Entry kind** |
+| `ORDER` | The single sort comparator (`priority` descending) | Callers that need the holder and cannot use `findAll` (`HoldLookup`, `ItemAuraService`) sort by it themselves instead of each writing one |
 | `find(Registry<T> registry, ItemStack stack)` / `find(Stream<T> matchers, ItemStack stack)` | The first match | No match gives `Optional.empty()` |
-| `findAll(...)` (registry and stream forms) | Every match | Sorted by `priority` **ascending** |
+| `findAll(...)` (registry and stream forms) | Every match | Sorted by `priority` **descending** |
 | `ENTRIES_CODEC` | The codec for the entry list | Accepts both a single object and an array |
 
-`ItemMatcher.Entry` members: `matches(ItemStack)`, `default boolean itemLevel()`, `codec()`, plus the two codec constants `SHORTCUT_CODEC` (the shorthand: a bare item id → `item`, an item tag → `tag`) and `CODEC` (tries the shorthand first, then an object with `type`).
+`ItemMatcher.Entry` members: `matches(ItemStack)`, `default boolean itemLevel()`, `codec()`, plus the two codec constants `SHORTCUT_CODEC` (the shorthand: a bare item id → `item`, an item tag → `tag`) and `CODEC` (tries the shorthand first, then an object with `type`). **An Entry carries no priority**: who wins is decided by the definition's own `priority`.
 
 Entry kinds (`mxt:item_matcher_entry_type`, default `item`): `item`, `tag`, `wildcard`, `regex`; runtime modules additionally register `spirit_storage`, `herb_tag`, `technique`.
 
 Key points:
 
-- The "first" in `find` is the one with the **smallest priority number**, not registration order; equal priorities depend on the order of the stream passed in.
-- **`itemLevel()` is the cache-safety dividing line**: returning `true` means "whether it matches depends only on the item itself", and a caller caching per item **may only** cache such entries; an entry that reads components / NBT on the stack has to be asked once per stack.
+- The "first" in `find` is the definition with the **largest `priority` number** — not registration order, and not the "most specific" match; it is the same direction as `aura_zone` and `element_reaction`. Only equal `priority` values depend on the order of the stream passed in.
+- `priority` is **a field of ten definition tables themselves** (`artifact`, the `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` bindings, `spirit_herb`, `item_aura` and `currency`; default `0`, with no range validation at load time), so when a general definition and one that names items both exist the pack writes down which wins; naming an item **does not** move it up. `ArtifactHold` reads the field of the artifact it wraps; the `mxt:item` cost, the three item conditions and the two framework-owned hold declarations (technique reading and pouring) have no such field and always answer `DEFAULT_PRIORITY`.
+- **`itemLevel()` is the cache-safety dividing line**: returning `true` means "whether it matches depends only on the item itself", and a caller caching per item **may only** cache such entries; an entry that reads components / NBT on the stack — or whose answer comes from another definition, like `mxt:herb_tag`, which asks which `spirit_herb` claims the item — has to be asked once per stack.
 - The shorthand covers only `item` and `tag`; another implementation encoded through the shorthand throws `IllegalArgumentException`.
 
 ## Aura and resources {#aura}
@@ -202,7 +204,7 @@ Result types: `Result(valid, changed, value)` — **on failure `value` is `NaN`,
 Key points:
 
 - The three write methods **only change the attachment passed in**; they neither fetch nor create one themselves; the only thing that implicitly creates an attachment is `formulaContext(...)` taking a `LivingEntity`.
-- The by-id overloads (`initialize(holder, id, context)`, `change(holder, id, amount, context)` and the `formulaContext(..., id, base)` pair) **resolve the definition from the registry by id themselves** on every call, so an entry disabled by `mxt:disabled` is skipped automatically; when the id does not resolve they **fail silently** (a write gives `invalid`, and the two `formulaContext` calls return `base` unchanged).
+- The by-id overloads (`initialize(holder, id, context)`, `change(holder, id, amount, context)` and the `formulaContext(..., id, base)` pair) **resolve the definition from the registry by id themselves** on every call, so an entry the current pack does not provide (its file was deleted, or a `neoforge:conditions` block keeps it out) is skipped; when the id does not resolve they **fail silently** (a write gives `invalid`, and the two `formulaContext` calls return `base` unchanged).
 - Neither this class nor `AuraService` **has a server check of its own**; whether they are only called on the server is left to the call site's self-discipline.
 
 ## Cultivation and realms {#cultivation}
@@ -245,6 +247,34 @@ Key points:
 - `Failure.DISABLED` is produced only by the script bridge (`MxtKubeJsApi.tryBreakthrough`, when the aura id does not resolve) — `attempt` itself never produces it.
 - `Failure.MAX_PROGRESS` was **removed** on 2026-09-25 (it was provably unreachable): the progress ceiling can never be the reason a breakthrough is refused — `threshold()` requires a stage's `max_experience ≥ breakthrough_exp`, so progress being pinned at `max_experience` already satisfies `progress ≥ breakthrough_exp`, and the attempt can then only fail on conditions, cost or cancellation. An inline `Failure` branch that still writes it fails to compile.
 
+### `LifeSpanService` {#lifespanservice}
+
+Package `com.iafenvoy.mxt.runtime.cultivation`. The lifespan ledger (**the ticks left** and **the ceiling** this life was granted) and the one exit through which a life runs out. The numbers come from data packs (`realm_stage.lifespan`, `mxt:modify_lifespan`, `mxt:reincarnate`) while the server config owns the pace and what running out does.
+
+| Method | What it does | Notes |
+| --- | --- | --- |
+| `remaining(Entity)` / `total(Entity)` | Reads the two numbers | **Read-only, it does not create the attachment**; a body with no ledger answers `-1` (`UNACCOUNTED`) |
+| `set(LivingEntity entity, long ticks)` | Rewrites both numbers | `ticks < 0` is refused; answers `Result(changed, failure)` |
+| `add(LivingEntity entity, long ticks)` | A positive amount extends the life (both numbers grow), a negative one takes life away (only what is left drops) | Same result; a body nobody ever granted life to is measured from the configured **Base lifespan**; `0` does nothing at all |
+| `seed(LivingEntity entity)` | Seeds the ledger from the configured **Base lifespan** | Answers `false` with the master switch off, with a base of `0`, or when a ledger already exists (login and settlement share it) |
+| `settle(Entity entity)` | One settlement, which is also the expiry verdict | Answers `false` outright with the master switch off, for creative / spectator players, for anything that is not a living body and for a body with no ledger; **the only entry point that can end a life** |
+| `reincarnate(LivingEntity entity)` | Runs the rebirth reset list on the spot (the switches on the Reincarnation tab) | Answers `Result`: when `Pre` is cancelled the `failure` is `CANCELLED` and nothing at all happens. The data pack action `mxt:reincarnate`, `/mxt lifespan reincarnate`, KubeJS `MxtLifespan.reincarnate` and an addon all call this one method; it runs with the master switch off too |
+| `display(long remaining, long total, int ticksPerYear)` | The display component the character panel and the action-bar warning share | A negative remainder reads as "Unlimited" |
+
+`Result.failure` takes `SERVER_ONLY`, `INVALID_VALUE`, and `CANCELLED` — the last one only ever comes from `reincarnate`.
+
+**Two events** (both in the `event` package):
+
+- `LifeSpanEndEvent.Pre` / `Post`: fired once at the moment a lifespan runs out. `Pre` is cancellable — writing a positive lifespan inside it has extended the life, while writing nothing closes the account (`remaining = -1`, `total = 0`); `Post` carries `outcome()` (`NONE` / `DEATH` / `REINCARNATE`).
+- `LifeSpanRebirthEvent.Pre` / `Post`: fired before and after an **explicit rebirth**, and only by that public entry point. A cancelled `Pre` means the whole thing did not happen and the body is untouched.
+
+Key points:
+
+- **A write never kills**: `set` / `add` only record, and expiry is judged by `settle` alone, so nobody dies halfway through a cost transaction or an ability.
+- Server-only: a client-side write answers `Failure.SERVER_ONLY` and writes no log.
+- A player whose lifespan runs out under **On expiry → Death** is turned into a spectator (nothing drops, no death event fires and the ledger keeps its `0`); a non-player creature dies of the `mxt:lifespan` damage type, and if another mod blocks that kill the account is closed instead of retried.
+- An explicit rebirth fires **no** `lifespanEnd` — that event only answers "did a lifespan run out".
+
 ## Abilities {#ability}
 
 ### `AbilityService` {#abilityservice}
@@ -262,12 +292,14 @@ Package `com.iafenvoy.mxt.runtime.ability`. A pure static utility class. **There
 | `cancelCast(Holder<Ability>, AbilityAttachment, long gameTime)` | Interrupts a charge | **No refund** |
 | `executeTargetAction(Ability definition, Entity actor, Entity target, FormulaContext context)` | Runs an ability's target action | Reused by the event bridge, with an empty `origin` |
 
-Return types: `UseResult(committed, casting, failure, failedResource, amounts)` (**three states**: committed / casting / failed), `GateResult(approved, failure, failedResource)`, `PrepareResult` (`approved()` is `use != null`), `PreparedUse`, `CommitResult`, `ChannelResult(state, failure, nextTick, amounts)`, `enum State {INACTIVE, WAITING, PULSED, STOPPED}`, `enum Failure {DISABLED, NOT_GRANTED, COOLDOWN, INSUFFICIENT_RESOURCE, INSUFFICIENT_COST, INVALID_FORMULA, CONDITION_FAILED, NO_CHARGES, CANCELLED, PERMISSION_DENIED, ELEMENT_AFFINITY, SERVER_ONLY, CARRIED_NOT_INSTANT}`.
+Return types: `UseResult(committed, casting, failure, failedResource, amounts)` (**three states**: committed / casting / failed), `GateResult(approved, failure, failedResource)`, `PrepareResult` (`approved()` is `use != null`), `PreparedUse`, `CommitResult`, `ChannelResult(state, failure, nextTick, amounts)`, `enum State {INACTIVE, WAITING, PULSED, STOPPED}`, `enum Failure {DISABLED, NOT_GRANTED, COOLDOWN, INSUFFICIENT_RESOURCE, INSUFFICIENT_COST, INVALID_FORMULA, CONDITION_FAILED, NO_CHARGES, CANCELLED, PERMISSION_DENIED, ELEMENT_AFFINITY, SERVER_ONLY, CARRIED_NOT_INSTANT, NO_TARGET, NOT_APPLICABLE}` (fifteen).
 
 Key points:
 
 - Whenever something is "pressing a switch", the server always goes through `runtime/ability/AbilityActivationService` first — the wheel, commands, KubeJS and talismans all use it, **so do not write another "pressing a switch" dispatch anywhere else**. Only when an implementation is `Toggable` and `gated(ctx)` is true does it come back and call `gate` here.
 - **Cooldown and cost are entirely this road's job**: the `cooldown` field writes the `mxt:cooldown` state itself, and content does not need to declare a cooldown a second time.
+- **What an ability does when it takes effect is the type's answer**: the four action fields (`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`) are **declared and run by each type that runs actions**, so the step this road takes to "what should happen" is `AbilityEffect.run(definition.type(), actor, context, origin)` — one static entry that only asks whether the type implements the `AbilityEffect` **capability interface** rather than dispatching on the concrete class, with the shared execution of the four fields on `ActionCarrier`. When each of the four fields runs is on [Ability · The Four Action Fields](/en/datapack/json/ability#action-fields-by-type).
+- **A targeted cast (`mxt:targeted`) takes this same road**: it implements the `AbilityApplier` capability interface (`reach` for the entities this cast lands on plus `payload` for the ability run on each of them), the runtime asks `reach` once **before anything is paid** - picking nobody is `NO_TARGET` and a payload with no one-target half is `NOT_APPLICABLE` (both are values of `Failure` above) - and its own price, cooldown and element affinity are still taken once by this road. See [Targeted Casts](/en/datapack/json/ability#targeted).
 - World actions never roll back, so a composite ability validates with `prepare` first and then `commit`s as one.
 - This class **does not check the client itself** and never produces `Failure.SERVER_ONLY` — the client-side `SERVER_ONLY` is returned by the caller (the KubeJS bridge `MxtKubeJsApi`, for instance). Calling `use` directly on the client really acts.
 - The `amounts` / `costs` in any result are for display and records only; **do not use them as a basis for rollback**.
@@ -302,7 +334,7 @@ Package `com.iafenvoy.mxt.runtime.damage`. **The one settlement pipeline for a s
 | `incoming(LivingEntity target, DamageSource source, double amount)` / `incoming(LivingEntity target, @Nullable Entity attacker, double amount)` | Derives the element from the damage source or the attacker and then reduces | Two shorthands for the main overload above |
 | `adaptationMultiplier(LivingEntity target, Set<Holder<Element>> attacking)` | The target's `adapted_to` | Being overcome is the attacker's advantage, so the target side does not add it a second time |
 | `overcomeMultiplier(Set<Holder<Element>> attacking, Entity target)` | The attacker's elements' `overcomes` against the target's spirit roots | Every matching pair is multiplied (two elements both overcoming means both count) |
-| `attachmentMultiplier(LivingEntity target)` | The product of the `attachment_multiplier` of what the target carries | It only scales the **element buildup** this strike leaves, and does not affect what an element reaction does |
+| `attachmentMultiplier(LivingEntity target)` | The product of the `attachment_multiplier` of the **artifacts** the target carries | It only scales the **element buildup** this strike leaves, and does not affect what an element reaction does |
 | `bypasses(DamageSource source)` | Whether this damage type is in `mxt:no_bonus` | Pass-through means no factor is multiplied and no element is left, but **vanilla's own mitigation still applies** — it is "not governed by this mod's bonus arithmetic", not immunity |
 | `source(Level level, @Nullable Entity attacker, Optional<Holder<DamageType>> damageType)` | Builds this strike's `DamageSource` | **Attribution is decided here** (a player → `playerAttack`, a mob → `mobAttack`, neither → `generic`); a caller building its own source loses the kill credit |
 
@@ -316,7 +348,7 @@ Package `com.iafenvoy.mxt.runtime.damage`. Answers "**what element is this strik
 | --- | --- | --- |
 | `strike(Level level, Optional<Holder<DamageType>> type, @Nullable Entity attacker)` / `strike(DamageSource source)` | This strike's element set | **The one rule shared by the pipeline and the damage condition**: a damage type claimed by elements means those elements, and with no claimant it falls back to the attacker's spirit roots |
 | `reading(Level level, ...)` / `reading(DamageSource source)` | The elements + the origin + how much buildup each element will leave | The three fields come from **the same** registry query; reduction and element buildup must share this one reading, or the two numbers go out of step |
-| `of(RegistryAccess access, Holder<DamageType> type)` / `of(DamageSource source)` | **Who claimed this damage type** (without the fallback) | No claimant gives an **empty set**; an element disabled by `mxt:disabled` is skipped while the index is built |
+| `of(RegistryAccess access, Holder<DamageType> type)` / `of(DamageSource source)` | **Who claimed this damage type** (without the fallback) | No claimant gives an **empty set**; the index is built from the `damage_types` each element definition declares |
 | `typeOf(RegistryAccess access, Holder<Element> element)` | Takes the first resolvable type in that element's `damage_types` | A tag form expands to the first matching element |
 | `resolveType(RegistryAccess access, List<Either<Holder<Element>, TagKey<Element>>> elements, Optional<Holder<DamageType>> damageType)` | Decides what type a declarative strike should go out as | An empty result means keeping its original reading (the attacker's spirit roots); a failed declaration only warns and **never fails the load** |
 | `checkDeclaration(RegistryAccess access, ...)` | Checks that the declared elements really claim this type | Checked **on first use**, not at load time (registries are decoded in parallel, and a load-time check would make the same pack pass sometimes and fail other times) |
@@ -415,8 +447,8 @@ Package `com.iafenvoy.mxt.runtime.economy`. The **server-side read API** for ite
 | `unitValue(Provider access, ...)` (including the overloads with a holder and a `FormulaContext`) | The explicit-registry / holder-carrying forms | **An empty stack gives `of(0L)`**; only the overload with a `FormulaContext` threads the context all the way into the `unavailable_when` check and the quality multiplier |
 | `value(ItemStack stack)` / `value(@Nullable Entity holder, ItemStack stack)` | The whole-stack value = unit price × count | A unit price that cannot be found, or a multiplication past `Long.MAX_VALUE`, always gives empty and **never truncates or clamps** |
 | `totalValue(Collection<ItemStack> stacks)` | The total value of a pile of stacks | Any stack that is not currency, or an overflowing sum → empty |
-| `exchangeOffers(ItemStack input)` (plus the registry and holder-carrying forms) | Which quotes this input can be exchanged for | Only takes the `exchanges` of **available** definitions and flattens them; with no server it gives an empty list |
-| `isExchangeInput(RegistryAccess registryAccess, ItemStack input)` | Whether this stack can go into the exchange input slot (**without yet looking at whether the count suffices**) | Requires a matching definition that is available and has a non-empty `exchanges` |
+| `exchangeOffers(ItemStack input)` (plus the registry and holder-carrying forms) | Which quotes this input can be exchanged for | Only takes the `exchanges` of the definition that **claims this item** (the highest `priority` one) and flattens them; empty when that winner is unavailable, and with no server it gives an empty list |
+| `isExchangeInput(RegistryAccess registryAccess, ItemStack input)` | Whether this stack can go into the exchange input slot (**without yet looking at whether the count suffices**) | Requires the winner claiming this item to be available and to have a non-empty `exchanges` |
 | `definition(Provider access, ItemStack stack)` | Finds a currency definition by matcher only | **Does not judge availability** — do not treat `isPresent()` as "usable" |
 | `unavailableReason(Provider access, @Nullable Entity holder, ItemStack stack)` | Why it is unavailable | With `holder == null` it is **always empty** (there is no holder, so no reason can be asked for); it takes the first entry in `unavailable_when` whose condition is true |
 

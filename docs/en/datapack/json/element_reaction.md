@@ -1,32 +1,34 @@
 ---
 title: Element Reaction (element_reaction)
-description: "Defines what happens once enough of an element has accumulated on a body: the demand, what it consumes, and the action it runs."
+description: "The reaction that fires once element attachment has met its demand: how much it asks for, how much it consumes, and the action it runs."
 aside: false
 ---
 
-# Element Reaction (element_reaction)
+# Element Reaction (element_reaction) {#element_reaction}
 
-An `element_reaction` is what happens once enough of an element has built up on a body. The accumulation itself is [Element](./element.md) data — how much a strike of that element leaves behind and how fast it wears off — while the demand and the answer live here, so a pack can add a reaction without touching an element and can write a two-element one by listing two.
+An element reaction declares what happens once some element has accumulated enough on a body. How much has accumulated lives in the entity attachment `mxt:element_attachment`: [element](./element.md)'s `damage_attachment` and the entity action `mxt:attach_element` add to it, the element's own `attachment_decay` takes away from it. This definition only covers the moment after the demand has been met.
 
 ## File Location
 
-Element reaction files go in `data/<namespace>/mxt/element_reaction/` within your datapack.
+Element reaction files go in `data/<namespace>/mxt/element_reaction/` within your data pack.
 
-**Purpose**: What happens when element accumulation on a body reaches its demand.
+**Purpose**: triggering a reaction once element attachment reaches its demand.
 
-The filename corresponds to its ID. For example, `data/example/mxt/element_reaction/fire_burst.json` has the ID `example:fire_burst`.
+The filename is its ID. For example, `data/example/mxt/element_reaction/fire_burst.json` has the ID `example:fire_burst`.
 
 ## Fields
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `amounts` | `Map<Holder<element>, NumberProvider>` | **required** | How much of each listed element has to be accumulated; every entry has to be met. Must not be empty. |
-| `consume` | `Map<Holder<element>, NumberProvider>` | same as `amounts` | What the reaction takes away when it fires. **Omitting** the field takes the same amounts as the demand, while an explicit empty object `{}` takes nothing at all — a reaction that keeps the buildup it answered. Every key written here must also appear in `amounts`. |
-| `condition` | `EntityCondition` | `mxt:always_true` | An extra condition, for situational reactions such as "only while it is raining" or "only while standing in water". |
-| `action` | `EntityAction` | none | Run on the body that accumulated the reaction, when it fires. |
-| `priority` | Int | `0` | Higher is tried first; equal priorities are broken by registry id. |
+| `amounts` | map of element id to `NumberProvider` | **required** | How much each listed element has to accumulate for the reaction to hold. Every entry written has to be met at once; an empty map is rejected at load time. |
+| `consume` | map of element id to `NumberProvider` | same as `amounts` | How much is taken away when it fires. **Omitting** the field takes away the same amounts as the demand, while an explicit empty object `{}` takes nothing at all — a reaction that answers without settling the bill. Write only some of the keys and only those elements are consumed, every other element keeps its accumulation as it is. A key written here must also appear in `amounts`; naming an element nothing demanded is a load error. |
+| `condition` | `EntityCondition` | `mxt:always` | Extra condition, for situational limits such as "only blows up while it rains" or "only reacts while standing in water". |
+| `action` | `EntityAction` | none | The action run on the **holder itself** when it fires. |
+| `priority` | Int | `0` | Higher is tried first; equal values are ordered by registry id. |
 
-A reaction is a demand rather than an amount: once the accumulation is enough, the pipeline takes the **first** definition, in `priority` order, whose every listed element has reached its number and whose `condition` passes, runs its `action`, subtracts its `consume`, and then **keeps looking** — so one reaction can set off another. The chain is capped at **8 reactions per application**, because a reaction that consumes an element and applies it again is a legal and useful thing to write. The cap covers the **whole chain** rather than one pass of it: when a reaction's action applies an element again (or deals typed damage that builds attachment up on the body it hits), that application does not open a second chain — the amount simply lands, and the chain already running reads it on its next pass. "It keeps burning until something puts it out" is therefore writable and still terminates. Natural decay never triggers a reaction: decay can only lower a total, so a demand that was unmet stays unmet.
+`amounts` is a **demand**, not a quantity. A reaction is "once there is enough, answer": the element builds up, the pipeline walks the definitions in priority order, takes the **first** one whose every demand is met and whose `condition` passes, runs its `action`, subtracts its `consume`, and then **keeps looking** — so one reaction can lead to another.
+
+The chain is capped at `8` reactions per application, because "consume yourself and apply yourself again" is a legal thing to write. The cap is on the **whole chain**, not one per level: when a reaction's action applies the element again (or deals typed damage that builds attachment up where it lands), that application does not open a second chain — it just adds the amount, which the chain already running reads and settles on its next pass. "Fire that keeps burning until somebody puts it out" is therefore writable, and it still cannot feed itself forever. Natural decay never triggers a reaction: decay only lowers a total, and a demand that was out of reach stays out of reach.
 
 ```json
 // data/example/mxt/element_reaction/fire_burst.json
@@ -39,8 +41,6 @@ A reaction is a demand rather than an amount: once the accumulation is enough, t
 
 ## Where the Accumulation Lives
 
-The amount itself lives in the `mxt:element_attachment` entity attachment: it is keyed per element, is saved and synchronised with the entity, and drops a key as soon as it reaches zero. Two things feed it — `element.damage_attachment` on a hit made of that element, and the entity action `mxt:attach_element` for every other source (a lava bath, a pill, a curse) — and it is worn off by each element's own `element.attachment_decay` every tick. Cleaning is the same action with a negative amount. The entity condition `mxt:element_attachment` reads the current amount with the same `{min?, max}` window shape, so a pack can write "the more it builds, the worse it gets" without any reaction firing.
+The amount itself lives in the entity attachment `mxt:element_attachment`: keyed per element, saved and synchronised with the entity, and dropped as soon as it reaches zero. That keeps "how much has built up" and "what happens once enough has built up" as two separate things. Two routes add to it — `element.damage_attachment` when the body is hit, and the entity action `mxt:attach_element` for everything else (sitting in lava, taking a pill, a curse). Clearing it uses the same action with a negative number, or lets the element's own `attachment_decay` subtract every tick. The entity condition `mxt:element_attachment` reads the current amount on its own, with the same `{min?, max}` window, so "the more it has built up, the worse it gets" needs no reaction to fire at all; an empty map there is rejected at load time rather than read as "always true".
 
-Accumulation and reactions are entirely content-driven: a reaction has no event callback of its own (write an action to observe it), and the mod provides **no player-facing entry point** — no command, keybind or screen adds accumulation or fires a reaction by hand.
-
-The element a strike is made of, and the `damage_types` an element claims, are documented in [Element](./element.md). The action that feeds accumulation is listed with the other [entity action types](../types/action/entity_action_types.md), and the read-only condition with the [entity condition types](../types/condition/entity_condition_types.md).
+Reactions have **no event callback of their own** — to observe one, write an action. There is no player-facing entry point either: accumulation and reactions are driven entirely by content (damage type claiming and actions), and the mod provides no command, keybind or screen to add accumulation or fire a reaction by hand. The element side — `damage_types`, `damage_attachment` and `attachment_decay` — is on [element](./element.md).

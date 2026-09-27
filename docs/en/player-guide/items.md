@@ -61,7 +61,7 @@ The items below are backed by a unified server-side implementation shipped with 
 | Wooden Token / Stone Token | `mxt:wooden_token`, `mxt:stone_token` | `mxt:token` | Carry `kind`, `value` and `owner` together for the secret realm and trade permission systems. |
 | Identification Mirror | `mxt:identification_mirror` | consumes `mxt:identification` | Resolves items that carry an identification component in a unified way; the items to identify come from content packs or other mods. |
 | Talisman Brush / Talisman Ink | `mxt:talisman_brush`, `mxt:talisman_ink` | none | Generic base inputs for talisman crafting and formation content, used together with Blank Talisman; the recipes come from datapacks or KubeJS. |
-| Talisman | `mxt:talisman` | `mxt:talisman`, `mxt:spirit_storage` | Holds the `talisman` definitions inscribed on it, in order, plus a `mode` (`fire` by default, or `store`). Holding right-click pours spirit power in; a full carrier fires everything inscribed on it, and a sneak-use switches the mode. |
+| Talisman | `mxt:talisman` | `mxt:talisman`, `mxt:spirit_storage` | Holds the `talisman` definitions inscribed on it, in order, plus a `mode` (`fire` by default, or `store`). Holding right-click pours spirit power in (capacity = one invocation's aura entries times the inscriptions' `capacity` multiplier, itself capped by what the carrier has left, counted per aura); a full carrier fires everything inscribed on it, and once the store covers one invocation's aura entries a plain right-click fires it too — declare a `durability` / `consume` and a larger multiplier to fire several times from a single pour. A sneak-use switches the mode. An inscribed definition may declare a durability (`durability` / `consume`): the cap is written into the vanilla components (`max_damage` plus `max_stack_size: 1` and `damage: 0`), so the item shows a durability bar, and firing spends wear instead of whole carriers until the carrier breaks. |
 
 The value of `mxt:resource_container` is a bare map whose keys are resource IDs; there is no `values` wrapper, and a wrongly wrapped value is silently read as one unreadable key — the container stays empty and only a warning is logged.
 
@@ -86,7 +86,7 @@ give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
 give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
 ```
 
-The last line is how a **manual** is made: a stack teaches a technique only while it carries the `mxt:technique` component, and a jade slip without that component teaches nothing and shows no technique in its tooltip. The declaration (`technique_binding`) only decides how the technique is **read** and which item the mod generates as its carrier in the creative tab and under `/picker mxt:technique`; see [Technique Binding](../datapack/json/technique_binding.md).
+The last line is how a **manual** is made: a stack teaches a technique only while it carries the `mxt:technique` component, and a jade slip with neither that component nor any declaration's `items` claiming it teaches nothing and shows no technique in its tooltip. The declaration (`technique_binding`) only decides how the technique is **read** and which item `/picker mxt:technique` generates as its carrier (**the creative tab does not generate carriers**); writing the item into the declaration's `items` also makes a stack a manual with no component at all. See [Technique Binding](../datapack/json/technique_binding.md).
 
 ## Blocks and Workstations
 
@@ -109,11 +109,15 @@ MiXianTu does not create logical datapack items. Physical items must be register
 | Registry | Purpose |
 |---|---|
 | `item_binding` | Attaches behaviour, conditions, spirit roots or generic display to an existing item. |
-| `weapon_binding` | Configures damage, attack speed, attributes and attack, use and tick behaviour. |
+| `weapon_binding` | Adds vanilla attribute modifiers (a weapon's own attack damage and speed go here too) plus attack, use and tick behaviour. |
 | `pill_binding` | Configures pill consumption and behaviour. |
-| `technique_binding` | Describes how one technique is **read** — the hold length, pose, sound, quality group and conditions, plus the item the mod generates as its carrier. Whether a stack is a manual, and which technique it teaches, comes from the stack's own `mxt:technique` data component rather than from this table. |
+| `tool_binding` | Claims tool items and lists the forging methods they unlock. |
+| `blueprint_binding` | Claims blueprint items and lists the forging blueprints they offer. |
+| `technique_binding` | Describes how one technique is **read** — the hold length, pose, sound, quality group and conditions, plus the item the mod generates as its carrier. Whether a stack is a manual, and which technique it teaches, follows the stack's own `mxt:technique` data component first and a declaration's `items` second. |
 
-Item matching accepts a single item, a vanilla item tag, wildcards, regular expressions and mixed arrays. `carrier_item` is the exception: it takes one item ID only. `technique_binding` is matched by technique id, no longer by item. See [Item Binding](../datapack/json/item_binding.md) for the shared matching, condition and quality rules, and [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) for the fields of each binding type.
+Item matching accepts a single item, a vanilla item tag, wildcards, regular expressions and mixed arrays. `carrier_item` is the exception: it takes one item ID only. A `technique_binding` declaration is matched by technique id, and its `items` is the optional route.
+
+**Per-stack additions are data components**: `mxt:quality_chain` (single value — the component wins), `mxt:element` (a list — unioned with the definition), `mxt:pill` (field-by-field override of a pill definition), `mxt:technique_reading` (field-by-field override of the reading parameters), `mxt:forging_methods` and `mxt:forging_blueprints` (lists — unioned with the definition). They are written for one stack only. `conditions` and a weapon's numbers and actions have **no** component: a per-stack change means writing a definition that names that stack through `items`, and per-stack weapon numbers go through vanilla `minecraft:attribute_modifiers`. See [Item Binding](../datapack/json/item_binding.md) for the shared matching, condition and quality rules, and [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) for the fields of each binding type.
 
 ## Item Aura
 

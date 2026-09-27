@@ -1,30 +1,31 @@
 ---
 title: Spirit Herb (spirit_herb)
-description: A spirit herb attaches quality and herb metadata to existing items without creating a new item.
+description: Marks existing items as spirit herbs with a default quality and a set of classification metadata, without registering a new item.
 aside: false
 ---
 
-# Spirit Herb (spirit_herb)
+# Spirit Herb (spirit_herb) {#spirit_herb}
 
-A spirit herb marks existing items as spirit herbs for alchemy and gathering gameplay, giving them a default quality and classification metadata.
+`spirit_herb` marks an **existing item** as a spirit herb and gives it a default quality and a set of classification metadata. It registers no new item: the herb itself comes from a content pack or another mod, and this definition only turns an item that already exists into a spirit herb.
 
 ## File Location
 
-Spirit herb JSON files go in `data/<namespace>/mxt/spirit_herb/` within your data pack.
+Spirit herb files go in `data/<namespace>/mxt/spirit_herb/` within your data pack.
 
 **Purpose**: Spirit herb metadata for existing items.
 
-The filename corresponds to its ID. For example, `data/example/mxt/spirit_herb/fire_ginseng.json` has the ID `example:fire_ginseng`.
+The filename is its ID. For example, `data/example/mxt/spirit_herb/fire_ginseng.json` has the ID `example:fire_ginseng`.
 
 ## Fields
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `items` | `ItemMatcher` | **required** | Binds existing items. It does not create a new spirit herb item. |
-| `quality` | `Holder<quality>` | **required** | The quality of that item, and the **last** step of resolution: override component, forge result, definition default (artifact or technique), the chain's `default`, then here. See [Quality Chain](./quality_chain.md#resolution). |
+| `items` | `ItemMatcher` | **required** | Binds existing items; it creates no new spirit herb item. |
+| `priority` | Int | `0` | Order between several definitions of the same kind matching one item: the higher number goes first (see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher)); ties fall back to registry order. |
+| `quality` | quality id | **required** | The quality of that item, and the **last** slot of the whole resolution order: override component → forge result → definition default (artifact / technique) → the chain's `default` → here (see [Quality Chain](./quality_chain.md#resolution)). |
 | `age` | `NumberProvider` | `0` | Age metadata. |
-| `element_tags` | `HolderOrTag<element>[]` | `[]` | The element alignment of this herb, written against the **element registry**: an entry is one element and a `#` tag is a set of them, and disabled elements do not count. It is matched by `mxt:herb_tag` (`element`), so a herb can be named anywhere an `ItemMatcher` is accepted (item conditions, bindings, `mxt:item_matcher`, …). |
-| `material_tags` | Identifier[] | `[]` | Material classification tags. |
+| `element_tags` | Array of element ids or `#tags` | `[]` | Which elements this herb belongs to, written against the **element registry**: an entry is one element, a `#` tag is a set of them. `mxt:herb_tag` (`element`) matches it, so a herb can be named anywhere an `ItemMatcher` is accepted (item conditions, bindings, `mxt:item_matcher`, …). |
+| `material_tags` | Identifier[] | `[]` | Material classification tags, matched the same way through `mxt:herb_tag`'s `material`. |
 | `growth_rate` | `NumberProvider` | `0` | Growth rate metadata. |
 | `drop_chance` | `NumberProvider` | `1` | Drop chance metadata. |
 
@@ -42,11 +43,12 @@ The filename corresponds to its ID. For example, `data/example/mxt/spirit_herb/f
 }
 ```
 
+`items` uses the shared item matcher common to these definitions: a single item ID, a single `#namespace:tag`, or an array mixing both, where an array entry may also be a typed object carrying `type`, dispatched by the built-in `item_matcher_entry_type` registry — see [Shared Data Types](../types/shared_data_types.md). `element_tags` and `material_tags` are properties of the herb, not of the item, so a content pack can write "any fire spirit herb" without knowing which items get bound to that herb later.
+
 ::: info Work in progress
 
-The mod has no spirit herb planting or growth system at all: growth, harvesting and generation are left to content mods, as the mod's own code states. Binding, quality lookup, the element and material tags and the tooltip are wired up, while `age`, `growth_rate` and `drop_chance` are declared metadata with no lifecycle behind them. For the same reason the [`spirit_plant_bonus`](./aura_zone.md) and [`natural_spawn_herb`](./aura_zone.md) rules of an aura zone have no consumer.
+Binding, quality lookup, the tooltip and the matching of both classification tags are wired up (`mxt:herb_tag`); `age`, `growth_rate` and `drop_chance` are metadata for content mods to read, with no lifecycle behind them — the mod ships no planting or growth system, so growth, harvesting and spawning are left to content mods by design. `mxt:aura_zone`'s `spirit_plant_bonus` and `natural_spawn_herb` have no consumer for the same reason.
 
 :::
 
-The `items` matcher is the shared item matcher used by several formats; it accepts a single item ID, a single `#namespace:tag` or a list of both, and an array entry may also be a typed object dispatched by the built-in `item_matcher_entry_type` registry. See [Shared Data Types](../types/shared_data_types.md). The quality it points at is defined by [Quality](./quality.md), and a spirit herb's `quality` is the **last** fallback an item's resolved quality uses - after the override component, a forge result, a definition default and the chain's `default`, as laid out on [Quality Chain](./quality_chain.md#resolution). Herbs are intended as materials for [Alchemy Recipe](./alchemy_recipe.md).
-
+A spirit herb is a material for [Alchemy Recipe](./alchemy_recipe.md), and its quality is defined by [Quality](./quality.md).

@@ -25,6 +25,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 | 问某个坐标有多少灵气 | [`AuraService`](#auraservice) | `runtime.world` |
 | 读写实体身上的一条数值 | [`ResourceService`](#resourceservice) | `runtime.resource` |
 | 加修炼进度、突破、设置境界 | [`CultivationService`](#cultivationservice) | `runtime.cultivation` |
+| 读写一个生物的寿元、让它转世 | [`LifeSpanService`](#lifespanservice) | `runtime.cultivation` |
 | 执行一个技能、受理一次按键 | [`AbilityService`](#abilityservice) | `runtime.ability` |
 | 自己造成一次伤害 | [`DamageCalculationService`](#damagecalculationservice) | `runtime.damage` |
 | 给阵法加一种功能模块 | [`FormationActionType`](#formationactiontype) | `data.formation` |
@@ -42,32 +43,31 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 
 | 方法 | 作用 | 备注 |
 | --- | --- | --- |
-| `get(ResourceKey<? extends Registry<T>> key, Identifier id)` | 按 id 取定义值 | 已过掉被 `mxt:disabled` 停用的条目；条目不存在给 `Optional.empty()` |
-| `get(key, Holder<T> holder)` | 从 holder 取值 | 只看 holder 自己挂的停用标签，不回查注册表 |
+| `get(ResourceKey<? extends Registry<T>> key, Identifier id)` | 按 id 取定义值 | 条目不存在给 `Optional.empty()` |
 | `holder(key, Identifier id)` | 按 id 取 holder | 读的是**服务端**注册表 |
-| `holders(key)` | 遍历整表的全部 holder | 已过滤停用条目 |
+| `holders(key)` | 遍历整表的全部 holder | |
 
 显式传入注册表访问器（**客户端用这几个**）：
 
 | 方法 | 作用 | 备注 |
 | --- | --- | --- |
 | `holder(HolderLookup.Provider access, key, Identifier id)` | 客户端按 id 取 holder 的**唯一正确入口** | 不碰 `ServerLifecycleHooks` |
-| `holders(Provider access, key)` / `holders(RegistryAccess access, key)` | 遍历整表 | 已过滤停用条目 |
-| `get(Provider access, key, Identifier id)` / `get(Provider access, key, Holder<T> holder)` | 取值 | 同上 |
+| `holders(Provider access, key)` / `holders(RegistryAccess access, key)` | 遍历整表 | |
+| `get(Provider access, key, Identifier id)` | 取值 | 同上 |
 
-停用（`mxt:disabled`）与标签：
+**这一层不过滤任何东西**：条目在不在注册表里就是全部答案，而"停用一条定义"是加载期的事（`neoforge:conditions`，见[停用一条定义](/datapack/overview#停用一条定义)），被条件挡掉的条目根本不在表里。所以读了 holder 就能直接动用，没有"读到了一条被关掉的定义"这种状态。
 
-| 方法 | 作用 | 备注 |
-| --- | --- | --- |
-| `isDisabled(key, Identifier id)` | 这个 id 是否被停用 | **条目不存在也返回 `false`**——它回答"是不是被关掉了"，不是"在不在" |
-| `isDisabled(key, Holder<T> holder)` | holder 是否被停用 | 纯标签判断，不查注册表 |
-| `isTagged(key, Identifier id, Identifier tagId)` / `isTagged(key, Holder<T> holder, Identifier tagId)` | 在不在某个标签里 | 同样有"条目不存在返回 `false`"的口径 |
-
-裸查与规模：
+标签查询：
 
 | 方法 | 作用 | 备注 |
 | --- | --- | --- |
-| `rawHolder(key, Identifier id)` | **不看停用标签**的裸查 | 唯一用途是区分"被停用"与"已删除"；没有服务端时给空，不抛 |
+| `isTagged(key, Identifier id, Identifier tagId)` / `isTagged(key, Holder<T> holder, Identifier tagId)` | 在不在某个标签里 | 条目不存在返回 `false` |
+
+带容错与规模：
+
+| 方法 | 作用 | 备注 |
+| --- | --- | --- |
+| `holderOrEmpty(key, Identifier id)` | 与 `holder(key, id)` 同义，但**没有服务端时不抛**，给空 | 给同时在客户端跑的读者用（例如 `CurseService.definitionState`） |
 | `registry(key)` | 拿到原版 `Registry<T>` 本体 | 没有运行中的服务端时抛 `IllegalStateException` |
 | `size(key)` | 该表的条目数 | 与 `registry(...)` 同一条服务端断言 |
 | `registries()` | 本类登记过的全部注册表 key | |
@@ -75,8 +75,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 要点：
 
 - 类里**不缓存注册表实例**。要缓存就按**注册表实例**开键（`/reload` 不换实例，世界加载才换），参考 `DamageElements`。
-- 除了 `rawHolder`，**每一个读取都过滤 `mxt:disabled`**。
-- 附件里存 `Holder` 会绕过这层过滤（`RegistryFixedCodec` 不认识标签），读了 holder 再动手的地方要自己补 `isDisabled(...)`。
+- 附件里存着、而当前包已经不提供的 `Holder`（条目被 `neoforge:conditions` 挡掉，或直接删了文件）**在两次世界加载之间不会自己消失**：附件只在**世界加载**时解码，那一刻找不到定义的引用会被容错列表丢掉、重新进一次世界就干净了；而 `/reload` 不重解附件，所以旧引用在本次会话里还在。要问"现在还在不在"就按 id 回查注册表（`Elements.of` / `activeSpiritRoots` / `SecretRealmService.enter` 都是这么做的），别拿手里这枚 holder 当它还存在的证据。
 - `newDatapackRegistries(NewRegistry)` 由启动事件调用，**不是给业务代码用的**；表与 codec 的登记在 `MxtResourceKeys`。
 
 ### `DefinitionText` {#definitiontext}
@@ -133,19 +132,22 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 | 成员 | 作用 | 备注 |
 | --- | --- | --- |
 | `List<Entry> entries()` | 匹配项列表 | 实现必须给全 |
-| `default int priority()` | 排序权重 | 默认 `0` |
+| `int priority()` | 排序权重 | **没有默认实现**：每个实现返回自己在 JSON 里声明的 `priority`；没有那个字段的匹配器返回 `DEFAULT_PRIORITY` |
+| `DEFAULT_PRIORITY` | 定义没写 `priority` 时的值（`0`） | 三个物品条件、消耗 `mxt:item` 与框架内置的两个长按声明没有这个字段，也用它；**档位不按 Entry 类型分** |
+| `ORDER` | 唯一的排序比较器（`priority` 降序） | 需要 Holder、不能用 `findAll` 的调用方（`HoldLookup`、`ItemAuraService`）按它自己排，别各写一份 |
 | `find(Registry<T> registry, ItemStack stack)` / `find(Stream<T> matchers, ItemStack stack)` | 第一个命中 | 无命中给 `Optional.empty()` |
-| `findAll(...)`（注册表版与流版） | 全部命中 | 按 `priority` **升序**排序 |
+| `findAll(...)`（注册表版与流版） | 全部命中 | 按 `priority` **降序**排序 |
 | `ENTRIES_CODEC` | entry 列表的 Codec | 同时认单个对象与数组两种写法 |
 
-`ItemMatcher.Entry` 的成员：`matches(ItemStack)`、`default boolean itemLevel()`、`codec()`，以及两个 codec 常量 `SHORTCUT_CODEC`（简写：裸物品 id → `item`、物品标签 → `tag`）与 `CODEC`（先试简写，再试带 `type` 的对象）。
+`ItemMatcher.Entry` 的成员：`matches(ItemStack)`、`default boolean itemLevel()`、`codec()`，以及两个 codec 常量 `SHORTCUT_CODEC`（简写：裸物品 id → `item`、物品标签 → `tag`）与 `CODEC`（先试简写，再试带 `type` 的对象）。**Entry 不带优先级**：谁赢由定义自己的 `priority` 决定。
 
 Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`、`wildcard`、`regex`；运行期的模块另外注册了 `spirit_storage`、`herb_tag`、`technique`。
 
 要点：
 
-- `find` 的"第一个"是**优先级数值最小**的那个，不是注册顺序；优先级相同时取决于传入流的顺序。
-- **`itemLevel()` 是缓存安全的分界线**：它返回 `true` 表示"命中与否只由物品本身决定"，按物品开缓存的调用方**只能**缓存这类项；会读堆上的组件 / NBT 的项必须每个堆都问一次。
+- `find` 的"第一个"是 `priority` **数值最大**的那个定义，不是注册顺序，也不是"匹配得最具体"的那个，与 `aura_zone`、`element_reaction` 同一个方向；`priority` 相同的才取决于传入流的顺序。
+- `priority` 是**十张定义表自己的字段**（`artifact`、`item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` 六种 binding、`spirit_herb`、`item_aura`、`currency`，默认 `0`，加载期不校验范围），所以"通用定义 + 特地点名定义"共存时由数据包写死谁先；点名的条目**不会**因此更靠前。`ArtifactHold` 直接回读它那件法器的字段；消耗 `mxt:item`、三个物品条件与两个框架内置的长按声明（功法阅读、灌注）没有这个字段，恒为 `DEFAULT_PRIORITY`。
+- **`itemLevel()` 是缓存安全的分界线**：它返回 `true` 表示"命中与否只由物品本身决定"，按物品开缓存的调用方**只能**缓存这类项；会读堆上的组件 / NBT 的项，以及答案来自另一条定义的项（`mxt:herb_tag` 问的是哪条 `spirit_herb` 认领这件物品）必须每个堆都问一次。
 - 简写只覆盖 `item` 与 `tag`；其它实现走简写编码会抛 `IllegalArgumentException`。
 
 ## 灵气与资源 {#aura}
@@ -202,7 +204,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 要点：
 
 - 三个写入方法**只改传进来的那个附件**，自己不取、也不创建附件；唯一会隐式创建附件的是收 `LivingEntity` 的 `formulaContext(...)`。
-- 按 id 的重载（`initialize(holder, id, context)`、`change(holder, id, amount, context)` 与一对 `formulaContext(..., id, base)`）每次都**自己按 id 去注册表取定义**，所以被 `mxt:disabled` 停用的条目会自动跳过；id 解析不到时**静默失败**：写入给 `invalid`，两个 `formulaContext` 原样返回 `base`。
+- 按 id 的重载（`initialize(holder, id, context)`、`change(holder, id, amount, context)` 与一对 `formulaContext(..., id, base)`）每次都**自己按 id 去注册表取定义**，所以当前包里没有的条目（文件被删、或被 `neoforge:conditions` 挡掉）会被跳过；id 解析不到时**静默失败**：写入给 `invalid`，两个 `formulaContext` 原样返回 `base`。
 - 这个类和 `AuraService` 都**没有自己的服务端检查**，是否只在服务端调用靠调用点自律。
 
 ## 修炼与境界 {#cultivation}
@@ -245,6 +247,34 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 - `Failure.DISABLED` 只有脚本桥会产出（`MxtKubeJsApi.tryBreakthrough` 在灵气 id 解析不到时），`attempt` 自己不产出它。
 - `Failure.MAX_PROGRESS` 已于 2026-09-25 **删除**（它是一条走不到的分支）：进度上限不可能成为拒绝突破的理由——`threshold()` 要求某一段的 `max_experience ≥ breakthrough_exp`，所以进度被顶在 `max_experience` 时必然已经满足 `progress ≥ breakthrough_exp`，此时只会因条件、代价或取消而失败。内联的 `Failure` 分支若写了它，编译期就会报错。
 
+### `LifeSpanService` {#lifespanservice}
+
+包 `com.iafenvoy.mxt.runtime.cultivation`。寿元账本（**剩余**与**上限**两个数，单位都是刻）的读写与唯一的耗尽出口。数值由数据包给（`realm_stage.lifespan`、`mxt:modify_lifespan`、`mxt:reincarnate`），节奏与后果由服务端配置决定。
+
+| 方法 | 作用 | 备注 |
+| --- | --- | --- |
+| `remaining(Entity)` / `total(Entity)` | 读两个数 | **只读，不创建附件**；没有账本答 `-1`（`UNACCOUNTED`） |
+| `set(LivingEntity entity, long ticks)` | 两个数一起重写 | `ticks < 0` 拒绝；返回 `Result(changed, failure)` |
+| `add(LivingEntity entity, long ticks)` | 正数续命（两个数一起涨）、负数抽寿（只减剩余） | 同上；从未被给过寿元的生物先按配置的「凡人基础寿元」起算；`0` 什么都不做 |
+| `seed(LivingEntity entity)` | 按配置的「凡人基础寿元」播种 | 总开关关着、基数为 0、已经有账本时返回 `false`（登录与结算共用） |
+| `settle(Entity entity)` | 结算一次并判定耗尽 | 总开关关着、创造 / 旁观、不是生物、没有账本时直接 `false`；**这是唯一会致死的入口** |
+| `reincarnate(LivingEntity entity)` | 当场走一遍转世重置清单（按「转世」页的开关） | 返回 `Result`：`Pre` 被取消时 `failure` 为 `CANCELLED` 且什么都不做。数据包行为 `mxt:reincarnate`、`/mxt lifespan reincarnate`、KubeJS `MxtLifespan.reincarnate` 与附属调的是同一个方法；总开关关着也照做 |
+| `display(long remaining, long total, int ticksPerYear)` | 人物面板与动作栏提醒共用的显示组件 | 剩余为负读作「不受限」 |
+
+`Result` 的 `failure` 取值：`SERVER_ONLY`、`INVALID_VALUE`，以及只有 `reincarnate` 会产出的 `CANCELLED`。
+
+**两个事件**（都在 `event` 包）：
+
+- `LifeSpanEndEvent.Pre` / `Post`：寿元耗尽那一刻发一次。`Pre` 可取消——在事件里写下正值＝续命成功，什么都不写＝关闭账本（`remaining = -1`、`total = 0`）；`Post` 带 `outcome()`（`NONE` / `DEATH` / `REINCARNATE`）。
+- `LifeSpanRebirthEvent.Pre` / `Post`：**显式转世**前后各发一次，只由 `reincarnate` 这条公开入口发。`Pre` 可取消，取消＝整件事不做、身体原样不动。
+
+要点：
+
+- **写入永不致死**：`set` / `add` 只记账，耗尽只由 `settle` 判定，所以扣费事务或技能的中间不会有人当场身死。
+- 服务端限定：客户端调用写入得到 `Failure.SERVER_ONLY`，不写日志。
+- 玩家寿元耗尽遇到「耗尽后果 → 身死」时被转为旁观者（不掉物品、不触发死亡事件、账本停在 `0`）；非玩家生物走 `mxt:lifespan` 伤害类型，被别的模组拦下时结束记账而不重试。
+- 显式转世**不发** `lifespanEnd`——那个事件只回答"寿元耗尽了没有"。
+
 ## 技能 {#ability}
 
 ### `AbilityService` {#abilityservice}
@@ -262,12 +292,14 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 | `cancelCast(Holder<Ability>, AbilityAttachment, long gameTime)` | 中断蓄力 | **不退费** |
 | `executeTargetAction(Ability definition, Entity actor, Entity target, FormulaContext context)` | 执行技能的目标行为 | 给事件桥复用，`origin` 为空 |
 
-返回类型：`UseResult(committed, casting, failure, failedResource, amounts)`（**三态**：已提交 / 引导中 / 失败）、`GateResult(approved, failure, failedResource)`、`PrepareResult`（`approved()` 即 `use != null`）、`PreparedUse`、`CommitResult`、`ChannelResult(state, failure, nextTick, amounts)`、`enum State {INACTIVE, WAITING, PULSED, STOPPED}`、`enum Failure {DISABLED, NOT_GRANTED, COOLDOWN, INSUFFICIENT_RESOURCE, INSUFFICIENT_COST, INVALID_FORMULA, CONDITION_FAILED, NO_CHARGES, CANCELLED, PERMISSION_DENIED, ELEMENT_AFFINITY, SERVER_ONLY, CARRIED_NOT_INSTANT}`。
+返回类型：`UseResult(committed, casting, failure, failedResource, amounts)`（**三态**：已提交 / 引导中 / 失败）、`GateResult(approved, failure, failedResource)`、`PrepareResult`（`approved()` 即 `use != null`）、`PreparedUse`、`CommitResult`、`ChannelResult(state, failure, nextTick, amounts)`、`enum State {INACTIVE, WAITING, PULSED, STOPPED}`、`enum Failure {DISABLED, NOT_GRANTED, COOLDOWN, INSUFFICIENT_RESOURCE, INSUFFICIENT_COST, INVALID_FORMULA, CONDITION_FAILED, NO_CHARGES, CANCELLED, PERMISSION_DENIED, ELEMENT_AFFINITY, SERVER_ONLY, CARRIED_NOT_INSTANT, NO_TARGET, NOT_APPLICABLE}`（15 个）。
 
 要点：
 
 - 凡是"按下某个开关"，服务端一律先经 `runtime/ability/AbilityActivationService`——轮盘、命令、KubeJS 与符箓都走它，**别在别处再写一套"按下某个开关"的分派**。实现了 `Toggable` 且 `gated(ctx)` 为真时它才回头调这里的 `gate`。
 - **冷却与消耗全由这条路负责**：`cooldown` 字段自己会写 `mxt:cooldown` 状态，内容不需要再声明一遍冷却。
+- **技能生效时做什么由类型回答**：四个动作字段（`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`）由**会跑动作的类型各自声明并各自执行**，所以这条路走到"该做什么"那一步就是 `AbilityEffect.run(definition.type(), actor, context, origin)`——一个静态入口，内部只判断类型有没有实现 `AbilityEffect` 这个**能力接口**，不是按具体类型分派；四个字段的共享执行在 `ActionCarrier` 上。四个字段各自的时机见[ability（技能）· 四个动作字段](/datapack/json/ability#action-fields-by-type)。
+- **定向施放（`mxt:targeted`）走的也是这条路**：它实现能力接口 `AbilityApplier`（`reach` 挑这次够得着的实体 + `payload` 每个目标上跑的那条技能），运行时在**付款之前**先问一次 `reach`——一个人都没选中＝`NO_TARGET`，载荷类型没有单目标那一半＝`NOT_APPLICABLE`（两个都进上面的 `Failure`）；它自己的价格、冷却与元素亲和照常由这条路收一次。见[定向施放](/datapack/json/ability#targeted)。
 - 世界动作永不回滚，所以复合技能先 `prepare` 校验、再统一 `commit`。
 - 这个类**自己不检查客户端**，也从不产生 `Failure.SERVER_ONLY`——客户端那道 `SERVER_ONLY` 是调用方（例如 KubeJS 桥 `MxtKubeJsApi`）自己返回的。直接调 `use` 在客户端会真的动手。
 - 所有结果里的 `amounts` / `costs` 只用于展示与记录；**别拿它当回滚依据**。
@@ -302,7 +334,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 | `incoming(LivingEntity target, DamageSource source, double amount)` / `incoming(LivingEntity target, @Nullable Entity attacker, double amount)` | 从伤害来源或攻击者反推元素再减免 | 上面那个主重载的两个简写 |
 | `adaptationMultiplier(LivingEntity target, Set<Holder<Element>> attacking)` | 受击方的 `adapted_to` | 被克制是攻击方的便宜，受击侧不再加一次 |
 | `overcomeMultiplier(Set<Holder<Element>> attacking, Entity target)` | 攻击方元素对目标灵根的 `overcomes` | 每一对匹配都相乘（两个元素都克制就都算） |
-| `attachmentMultiplier(LivingEntity target)` | 受击者携带物的 `attachment_multiplier` 连乘 | 只缩放这一击留下的**元素附着量**，不影响元素反应的效果 |
+| `attachmentMultiplier(LivingEntity target)` | 受击者携带的**法器**的 `attachment_multiplier` 连乘 | 只缩放这一击留下的**元素附着量**，不影响元素反应的效果 |
 | `bypasses(DamageSource source)` | 这个伤害类型在不在 `mxt:no_bonus` 里 | 直通＝不乘任何因子、不留元素，但**原版自己的减免照旧**——它是"不归本模组加成口径管"，不是免疫 |
 | `source(Level level, @Nullable Entity attacker, Optional<Holder<DamageType>> damageType)` | 造这一击的 `DamageSource` | **归因在这里定**（玩家 → `playerAttack`、生物 → `mobAttack`、都没有 → `generic`）；调用方自己建 source 会丢击杀归属 |
 
@@ -316,7 +348,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 | --- | --- | --- |
 | `strike(Level level, Optional<Holder<DamageType>> type, @Nullable Entity attacker)` / `strike(DamageSource source)` | 这一击的元素集合 | **管线与伤害条件共用的唯一规则**：伤害类型被元素认领就是那些元素，没人认领就回落到攻击者灵根 |
 | `reading(Level level, ...)` / `reading(DamageSource source)` | 元素 + 来源 + 每个元素会留多少附着量 | 三个字段来自**同一次**注册表查询；减免与元素附着必须共用这一次读取，否则两个数不同步 |
-| `of(RegistryAccess access, Holder<DamageType> type)` / `of(DamageSource source)` | **谁认领了这个伤害类型**（不含回落） | 没人认领给**空集**；被 `mxt:disabled` 停用的元素在建索引时就跳过 |
+| `of(RegistryAccess access, Holder<DamageType> type)` / `of(DamageSource source)` | **谁认领了这个伤害类型**（不含回落） | 没人认领给**空集**；建索引时读的就是各元素定义自己的 `damage_types` |
 | `typeOf(RegistryAccess access, Holder<Element> element)` | 取该元素 `damage_types` 里第一条能解析出来的类型 | 标签形式会展开成第一个匹配元素 |
 | `resolveType(RegistryAccess access, List<Either<Holder<Element>, TagKey<Element>>> elements, Optional<Holder<DamageType>> damageType)` | 决定一次声明式打击该以什么类型出行 | 空结果 = 保持它原本的读取（攻击者灵根）；声明失败只警告，**绝不让加载失败** |
 | `checkDeclaration(RegistryAccess access, ...)` | 校验声明的元素确实认领了这个类型 | **首次使用时检查**，不在加载期（注册表是并行解码的，加载期检查会让同一个包时过时不过） |
@@ -415,8 +447,8 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 | `unitValue(Provider access, ...)`（含带持有者与 `FormulaContext` 的重载） | 显式注册表 / 带持有者版 | **空堆给 `of(0L)`**；只有带 `FormulaContext` 的那个重载把上下文一路传进 `unavailable_when` 判定与品质倍率 |
 | `value(ItemStack stack)` / `value(@Nullable Entity holder, ItemStack stack)` | 整堆价值 = 单价 × 数量 | 单价查不到、或相乘越过 `Long.MAX_VALUE` 一律给 empty，**绝不截断夹取** |
 | `totalValue(Collection<ItemStack> stacks)` | 一堆堆的总价值 | 任一堆不是货币、或累加溢出 → empty |
-| `exchangeOffers(ItemStack input)`（以及注册表版与带持有者版） | 这个输入能换到哪些报价 | 只取**可用**定义的 `exchanges` 并摊平；没有服务端给空列表 |
-| `isExchangeInput(RegistryAccess registryAccess, ItemStack input)` | 这堆能不能放进兑换输入格（**还不看数量够不够**） | 要求存在可用且 `exchanges` 非空的匹配定义 |
+| `exchangeOffers(ItemStack input)`（以及注册表版与带持有者版） | 这个输入能换到哪些报价 | 只取**这件物品认领到的（`priority` 最大的）**定义的 `exchanges` 并摊平；赢家不可用时为空，没有服务端也给空列表 |
+| `isExchangeInput(RegistryAccess registryAccess, ItemStack input)` | 这堆能不能放进兑换输入格（**还不看数量够不够**） | 要求认领这件物品的赢家可用且 `exchanges` 非空 |
 | `definition(Provider access, ItemStack stack)` | 只按 matcher 找货币定义 | **不判可用性**——别拿 `isPresent()` 当"能用" |
 | `unavailableReason(Provider access, @Nullable Entity holder, ItemStack stack)` | 它为什么不可用 | `holder == null` 时**恒为 empty**（"没有持有者"就问不出原因）；取 `unavailable_when` 里第一条条件为真的条目 |
 

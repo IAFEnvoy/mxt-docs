@@ -7,7 +7,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 
 锻造台不合成物品，它**打**物品：你放进去一份材料，它按一张图纸给出目标，玩家用一个个"手法"把一条数值条推进区间，最后按**多打了几锤**决定品质。同一个结果可以是凡品，也可以是绝品，区别只在过程。
 
-这套系统的数据分四处：`forging_method` 是单次锻打，`tool_binding` 决定哪把工具能打出哪些手法，`forging_blueprint` 是"要什么材料、打成什么样"，`blueprint_binding` 则把图纸挂到一件真实物品上。前三张是数据表，第四张要靠**物品组件**才生效——这是本教程与前面几篇最不一样的地方。
+这套系统的数据分四处：`forging_method` 是单次锻打，`tool_binding` 认领工具物品并给出它们解锁的手法，`forging_blueprint` 是"要什么材料、打成什么样"，`blueprint_binding` 则认领图纸物品并给出它们提供的蓝图。四张都是数据表：定义用 `items` 直接认领物品，**不需要给物品挂任何组件**；只有想让某几堆临时多带一份手法或图纸时，才用堆上的列表组件。
 
 本篇给示例包加一条铁剑生产线：四种手法、一把铁匠锤、一张图纸物品和三个品质档。
 
@@ -52,7 +52,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 | --- | --- | --- | --- |
 | `value_delta` | Integer | **必填** | 锻打条的偏移，**不能为 `0`**。 |
 | `costs` | `List<Cost>` | `[]` | 每次锻打的消耗，从锻打者身上扣，整份数组全有或全无；写法见[共享数据类型 · `Cost`](../datapack/types/shared_data_types.md#cost)，各类型见[触发器与消耗类型](../datapack/types/other/trigger-and-cost.md#cost-type)。 |
-| `condition` | `EntityCondition` | `mxt:always_true` | 允许使用该手法的条件，判定对象是**玩家**（[实体条件](../datapack/types/condition/entity_condition_types.md)）。 |
+| `condition` | `EntityCondition` | `mxt:always` | 允许使用该手法的条件，判定对象是**玩家**（[实体条件](../datapack/types/condition/entity_condition_types.md)）。 |
 | `icon` | 图标引用 | 无 | 列表里画什么，**同时决定这个手法在列表里叫什么名字**。 |
 | `cooldown` | Integer | `0` | 冷却，单位 tick，范围 `0..72000`。 |
 | `sound` | SoundEvent ID | `minecraft:block.anvil.place` | 锻打**真的发生**之后，在台子位置对附近所有玩家播放。 |
@@ -67,11 +67,12 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 
 ## 第 2 步 —— 工具与图纸物品
 
-两张绑定表都只是"某件物品 → 一组定义"的清单，清单本身不指定物品：
+两张绑定表都认领物品：写 `items` 说明这份定义管哪件（或哪族）工具、图纸，再给出这组定义：
 
 ```json
 // data/example/mxt/tool_binding/smith_hammer.json
 {
+  "items": "example:smith_hammer",
   "methods": [
     "example:heavy_strike", "example:light_strike",
     "example:quench", "example:temper"
@@ -82,30 +83,31 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 ```json
 // data/example/mxt/blueprint_binding/sword_manual.json
 {
+  "items": "example:sword_manual",
   "blueprints": ["example:spirit_sword"]
 }
 ```
 
-物品通过组件指向它们：`mxt:tool_binding` 与 `mxt:blueprint_binding`。组件里存的是 Holder，物品本身不复制定义，所以改绑定表不需要动物品。
+**工具与图纸物品由此自动生效**：定义的 `items` 命中谁，谁放进锻造台对应槽位就有效，物品本身不复制定义，所以改绑定表不需要动物品。
 
 **可用手法 = 蓝图 `allowed_methods` ∩ 所有已放置工具 `methods` 的并集。** 蓝图没声明 `allowed_methods` 时，蓝图一侧不做限制，列表就是工具的并集。
 
-### 怎么把组件挂到物品上
+### 给某几堆临时附加
 
-这是本教程唯一需要物品侧配合的地方。两条路：
+绝大多数情况下这一步什么都不用做：定义的 `items` 已经认领了物品。两条**逐堆**附加的路：
 
-**测试用 `/give` 的组件语法**（不用写代码，改完数据表直接试）：
+**测试用 `/give` 的物品组件语法**（不用写代码，改完数据表直接试）：
 
 ```text
-/give @s minecraft:iron_ingot[mxt:tool_binding="example:smith_hammer"]
-/give @s minecraft:paper[mxt:blueprint_binding="example:sword_manual"]
+/give @s minecraft:iron_ingot[mxt:forging_methods=["example:heavy_strike","example:light_strike"]]
+/give @s minecraft:paper[mxt:forging_blueprints=["example:spirit_sword"]]
 ```
 
-**正式整合包应该在注册物品时就带上它。** 模组自带的测试物品就是这么做：把绑定表的名字作为物品自己的 ID，用延迟 Holder 组件写进物品属性，于是每一个合成出来的锤子都自带这份绑定，不依赖命令或创造模式手动改组件。
+**正式整合包不需要这条路**：把工具 / 图纸物品的 id 写进对应定义的 `items` 就够了，物品注册的地方一个字都不用改。（物品本身由内容包注册，例如用 [KubeJS](./create-items-with-kubejs.md)；本教程只写数据表，所以上面那条组件写法也是手边没有这两件物品时最快的试法。）
 
-::: tip 组件的值是数据表 ID，不是内联内容
+::: tip 两条路指向的是同一批定义
 
-`mxt:tool_binding="example:smith_hammer"` 里的 `example:smith_hammer` 是 `tool_binding` 注册表里的条目名。写一个不存在的 ID，物品会带上一个解析不出的组件——列表里什么都不会出现。
+`items` 里写的是**物品** id（`example:smith_hammer`），堆上的组件里写的是**注册表条目** id（`example:heavy_strike` 属于 `forging_method` 注册表）。定义认领与堆上的列表**取并集**，所以工具槽问的是「这堆能解析出至少一种手法吗」；两处任一写错 id，那一项就解析不出来。
 
 :::
 
@@ -235,10 +237,17 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 
 ```text
 /give @s mxt:forging_table
-/give @s minecraft:iron_ingot[mxt:tool_binding="example:smith_hammer"]
-/give @s minecraft:paper[mxt:blueprint_binding="example:sword_manual"]
+/give @s example:smith_hammer
+/give @s example:sword_manual
 /mxt registries validate
 /mxt registries list
+```
+
+这两件物品还没注册的话，把定义里的 `items` 换成原版物品，或者直接给原版物品挂组件：
+
+```text
+/give @s minecraft:iron_ingot[mxt:forging_methods=["example:heavy_strike","example:light_strike","example:quench","example:temper"]]
+/give @s minecraft:paper[mxt:forging_blueprints=["example:spirit_sword"]]
 ```
 
 1. 放下锻造台，右键打开。界面左边三格放图纸，右边三格放工具，中间 4×3 是材料输入格，成品在右侧输出格。
@@ -261,7 +270,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 
 | 现象 | 原因 |
 | --- | --- |
-| 左列表空的 | 蓝图槽里没放带 `mxt:blueprint_binding` 组件的物品。**没有"列出全注册表"的回退**：三格为空就没有蓝图。 |
+| 左列表空的 | 蓝图槽里没放物品，或者放进去的物品没有任何 `blueprint_binding` 定义的 `items` 认领、它自己也没带 `mxt:forging_blueprints` 组件。**没有"列出全注册表"的回退**：三格为空就没有蓝图。 |
 | 右列表里没有你要的手法 | 交集为空：蓝图 `allowed_methods` 里没有它，或没有任何已放置的工具解锁它。 |
 | 蓝图定义加载失败 | `input` 为空、超过 15 项、同一物品写两次、ID 解析不出；`meter_min`/`meter_max` 没有跨过 0；品质阶梯不是升序或末项不是 `2147483647`；`finish_pattern` 要校验却不是六项。 |
 | 「使用蓝图」按钮是灰的 | 材料不足（悬停蓝图看哪一行是 `✖`）、输出格里有东西，或者会话已经在跑。 |
@@ -277,6 +286,6 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 
 - [forging_blueprint（锻造图纸）](../datapack/json/forging_blueprint.md) —— 图纸的完整字段表与校验规则。
 - [forging_method（锻造手法）](../datapack/json/forging_method.md) 与 [tool_binding（工具绑定）](../datapack/json/tool_binding.md) —— 手法与工具那一半。
-- [blueprint_binding（图纸绑定）](../datapack/json/blueprint_binding.md) —— 组件与物品的关系。
+- [blueprint_binding（图纸绑定）](../datapack/json/blueprint_binding.md) —— 定义怎么认领图纸物品，以及堆上的列表组件怎么追加。
 - [quality（品质）](../datapack/json/quality.md) 与 [quality_chain（品质链条）](../datapack/json/quality_chain.md) —— `forging_modifier`、链条的顺序与默认档、以及品质的解析顺序。
 - [MxtEvents：事件](../kubejs/api/events.md) —— 用脚本读/改锻打消耗、拦下某个阶段。

@@ -22,8 +22,8 @@ public final class MyBar extends AbstractHudEntry {
     @Override public String displayName() { return Component.translatable("hud.mxt.my_bar").getString(); }
     @Override public int layoutWidth() { return WIDTH; }
     @Override public int layoutHeight() { return HEIGHT; }
-    @Override public int defaultX() { return 4; }
-    @Override public int defaultY() { return 4; }
+    @Override public int defaultOffsetX() { return 4; }
+    @Override public int defaultOffsetY() { return 4; }
 
     // 只描述：一块底、一行数值；位置由框架决定
     @Override
@@ -40,17 +40,17 @@ MyBar bar = HudManager.register(new MyBar());
 
 要点：
 
-- **位置是「窗口比例」存的，不是像素**，坐标原点在窗口**左上角**。`config/mxt/mxt-hud.json` 里 `hud.layout_v2` 的每一项是 `x,y,visible`，`x`/`y` 是 `0..1` 的比例，指向元素矩形的左上角，所以换分辨率、换 GUI 缩放后布局不会漂。像素值只活在内存里，并且每次读取都夹进窗口，元素不可能被拖到看不见的地方。键上的 `_v2` 是位置含义变过一次留下的：旧键不再被读，那批布局退回默认位置。
-- **HUD 布局是独立的一份配置**（`config/mxt/mxt-hud.json`），不在客户端设置里；其余配置也统一收进 `config/mxt/`（`mxt-client.json`、`mxt-server.json`）。
-- **锚点 `HudAnchor`** 决定 `defaultX()`/`defaultY()` 指的是矩形上哪个点，以及**尺寸变化时哪个点不动**。默认是左上角；会往上长的东西（一列资源条）用 `CENTER_BOTTOM`，这样它长高时下边缘钉在原地。
-- **改动即存档**：拖动、方向键微调、显隐切换都会立刻写配置。没有"关界面时统一保存"，所以崩了也不会丢布局；反过来，手动改 JSON 之后要重开客户端才生效（元素只在构造时读一次）。
-- **位置只有一个来源**：存档里有这个布局键就用键里的比例（并且只在窗口尺寸变化时重算），没有就用元素自己给的默认位置（每帧重算，所以跟着窗口走）。`resetToDefault()` 会把键**从存档里删掉**——复位必须跨重启有效，否则看起来就像"布局没保存"。（这里曾经多存了一个布尔标志表示"当前用的是存档位置"，它初值是 `false`、只有拖动才置真，于是文件里的位置永远读不到：每次重启都退回默认。删掉那个标志、只留"键在不在"这一个事实，问题就没了。）
-- **只有 `visible() && moveable()` 的元素**会被当成可拖动项。自己算位置、不该被拖的元素（比如居中的快捷栏）重写 `moveable() { return false; }` 即可，它依然会被框架画；这类元素若连尺寸都由世界状态决定，还要重写 `refreshPlacement()` 并调用基类的 `placeAtDefault()` 把默认位置应用上去——**只算尺寸不落位置的话，锚点会一直停在 `(0,0)`**，元素画在窗口左上角。
+- **位置是「窗口锚点 + 像素偏移」存的**：`config/mxt/mxt-hud.json` 的根是一个 `version` 加一张 `layout` 表，每一项是一个对象——`{"anchor": {"horizontal": "center", "vertical": "bottom"}, "offset_x": -55, "offset_y": -47, "visible": true}`。锚点是窗口的八个点之一（四角 + 上下左右四个边中点，JSON 里写成两个轴的对象，而不是一个拼好的字符串），偏移是**从那个窗口点到元素自己同名点的像素距离**，所以换分辨率、换 GUI 缩放后布局不会漂，拖动也不会被比例取整吃掉一像素。显示的像素每次读取都夹进窗口，元素不可能被拖到看不见的地方；夹取不改写存档，窗口缩小时贴边、还原后回到原处。`version` 是 `3`：旧版那种 `hud.layout_v2` 的 `x,y,visible` 字符串不再被读，那批布局退回默认位置。
+- **HUD 布局不进配置框架**：它是模组自己的一个 JSON 文件（`config/mxt/mxt-hud.json`，由 `HudLayoutFile` 读写），一行一个元素的对象，编辑器拖动一步就写一次；其余配置仍然统一收进 `config/mxt/`（`mxt-client.json`、`mxt-server.json`）。
+- **锚点 `HudAnchor`** 是窗口的八个点（四角 + 四个边中点），它同时管两件事：偏移**从哪个窗口点量起**，以及**尺寸变化时元素的哪个点不动**。默认是左上角；会往上长的东西（一列资源条）用 `CENTER_BOTTOM`（下边中点），轮盘格用 `LEFT_CENTER`（左边中点）。玩家把元素拖到某个锚点方框上就**自动绑定**到它：绑定不移动元素，只把偏移按新锚点重算，所以拖过锚点的瞬间不会跳，之后窗口变化时它跟着那个点走。
+- **改动即存档**：拖动、方向键微调、显隐切换都会立刻写布局文件。没有"关界面时统一保存"，所以崩了也不会丢布局；反过来，手动改 JSON 之后要重开客户端才生效（元素只在构造时读一次）。
+- **位置只有一个来源**：存档里有这个布局键就用键里的锚点与像素偏移（窗口变化时不需要重算：两个数都是绝对的），没有就用元素自己给的默认（`defaultAnchor()` + `defaultOffsetX()` / `defaultOffsetY()`，每帧重算，所以跟着窗口走）。`resetToDefault()` 会把键**从存档里删掉**——复位必须跨重启有效，否则看起来就像"布局没保存"。（这里曾经多存了一个布尔标志表示"当前用的是存档位置"，它初值是 `false`、只有拖动才置真，于是文件里的位置永远读不到：每次重启都退回默认。删掉那个标志、只留"键在不在"这一个事实，问题就没了。）
+- **`moveableEntries()` 收的是所有 `moveable()` 的元素，隐藏的也在内**：编辑器要把隐藏的也画成半透明、并用它右上角的勾选框把它收回来，在这里过滤掉就再也点不到了。自己算位置、不该被拖的元素（比如居中的快捷栏）重写 `moveable() { return false; }` 即可，它依然会被框架画；这类元素若连尺寸都由世界状态决定，还要重写 `refreshPlacement()` 并调用基类的 `placeAtDefault()` 把默认位置应用上去——**只算尺寸不落位置的话，锚点会一直停在 `(0,0)`**，元素画在窗口左上角。
 - **尺寸由元素自己说了算**：宽度随内容变化的元素在变化时调用 `setSize(w, h)`。空元素也要给非零尺寸，否则编辑器里看不到。
 - **元素要在客户端初始化时登记**，不要等第一帧渲染：框架的 GUI 层只在世界里绘制，否则玩家在主菜单打开编辑器时会看到一片空白。
-- **编辑界面**由 `HudManager.openEditor()` 打开（按键 `key.mxt.hud_layout`，默认右 Shift，或客户端命令 `/hud open`）。里面左键拖动、方向键 1 像素（按住修饰键 10 像素）微调、`Esc` 放弃当前选中、点空白处取消选中。**还没有缩放**：这一版只做移动，KronHUD 那种拖角缩放与吸附参考线都没移植。
+- **编辑界面**由 `HudManager.openEditor()` 打开（按键 `key.mxt.hud_layout`，默认右 Shift，或客户端命令 `/hud open`）。里面左键拖动、**把元素拖到窗口边上的八个锚点方框上即自动绑定、并画一条从锚点到它的连接线**（线只画选中/正在拖的那一个，八个方框常显）、**元素右上角框内的勾选框切换显隐**（隐藏的元素在编辑器里半透明、勾选框本身不透明）、方向键 1 像素（按住修饰键 10 像素）微调、`Esc` 放弃当前选中、点空白处取消选中；**选中在松开鼠标后保留**。**还没有缩放**：这一版只做移动与绑定，KronHUD 那种拖角缩放与吸附参考线都没移植。
 - 编辑器里元素**照常真实绘制**，编辑器只额外画半透明矩形与名字标签，所以拖的时候看到的就是实际效果。
-- 诊断用客户端命令 `/hud`：打出每个元素的布局键、位置、尺寸、当前块数与可见/可拖状态。"一个元素都没登记"和"登记了但这一帧没有内容"在界面上长得一样，只有它能分开。
+- 诊断用客户端命令 `/hud`：打出每个元素的布局键、**绑定的锚点**、位置、尺寸、当前块数与可见/可拖状态。"一个元素都没登记"和"登记了但这一帧没有内容"在界面上长得一样，只有它能分开。
 
 当前**已接入的元素**是五个：资源条四个——两列可拖的（`resource_bars.left` / `resource_bars.right`）+ 两条不可拖的固定行（`resource_bars.target` / `resource_bars.boss`）——加上轮盘的「轮盘格」（`wheel.selection`，`screen/wheel/WheelSelectionEntry`：它 `renderBlocks()` 返回空、自己 `render()` 画**永远 4 列、行数随页数向下长的格子**（每格 22px，一页 12 格 = 三行；块宽固定 94、高按内容算，格子号 = 编号读序，**编号此刻代表的那一格换金色边框贴图**；**冷却中的格子按原版物品冷却那样压一层白幕**——盖住图标的剩余比例、随时间从上往下退（剩余读条目的 `cooldownTicks`、全长读 `cooldownLength`），其它原因不可用时才压暗），是"整块自己画"那条口子的第一个范例，也是"尺寸随内容变"的第一个范例（`layoutWidth` / `layoutHeight` 每帧算，`refreshPlacement` 里 `setSize` 回报，长出去会被夹回窗口）；默认位置在窗口左边、竖直居中；**画的是整张轮盘的一览**（每一页的每一格）；**不写任何文字标签**）。资源条那四个的做法可以当范例：`ResourceBarOverlay.column(anchor)`／`row(target, layout)` 只回答"哪些条、什么顺序"，条目用 `ResourceBarEntry.blocksWithGaps(...)` 把每条包成块并在条之间插 `spacer`。**位置在数据包那边没有字段**——`resource.bars` 的 `anchor` 只决定落进哪一列，列摆在哪是玩家自己的设置在客户端配置里；两条固定行钉在准心实体上、位置每帧现算、永不入档。资源条自己的 `mxt:resource_bars` GUI 层已经删掉，全部走框架那一层。框架本身的取舍见仓库里的 `research/26_可拖动HUD框架设计.md`，轮盘格这次的改动见 `research/27_轮盘选择系统设计.md` §8 与 `research/31_多轮盘与轮盘来源设计.md` §10.4。
 
@@ -79,7 +79,7 @@ MyBar bar = HudManager.register(new MyBar());
 
 轮盘上「储物」那一格按下去打开的就是它（见 `research/32_法器开关与轮盘接线设计.md`，由 `AbilityActivationService` 统一进入）：**没有自己的菜单类，也没有自己的界面类**——它就是原版箱子那一套，注册的是 `ChestMenu`，客户端注册的是 `ContainerScreen`（`generic_54.png` 那张贴图本来就画 1..6 行），所以宽度固定 176、行数由 `getRowCount()` 决定，标题由开窗包带过去（`screen.mxt.artifact_storage` = 「储物 · 法器名」）。行数走 `IMenuTypeExtension` 的附加数据（服务端写 `capacity / 9`），客户端据此重建一个同样大小的 `SimpleContainer` 镜像，格子内容照常走菜单同步。
 
-内容那一侧是 `runtime/artifact/ArtifactStorageContainer`（`SimpleContainer` 子类）：开窗时从法器的 `mxt:artifact_storage` 组件读进来，之后**每一次改动都在 `setChanged()` 里整份写回**（`ArtifactStorageService#replace`，一次组件更新而不是每格一次）。它**故意不持有那个物品堆**——法器的位置是会变的，往一个没人拿着的栈里写就是物品消失的经典成因：所以每次读写都按"这件法器还在不在玩家身上"重新解析（`ArtifactService#carried` 扫双手、背包与 Curios），`stillValid` 一旦为假，服务端每刻的菜单检查就会把窗口关掉。储物格数由定义给出：**按 9 向上取整、最多 6 行（54 格）**，容量与窗口永远是同一个数。
+内容那一侧是 `runtime/artifact/ArtifactStorageContainer`（`SimpleContainer` 子类）：开窗时从承载物的 `mxt:storage` 组件读进来——内容是其中按**这条储物技能自己的 id** 寻址的一条 `mxt:container` 记录（组件 `mxt:artifact_storage` 已删除），之后**每一次改动都在 `setChanged()` 里整份写回**（`ArtifactStorageService#replace`，一次组件更新而不是每格一次）。它**故意不持有那个物品堆**——法器的位置是会变的，往一个没人拿着的栈里写就是物品消失的经典成因：所以每次读写都按"这件法器还在不在玩家身上"重新解析（`ArtifactService#carried` 扫双手、背包与 Curios），`stillValid` 一旦为假，服务端每刻的菜单检查就会把窗口关掉。储物格数由定义给出：**按 9 向上取整、最多 6 行（54 格）**，容量与窗口永远是同一个数。
 
 ## 物品选择界面 `ItemPickerScreen`
 

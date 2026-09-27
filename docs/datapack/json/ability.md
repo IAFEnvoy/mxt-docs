@@ -5,31 +5,66 @@ aside: false
 
 # ability（技能） {#ability}
 
-文件位置：`data/<namespace>/mxt/ability/<path>.json`
+## 文件位置
 
-**用途**：主动、被动和触发技能。**法器能力与技能是同一个概念**：技能类型是一张共用的表，法器、功法、命令与脚本都能授予同一种技能。
+`data/<namespace>/mxt/ability/<path>.json`
+
+一条技能永远只是一个 `mxt:ability` 条目，这里就是它唯一的定义处。它的身份是自己的注册表 id：`name` / `description` 省略时，默认键按这个 id 的命名空间与路径生成，路径后面不会再挂后缀。
+
+宿主只写它的 id 或 `#标签`。法器（[artifact](./artifact.md)）的 `abilities`、功法与符箓的 `granted_abilities`、灵根与体质、命令、脚本，无一例外都用引用，不能把技能整个抄进宿主定义：**写在宿主里的内联技能不认**，那样会让宿主那份定义整个不可解析。
+
+主动、被动、触发技能都在这一页。法器能力与技能是同一个概念：技能类型是一张共用的表，法器、功法、命令与脚本授予的是同一种技能。
+
+## 通用字段
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `ability.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `ability.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
-| `type` | `AbilityType` | **必填** | 固有技能类型，**就写在顶层**（`{"type": "mxt:active", ...}`），不是嵌套在 `ability` 对象里。可选值见下方[技能类型](#ability-types)。 |
-| `costs` | `List<Cost>` | `[]` | 技能执行前扣除的消耗，整份数组**全有或全无**；写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。 |
-| `cast_time` | `NumberProvider` | `0` | 施法时间。 |
-| `cooldown` | `NumberProvider` | `0` | 冷却时间。**所有类型都支持**（不只是主动技）：每次付款都会把这次的实际长度与起点写进 `mxt:cooldown` 状态，所以不用在 `components` 里再声明一遍。 |
-| `icon` | Icon 引用 | 无 | 主动技能的轮盘图标，必须**恰好**定义 `texture`（16×16 GUI 贴图）或 `item` 之一：两者都给或都不给都会被拒绝。 |
-| `components` | `List<DataStorage>` | `[]` | 该技能声明的状态类型（冷却、充能、切换、持续…）。类型的类是槽，值存在技能自己那份附件里。 |
-| `modifiers` | `List<AttributeEntry>` | `[]` | 被动原版属性修正；条目包含 `attribute`、`id`、`amount`、`operation`，可选 `value` 公式。 |
-| `damage_condition` | `DamageCondition` | `mxt:always_true` | 伤害触发限制。 |
-| `condition` | `EntityCondition` | `mxt:always_true` | 技能可用条件；对 `modifier`（被动属性）与 `aura` 类型还会**每 tick 重算一遍**，因此可以拿来把被动"挂条件"（不满足时它贡献的属性会被撤下）。 |
-| `entity_action` | `EntityAction` | `mxt:no_op` | 对施法者执行的行为。 |
-| `target_selector` | `AbilityTargetSelector` | `mxt:self` | `bi_entity_action` 作用于哪些实体：`mxt:self` 只有施法者；`mxt:area` 取 `radius`（必填，上限 128）与 `include_actor`（默认 `false`）；`mxt:ray` 是沿视线的圆柱（`length` 必填、`radius` 默认 `0.5`）、`mxt:cone` 是沿视线的圆锥（`length` 与半角 `angle` 必填），两者同样支持 `include_actor`；三种区域型选择器还都能写 `limit`（默认 `0`＝不限）与 `order`（`nearest` / `farthest` / `random`，默认 `nearest`）来"只取最近的三个"。`mxt:js` 交给服务端脚本。字段见[技能目标选择器类型](/datapack/types/other/ability-and-curse#ability-target-selector-type)。 |
-| `target_condition` | `BiEntityCondition` | `mxt:always_true` | 目标关系条件。 |
-| `bi_entity_action` | `BiEntityAction` | `mxt:no_op` | 对施法者和目标执行的行为。 |
-| `element_affinity` | `HolderOrTag<element>[]` | `[]` | 技能的元素亲和标记；非空时既是**施放门槛**（没有任何匹配灵根就不放行），也是 `element_modifier` 的来源——[伤害管线](/technical/damage)第一层会把它直接乘进这次施放打出的伤害（匹配灵根的 `element_ability_modifier`，按 `element_affinity_mode` 合并），所以伤害公式里**不要**再手写 `* element_modifier`。 |
-| `element_affinity_mode` | `average` / `max` | `average` | 多条灵根都匹配时 `element_modifier` 怎么算：`average` 取平均（老行为），`max` 取最好的那条。 |
-| `hidden` | bool | `false` | 不在轮盘与提示框里出现，但照常生效与授予：一条技能"只想要效果、不想占一格"就靠它。 |
-| `item_action` | `ItemAction` | `mxt:no_op` | 对**承载这件技能的物品堆**执行的行为，给"技能自己的物品代价／回馈"用。`mxt:upkeep` 的 `on_fail` 是同一件事的专用写法（见该类型）。 |
+| `name` | Text Component | `ability.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列那个键。 |
+| `description` | Text Component | `ability.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列那个键；今天只被存储与读取，还没有界面画它。 |
+| `type` | 技能类型 id | **必填** | 写在**顶层**（`{"type": "mxt:active", ...}`），不嵌套在 `ability` 对象里。取值见[技能类型](/datapack/types/other/ability)。 |
+| `costs` | `Cost` 列表 | `[]` | 技能执行前扣除的消耗，整份数组**全有或全无**；写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。 |
+| `cast_time` | `NumberProvider` | `0` | 施法时间。大于 `0` 时按下只登记一个到点时刻，到那一 tick 才真正跑动作字段。 |
+| `icon` | 图标引用 | 无 | 轮盘图标：**裸字符串**＝16×16 GUI 贴图，**对象**＝物品堆模板 `{"id": ...}`（可带 `count` / `components`）。两支按解析顺序区分（贴图那一支先试），物品必须写成对象形式，详见[共享数据类型 · 图标引用](../types/shared_data_types.md#图标引用)。 |
+| `charges` | `{maximum, recharge_ticks}` | 无 | 充能池的声明，两个字段都是 `NumberProvider`、都必填：最多几次、每多少刻回一次。 |
+| `condition` | `EntityCondition` | `mxt:always` | 技能可用条件。每个类型都读它，见下方[条件](#condition)。 |
+| `element_affinity` | 灵气 id 或 `#标签` 的列表 | `[]` | 技能的元素亲和标记；非空时既是施放门槛（没有任何匹配灵根就不放行），也是这次施放伤害的 `element_modifier` 来源。 |
+| `element_affinity_mode` | `average` / `max` | `average` | 多条灵根都匹配时 `element_modifier` 怎么算：`average` 取平均，`max` 取最好的那条。 |
+| `hidden` | bool | `false` | 只在**法器的提示框**里跳过这条技能，其他场合照常生效、照常授予。 |
+
+上表是**所有类型都读**的那部分。只被一部分类型读的键不在这里，写在[技能类型](/datapack/types/other/ability)那一页：`cooldown`（默认 `0`，只有会付款的类型读）、`damage_condition`（默认 `mxt:always`，只有 `mxt:triggered` 读）与四个动作字段（`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`）。它们在 JSON 里照样写在 `type` 同级，只是没被列出来的键写了也不读。
+
+技能的数值字段统一用 `NumberProvider`，可以写表达式。技能必须先通过条件和所有资源消耗，才执行行为。
+
+### 条件 {#condition}
+
+`condition` 每个类型都读，而且每拍都读：它既是生效门槛，也是这一拍跑不跑动作的开关。各类型在什么时机查它不一样，`mxt:interval` / `mxt:aura` 的脉冲只在它成立的拍跑，`mxt:modifier` 的属性只在它成立时贡献（每 tick 重算，不成立立即撤下）。
+
+### `costs` 与 `cast_time` 的口径
+
+`costs` 走的是同一套消耗计划：先整份校验、再整份扣除，中途有任何一项付不出就整份拒付，已写入的部分还原。`mxt:resource` 条目的 `amount` 在施法者上下文之外还带上**该数值自己的公式上下文**（资源族变量，如 `realm_rank`、`absorbed_aura`），见[公式变量](../types/formula_variables.md)。
+
+`cast_time` 只在施放时读，按下那一刻只登记一个到点时刻，到那一 tick 才跑动作字段。物品承载的技能（不要求持有）写正值直接被拒，失败原因是 `CARRIED_NOT_INSTANT`；`mxt:composite` 的子技能写正值会让整条复合技能以 `INVALID_FORMULA` 拒掉。`mxt:composite` 自己这一项不读。
+
+### 元素亲和
+
+`element_affinity` 非空时是第一层门槛：没有任何匹配灵根就不放行，失败原因是 `ELEMENT_AFFINITY`。它同时是[伤害管线](/technical/damage)第一层的 `element_modifier` 来源，按匹配灵根的 `element_ability_modifier` 合并进这次施放打出的伤害，多条灵根都匹配时按 `element_affinity_mode` 取平均或取最好。所以伤害公式里**不要**再手写 `* element_modifier`。
+
+### `hidden`
+
+`hidden` 只在**法器的提示框**里被跳过：列这条法器授予的技能时跳过它，仅此一处。它**不参与轮盘那道筛选**：轮盘候选池读的是授予台账（按 id 排序），筛的是**按键型**，`hidden` 不在筛选条件里，所以它不会让轮盘少一格。想让一条按键技能不占轮盘，就别把它的 id 放进轮盘布局；非按键型本来就不会进池子。
+
+### 对象字段的形状
+
+这几个键里装的是**一个对象，而不是类型分派项**（同一个键下面的普通字段）：
+
+| 字段 | 形状 | 说明 |
+| --- | --- | --- |
+| `charges` | `{maximum, recharge_ticks}` | 两个都必填（`NumberProvider`）：最多几次、每多少刻回一次。 |
+| `modifiers[]` | `attribute` + 摊平的 `id` / `amount` / `operation`，外加可选 `value` | `value` 是公式覆盖项：写了它就用它求值，不写用 `amount`（每 tick 重算）。 |
+
+`charges` 的剩余次数是状态（`mxt:charges.remaining`），定义上不写。**只有走完整施放的类型扣它**：施放时剩余不足 1 就以 `NO_CHARGES` 拒掉，施放成功后扣 1。`mxt:flight_control` 与 `mxt:storage` 两个按键技能不扣充能。它是唯一留在技能定义上的状态参数。
+
+`modifiers` 的 `amount` 不是有限数**不在加载期报错**，属性服务在运行期跳过那一条。
 
 ```json
 {
@@ -40,95 +75,165 @@ aside: false
   ],
   "cooldown": 100,
   "condition": {"type": "mxt:sneaking"},
-  "entity_action": {"type": "mxt:damage", "amount": "4 + level"}
+  "entity_action": {"type": "mxt:spawn_particles", "particle": {"type": "minecraft:crit"}},
+  "target_selector": {"type": "mxt:ray", "length": 6, "limit": 1},
+  "target_condition": {"type": "mxt:not_owner"},
+  "bi_entity_action": {"type": "mxt:damage", "amount": "6 + level"}
 }
 ```
 
-技能的数值字段统一使用 `NumberProvider`；技能必须先通过条件和所有资源消耗，才执行行为。`costs` 里 `mxt:resource` 条目的 `amount` 在施法者上下文之外还带上**该数值自己的公式上下文**（资源族变量，如 `realm_rank`、`absorbed_aura`），见[公式变量](../types/formula_variables.md)。
+（这条技能自己带动作字段，见下方[四个动作字段](#action-fields-by-type)。）
 
-## `components` 与统一状态存储
+## 状态存储 {#state-kinds-by-type}
 
-`components` 是内容声明的**状态类型**列表，类型由固有注册表 `mxt:data_storage_type` 分派。每个类型就是一个可存储的对象：**槽的身份是这个类型本身的类**，同一个宿主上每种类型最多存一个值，所以既不需要键名，也不需要另外声明一个槽。存进附件的就是这个对象本身——声明字段与状态字段一起编码，持久化直接用类型自带的 `type` 分派，存储因此不需要认识任何形状。
+一条技能能存哪些**状态种类**由它的 `type` 决定，数据包不声明这件事。定义上唯一能写的状态参数是 `charges`（充能池的 `maximum` 与 `recharge_ticks`），其余都在运行期产生。
 
-| `type` | 声明字段 | 状态字段 |
-| --- | --- | --- |
-| `mxt:empty` | 无 | 无（该类型只是注册表默认项，用来表示"不声明状态"）。 |
-| `mxt:cooldown` | `ticks`（必填） | `duration`：上次实际冷却长度；写入时刻即冷却开始时刻。**通常不用写**：`cooldown` 字段本身就会写这份状态，只有想把声明长度与字段分开时才显式声明（声明的 `ticks` 优先于字段）。 |
-| `mxt:charges` | `maximum`、`recharge_ticks`（均必填） | `remaining`：剩余次数；没有该字段即视为满。充能由运行时自动恢复：距上次写入超过 `recharge_ticks` 就在持有者 tick 里 +1，每次最多一步、满则不再写。 |
-| `mxt:toggle` | `default`（默认 `false`） | `state`：当前开关。 |
-| `mxt:timer` | `duration`（必填） | `ends_at`：计时结束的 tick。 |
-| `mxt:resource` | `resource`（必填） | `amount`：该数值的存量。 |
-| `mxt:target_lock` | `range`（必填） | `target`：被锁定实体的 UUID（字符串）。 |
+状态住在技能自己的附件里，一个技能一份，跟着存档也同步给客户端。每条记录按两个维度寻址：**技能自己的 id** 加 **状态种类**。不同技能 id 互不影响，同一个技能在两个人身上也互不影响。一对地址只有一条记录，写入是替换。
 
-值**跟着拥有它的那份附件一起存**：技能的状态住在 `mxt:ability_holder` 里，地址是「持有者 id + 类型类」——附件本身就是宿主，所以不用再记一个宿主类，存档只记 id，类型由值自己的 `type` 反序列化回来。技能 id 不同就互不影响，同一个技能在不同实体上也互不影响。附件记录每次写入的 tick，读取方由此得到"这次状态是什么时候开始的"。存下去的就是类型实例本身，靠它自带的 `type` 分派编解码，因此存储本身不认识任何家族的形状。
+内容用 `family` 与 `id` 给出这两个维度（`family` 是宿主所在的注册表，今天只有 `mxt:ability`），可写的是这六种：
 
-技能的**最后一次授予来源被撤销时，它名下的全部状态会被清除**：重新授予的技能不会带着上一次的充能回来。由内容写入状态用实体行为 `mxt:modify_storage`（`family`、`id`、`value`），其中 `value` 是一个完整的存储对象，例如 `{"type":"mxt:charges","maximum":3,"recharge_ticks":100,"remaining":2}`——解析它的就是那个 `type` 分派；宿主没声明过的类型会被拒绝并记一条警告。运行时的游标虽然也注册在同一张表里，但属于运行时，`mxt:modify_storage` 会直接拒绝：技能有 `mxt:cast_deadline`、`mxt:channel_pulse`、`mxt:aura_pulse` 三个，天劫有 `mxt:entry_began`、`mxt:idle_countdown` 两个（后两者住在天劫附件自己的单槽里，不进技能这套按 id 寻址的存储）。
+| 状态种类 | 状态字段 |
+| --- | --- |
+| `mxt:toggle` | `default`、`state` |
+| `mxt:timer` | `ends_at` |
+| `mxt:resource` | `resource`、`amount` |
+| `mxt:target_lock` | `target`（UUID 字符串） |
+| `mxt:charges` | `remaining`、`last_change` |
+| `mxt:cooldown` | `duration`、`started_at` |
 
-读取状态用六个实体条件，地址与 `mxt:modify_storage` 完全一致（`family` = 数据包注册表、`id` = 宿主），并且同样只认宿主**声明过**的类型——六种状态因此都能被内容询问：`mxt:storage_toggle`（`expected`，默认 `true`，读 `state`，没写过时读声明的 `default`）、`mxt:storage_timer`（`remaining` 是 `{min?, max?}` 窗口、`ended` 读 `ends_at`；没有 `ends_at` 的计时没有在跑，剩余按 0、`ended` 为真）、`mxt:storage_resource`（`amount` 是窗口；不给窗口就只问"存没存过"）、`mxt:storage_target`（`locked` 默认 `true` 问有没有锁着目标，`max_distance` 额外要求那个 UUID 还能在施动者所在维度里找到且在距离内）、`mxt:storage_charges`（`remaining` 是窗口，读剩余次数；从没花过就读作满，也就是声明的 `maximum`）、`mxt:storage_cooldown`（`remaining` 是窗口、`ready` 问好没好；长度取上次实际冷却时长，内容自己写进去的没带 `duration` 时取声明的 `ticks`，起点是写入那一刻——运行时读的是同一个锚点；从没写过就是没在冷却，剩余 0、`ready` 为真）。`mxt:storage_cooldown` 是唯一**不要求宿主声明过该类型**的：字段 `cooldown` 本身就够（长度取写入时的实际值，没有声明时按 0 计），所以只写一个 `cooldown` 的技能也能被条件读出来。条件在客户端也会被求值（物品 tooltip），此时没有服务端数据包注册表，一律读作不成立。
+**只有宿主声明过的种类才写得进**，撤销技能最后一个授予来源会清掉它名下的全部状态。声明表、读写用的行为与条件、冷却与充能的口径，见[技能施放](/technical/ability)。哪些类型声明了哪些种类，见[技能类型](/datapack/types/other/ability)。
 
 ## 技能类型 {#ability-types}
 
-顶层的 `type` 属于可扩展的固有分派表 `mxt:ability_type`，内置十二种：`empty`、`active`、`triggered`、`modifier`、`aura`、`channelled`、`composite`、`word`、`mount`、`flight_control`、`storage`、`upkeep`。**法器能力与技能共用这张表**——`mxt:storage`、`mxt:upkeep` 与今天的 `mxt:mount` / `mxt:flight_control` 曾经是另一张表 `mxt:artifact_ability_type`（已整张删除），现在它们就是普通的技能类型，任何来源（法器、功法、命令、脚本）都能授予。
+顶层的 `type` 取自固有分派表 `mxt:ability_type`，内置十四种：`empty`、`active`、`triggered`、`modifier`、`aura`、`interval`、`channelled`、`targeted`、`composite`、`word`、`mount`、`flight_control`、`storage`、`upkeep`。法器、功法、灵根、体质、技能书、命令与脚本授予的都是同一种技能。
 
-其中两种类型会改变行为的执行时机：
+**类型与各自读的字段见[技能类型](/datapack/types/other/ability)**，那里一个类型一节。这一页只留类型之间的共同部分：谁会在什么时候跑动作字段，以及定向施放怎么读。
 
-| 类型 | 专属字段 | 行为执行时机 |
-| --- | --- | --- |
-| `mxt:channelled` | `tick_interval`（默认 `1`）、`upkeep_costs`（默认 `[]`） | 激活时执行一次 `entity_action` 与目标行为，随后每个 `tick_interval` 在维持资源扣除成功后各执行一次，直到自身被释放或维持失败。它是持续效果唯一的行为入口。 |
-| `mxt:composite` | `abilities`（必填）、`all_required`（默认 `true`） | 自身不执行行为；`all_required: false` 时只执行列表首个技能，为 `true` 时按列表顺序提交全部成本后依次执行每个子技能的行为。 |
+`cooldown` 与 `damage_condition` 写在 `type` 同级，但只有一部分类型读：
 
-三个**需要承载物品**的类型（它们是法器等物品侧技能的写法，被技能书授予时语法合法但没有物品可用，会在使用时拒绝并报"没有承载物"）：
+- **`cooldown`**（`NumberProvider`，默认 `0`）：冷却长度，写进 `mxt:cooldown` 状态。会付款的类型读它：`mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` / `mxt:word` / `mxt:targeted` / `mxt:flight_control` / `mxt:storage`。**不付款的类型写了也没人读**：`mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:empty`，以及 `mxt:composite` 自己（只有子技能会付款）——这些技能被命令、脚本或已保存的轮盘格子强制施放时才写一次。
+- **`damage_condition`**（`DamageCondition`，默认 `mxt:always`）：**只有 `mxt:triggered` 读**。它订阅 `mxt:hurt` 信号时先过这个条件，不成立就跳过这次信号。别的类型写了等于没人读，要挑伤害场景请用 `condition` 或动作里的条件。
 
-| 类型 | 专属字段 | 作用 |
-| --- | --- | --- |
-| `mxt:mount` | `speed`（必填 `NumberProvider`）、`seats`（默认 `1`，最多 `4`）、`sit`（默认 `false`＝站）、`display`（载具怎么画，默认＝"放平 + 剑刃朝前 + 两倍大"）、`width` / `height`（默认 `0.35` / `0.12`）、`step_height`（默认 `0`）、`seat_offsets`、`mount_action`（`on_mount` / `on_dismount` / `tick`）、`trail`（尾迹粒子） | **载具（数据）**：一件法器被御器之术取走之后，飞的是什么。它**从不被发动**，只读自己的字段、顶层 `costs`（**每 tick 的燃料**：先扣载具里那件法器存的同门灵气，余额才由驾驶者付；可以写成小数）与 `condition`（每 tick 复查，不满足即落地）；**其余顶层字段写了会在加载期报错**（`cooldown` / `components` / `cast_time` / `entity_action` / `target_selector` / `target_condition` / `bi_entity_action` / `modifiers` / `damage_condition` / `element_affinity` / `element_affinity_mode` / `item_action`，报错会逐个点名）。撞到方块或地面就落剑。`seats` 是**总人数含驾驶者**——驾驶者必须是玩家，其余座位谁都能坐（对载具按右键上座）；`sit` 是全车一个姿势。驾驶者用移动键操作：`跳跃`上升、下降键（默认 `X`，可改绑）下沉、`疾跑`给 1.5 倍水平速度，前后左右**默认沿视线方向**（抬头爬升、低头俯冲，服务端配置「飞行 → 朝视线方向飞行」，默认开；关掉后四个方向都只在水平面上），潜行仍是原版的下坐骑。位移只在服务端算。`mount_action` 的三个行为**都跑在驾驶者身上**（`on_mount` 起剑那一刻、`on_dismount` 落剑那一刻——在下座之前跑、`tick` 每 tick 且燃料已付），`trail` 则由**载具自己**发（`particle`（**对象形式** `{"type": "minecraft:end_rod"}`，裸 id 字符串会在加载期报 `Not a JSON object`）/ `interval` / `count` / `speed` / `spread` / `offset_x` / `offset_y` / `offset_z` / `moving_only`，spread 与 offset 的单位是格）。 |
-| `mxt:flight_control` | `hand`（`main` / `off` / `either`，默认 `either`＝主手优先）、`speed_multiplier`（默认 `1`） | **御器之术（需要按键）**：按一下从主手、其次副手找一件声明了 `mxt:mount` 的法器，把那件东西**收进载具实体**并骑上去；再按一下落剑，**落地不收费**。它通常由功法授予（`granted_abilities`），灵根 / 体质 / 技能书 / 命令 / 脚本同样能授予；**没有它，轮盘上根本没有这一格**。起剑一次的价格是它自己的 `costs`，冷却是它自己的 `cooldown`。 |
-| `mxt:storage` | `slots`（必填 `NumberProvider`） | 这件承载物自带容器：格数求值后**按 9 向上取整**并夹在 6 行以内（最多 54 格），内容写在物品组件 `mxt:artifact_storage` 上，只认主人与服务端。它也是"需要按键"的：轮盘上按一下打开箱子，没有状态。 |
-| `mxt:upkeep` | `interval`（默认 `20`）、`on_fail`（默认 `mxt:no_op`）、`owner_only`（默认 `true`） | **周期性代价**：承载期间每 `interval` 刻结算一次，把技能自己的 `costs` **全部一起**扣掉（全有或全无）。付不出时跑 `on_fail`（对持有者与该物品堆执行）。时钟是**世界时间**：只在能被 `interval` 整除的刻结算。它**不是**"需要按键"的：不进轮盘。 |
+### 每个类型读哪些字段 {#fields-per-type}
 
-其余六种类型与行为字段的关系：
+每种类型从**同一个 JSON 对象**里读自己那几个键，`type` 是平铺分派、不是嵌套对象。**没被列出来的键写了也不读**。两条最容易踩的：
 
-| 类型 | 专属字段 | 说明 |
-| --- | --- | --- |
-| `mxt:active` | 无 | 可从轮盘施放；**它没有 `slot` 字段**（2026-09-25 删除）：技能落在轮盘哪一格由**玩家自己的 12 格布局**决定，从来不是技能定义的一部分。旧包里写了 `"slot": "..."` 会在**加载期报错并点名 `slot`**（这是"这个类型永远不读的已知键"，不是静默忽略），删掉这一行即可。 |
-| `mxt:triggered` | `triggers`（默认 `[]`）、`chance`（默认 `1`） | 当它的某个事件规则匹配时触发，并按 `chance` 掷一次。`triggers` 的每一项是一个 `trigger_type` 条目，除内置信号外还可以是脚本发布的 `mxt:js` 自定义信号。 |
-| `mxt:modifier` | 无 | 被动属性：不执行 `entity_action`，只在被授予期间把 `modifiers` 贡献给持有者的属性，并且**每 tick 重新过一遍 `condition`**（不满足时贡献会被撤下）。 |
-| `mxt:aura` | `interval`（默认 `20`）、`radius`（默认 `4`） | 范围脉冲：每隔 `interval` 刻对 `radius` 范围内的实体施加一次，同样每轮重算 `condition`。 |
-| `mxt:word` | `effect`（必填）、`requires_operator`（默认 `true`）、`amount`（默认 `0`） | 终端载荷：`effect` 是一份**代码白名单**，只有 `self_heal` 与 `purge_self_curses` 两个值（`amount` 只对前者有意义），数据包**加不了第三个**——言灵不是"任意命令字符串"；要别的效果请用普通技能类型加 `entity_action`（如 `mxt:heal`）。它不会再执行目标行为。 |
-| `mxt:empty` | 无 | 什么都不做，也是这张表的默认项。 |
+- **`cooldown` 与 `damage_condition` 不属于通用字段**，它们写在 `type` 同级，但只有上一条列出的那些类型读。
+- **四个动作字段不属于通用字段**，只有会跑动作的类型读，见下一节。
+
+### 四个动作字段 {#action-fields-by-type}
+
+`entity_action`、`target_selector`、`target_condition`、`bi_entity_action` 写在**技能顶层**，与 `type` 平级，默认分别是 `mxt:no_op` / `mxt:self` / `mxt:always` / `mxt:no_op`。它们不是通用字段：只有会跑动作的类型读，别的类型写了不报错也不生效。
+
+同一条链里的顺序永远是：`entity_action`（先跑）→ `target_selector` 取目标 → 每个目标过 `target_condition` → 通过才跑 `bi_entity_action`。一个目标失败不影响别的目标，动作抛异常也只记一条日志、不打断其余目标。`target_selector` 自己的字段见[技能目标选择器类型](/datapack/types/other/ability-selector#ability-target-selector-type)。
+
+会跑这套字段的是五个类型，各自按**自己的时机**跑：
+
+| 类型 | 什么时候跑这四键 |
+| --- | --- |
+| `mxt:active` | 按下的那一次（有 `cast_time` 时是走完的那一 tick）。 |
+| `mxt:triggered` | 触发器命中、概率通过、费用付掉之后。 |
+| `mxt:channelled` | 激活时一次，随后每个 `tick_interval` 在维持资源扣成功后各一次。 |
+| `mxt:aura` | `interval` 到点的脉冲**按半径逐个找实体**，对每个实体只跑 `target_condition` + `bi_entity_action`（脉冲不读 `target_selector` 与 `entity_action`）；被一次性发动（命令 / 脚本 / 符箓）时按普通路径跑一次整套。 |
+| `mxt:interval` | 自己按 `interval` 跑整套；被命令或脚本一次性发动时按普通路径跑一次。 |
+
+`mxt:word` 自带终端载荷（它自己的 `effect` 字段），不读这四个键；`mxt:composite` 委托给子技能，也不读；`mxt:targeted` 同样不读（它只挑目标、只跑载荷的单目标那一半）；`mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` 也不读。
 
 ```json
 {
-  "type": "mxt:modifier",
-  "condition": {"type": "mxt:sneaking"},
-  "modifiers": [{"attribute": "minecraft:armor", "id": "example:guard", "amount": 2, "operation": "add_value"}]
+  "type": "mxt:active",
+  "costs": [{"id": "example:qi", "amount": 10}],
+  "cooldown": 40,
+  "entity_action": {"type": "mxt:spawn_particles", "particle": {"type": "minecraft:flame"}},
+  "target_selector": {"type": "mxt:ray", "length": 16},
+  "target_condition": {"type": "mxt:not_owner"},
+  "bi_entity_action": {"type": "mxt:set_on_fire", "ticks": 60}
 }
 ```
 
+### 定向施放（`mxt:targeted`） {#targeted}
+
+`mxt:targeted` 按下时走一次完整施放：自己的 `costs` / `cast_time` / `condition` / `cooldown` / `charges` / 元素亲和照常付一次、查一次，与 `mxt:active` 完全一样。它只读三个键：`target_selector`（**必填**，距离与形状写在这里）、`ability`（**必填**，每个目标身上跑的载荷技能，**只收具体 id、不收 `#标签`**）与 `cooldown`（默认 `0`，长度写进 `mxt:cooldown`）。字段表见[技能类型 · `mxt:targeted`](/datapack/types/other/ability)。
+
+它**不读**自己顶层的 `entity_action` / `target_condition` / `bi_entity_action`。每个被 `target_selector` 选中的实体，先过**载荷技能自己的** `target_condition`（方向是施法者 → 目标），通过才跑**载荷的** `bi_entity_action`；**行为者始终是按下的人**，伤害与效果都记在他头上，与 `mxt:aura` 的逐目标脉冲同一条口径。载荷自己的 `costs` / `cast_time` / `cooldown` / `charges` / `condition` / 元素亲和一个都不读，它的 `entity_action` 与 `target_selector` 同样不读，所以它必须是**自己会跑四个动作字段的五个类型之一**。价格与冷却全算在这条 `mxt:targeted` 自己头上，一次施放只付一次。
+
+**落空在付款之前判**，所以按到没人的地方不花钱：`target_selector` 一个实体都没选到、或者选到的全被载荷的 `target_condition` 挡掉＝`NO_TARGET`（没有符合条件的目标）；载荷类型根本没有"单目标那一半"＝`NOT_APPLICABLE`（指定的技能不能作用在目标身上）。写进 `mxt:composite` 的子技能时，这两个原因也在**预演**阶段就判掉，同样一分钱不花。`cast_time > 0` 时这一步在唱完的那一 tick 判，失败那一次会在动作栏报「施放失败：<原因>」。
+
+**效果落在哪里**：载荷里**作用于目标**的行为（`mxt:damage_target` / `mxt:heal_target` / `mxt:apply_effect` 这类以实体为准的）不受影响；**要摆个东西出来**的行为（`mxt:spawn_lightning`、`mxt:explode`、`mxt:spawn_particles`、`mxt:spawn_effect_cloud`、`mxt:play_sound`、`mxt:block_action` 这些按"这次施放在哪儿"落点的）默认落在**发动地点**。轮盘、命令、脚本发动没有地点，于是落在每个目标自己的位置；**符箓与展示架发动有地点**（符箓 / 架子那里），于是全都落在符箓脚下。要让它们**一律落在目标自己的位置**，把这类行为包进 `mxt:target_action` 并写 `"use_target_position": true`：
+
 ```json
-{
-  "type": "mxt:channelled",
-  "tick_interval": 20,
-  "upkeep_costs": [{"id": "example:qi", "amount": 1}],
-  "entity_action": {"type": "mxt:add_resource", "resource": "example:qi", "amount": 2}
-}
+{"type": "mxt:target_action", "use_target_position": true,
+ "action": {"type": "mxt:spawn_lightning", "visual_only": true, "color": 11962854}}
 ```
+
+`mxt:target_action` 的默认值仍是沿用发动地点；想在**施法者**身上摆东西用 `mxt:actor_action`。
+
+范围技能与射线技能是同一种类型写出来的两种，要换的不是类型，是 `target_selector`，而两者都必须写出自己的距离。
 
 ```json
 {
-  "type": "mxt:composite",
-  "abilities": ["example:meditate_channel"],
+  "type": "mxt:targeted",
+  "target_selector": {"type": "mxt:area", "radius": 8, "limit": 5},
+  "ability": "example:flame_mark",
+  "costs": [{"id": "example:qi", "amount": 12}],
   "cooldown": 100
 }
 ```
 
-顶层技能若要是可从上手栏释放的引导技，应把 `mxt:channelled` 作为 `mxt:composite` 的子技能：`mxt:active` 与 `mxt:channelled` 是互斥的单一 `type`，而复合技能的子技能才会成为活跃引导。
+`example:flame_mark` 自己带 `target_condition` 与 `bi_entity_action`（它是这套施放里的载荷），按下那条 `mxt:targeted` 的人付钱、也被记成行为的来源。
 
-### 技能只定义一处 {#ability-single-definition}
+### 按键、命令与脚本
 
-技能永远只是一个 `mxt:ability` 条目，**`data/<命名空间>/mxt/ability/<路径>.json` 是它唯一的定义处**，它的身份就是自己的注册表 id（`name` / `description` 省略时按上面那条四段式默认键生成，路径里不会再带什么后缀）。宿主（[法器](./artifact.md) 的 `abilities`、符箓与功法的 `granted_abilities` 等）只写它的 **id** 或 **`#标签`**，不写 `key`，也不能把技能整个抄进去：**"写在宿主定义里的内联技能"这个形状已经取消**，旧写法会让宿主那份定义整个不可解析。
+**按键型只有五个**：`mxt:active` / `mxt:channelled` / `mxt:targeted` / `mxt:storage` / `mxt:flight_control`。前三个按一下就走一次完整施放、自己付款；`mxt:flight_control` 与 `mxt:storage` 短一截，只查持有、冷却、条件与代价，**不写充能、也不跑动作字段**。
 
-技能的计算字段均可使用 NumberProvider/表达式。技能类型写在**顶层** `type` 上（不是嵌套的 `ability` 对象），行为写在 `entity_action` / `bi_entity_action` 中，并通过 `costs` 声明资源或物品消耗：
+**轮盘池只收按键型**：候选池读授予台账、按 id 排序，再用按键型过滤。所以 `mxt:triggered` / `mxt:aura` / `mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:composite` / `mxt:word` / `mxt:empty` 都**不会进轮盘池**，`hidden` 也不是这道筛选的条件。轮盘按下时的分派是：按键型走激活，**其余回落成一次普通施放**——这一路只服务于**已保存的轮盘格子 / 布局**，布局落盘，里面可能点名一条不可按键的技能，所以服务端仍然受理。
+
+**命令与 KubeJS 是另一条路**：`/mxt ability cast` 与 KubeJS 的施放入口对任何类型都直接施放，物品承载也走同一条，那几次照常过完整套闸门（条件、代价、`cast_time`、冷却、充能）。
+
+技能行为由服务端处理，客户端轮盘只发送"选中了哪一类的哪个 id"，授予、条件、消耗与冷却全部由服务端判定。
+
+一次技能发动的先后顺序：
+
+```mermaid
+sequenceDiagram
+    participant C as 客户端轮盘
+    participant S as 服务端
+    participant H as 技能的状态附件
+    participant R as 技能自己的 costs
+
+    C->>S: 发送使用请求
+    S->>H: 读这份技能的冷却状态
+    H-->>S: duration 与开始那一刻的 started_at
+    S->>S: 求值 condition 与元素亲和门槛
+    S->>R: 按 costs 扣除资源或物品
+    alt 冷却、条件、门槛或消耗不通过
+        S-->>C: 拒绝，不执行行为
+    else 全部通过
+        S->>S: 跑这次发动自己的四个动作字段
+        S->>H: 写入实际冷却长度与开始 tick
+        S-->>C: 施放结果
+    end
+    opt 技能是 mxt:channelled
+        S->>R: 每个 tick_interval 扣 upkeep_costs
+        S->>S: 扣除成功后跑一次这四个动作字段
+        S-->>C: 释放或维持失败后引导结束
+    end
+    opt 技能是 mxt:interval
+        S->>H: 每 tick 驱动它自己的状态
+        S->>S: 世界时间能整除 interval 且它算作生效时跑这四个动作字段
+    end
+```
+
+顶层技能若要是可从上手栏释放的引导技，应把 `mxt:channelled` 作为 `mxt:composite` 的子技能：`mxt:active` 与 `mxt:channelled` 是互斥的单一 `type`，而复合技能的子技能才会成为活跃引导。`mxt:composite` 自己的 `costs` / `cooldown` / `charges` 都不生效，钱与冷却都记在**子技能自己的 id** 下。
+
+```json
+{
+  "type": "mxt:composite",
+  "abilities": ["example:meditate_channel"]
+}
+```
+
+`example:iron_palm` 是一条带上动作字段的 `mxt:active` 技能：
 
 ```json
 {
@@ -136,34 +241,4 @@ aside: false
   "costs": [{"type": "mxt:resource", "resource": "mxt:spirit_power", "amount": 10}],
   "entity_action": {"type": "mxt:damage", "amount": "8 + level"}
 }
-```
-
-技能行为由服务端处理，客户端轮盘只发送"选中了哪一类的哪个 id"（`WheelActionC2SPayload(kind, id)`），授予、条件、消耗与冷却全部由服务端判定。
-
-把这条规则摊成时序，一次技能发动的先后顺序如下。
-
-```mermaid
-sequenceDiagram
-    participant C as 客户端轮盘
-    participant S as 服务端
-    participant H as mxt:ability_holder
-    participant R as 技能自己的 costs
-
-    C->>S: 发送使用请求
-    S->>H: 读这份技能的冷却状态
-    H-->>S: 上次写入的 tick 就是冷却起点
-    S->>S: 求值 condition 与元素亲和门槛
-    S->>R: 按 costs 扣除资源或物品
-    alt 冷却、条件、门槛或消耗不通过
-        S-->>C: 拒绝，不执行行为
-    else 全部通过
-        S->>S: 执行 entity_action 与目标行为
-        S->>H: 写入实际冷却长度与起点
-        S-->>C: 施放结果
-    end
-    opt 技能是 mxt:channelled
-        S->>R: 每个 tick_interval 扣 upkeep_costs
-        S->>S: 扣除成功后执行一次行为
-        S-->>C: 释放或维持失败后引导结束
-    end
 ```

@@ -1,43 +1,39 @@
 ---
 title: Spirit Root (spirit_root)
-description: Defines a spirit root bound to one or more elements that grants cultivation bonuses and abilities.
+description: "Defines a spirit root: the elements it binds and their shares, the cultivation multiplier, the element affinity multiplier and its conflicting elements."
 aside: false
 ---
 
-# Spirit Root (spirit_root)
+# Spirit Root (spirit_root) {#spirit_root}
 
-A `spirit_root` is a stackable source attached to an entity that is bound to one or more elements and modifies cultivation and element affinity.
+File location: `data/<namespace>/mxt/spirit_root/<path>.json`
 
-## File Location
-
-Spirit root files go in `data/<namespace>/mxt/spirit_root/` within your datapack.
-
-**Purpose**: A spirit root bound to one or more elements.
-
-The filename corresponds to its ID. For example, `data/example/mxt/spirit_root/fire_root.json` has the ID `example:fire_root`.
-
-## Fields
+A spirit root ties a body to one or more elements. It hands out a cultivation multiplier, an element affinity multiplier and abilities, and it declares which elements may not share the body with it. True root, false root and waste root play is nothing more than "write a few elements and their shares".
 
 | Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | Text Component | `spirit_root.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `spirit_root.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
-| `elements` | `ElementWeight[]` | **required, non-empty** | The elements this root binds. **Several are allowed** - a mixed, false or broken root is "how many you write, and in what proportion". An entry may be a bare entry id (the whole share of that one element) or `{"element": "…", "weight": 0.7}`. **`weight` is a proportion, not a multiplier**: shares are normalised when read, so `[1, 1]` and `[0.5, 0.5]` mean the same thing and a single-element root is unaffected by the number on it. `weight` defaults to `1` and must be finite and positive. An empty array, or the same element twice, is a load error. |
-| `cultivation_multiplier` | `NumberProvider` | `1` | Cultivation multiplier. Written as a number it is validated as finite and non-negative while loading. |
-| `element_ability_modifier` | `NumberProvider` | `1` | Element affinity ability multiplier: when an ability whose `element_affinity` names **any** element of this root is cast, it is a factor of layer one of [damage settlement](../../technical/damage.md) (**one root contributes once**, however many of its elements matched; several matching roots are averaged or best-picked by `element_affinity_mode`), and it is also readable in formulas as `element_modifier`. Written as a number it is validated as finite and non-negative while loading. |
-| `rarity` | String | `common` | Rarity marker; the info panel and `/mxt spirit_root list` show the raw text, and the `mxt.rarity.<rarity>` translation is used when one exists. |
-| `granted_abilities` | `HolderOrTag<ability>[]` | `[]` | Granted abilities. |
-| `conflicting_elements` | `HolderOrTag<element>[]` | `[]` | The elements that **cannot coexist in one body**: granting a root that holds an element listed on a held root — or the other way round — is rejected, **either side matching is enough**. An element carrying `mxt:disabled` takes no part in the question. |
+| --- | --- | --- | --- |
+| `name` | Text Component | `spirit_root.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `spirit_root.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is stored and read, but no screen draws it. |
+| `elements` | Element and weight array | **required and non-empty** | The elements this root is bound to; several may be written. |
+| `cultivation_multiplier` | `NumberProvider` | `1` | Cultivation multiplier. |
+| `element_ability_modifier` | `NumberProvider` | `1` | Element affinity ability multiplier. |
+| `rarity` | String | `common` | Rarity marker. |
+| `granted_abilities` | Array of ability ids or `#tags` | `[]` | Granted abilities. |
+| `conflicting_elements` | Array of element ids or `#tags` | `[]` | The elements it **cannot share a body with**. |
 
-::: info Grouping and Filtering
-Spirit root grouping, compatibility and filtering use vanilla tags at `data/<namespace>/tags/mxt/spirit_root/<name>.json`. There are no duplicate custom grouping fields. The `spirit_root` field of both the `mxt:has_spirit_root` entity condition and the loot condition accepts an entry, a tag or an array of them, so "any fire root" is one tag.
-:::
+An entry of `elements` may be a bare element id (which takes the whole share of that root), or `{"element": "…", "weight": 0.7}`. `weight` is a share, not a multiplier: it is normalised against the sum when read, so `[1, 1]` and `[0.5, 0.5]` mean the same thing and the number on a single-element root changes nothing. `weight` defaults to `1` and must be finite and positive. An empty array, or the same element written twice, is a load error.
 
-`conflicting_elements` is not a reading of the element relations: two elements may be opposed in the damage pipeline and still be perfectly possible to hold together, and a pack that wants "fire and water do not mix in one body" says so here. The check is symmetric, so writing the rule on either root is enough, and a switched-off root takes no part in it. A disabled element does not count as an element at all: if either side of the pair is out of play, the rule simply does not hold. **It has a second consumer**: when an element of the attacker's main-hand item is listed as conflicting by one of their active roots, that element's `conflict_multiplier` multiplies everything the attacker deals — see [element](./element.md), "Conflict With The Wielder".
+`cultivation_multiplier` and `element_ability_modifier` are both validated as finite and non-negative at load time when they are written as numbers.
 
-`element_ability_modifier` and the element relations are two independent paths: the relations (`overcomes` / `adapted_to`) say who overcomes whom, and both sides' spirit roots take part in that; this multiplier says what it is worth when *this body* casts the element it is attuned to, and it is decided only by the casting side and by **this one casting**. The same fire technique therefore produces different numbers from a fire root at 1.1 and one at 1.3, while the half that sits on the opponent is decided by the opponent's element alone.
+How `element_ability_modifier` is measured: when an ability whose `element_affinity` names **any** element of this root is cast, it is a factor of layer one of [damage settlement](/en/technical/damage) (**one root contributes once**, however many of its elements matched; several matching roots are averaged or best-picked by `element_affinity_mode`), and formulas can read it as `element_modifier` too. It and the element relations are two independent paths: the relations (`overcomes` / `adapted_to`) say who overcomes whom, and both sides' spirit roots take part in that; this multiplier says what this body is worth when it casts the element it is attuned to, and it is decided only by the casting side and by **this one cast**. So the same fire technique lands different numbers off a fire root at 1.1 and one at 1.3, while the half that sits on the opponent is decided by the opponent's element alone.
 
-**How a root with several elements is read** (the part content packs get wrong, so it is spelled out): (1) **which elements the body carries** is the union and **does not depend on the weights** - `mxt:has_element`, loot conditions, element relations and "what element is this strike" all read that set; (2) **cultivation affinity** is the **weighted average** (`1 + Σ(weight × concentration of that element) / Σweight`), so the element with the larger share matters more; (3) **the conflict penalty** is that same weighted average of the elements' opposition before multiplying `aura_zone.element_conflict_penalty`, so a mostly-fire mixed root is punished harder in water than a mostly-water one, and both less than a pure fire root; (4) **the ability modifier** is counted once and **ignores the weights** (see the table above); (5) **exclusion** is asked set against set and **ignores the weights**. `aura_zone.element_fit_bonus` only asks whether any of the elements' aura is here at all, so it ignores them too.
+`rarity` is shown as raw text by the info panel and `/mxt spirit_root list`, and the `mxt.rarity.<rarity>` translation is used when one exists.
+
+Spirit root grouping, compatibility and filtering use vanilla tags (`data/<namespace>/tags/mxt/spirit_root/<name>.json`). The `spirit_root` field of both the entity condition and the loot condition takes an entry, a tag or an array of them, so "any fire spirit root" is one tag.
+
+`conflicting_elements` and the element relations are two different things: two opposed elements can still be held at once, and whether that is forbidden is up to this field; granting a further root that lists an element of a held one (or the other way round) is rejected, **either side matching is enough**, and a switched-off root takes no part in that check. It is also read once in damage settlement: when an element of the attacker's main-hand item is listed as conflicting by an active root, that element's `conflict_multiplier` multiplies everything the attacker deals — once per element in hand, and several conflicting roots at the same time still do not multiply it twice. See [element](./element.md), "Conflicting With The Holder's Spirit Root".
+
+**How a root bound to several elements is read** (the place content writers guess wrong, so it is spelled out one by one): (1) **which elements are held** is the union and **has nothing to do with the weights** — `mxt:has_element`, loot conditions, element relations and "what element is this strike" all read that set; (2) **cultivation affinity** is the **weighted average** (`1 + Σ(weight × that element's concentration) / Σweight`), so the larger share is the one that pays; (3) **the element conflict penalty** is the same weighted average, multiplied by `aura_zone.element_conflict_penalty`, so a mostly-fire dual root is punished harder in water than a mostly-water one, and both less than a pure fire root; (4) **the ability modifier** is counted once and **ignores the weights** (see the table above); (5) **exclusion** is decided over the element sets, both ways, and **ignores the weights**. `aura_zone.element_fit_bonus` only asks whether any of its own auras is present here, so it ignores the weights too.
 
 ```json
 {
@@ -49,22 +45,10 @@ Spirit root grouping, compatibility and filtering use vanilla tags at `data/<nam
 }
 ```
 
-## Switching a Root or Physique Off
+## Holding and Switching Off {#holding}
 
-Every **held** spirit root and physique can be switched **off without being lost**. A switched-off root or physique still counts as held — `mxt:has_spirit_root` / `mxt:has_physique` stay true and it can still be removed normally — but it contributes no element, no cultivation multiplier, no granted abilities, no passive attributes, no damage multipliers and no `conflicting_elements` rule. The state lives in the `spirit_identity` attachment as `disabled_spirit_roots` / `disabled_physiques`, so it is saved and synchronised with the entity.
+Granting and removing both go through entity actions: `mxt:grant_spirit_root` and `mxt:remove_spirit_root` (the physique side is `mxt:grant_physique` and `mxt:remove_physique`).
 
-This module has **no player-facing entry point** — there is no keybind and no screen. The operations are the script-side `MxtSpiritRoots.setEnabled` / `MxtPhysiques.setEnabled`, or the administrator command `/mxt spirit_root enable|disable` / `/mxt physique enable|disable`, and how it is wired up is still left to content packs or modpacks. That makes it a different mechanism from the `mxt:disabled` data pack tag, which seals a whole definition and hides it from every consumer: the switch only governs the one entry that was switched off, and that entry is still held.
+Every spirit root and physique a body already holds can be **switched off** on its own without being lost: once it is off, its elements, cultivation multiplier, granted abilities, passive attributes, damage multipliers and the `conflicting_elements` it declares all stop applying, yet it is still "held" (`mxt:has_spirit_root` / `mxt:has_physique` still answer true, and it can still be removed normally). That state is the `disabled_spirit_roots` / `disabled_physiques` in the `spirit_identity` attachment, and it is saved and synchronised along with the entity.
 
-## Example
-
-```json
-{
-  "elements": ["example:fire", "example:water"],
-  "cultivation_multiplier": 1.25,
-  "element_ability_modifier": 1.1,
-  "rarity": "rare",
-  "granted_abilities": ["example:fire_control"],
-  "conflicting_elements": ["example:water"]
-}
-```
-
+This module has **no player-facing entry point** (no keybind and no screen): the operation is the script-side `MxtSpiritRoots.setEnabled` / `MxtPhysiques.setEnabled`, or the administrator command `/mxt spirit_root enable|disable` / `/mxt physique enable|disable`, and how it is wired up is still left to content packs or modpacks. That is a different question from taking the definition out of the data pack: the switch only governs the one entry that was switched off, and that entry is still held, while removing a definition means the whole definition is gone (write `neoforge:conditions`, see [Disabling a Definition](../overview.md#disabling-a-definition)).

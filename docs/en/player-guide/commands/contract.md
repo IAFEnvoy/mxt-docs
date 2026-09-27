@@ -23,7 +23,7 @@ What a data pack can do is **narrow** it: a [contract_type](/en/datapack/json/co
 
 `bind` (and the Contract Scroll) asks in a fixed order, and **the payment comes last**:
 
-1. Does it already have a contract? → Can it be contracted at all? → Is this contract type disabled by `#mxt:disabled`?
+1. Does it already have a contract? → Can it be contracted at all?
 2. The interface's `acceptsContract` → `owner_condition` → `creature_condition` → the per-owner limit `max_owned`;
 3. The `Pre` event (cancellable, and **nothing has been paid yet**);
 4. The `costs` payment → the record is written → the owner index is written → the creature's `onContractBound`.
@@ -50,4 +50,4 @@ The player's entry point is the **Beast Taming Bell**: right-clicking one of you
 
 ## Refusal reasons
 
-The scroll, the bell, the bag and this command all print from **one** table of texts, keyed `contract.mxt.failure.<lowercase enum name>`: `already_bound`, `disabled`, `not_contractable`, `owner_conditions`, `creature_conditions`, `limit_reached`, `insufficient_cost`, `not_bound`, `not_owner`, `recall_cooldown`, `cancelled`, `unsupported_behavior` (the creature does not take that order) and `behavior_refused` (it takes it, but refused this one).
+The scroll, the bell, the bag and this command all print from **one** table of texts, keyed `contract.mxt.failure.<lowercase enum name>`: `already_bound`, `not_contractable`, `owner_conditions`, `creature_conditions`, `limit_reached`, `insufficient_cost`, `not_bound`, `not_owner`, `recall_cooldown`, `cancelled`, `unsupported_behavior` (the creature does not take that order) and `behavior_refused` (it takes it, but refused this one).

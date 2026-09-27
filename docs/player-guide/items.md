@@ -15,11 +15,15 @@ MiXianTu 不为每个玩法预设具体数值，但提供少量通用承载物�
 | 注册表 | 用途 |
 | --- | --- |
 | `item_binding` | 给现有物品附加行为、条件、灵根或通用显示。 |
-| `weapon_binding` | 配置伤害、攻击速度、属性和攻击/使用/Tick 行为。 |
+| `weapon_binding` | 给武器附加原版属性修正（攻击力与攻速也写在这里）与攻击/使用/Tick 行为。 |
 | `pill_binding` | 配置丹药消耗和行为。 |
-| `technique_binding` | 描述一门功法**怎么被读**——长按时长、姿势、音效、品质链与条件，以及本体替它生成载体时用哪个物品。**这一叠是不是手册、教的是哪门功法，由堆上的物品组件 `mxt:technique` 决定**，不由本表决定。 |
+| `tool_binding` | 认领工具物品，并给出它们解锁的锻打方式。 |
+| `blueprint_binding` | 认领图纸物品，并给出它们提供的锻造蓝图。 |
+| `technique_binding` | 描述一门功法**怎么被读**——长按时长、姿势、音效、品质链与条件，以及本体替它生成载体时用哪个物品。**哪一叠是手册、教的是哪门功法，先看堆上的物品组件 `mxt:technique`；没有组件时才看声明的 `items`。** |
 
-物品匹配支持单个物品、原版物品标签、通配符、正则和混合数组。`carrier_item` 是例外：它只接受单个物品 id。`technique_binding` 按功法 id 匹配，不再按物品匹配。
+物品匹配支持单个物品、原版物品标签、通配符、正则和混合数组。`carrier_item` 是例外：它只接受单个物品 id。`technique_binding` 的声明按功法 id 匹配，它的 `items` 是可选的那条路。
+
+**逐件附加的内容走物品组件**：`mxt:quality_chain`（单值，组件优先）、`mxt:element`（列表，与定义取并集）、`mxt:pill`（按字段覆盖丹药定义）、`mxt:technique_reading`（按字段覆盖功法阅读参数）、`mxt:forging_methods` 与 `mxt:forging_blueprints`（列表，与定义取并集）——它们只写给这一堆。`conditions` 与武器的数值/动作**没有**组件：想逐件改就为那一堆写一条定义、用 `items` 点名，武器的属性数值则写原版 `minecraft:attribute_modifiers`。
 
 ## 灵气物品
 
@@ -64,7 +68,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 木/石令牌 | `mxt:wooden_token`、`mxt:stone_token` | `mxt:token` | 统一承载 `kind`、`value`、`owner`，供秘境和交易等权限系统共用。 |
 | 鉴定镜 | `mxt:identification_mirror` | 消费 `mxt:identification` | 统一解析带有鉴定组件的物品；具体待鉴定物品由内容包或其他模组提供。 |
 | 符笔、符墨 | `mxt:talisman_brush`、`mxt:talisman_ink` | 无 | 制符和阵法内容的通用基础输入，与空白符纸配套，具体配方由数据包或 KubeJS 提供。 |
-| 符箓 | `mxt:talisman` | `mxt:talisman` + `mxt:spirit_storage` | 保存**已铭刻的符箓**：一个按追加顺序排列的 `talisman` 定义条目列表，加上一个模式字段 `mode`（`"fire"` 缺省／`"store"`），空列表就是刚做出来的空载体。手持按住右键灌注灵气（容量 = 所铭刻定义的 `aura_cost` 合计，按灵气分别计量），灌满那一刻铭刻的能力全部发动并消耗一件本体（`store` 模式除外：它只积累，不自动发动）。**潜行 + 右键切换模式**，`store` 且已灌满时潜行使用不切换而是**直接发动**。摆在展示架上被填满时按模式处理，并以展示架的位置作为激发地点——公式与位置类行为都用它（见 [灌注与激发](/datapack/json/talisman)）。铭刻（写符）服务尚未接入，`mxt:talisman` 组件目前可以手写或用物品组件语法直接写入（`/talisman give` 也能发）；灌注进度与灵石共用同一个存储组件 `mxt:spirit_storage`（按灵气记已灌单位，缺省表示一点都没灌）。**徒手右键与灌满自动发动走同一个入口**，但两条规则各按"在哪"分：**冷却只是手上的闸门**（服务端配置「符箓 → 使用冷却」，默认 20 刻、0 关闭），一次**尝试**就进冷却，窗口内长按灌注不会发动、那一 tick 的灵气也不会被灌进去；**消耗则按位置分**——手上一次发动消耗一件本体（**创造模式不消耗**），摆在展示架上的**永远消耗**、且不查也不记冷却。两条规则都由 `SpiritSource.consumedByHand()` 区分。 |
+| 符箓 | `mxt:talisman` | `mxt:talisman` + `mxt:spirit_storage` | 保存**已铭刻的符箓**：一个按追加顺序排列的 `talisman` 定义条目列表，加上一个模式字段 `mode`（`"fire"` 缺省／`"store"`），空列表就是刚做出来的空载体。手持按住右键灌注灵气（容量 = 一次发动的灵气用量 × 铭刻定义的 `capacity` 倍率，实际倍率还要跟载体剩余使用次数取小，按灵气分别计量），灌满那一刻铭刻的能力全部发动并消耗一件本体（`store` 模式除外：它只积累，不自动发动）。存量够付清一次发动的灵气条目时，**右键即发动**——写了 `durability` / `consume` 再配大倍率，就能灌满一次连打好几次（见 [灌注与激发](/datapack/json/talisman)）。**潜行 + 右键切换模式**，`store` 且已灌满时潜行使用不切换而是**直接发动**。摆在展示架上被填满时按模式处理，并以展示架的位置作为激发地点——公式与位置类行为都用它（见 [灌注与激发](/datapack/json/talisman)）。铭刻（写符）服务尚未接入，`mxt:talisman` 组件目前可以手写或用物品组件语法直接写入（`/talisman give` 也能发）；灌注进度与灵石共用同一个存储组件 `mxt:spirit_storage`（按灵气记已灌单位，缺省表示一点都没灌）。**徒手右键与灌满自动发动走同一个入口**，但两条规则各按"在哪"分：**冷却只是手上的闸门**（服务端配置「符箓 → 使用冷却」，默认 20 刻、0 关闭），一次**尝试**就进冷却，窗口内长按灌注不会发动、那一 tick 的灵气也不会被灌进去；**消耗则按位置分**——手上一次发动消耗一件本体（**创造模式不消耗**），摆在展示架上的**永远消耗**、且不查也不记冷却。两条规则都由 `SpiritSource.consumedByHand()` 区分。**铭刻的定义可以声明耐久**（`durability` / `consume`）：上限写进原版组件（`max_damage` 加 `max_stack_size: 1` 与 `damage: 0`，物品上就有耐久条），每次发动改成扣耐久、扣满那一次销毁载体；没声明耐久的载体照旧一次一张本体。 |
 
 ## 数据组件示例
 
@@ -80,7 +84,7 @@ give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
 give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
 ```
 
-最后一行是**手册**的做法：堆上带 `mxt:technique` 组件时，这一叠才教那门功法；不带组件的玉简什么都不教、Tooltip 里也不显示功法。功法定义（`technique_binding`）只决定**怎么读**，以及本体在创造模式物品栏和 `/picker mxt:technique` 里生成的载体用哪个物品，见[功法绑定](/datapack/json/technique_binding)。
+最后一行是**手册**的做法：堆上带 `mxt:technique` 组件时，这一叠才教那门功法；不带组件、也没有任何声明的 `items` 认领的玉简什么都不教、Tooltip 里也不显示功法。功法声明（`technique_binding`）只决定**怎么读**，以及 `/picker mxt:technique` 替它生成的载体用哪个物品（**创造模式物品栏不生成载体**）；把物品写进声明的 `items` 也可以让那一叠不带组件就当手册，见[功法绑定](/datapack/json/technique_binding)。
 
 注意 `mxt:resource_container` 的值是**裸 map**，键就是资源 ID，**没有** `values` 外壳；写错外壳会被当作一个无法解析的键**静默忽略**（只留一条 WARN 日志），容器仍是空的。
 

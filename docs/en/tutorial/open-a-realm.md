@@ -74,7 +74,7 @@ With no `entry` the landing point is random (radius 40% of the border diameter, 
   {
     "pos": [0, 80, 0],
     "yaw": 0, "pitch": 0,
-    "enter_condition": {"type": "mxt:always_true"},
+    "enter_condition": {"type": "mxt:always"},
     "enter_denied_message": {"text": "You are not ready to set foot here"}
   },
   {
@@ -165,7 +165,7 @@ A missing structure is not a load error: it returns `MISSING_STRUCTURE` on the w
 | Entry is refused with `NO_FREE_INSTANCE` | `max_instances` is full (dormant claimed instances count); destroy the ones you do not need, or raise the limit. |
 | Entry is refused with `MISSING_STRUCTURE` | A `structures[].nbt` points at a structure file that does not exist, or the path is wrong. |
 | Entry is refused with `CONDITION_NOT_MET` | The chosen entry point's `enter_condition` does not pass; an `enter_denied_message` is shown instead of the code. |
-| Entry is refused with `DISABLED` | The definition is switched off by `#mxt:disabled`, or the id is not in the registry at all. |
+| Entry is refused with `DISABLED` | That id is not in the current registry, including a definition a `neoforge:conditions` block keeps out. |
 | Entry is refused with `ALREADY_TRAVELLING` | That player is already inside an enter/exit sequence. |
 | You fall straight down | `mxt:void` with no structures: an empty column's surface height is the bottom of the world. |
 | The terrain disappeared | The instance is `owned: false`, so the last member leaving deleted it; write `true` to keep it. |

@@ -31,16 +31,16 @@ data/example/
 │   ├── ability/qi_bolt.json                 An active ability
 │   ├── ability/qi_recovery.json             A triggered ability
 │   ├── ability/spark.json                   An ability a talisman inscribes
-│   ├── talisman/flame_sigil.json            The talisman: abilities + aura bill
+│   ├── talisman/flame_sigil.json            The talisman: abilities + capacity + costs
 │   ├── formation/spirit_gathering_array.json Structure, upkeep, buff module
 │   ├── formation/ward_array.json            Protection + attack modules
 │   ├── secret_realm/trial_realm.json      A pocket world template
 │   ├── tribulation/heavenly_gate.json       The trial a breakthrough starts
 │   ├── forging_method/light_strike.json     One strike: meter shift, cost, cooldown
 │   ├── forging_method/heavy_strike.json
-│   ├── tool_binding/smith_hammer.json       Which methods a placed tool unlocks
+│   ├── tool_binding/smith_hammer.json       Claims the hammer; lists its methods
 │   ├── forging_blueprint/spirit_sword.json  Materials, target band, quality ladder
-│   ├── blueprint_binding/sword_manual.json  Which blueprint the item offers
+│   ├── blueprint_binding/sword_manual.json  Claims the manual; lists its blueprint
 │   ├── quality/common.json             Quality tiers
 │   ├── quality/refined.json
 │   ├── quality/flawless.json
@@ -80,6 +80,6 @@ data/example/
 
 ## 接下来读什么
 
-- [数据包开发总览](../datapack/overview.md) —— 文件位置、ID、Holder 引用、停用标签与错误报告，如果你还没读过。
+- [数据包开发总览](../datapack/overview.md) —— 文件位置、ID、Holder 引用、加载期条件与错误报告，如果你还没读过。
 - [数据包示例](../datapack/examples.md) —— 同样的形状，写成短小独立的片段。
 - [KubeJS API 参考](../kubejs/api-reference.md) —— 第三篇教程里用到的脚本对象。
