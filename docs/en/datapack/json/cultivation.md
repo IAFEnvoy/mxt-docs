@@ -1,21 +1,22 @@
 ---
-title: cultivate_action (Cultivate Action)
+title: cultivation (Cultivation Method)
 aside: false
 ---
 
-# cultivate_action (Cultivate Action) {#cultivate_action}
+# cultivation (Cultivation Method) {#cultivation}
 
-File location: `data/<namespace>/mxt/cultivate_action/<path>.json`
+File location: `data/<namespace>/mxt/cultivation/<path>.json`
 
-A `cultivate_action` is one method of cultivation: which ambient aura it takes in, how often it settles, what it does every tick, what it charges, what it gives back, and how long the cooldown is after you stop. This registry decides which method a player is currently using.
+A `cultivation` is one method of cultivation: which ambient aura it takes in, how often it settles, what it does on every tick and on a tick that settles, what it charges, what it gives back, and how long the cooldown is after you stop. This registry decides which method a player is currently using.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `cultivate_action.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `cultivate_action.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is only stored and read, nothing draws it. |
+| `name` | Text Component | `cultivation.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
+| `description` | Text Component | `cultivation.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is only stored and read, nothing draws it. |
 | `priority` | Int | `0` | The order among several methods: the higher number wins, and an equal one falls back to registry order. It only orders the methods that **apply right now**. |
 | `start_condition` | `EntityCondition` | `mxt:always` | Condition for starting a session (can this body sit down). |
 | `cultivate_condition` | `EntityCondition` | `mxt:always` | **Whether this tick yields anything**; while it fails the session carries on and **nothing happens** (nothing paid, nothing gained, no settlement) — the moment it holds again the body settles straight away. **Almost only used for dual cultivation.** |
+| `cultivate_action` | EntityAction | `mxt:no_op` | Runs on a **tick that actually settles**: `cultivate_condition` holds, `tick_interval` has elapsed and the costs are paid. |
 | `tick_condition` | `EntityCondition` | `mxt:always` | Whether the session carries on; failing it **stops** the session. |
 | `tick_interval` | Integer | `20` | Absorption settlement interval. |
 | `costs` | `Cost` array | `[]` | Paid on each session tick, out of the cultivating entity's own accounts. |
@@ -23,7 +24,7 @@ A `cultivate_action` is one method of cultivation: which ambient aura it takes i
 | `aura_costs` | `Cost` array holding only `mxt:aura` entries | `[]` | Paid on each session tick out of the **shared aura pool** where the cultivator stands. |
 | `aura_gains` | `{id, amount}` array | `[]` | Extra aura gained. |
 | `cooldown` | Integer | `0` | Cooldown in ticks after stopping. |
-| `tick_action` | EntityAction | `mxt:no_op` | Action run on every cultivation tick. |
+| `tick_action` | EntityAction | `mxt:no_op` | Runs on **every** tick (once `tick_condition` has passed), whether or not that tick yields anything. |
 | `abort_reason` | Text Component | none | Names the abort caused by a failing `tick_condition`: when written it replaces the generic "Cultivation conditions are not met". Other aborts — environment, aura, invalid configuration — are not affected. |
 
 **How one is picked when several methods exist**: first the methods that **apply right now** are filtered out of the whole table — both `start_condition` and `cultivate_condition` have to hold, on top of the aura-side gate (each `aura` that has a first realm carries its own `start_cultivate_conditions`) — and then the one with the highest `priority` among those is taken, an equal one falling back to registry order. When none applies, the answer is "no method can be practised right now".
@@ -32,7 +33,7 @@ So **applicability is the filter and `priority` is only the order**: `priority` 
 
 **Naming one method skips `priority`**: a manual pick such as `/mxt cultivate select <action>` starts that method straight away (stopping the one already running), but it passes through the same filter, so a pick that does not apply is refused and the running session is left alone. It covers this one start only and never changes what the next press of the key picks.
 
-`start_condition` only decides whether a body can sit down; `cultivate_condition` is asked before every settlement, and while it fails that settlement is **skipped** (nothing paid, nothing gained, no settlement) **without stopping** the session; `tick_condition` is asked as well and failing it **aborts** the session (the actionbar reports "Cultivation cannot continue: Cultivation conditions are not met", or your own words when `abort_reason` is written).
+`start_condition` only decides whether a body can sit down; `tick_condition` is asked on **every** tick and failing it **aborts** the session (the actionbar reports "Cultivation cannot continue: Cultivation conditions are not met", or your own words when `abort_reason` is written); `cultivate_condition` is asked before every settlement, and while it fails that settlement is **skipped** (nothing paid, nothing gained, no settlement) **without stopping** the session. The action fields follow their own conditions: `tick_action` runs on every tick, `cultivate_action` only on a tick that actually settles.
 
 All three can read the environment and the bodies around: `mxt:aura_range` asks for a window of one aura's concentration, `mxt:dimension` for a dimension, block / biome conditions for the ground underfoot, and `mxt:partner` for a matching body nearby (wrap `mxt:target_condition` around a condition to ask what that body holds). "My partner is cultivating too" (`mxt:cultivating`) only belongs in `tick_condition` — before starting it is necessarily false.
 
@@ -46,7 +47,7 @@ The whole `costs` array is **all or nothing**, paid out of the cultivator's own 
 
 Each `aura_gains` entry is `{id, amount}`, where `id` is one aura.
 
-`tick_action` only runs on the tick that actually settles, not every tick.
+`tick_action` runs on **every** tick (once `tick_condition` has passed); `cultivate_action` runs only on a **tick that actually settles** — `cultivate_condition` holds, `tick_interval` has elapsed and the costs are paid.
 
 `aura_costs` accepts only `mxt:aura` entries — any other type is a load error; `amount` has to evaluate to a finite positive number, or that entry cannot be paid. How to write it is in [Shared Data Types · `Cost`](../types/shared_data_types.md#cost).
 
@@ -55,7 +56,7 @@ How `aura_costs` is paid is the most involved part of this field set. When sever
 There is no separate "environment kind" field: where a session can run is expressed entirely by the three conditions, and all of them can read the environment — `mxt:aura_range` demands a concentration range of some aura, `mxt:dimension` demands a dimension, and block or biome conditions demand the place underfoot. Note that this is another side from `aura_zone.cultivate_condition` and `realm_stage.cultivate_condition`: those have the environment or the realm declare "cultivation is allowed here" and "this chain's regeneration counts", while these three have the method declare what it needs.
 
 ```json
-// data/example/mxt/cultivate_action/seated.json
+// data/example/mxt/cultivation/seated.json
 {
   "priority": 1,
   "start_condition": { "type": "mxt:aura_range", "aura": { "example:qi": { "min": 10, "max": 200 } } },
@@ -65,7 +66,8 @@ There is no separate "environment kind" field: where a session can run is expres
   "aura_costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 0.5 }],
   "aura_gains": [{ "id": "example:qi", "amount": 1 }],
   "cooldown": 100,
-  "tick_action": { "type": "mxt:no_op" }
+  "tick_action": { "type": "mxt:no_op" },
+  "cultivate_action": { "type": "mxt:no_op" }
 }
 ```
 

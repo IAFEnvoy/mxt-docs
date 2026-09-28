@@ -159,11 +159,11 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 
 ### `mxt:cultivating`
 
-检查实体**是不是正在运功**，也可以要求它正好在跑某一条[法门](../../json/cultivate_action.md)。
+检查实体**是不是正在运功**，也可以要求它正好在跑某一条[法门](../../json/cultivation.md)。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `action?` | 法门 id | 不限定 | 点名一条 `cultivate_action`，只有正在跑它的实体才通过。 |
+| `action?` | 法门 id | 不限定 | 点名一条 `cultivation`，只有正在跑它的实体才通过。 |
 
 ```json
 {"type": "mxt:cultivating"}

@@ -9,7 +9,7 @@ description: "在修炼行为上写一条只有身边有人时才出成果的法
 
 ## 你要搭建什么
 
-- 一条 `cultivate_action`，它"这一拍拿不拿得到成果"问的是"旁边有没有一个拿着功法手册的好友"。
+- 一条 `cultivation`，它"这一拍拿不拿得到成果"问的是"旁边有没有一个拿着功法手册的好友"。
 - 那条判据由三样现成的东西拼成：`mxt:partner`（扫附近的人）、`mxt:target_condition`（把问题问到对方身上）、`mxt:main_hand_item`（问对方主手拿着什么）。
 - 两个选择：对方走开时，是"我还坐着、只是没有成果"，还是"我也跟着停"。
 - 两个人各自拿到那本手册的办法。
@@ -17,7 +17,7 @@ description: "在修炼行为上写一条只有身边有人时才出成果的法
 ## 第 1 步 —— 一条法门
 
 ```json
-// data/example/mxt/cultivate_action/dual_meditation.json
+// data/example/mxt/cultivation/dual_meditation.json
 {
   "priority": 10,
   "tick_interval": 20,
@@ -112,10 +112,10 @@ give @p mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 回报有两个现成的出口，都在同一条定义里：
 
 - **速率**：把 `absorb_amount` 写高（上面就是 `3 + realm_rank * 0.15`，单人那条是 `1.5`）。
-- **额外收获**：`tick_action` 里加熟练度或资源。它**只在真的结算的那一拍跑**——也就是 `cultivate_condition` 成立的那些拍——所以不必再套一层条件：
+- **额外收获**：`cultivate_action` 里加熟练度或资源。它**只在真的结算的那一拍跑**——也就是 `cultivate_condition` 成立的那些拍——所以不必再套一层条件（想每个 tick 都做点什么就写 `tick_action`）：
 
 ```json
-"tick_action": { "type": "mxt:add_resource", "resource": "example:qi_mastery", "amount": "2" }
+"cultivate_action": { "type": "mxt:add_resource", "resource": "example:qi_mastery", "amount": "2" }
 ```
 
 ## 在游戏里验证
@@ -139,6 +139,6 @@ give @p mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 
 ## 接下来
 
-- [cultivate_action（修炼行为）](../datapack/json/cultivate_action.md) —— 三个条件的分工与全部字段。
+- [cultivation（修炼方式）](../datapack/json/cultivation.md) —— 三个条件的分工与全部字段。
 - [实体条件类型](../datapack/types/condition/entity_condition_types.md) —— `mxt:partner`、`mxt:main_hand_item`、`mxt:cultivating` 的字段表。
 - [功法绑定](../datapack/json/technique_binding.md) —— 手册怎么被读、专属载体物品怎么给。

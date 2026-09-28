@@ -159,11 +159,11 @@ An empty list means "has learned any technique at all". An empty list with `all`
 
 ### `mxt:cultivating`
 
-Checks whether the entity is **cultivating**, optionally inside one named [method](../../json/cultivate_action.md).
+Checks whether the entity is **cultivating**, optionally inside one named [method](../../json/cultivation.md).
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `action?` | Method id | Any | Names one `cultivate_action`; only a body running that one passes. |
+| `action?` | Method id | Any | Names one `cultivation`; only a body running that one passes. |
 
 ```json
 {"type": "mxt:cultivating"}

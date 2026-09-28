@@ -141,7 +141,7 @@ aside: false
 - `cultivate_condition` 是此环境允许修炼的实体条件，默认为 `mxt:always`。例如 `mxt:aura_range` 可要求当前最终浓度处于 `min..max`；环境条件通过后，各 `realm_stage.cultivate_condition` 按资源链独立判断，不满足的链仅跳过自身恢复与转换。
 - 同一区块内到期修炼的玩家共享区块附件中的灵气库存。`distribution` 控制当库存不足时的分配方式：`random` 随机排序后优先满足；`equal`（默认）按最大最小公平方式均分并重分未使用份额；`realm_weighted` 按当前境界的 `aura_share_weight` 加权分配并重分未使用份额。共享区块内有重叠动态灵气域时，以稳定排序后的首个请求者所处环境的策略为准。
 - 修炼获得的修为与 `aura_gains` 会同时乘以当前位置浓度倍率。有限上限使用 `concentration / maximum`，无上限环境使用 `concentration / (concentration + 1)`；分配到的灵气不足请求量时还会额外按实际配额比例降低本次收益。
-- 这里没有「环境类型」字段：一处环境有什么灵气就是它 `aura` 的键；要求某处能修炼或能炼丹就写 `condition`（`cultivate_action` 的 `start_condition` / `condition`）或 `minimum_aura`（炼丹），两者都按灵气 id 或 `#标签` 说话。
+- 这里没有「环境类型」字段：一处环境有什么灵气就是它 `aura` 的键；要求某处能修炼或能炼丹就写条件（`cultivation` 的 `start_condition` / `cultivate_condition` / `tick_condition`）或 `minimum_aura`（炼丹），两者都按灵气 id 或 `#标签` 说话。
 - `block_aura` 不占用环境基础上限：它会同时为当前区块增加等量可储存灵气容量。环境上限为 100、方块总贡献为 30 时，该区块有效上限为 130。实际位置查询采用有界子区块算法：距离当前子区块 3 个子区块以内按方块真实位置计算，外围按子区块中心近似，并使用 `1 / max(1, 距离平方)` 衰减；同一来源子区块会按当前访问玩家数粗略平分，区块库存仍由玩家共享。
 - 方块灵气缓存和区块库存更新周期由服务端配置「灵气 → 方块灵气周期」控制，默认每 10 tick 更新一次，允许范围为 1 至 1200 tick。
 - 推荐的自然灵气模板将每种灵气的 `amount` 设为 `0`，并启用正负噪声。经 `/ 10 - 5` 处理后，大面积区域没有自然灵气；方块贡献会在此基础上按区块内方块数量累加，可将灵石矿脉配置为远高于自然值。

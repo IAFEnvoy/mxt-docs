@@ -92,7 +92,7 @@ Behaviours are uniformly called `action` and are split by target into entity, it
 
 | Category | Registries |
 | --- | --- |
-| Resources and cultivation | `resource`, `aura`, `element`, `element_reaction`, `realm_stage`, `spirit_root`, `physique`, `technique`, `skill_stage`, `cultivate_action` |
+| Resources and cultivation | `resource`, `aura`, `element`, `element_reaction`, `realm_stage`, `spirit_root`, `physique`, `technique`, `skill_stage`, `cultivation` |
 | Abilities and rules | `ability`, `curse`, `formation`, `tribulation`, `trigger`, `talisman` |
 | Aura and world | `aura_zone`, `block_aura`, `item_aura`, `secret_realm` |
 | Items and quality | `item_binding`, `weapon_binding`, `pill_binding`, `technique_binding`, `tool_binding`, `blueprint_binding`, `artifact`, `quality` |
@@ -104,7 +104,7 @@ An alchemy recipe is not a registry: `mxt:alchemy` is a vanilla recipe type whos
 ## Module Pages
 
 - [resource: Resources and Resource Bars](/en/datapack/json/resource)
-- [Cultivation, Realms and Spirit Roots](/en/datapack/json/cultivate_action)
+- [Cultivation, Realms and Spirit Roots](/en/datapack/json/cultivation)
 - [Aura Environment and Aura Items](/en/datapack/json/aura)
 - [Ability, Cost and Condition](/en/datapack/json/ability)
 - [Item Bindings, Quality and Economy](/en/datapack/json/item_binding)
@@ -134,7 +134,7 @@ flowchart TD
 - When a vanilla tag uses `replace: false`, values are appended in data pack merge order; apart from quality ordering tags, gameplay does not depend on tag value order.
 - Data packs are read-only, and a definition has no generic `schema_version`, `enabled` or `tags` field; "should this one enter the registry right now" is answered at load time by `neoforge:conditions`.
 - The display name of a data-driven definition generates its translation key automatically from the identifier: `<category>.<registry namespace>.<namespace>.<path>`. The category defaults to the registry's own path, and the **registry namespace is always `mxt` for MiXianTu's own registries** (their keys are all written `mxt:<path>`), so `mxt:fire` in `aura` reads `aura.mxt.mxt.fire`, `example:qi` in `resource` reads `resource.mxt.example.qi`, and `mxt_test:flame_sigil` in `talisman` reads `talisman.mxt.mxt_test.flame_sigil`. The category is the registry's own path with no exception table (`example:refined` in `mxt:quality` reads `quality.mxt.example.refined`). A `/` in the path goes into the key **as written** and is not turned into `.` (`example:foo/bar` produces `resource.mxt.example.foo/bar`), so sorting into subdirectories by category does not introduce a second set of translation-key rules. JSON has no `translation_key` field; supply the matching translation in `assets/<namespace>/lang/zh_cn.json` and `en_us.json`.
-- The definitions of these 18 registries may also carry an optional `name` and `description` (written like any other component field: a bare string is a translation key, an object is a full component): `resource`, `aura`, `realm_stage`, `element`, `spirit_root`, `physique`, `ability`, `curse`, `technique`, `skill_stage`, `cultivate_action`, `artifact`, `formation`, `tribulation`, `secret_realm`, `contract_type`, `talisman`, `quality`. Writing one uses your own text; omitting one falls back to the generated key above — an omitted `description` is the generated key plus `.description`. The point of the pair is that a pack can **translate the generated key or write its own text** (and so avoid a name clash); **`description` is only stored and read, and nothing draws it in a screen or tooltip except `quality` (the line describing the quality)**. Every other registry has the generated key only.
+- The definitions of these 18 registries may also carry an optional `name` and `description` (written like any other component field: a bare string is a translation key, an object is a full component): `resource`, `aura`, `realm_stage`, `element`, `spirit_root`, `physique`, `ability`, `curse`, `technique`, `skill_stage`, `cultivation`, `artifact`, `formation`, `tribulation`, `secret_realm`, `contract_type`, `talisman`, `quality`. Writing one uses your own text; omitting one falls back to the generated key above — an omitted `description` is the generated key plus `.description`. The point of the pair is that a pack can **translate the generated key or write its own text** (and so avoid a name clash); **`description` is only stored and read, and nothing draws it in a screen or tooltip except `quality` (the line describing the quality)**. Every other registry has the generated key only.
 - A `realm_stage` that declares its `minor_stages` as an integer names the sub-stages with the registry namespace too: `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>` (the index starts at `0`).
 - Each data pack registry's screen title has its own fixed key, `mxt.registry.<registry path>` (such as `mxt.registry.aura` and `mxt.registry.quality`), supplied by this mod's own language files; a data pack only has to provide the key above for its own definitions.
 - When a required single entry reference does not exist, the whole data pack load fails; optional references and tolerant list references are handled by their own rules.

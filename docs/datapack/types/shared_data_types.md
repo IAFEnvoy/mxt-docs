@@ -64,19 +64,19 @@ description: 多个注册表共用的复杂值：Cost、AuraGain、AttributeEntr
 | 写法 | 从哪里扣 |
 | --- | --- |
 | `mxt:resource` | 付款者自己的数值账户。 |
-| `mxt:aura` | 扣该灵气所度量的那个数值：付款者自己支付时从数值账户出；由场地从**共享灵气池**支付时（`cultivate_action.aura_costs`），先按同区块多人修炼的池子分配份额缩放，再由池子全有或全无地扣；从**方块实体的自有存量**支付时（灵气合成配方的 `aura`），扣这门灵气本身、按整单位向上取整。 |
+| `mxt:aura` | 扣该灵气所度量的那个数值：付款者自己支付时从数值账户出；由场地从**共享灵气池**支付时（`cultivation.aura_costs`），先按同区块多人修炼的池子分配份额缩放，再由池子全有或全无地扣；从**方块实体的自有存量**支付时（灵气合成配方的 `aura`），扣这门灵气本身、按整单位向上取整。 |
 | `mxt:item` | 需要玩家背包。付款者不是玩家（或阵法没有阵主）就是**付不出**，不是定义有问题。 |
 | `mxt:js` | 需要玩家，并且在其它通道全部付完之后**最后**运行。脚本消耗不做暂存，所以脚本必须自己对它保持幂等。 |
 
 缺少某个通道只会被报成「付不出」，永远不会被报成定义坏了。**解不出来的条目会让整份定义加载失败**（未知 `type`、缺必填字段都会）：`costs` 数组不套用容错列表的口径，不存在「打一条警告然后把这一项丢掉」。
 
-用这个数组的字段共 12 个：`ability.costs`（**所有技能类型共用**，所以 `mxt:mount` 的每 tick 燃料与 `mxt:upkeep` 的每周期费用也写在这里）、`mxt:channelled` 的 `upkeep_costs`、`realm_stage.costs`、`cultivate_action.costs` 与 `cultivate_action.aura_costs`、`formation.activation_costs` 与 `formation.maintenance_costs`、`forging_method.costs`、`contract_type.costs`（签订契约的代价，由主人支付）、`talisman.costs`（`mxt:aura` 条目从载体自己的存量扣，其余向持有者收）、`quality.upgrade_costs`，以及灵气合成配方（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）的 `aura`。其中 `cultivate_action.aura_costs` 与灵气合成配方的 `aura` **只收 `mxt:aura` 条目**（写其它类型是加载错误），这两个字段也接受 `{"<灵气 id>": 数值提供器}` 的映射写法。
+用这个数组的字段共 12 个：`ability.costs`（**所有技能类型共用**，所以 `mxt:mount` 的每 tick 燃料与 `mxt:upkeep` 的每周期费用也写在这里）、`mxt:channelled` 的 `upkeep_costs`、`realm_stage.costs`、`cultivation.costs` 与 `cultivation.aura_costs`、`formation.activation_costs` 与 `formation.maintenance_costs`、`forging_method.costs`、`contract_type.costs`（签订契约的代价，由主人支付）、`talisman.costs`（`mxt:aura` 条目从载体自己的存量扣，其余向持有者收）、`quality.upgrade_costs`，以及灵气合成配方（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）的 `aura`。其中 `cultivation.aura_costs` 与灵气合成配方的 `aura` **只收 `mxt:aura` 条目**（写其它类型是加载错误），这两个字段也接受 `{"<灵气 id>": 数值提供器}` 的映射写法。
 
 **下面这些故意不是 `Cost`**，别去「修」它们：`talisman.capacity` 是个 **倍率**（double ≥ 1），它说的是「载体装得下几次发动的灵气」而不是「要扣什么」——容量的灵气身份来自同一条符 `costs` 里的灵气条目；`alchemy` 配方的 `minimum_aura` 与 `creature_profile.minimum_aura` 是要求，从不被消耗。货币系统与这套形状无关：`currency` 的 `exchanges[].cost` 是「一次兑换要几个货币物品」的整数价格（`1..99`），`quality.value_multiplier` 是价值修正，两者都不是 `Cost`。
 
 ## `AuraGain`
 
-`cultivate_action.aura_gains` 用的是 `AuraGain`：字段名同样是 `id` 与 `amount`，但 `id` 指向一门灵气，`amount` 允许 `0`（有限非负即可）。它是另一种类型，与 `Cost` 无关，也不会进扣费事务。
+`cultivation.aura_gains` 用的是 `AuraGain`：字段名同样是 `id` 与 `amount`，但 `id` 指向一门灵气，`amount` 允许 `0`（有限非负即可）。它是另一种类型，与 `Cost` 无关，也不会进扣费事务。
 
 这个列表是**容错**的：解不出来的条目会被丢弃并打一条 `Ignoring invalid list element` 警告，其余条目照常生效。
 

@@ -940,7 +940,7 @@ description: 模组注册的全部内置实体行为类型，以及每种类型�
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `action?` | 法门 id | 走挑选 | 点名一条 [`cultivate_action`](../../json/cultivate_action.md)；不写就按"当下适用的里 `priority` 最大的一条"挑。 |
+| `action?` | 法门 id | 走挑选 | 点名一条 [`cultivation`](../../json/cultivation.md)；不写就按"当下适用的里 `priority` 最大的一条"挑。 |
 
 ```json
 { "type": "mxt:cultivate" }

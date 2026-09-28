@@ -25,7 +25,7 @@ The table below lists the mod's 37 datapack registries. In the field tables, "De
 | `blueprint_binding` | `mxt/blueprint_binding` | Claims blueprint items and lists the forging blueprints they offer. |
 | `technique` | `mxt/technique` | Cultivation technique definitions: learnable, granting abilities and cultivation modifiers by level. |
 | `skill_stage` | `mxt/skill_stage` | One level of a skill mastery chain. |
-| `cultivate_action` | `mxt/cultivate_action` | One cultivation routine: which ambient aura it absorbs, what it does every tick, and what it costs and yields. |
+| `cultivation` | `mxt/cultivation` | One cultivation routine: which ambient aura it absorbs, what it does every tick and on a tick that settles, and what it costs and yields. |
 | `spirit_herb` | `mxt/spirit_herb` | Spirit herb metadata for existing items. |
 | `medicinal_property` | `mxt/medicinal_property` | Medicinal identities: a name and description for one medicinal effect. |
 | `alchemy_furnace` | `mxt/alchemy_furnace` | Furnace specifications: slots, per-batch capacity and cooling rate. |

@@ -20,7 +20,7 @@ Read [Datapack Overview](../datapack/overview.md) first if you have not yet. It 
 ```text
 aura_zone / block_aura        the world supplies aura per chunk
         ↓
-cultivate_action              the player absorbs it while cultivating
+cultivation              the player absorbs it while cultivating
         ↓
 aura  example:qi              the definition that turns the stored number into an aura
         ↓
@@ -41,7 +41,7 @@ A player who has not entered a chain yet is **Mortal**. The Mortal state has no 
 | `realm_stage/qi_condensation.json` | `realm_stage` | First realm, and the requirements for the second. |
 | `realm_stage/foundation.json` | `realm_stage` | Second realm. |
 | `realm_stage/core_formation.json` | `realm_stage` | Third realm, the end of the chain. |
-| `cultivate_action/meditation.json` | `cultivate_action` | What the player does while cultivating. |
+| `cultivation/meditation.json` | `cultivation` | What the player does while cultivating. |
 | `aura_zone/common_land.json` | `aura_zone` | A plains-level supply of aura in the Overworld. |
 | `assets/example/lang/en_us.json` | — | Names for the IDs above. |
 
@@ -196,10 +196,10 @@ Inside a resource, realm or breakthrough formula, `level`, `realm` and `realm_ra
 
 ## Step 4 — A Cultivation Action
 
-A `cultivate_action` is a named activity. The player selects one, and it settles on a fixed interval; with several methods in one pack, the ones that **apply right now** are filtered out first (both `start_condition` and `cultivate_condition` have to hold), then the highest `priority` among them wins, an equal one falling back to registry order; when none applies, the answer is "no method can be practised right now".
+A `cultivation` is a named activity. The player selects one, and it settles on a fixed interval; with several methods in one pack, the ones that **apply right now** are filtered out first (both `start_condition` and `cultivate_condition` have to hold), then the highest `priority` among them wins, an equal one falling back to registry order; when none applies, the answer is "no method can be practised right now".
 
 ```json
-// data/example/mxt/cultivate_action/meditation.json
+// data/example/mxt/cultivation/meditation.json
 {
   "priority": 1,
   "tick_interval": 20,
@@ -217,7 +217,7 @@ A `cultivate_action` is a named activity. The player selects one, and it settles
 | `aura_costs` | The aura spent each tick, paid from the **shared aura pool** at the cultivator's position, and written with `mxt:aura` entries only (`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`). When several players cultivate in the same chunk each one's amount is scaled by the pool's allocation first, and the pool is then charged **all or nothing**. |
 | `cooldown` | Ticks before cultivation can start again after it stops. Defaults to `0`. |
 
-`start_condition` and `tick_condition` decide whether cultivation may start and continue; both default to always true, and both can read the environment. There is no "aura kind" field: an action that should only run in the right place asks for that place directly, for example with `mxt:aura_range` (a concentration range for one aura, where `max` is required on every entry) or `mxt:dimension`. `costs` (paid by the cultivating entity each tick, one `Cost` array and all or nothing), `aura_gains` (extra aura added per tick) and `tick_action` (an entity action run each tick) are the remaining fields.
+`start_condition` and `tick_condition` decide whether cultivation may start and continue; both default to always true, and both can read the environment. There is no "aura kind" field: an action that should only run in the right place asks for that place directly, for example with `mxt:aura_range` (a concentration range for one aura, where `max` is required on every entry) or `mxt:dimension`. `costs` (paid by the cultivating entity each tick, one `Cost` array and all or nothing), `aura_gains` (extra aura added per tick), `tick_action` (an entity action run on **every** tick) and `cultivate_action` (an entity action run only on a **tick that settles**) are the remaining fields.
 
 ## Step 5 — A Minimal Aura Zone
 
@@ -250,7 +250,7 @@ The aura environment has enough depth to deserve its own page — that is [Defin
 
 ## Step 6 — Names
 
-Display names are generated from the definition ID by default, so you do not have to write a translation key into the JSON — unless you want your own text: the definitions of 23 registries, including `resource`, `aura`, `realm_stage`, `element` and `cultivate_action`, may carry an optional `name` / `description`, both filled in from the id when omitted. Add the keys to your own language file:
+Display names are generated from the definition ID by default, so you do not have to write a translation key into the JSON — unless you want your own text: the definitions of 23 registries, including `resource`, `aura`, `realm_stage`, `element` and `cultivation`, may carry an optional `name` / `description`, both filled in from the id when omitted. Add the keys to your own language file:
 
 ```json
 // assets/example/lang/en_us.json
@@ -261,7 +261,7 @@ Display names are generated from the definition ID by default, so you do not hav
   "realm_stage.mxt.example.foundation": "Foundation Establishment",
   "realm_stage.mxt.example.core_formation": "Core Formation",
   "element.mxt.example.common": "Common Aura",
-  "cultivate_action.mxt.example.meditation": "Meditation"
+  "cultivation.mxt.example.meditation": "Meditation"
 }
 ```
 
@@ -276,7 +276,7 @@ Data pack registries are read while the world loads, so `/reload` is not enough:
 ```text
 (load the world again)
 /mxt registries validate          → registries loaded, no errors
-/mxt registries list              → mxt:resource=1, mxt:aura=1, mxt:realm_stage=3, mxt:element=1, mxt:cultivate_action=1, mxt:aura_zone=1, … (every registry the mod registers is listed, most of them empty)
+/mxt registries list              → mxt:resource=1, mxt:aura=1, mxt:realm_stage=3, mxt:element=1, mxt:cultivation=1, mxt:aura_zone=1, … (every registry the mod registers is listed, most of them empty)
 /mxt resource example:qi          → 0
 /mxt aura query example:qi        → the aura inventory of your chunk
 /mxt cultivate status             → the selected behaviour and the progress per aura

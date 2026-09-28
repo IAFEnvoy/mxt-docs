@@ -129,7 +129,7 @@ export const sections = [
           { page: 'datapack/json/blueprint_binding', zh: 'blueprint_binding（图纸绑定）', en: 'blueprint_binding' },
           { page: 'datapack/json/contract_type', zh: 'contract_type（契约类型）', en: 'contract_type' },
           { page: 'datapack/json/creature_profile', zh: 'creature_profile（生物档案）', en: 'creature_profile' },
-          { page: 'datapack/json/cultivate_action', zh: 'cultivate_action（修炼行为）', en: 'cultivate_action' },
+          { page: 'datapack/json/cultivation', zh: 'cultivation（修炼方式）', en: 'cultivation' },
           { page: 'datapack/json/currency', zh: 'currency（货币）', en: 'currency' },
           { page: 'datapack/json/curse', zh: 'curse（诅咒）', en: 'curse' },
           { page: 'datapack/json/element', zh: 'element（元素）', en: 'element' },

@@ -940,7 +940,7 @@ Makes the target **start cultivating**.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `action?` | Method id | Let the pick decide | Names one [`cultivate_action`](../../json/cultivate_action.md); with none written the applicable method of the highest `priority` is picked. |
+| `action?` | Method id | Let the pick decide | Names one [`cultivation`](../../json/cultivation.md); with none written the applicable method of the highest `priority` is picked. |
 
 ```json
 { "type": "mxt:cultivate" }

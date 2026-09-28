@@ -1,22 +1,23 @@
 ---
-title: cultivate_action（修炼行为）
-description: 定义一次运功法门：法门间的先后、开始与维持条件、结算间隔、消耗与收获。
+title: cultivation（修炼方式）
+description: 定义一次运功法门：法门间的先后、开始与维持条件、每 tick 与每次结算做什么、消耗与收获。
 aside: false
 ---
 
-# cultivate_action（修炼行为） {#cultivate_action}
+# cultivation（修炼方式） {#cultivation}
 
-文件位置：`data/<namespace>/mxt/cultivate_action/<path>.json`
+文件位置：`data/<namespace>/mxt/cultivation/<path>.json`
 
-一个 `cultivate_action` 是一次"运功"法门：它说吸收哪些环境灵气、每隔多久结算一次、每刻做什么、收什么费、给什么收获、停下来要冷却多久。玩家当前在用哪一套法门由这个注册表决定。
+一个 `cultivation` 是一次"运功"法门：它说吸收哪些环境灵气、每隔多久结算一次、每个 tick 做什么、结算成功那一拍做什么、收什么费、给什么收获、停下来要冷却多久。玩家当前在用哪一套法门由这个注册表决定。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `cultivate_action.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `cultivate_action.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
+| `name` | Text Component | `cultivation.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
+| `description` | Text Component | `cultivation.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
 | `priority` | Int | `0` | 多条法门并存时的先后：数值大者先，相同则按注册表顺序。它只在**此刻适用的**法门里排序。 |
 | `start_condition` | `EntityCondition` | `mxt:always` | 开始修炼条件：能不能坐下。 |
 | `cultivate_condition` | `EntityCondition` | `mxt:always` | **这一拍能不能拿到成果**；不成立时照常修炼、**不中止**，只是这一拍空过（不扣钱、不给收获、不算结算），条件一恢复立刻出成果。**基本只用于双修判定**。 |
+| `cultivate_action` | EntityAction | `mxt:no_op` | **结算成功那一拍**跑的行为：`cultivate_condition` 成立、`tick_interval` 已到、费用付清之后才跑。 |
 | `tick_condition` | `EntityCondition` | `mxt:always` | 还继续不继续修炼；不成立会**中止**本次运功。 |
 | `tick_interval` | Integer | `20` | 吸收结算间隔。 |
 | `costs` | `Cost` 数组 | `[]` | 每次修炼消耗，从修炼的实体自己账上扣。 |
@@ -24,7 +25,7 @@ aside: false
 | `aura_costs` | 只含 `mxt:aura` 条目的 `Cost` 数组 | `[]` | 每次修炼从修炼者所在位置的**共享灵气池**扣除的消耗。 |
 | `aura_gains` | `{id, amount}` 数组 | `[]` | 额外增加的灵气。 |
 | `cooldown` | Integer | `0` | 停止后冷却 tick。 |
-| `tick_action` | EntityAction | `mxt:no_op` | 每次修炼 tick 行为。 |
+| `tick_action` | EntityAction | `mxt:no_op` | **每一个 tick** 都跑的行为（`tick_condition` 通过之后），与这一拍有没有成果无关。 |
 | `abort_reason` | Text Component | 无 | 给"因为 `tick_condition` 不成立而中止"起的名字：写了就用它替代通用的「不满足修炼条件」，环境不允许、灵气不足、配置无效这些中止原因不受它影响。 |
 
 **多条法门并存时怎么挑**：先在整张表里筛出**此刻适用的**法门——`start_condition` 与 `cultivate_condition` **都要成立**，再加上灵气侧那道门禁（每条有首境界的 `aura` 自己的 `start_cultivate_conditions`）——再在筛出来的里面取 `priority` 最大的一条，同分按注册表顺序。一条都不适用就报「没有一门当下能修的法门」。
@@ -35,7 +36,7 @@ aside: false
 
 `tick_interval` 的范围是 `1..72000`，`cooldown` 的范围是 `0..72000`。
 
-`start_condition` 只决定能不能坐下；`cultivate_condition` 每次结算前问一次，不成立时这一拍**空过**（不扣钱、不给收获、不推进结算），**不中止**运功；`tick_condition` 每次结算前也要成立，不成立会**中止**本次运功（actionbar 报「修炼无法继续：不满足修炼条件」，写了 `abort_reason` 就报你自己的那句话）。
+`start_condition` 只决定能不能坐下；`tick_condition` **每个 tick** 都问一次，不成立会**中止**本次运功（actionbar 报「修炼无法继续：不满足修炼条件」，写了 `abort_reason` 就报你自己的那句话）；`cultivate_condition` 每次结算前问一次，不成立时这一拍**空过**（不扣钱、不给收获、不推进结算），**不中止**运功。两个行为字段跟各自的条件配套：`tick_action` 每个 tick 都跑，`cultivate_action` 只在真正结算的那一拍跑。
 
 三者都能读环境与身边的人：`mxt:aura_range` 要求某门灵气的浓度区间、`mxt:dimension` 要求维度、方块 / 群系类条件要求脚下的地方、`mxt:partner` 要求附近有符合条件的同伴（要问"对方手上拿着什么"就套 `mxt:target_condition`）。"对方也在修炼"（`mxt:cultivating`）只能写在 `tick_condition` 里——开始之前它必然为假。
 
@@ -47,7 +48,7 @@ aside: false
 
 `aura_gains` 每项是 `{id, amount}`，`id` 是一门灵气。
 
-`tick_action` 只在真正结算的那一拍跑，不是每刻都跑。
+`tick_action` 在**每一个** tick 都跑（`tick_condition` 通过之后）；`cultivate_action` 只在**真正结算的那一拍**跑——`cultivate_condition` 成立、`tick_interval` 已到、费用付清之后。
 
 `aura_costs` 只接受 `mxt:aura` 条目，写其它类型是加载错误；`amount` 必须求值为有限正数，否则这一项付不出。写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。
 
@@ -56,7 +57,7 @@ aside: false
 没有单独的"环境类型"字段：能在哪里修炼完全由三个条件表达，它们都能读环境——`mxt:aura_range` 要求某门灵气的浓度区间，`mxt:dimension` 要求维度，方块/群系类条件要求脚下的地方。注意这与 `aura_zone.cultivate_condition`、`realm_stage.cultivate_condition` 是几侧：那两个由环境 / 境界自己声明"这里能不能修炼、这条链的回复算不算数"，这三个由法门声明"我需要什么"。
 
 ```json
-// data/example/mxt/cultivate_action/seated.json
+// data/example/mxt/cultivation/seated.json
 {
   "priority": 1,
   "start_condition": { "type": "mxt:aura_range", "aura": { "example:qi": { "min": 10, "max": 200 } } },
@@ -66,7 +67,8 @@ aside: false
   "aura_costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 0.5 }],
   "aura_gains": [{ "id": "example:qi", "amount": 1 }],
   "cooldown": 100,
-  "tick_action": { "type": "mxt:no_op" }
+  "tick_action": { "type": "mxt:no_op" },
+  "cultivate_action": { "type": "mxt:no_op" }
 }
 ```
 

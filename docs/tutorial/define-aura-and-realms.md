@@ -20,7 +20,7 @@ description: "用 JSON 搭建核心修炼循环：一个灵气、一个元素、
 ```text
 aura_zone / block_aura        the world supplies aura per chunk
         ↓
-cultivate_action              the player absorbs it while cultivating
+cultivation              the player absorbs it while cultivating
         ↓
 aura  example:qi              the definition that turns the stored number into an aura
         ↓
@@ -41,7 +41,7 @@ realm_stage chain             progress + conditions + costs → next realm
 | `realm_stage/qi_condensation.json` | `realm_stage` | 第一个境界，以及对第二个境界的要求。 |
 | `realm_stage/foundation.json` | `realm_stage` | 第二个境界。 |
 | `realm_stage/core_formation.json` | `realm_stage` | 第三个境界，链条的终点。 |
-| `cultivate_action/meditation.json` | `cultivate_action` | 玩家修炼时做的事。 |
+| `cultivation/meditation.json` | `cultivation` | 玩家修炼时做的事。 |
 | `aura_zone/common_land.json` | `aura_zone` | 主世界里平原级别的灵气供给。 |
 | `assets/example/lang/en_us.json` | — | 上面这些 ID 的名称。 |
 
@@ -196,10 +196,10 @@ realm_stage chain             progress + conditions + costs → next realm
 
 ## 第 4 步 —— 修炼行为
 
-`cultivate_action` 是一个具名活动。玩家选择其中一个，它按固定间隔结算；多条法门并存时，先在整张表里筛出**此刻适用的**（`start_condition` 与 `cultivate_condition` 都要成立），再取 `priority` 最大的一条，同分按注册表顺序；一条都不适用就报「没有一门当下能修的法门」。
+`cultivation` 是一个具名活动。玩家选择其中一个，它按固定间隔结算；多条法门并存时，先在整张表里筛出**此刻适用的**（`start_condition` 与 `cultivate_condition` 都要成立），再取 `priority` 最大的一条，同分按注册表顺序；一条都不适用就报「没有一门当下能修的法门」。
 
 ```json
-// data/example/mxt/cultivate_action/meditation.json
+// data/example/mxt/cultivation/meditation.json
 {
   "priority": 1,
   "tick_interval": 20,
@@ -217,7 +217,7 @@ realm_stage chain             progress + conditions + costs → next realm
 | `aura_costs` | 每 tick 从修炼者所在位置的**共享灵气池**扣除的灵气消耗，只写 `mxt:aura` 条目（`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`）。多人同区块修炼时，各人的量先按池子分配份额缩放，再由池子**全有或全无**地扣。 |
 | `cooldown` | 停止后再次开始修炼前的冷却 tick。默认 `0`。 |
 
-`start_condition` 与 `tick_condition` 决定修炼能否开始与继续；两者默认恒为真，并且都能读取环境。没有“灵气种类”字段：只应在正确地点运行的行为会直接要求那个地点，例如用 `mxt:aura_range`（某一门灵气的浓度区间，每一项都必填 `max`）或 `mxt:dimension`。剩下的字段是 `costs`（每 tick 从修炼者身上扣的消耗，`Cost` 数组、全有或全无）、`aura_gains`（每 tick 额外增加的灵气）和 `tick_action`（每次修炼 tick 运行的实体行为）。
+`start_condition` 与 `tick_condition` 决定修炼能否开始与继续；两者默认恒为真，并且都能读取环境。没有“灵气种类”字段：只应在正确地点运行的行为会直接要求那个地点，例如用 `mxt:aura_range`（某一门灵气的浓度区间，每一项都必填 `max`）或 `mxt:dimension`。剩下的字段是 `costs`（每 tick 从修炼者身上扣的消耗，`Cost` 数组、全有或全无）、`aura_gains`（每 tick 额外增加的灵气）、`tick_action`（**每个 tick** 都运行的实体行为）和 `cultivate_action`（**结算成功那一拍**才运行的实体行为）。
 
 ## 第 5 步 —— 一个最小的灵气区域
 
@@ -250,7 +250,7 @@ realm_stage chain             progress + conditions + costs → next realm
 
 ## 第 6 步 —— 名称
 
-显示名称默认由定义 ID 自动生成，所以你不需要把翻译键写进 JSON —— 除非你想自己写名字：`resource`、`aura`、`realm_stage`、`element`、`cultivate_action` 等 23 个注册表的定义都可以写可选的 `name` / `description`（两者都可省略，省略时按 id 生成键）。把这些键加到你自己的语言文件里：
+显示名称默认由定义 ID 自动生成，所以你不需要把翻译键写进 JSON —— 除非你想自己写名字：`resource`、`aura`、`realm_stage`、`element`、`cultivation` 等 23 个注册表的定义都可以写可选的 `name` / `description`（两者都可省略，省略时按 id 生成键）。把这些键加到你自己的语言文件里：
 
 ```json
 // assets/example/lang/en_us.json
@@ -261,7 +261,7 @@ realm_stage chain             progress + conditions + costs → next realm
   "realm_stage.mxt.example.foundation": "Foundation Establishment",
   "realm_stage.mxt.example.core_formation": "Core Formation",
   "element.mxt.example.common": "Common Aura",
-  "cultivate_action.mxt.example.meditation": "Meditation"
+  "cultivation.mxt.example.meditation": "Meditation"
 }
 ```
 
@@ -276,7 +276,7 @@ realm_stage chain             progress + conditions + costs → next realm
 ```text
 （重新打开世界）
 /mxt registries validate          → 注册表已加载，没有错误
-/mxt registries list              → mxt:resource=1, mxt:aura=1, mxt:realm_stage=3, mxt:element=1, mxt:cultivate_action=1, mxt:aura_zone=1, …（本模组注册的每张表都会列出，多数为空）
+/mxt registries list              → mxt:resource=1, mxt:aura=1, mxt:realm_stage=3, mxt:element=1, mxt:cultivation=1, mxt:aura_zone=1, …（本模组注册的每张表都会列出，多数为空）
 /mxt resource example:qi          → 0
 /mxt aura query example:qi        → 你所在区块的灵气库存
 /mxt cultivate status             → 选中的法门与各灵气下的进度

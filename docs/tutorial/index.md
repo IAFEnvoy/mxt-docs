@@ -21,8 +21,8 @@ data/example/
 │   ├── realm_stage/qi_condensation.json     Realm chain
 │   ├── realm_stage/foundation.json
 │   ├── realm_stage/core_formation.json
-│   ├── cultivate_action/meditation.json     What the player does to absorb aura
-│   ├── cultivate_action/dual_meditation.json  Only yields beside a friend holding a manual
+│   ├── cultivation/meditation.json     What the player does to absorb aura
+│   ├── cultivation/dual_meditation.json  Only yields beside a friend holding a manual
 │   ├── aura_zone/common_land.json           Where the aura is
 │   ├── aura_zone/misty_valley.json          A denser zone (aura environment tutorial)
 │   ├── block_aura/spirit_stone_ore.json     Blocks that emit aura

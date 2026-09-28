@@ -83,15 +83,16 @@ Item aura. `items` claims the items, `type` points at a value definition, and `c
 }
 ```
 
-Cultivation action. `aura_costs` takes only `mxt:aura` entries and pays from the shared aura pool under the cultivator; `tick_interval` is how many ticks apart `tick_action` runs.
+Cultivation method. `aura_costs` takes only `mxt:aura` entries and pays from the shared aura pool under the cultivator; `tick_interval` is how many ticks apart a settlement happens — `cultivate_action` runs on that tick, while `tick_action` runs on every tick.
 
 ```json
-// data/example/mxt/cultivate_action/meditation.json
+// data/example/mxt/cultivation/meditation.json
 {
   "absorb_amount": "1 + level * 0.1",
   "aura_costs": [{"type": "mxt:aura", "aura": "example:spirit_power", "amount": 1}],
   "tick_interval": 20,
-  "tick_action": {"type": "mxt:no_op"}
+  "tick_action": {"type": "mxt:no_op"},
+  "cultivate_action": {"type": "mxt:no_op"}
 }
 ```
 

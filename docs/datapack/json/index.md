@@ -24,7 +24,7 @@ title: 动态注册表
 | `blueprint_binding` | `mxt/blueprint_binding` | 认领图纸物品，并给出它们提供的锻造蓝图。 |
 | `technique` | `mxt/technique` | 功法定义：可学习、按水平授予能力与修炼修正。 |
 | `skill_stage` | `mxt/skill_stage` | 技能水平链的单级定义。 |
-| `cultivate_action` | `mxt/cultivate_action` | 一次运功法门：吸收哪些环境灵气、每刻做什么、代价与收获。 |
+| `cultivation` | `mxt/cultivation` | 一次运功法门：吸收哪些环境灵气、每 tick 做什么、结算成功那一拍做什么、代价与收获。 |
 | `spirit_herb` | `mxt/spirit_herb` | 已有物品的灵植元数据。 |
 | `medicinal_property` | `mxt/medicinal_property` | 药性身份：一种药用效果的名字与描述。 |
 | `alchemy_furnace` | `mxt/alchemy_furnace` | 炉型规格：槽位、一炉容量与炉温回落速度。 |

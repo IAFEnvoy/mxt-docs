@@ -9,7 +9,7 @@ This page follows [Define Aura and Realms](./define-aura-and-realms.md): that on
 
 ## What You Are Building
 
-- One `cultivate_action` whose "does this tick yield anything" asks "is there a friend beside me holding a technique manual".
+- One `cultivation` whose "does this tick yield anything" asks "is there a friend beside me holding a technique manual".
 - That test, assembled from three pieces that already exist: `mxt:partner` (scans the bodies around), `mxt:target_condition` (asks the question about the other body), `mxt:main_hand_item` (asks what that body holds in its main hand).
 - Two choices: when the partner walks away, does the body keep sitting with no results, or stop as well.
 - A way for both bodies to get hold of the manual.
@@ -17,7 +17,7 @@ This page follows [Define Aura and Realms](./define-aura-and-realms.md): that on
 ## Step 1 — The Method
 
 ```json
-// data/example/mxt/cultivate_action/dual_meditation.json
+// data/example/mxt/cultivation/dual_meditation.json
 {
   "priority": 10,
   "tick_interval": 20,
@@ -112,10 +112,10 @@ To pin it to "the manual of that one technique", give the technique a [technique
 Two ready-made outlets, both in the same definition:
 
 - **Rate**: write `absorb_amount` higher (the one above is `3 + realm_rank * 0.15` against the solo method's `1.5`).
-- **Extra gains**: add mastery or a resource in `tick_action`. It runs **only on a settlement that actually happened** — that is, on the ticks where `cultivate_condition` held — so it needs no condition of its own:
+- **Extra gains**: add mastery or a resource in `cultivate_action`. It runs **only on a settlement that actually happened** — that is, on the ticks where `cultivate_condition` held — so it needs no condition of its own (use `tick_action` for something that should happen on every tick):
 
 ```json
-"tick_action": { "type": "mxt:add_resource", "resource": "example:qi_mastery", "amount": "2" }
+"cultivate_action": { "type": "mxt:add_resource", "resource": "example:qi_mastery", "amount": "2" }
 ```
 
 ## Verify
@@ -139,6 +139,6 @@ Two ready-made outlets, both in the same definition:
 
 ## Next
 
-- [cultivate_action](../datapack/json/cultivate_action.md) — how the three conditions divide the work, and every field.
+- [cultivation](../datapack/json/cultivation.md) — how the three conditions divide the work, and every field.
 - [Entity Condition Types](../datapack/types/condition/entity_condition_types.md) — the field tables for `mxt:partner`, `mxt:main_hand_item` and `mxt:cultivating`.
 - [Technique Binding](../datapack/json/technique_binding.md) — how a manual is read and where a dedicated carrier item comes from.
