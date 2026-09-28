@@ -102,6 +102,28 @@ The last line is how a **manual** is made: a stack teaches a technique only whil
 | Spirit Stone Ore | `mxt:spirit_stone_ore` | The mod's spirit stone ore block; it drops experience when mined. Aura contributions are defined by datapacks. |
 | Spirit Stone Block | `mxt:spirit_stone_block` | The storage block; the bundled `block_aura` entry makes it an aura source. |
 
+## Alchemy and Spirit Herbs
+
+A furnace is not one block: it is a fixed 3x3x3 you build by hand. The core carries the furnace spec, the two input stores split main ingredients from auxiliary ingredients and the catalyst, the output store only hands results out, and the other 22 cells are casing.
+
+| Block | ID | Function |
+|---|---|---|
+| Alchemy Furnace Core | `mxt:alchemy_furnace` | The cell on the front face at the middle layer. The exotic fire goes here, and the heat readout plus the Set / Start / Abort controls sit on the page this cell opens. |
+| Main Ingredient Input | `mxt:alchemy_main_input` | On your left when you face the front. Two main-ingredient slots. |
+| Auxiliary Ingredient Input | `mxt:alchemy_auxiliary_input` | On your right when you face the front. Two auxiliary slots plus one catalyst slot. |
+| Alchemy Output | `mxt:alchemy_output` | Top centre. Four take-only output slots. |
+| Alchemy Furnace Casing | `mxt:alchemy_furnace_casing` | The other 22 cells, each carrying its own wall material. Casing opens no screen. |
+| Spirit Herb Plot | `mxt:spirit_herb_plot` | One plant per plot: right-click with seeds to plant, right-click a mature plant to harvest, sneak with an empty hand to take the seeds back. |
+| Pill | `mxt:pill` | The pill carrier: vanilla eating, a name and a tooltip. What a pill does, how many times it can be taken and how much toxicity it adds all come from its pill binding. |
+
+The hand feel is: **exotic fire in the core, main ingredients in the left store, auxiliary ingredients and the catalyst in the right store, and the result taken from the output store.** Loading materials never starts a batch by itself; a player presses Start on the core's page. The centre cell must stay empty, and a shell with a missing cell, an invalid wall material or a cell claimed by another furnace does not form and cannot run.
+
+**There is no built-in heat source.** The item that heats a furnace has to come from a mod; a data pack cannot create one. The temperature ceiling is the lower of the coldest wall material in the whole furnace and the heat source's own ceiling.
+
+Neither the input stores nor the core's fire slot accept hoppers; the output store can only be pulled from its bottom face, and once the furnace is formed that face looks onto the centre air cell, so no hopper fits there. Removing casing or a store while a batch is running settles that batch as a failure once and does not return the materials already loaded; removing a store only drops that store's own contents.
+
+Eating a pill accumulates toxicity: what a pill does, where the threshold sits and what is left after an overdose are on [pill_binding](../datapack/json/pill_binding.md), and the mod only keeps the ledger. Toxicity does not fade on its own by default; with **Server Config → Alchemy → Natural toxicity decay per second** set to a positive number, an active entity that already has toxicity loses some once every 20 ticks, nothing happens offline, and an entity that has never taken a pill does not gain an empty ledger.
+
 ## Item Bindings
 
 MiXianTu does not create logical datapack items. Physical items must be registered by Minecraft, a content mod or KubeJS; datapacks only attach MiXianTu gameplay rules to those existing item IDs.

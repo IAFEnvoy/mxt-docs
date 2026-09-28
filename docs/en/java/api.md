@@ -32,12 +32,13 @@ Three things up front:
 | Ask "will a formation stop this" | [`FormationProtection`](#formationprotection) | `runtime.formation` |
 | Ask "does it count as one of mine" | [`FriendService`](#friendservice) | `runtime.friend` |
 | Compute an item's currency value | [`CurrencyValueService`](#currencyvalueservice) | `runtime.economy` |
+| Preview a batch, light a furnace, abort a batch | [`AlchemyWorkstationService`](#alchemyworkstationservice) | `runtime.alchemy` |
 
 ## Reading data definitions {#definitions}
 
 ### `MxtDatapackRegistries` {#mxtdatapackregistries}
 
-Package `com.iafenvoy.mxt.registry`. The declarations of the 35 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
+Package `com.iafenvoy.mxt.registry`. The declarations of the 37 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
 
 Reading a value by id / holder (it reads the **server** registry):
 
@@ -368,7 +369,7 @@ Key points:
 A formation's framework (structure, radius, costs) is on `Formation`; "what this formation does" is decided by its `actions` list, and every item in that list is a **functional module**.
 
 - `FormationActionType` (`com.iafenvoy.mxt.data.formation`) is the shape of a module: a `codec()`, plus a `CODEC` dispatching on the JSON `"type"` field (it must be a `Codec` rather than a `MapCodec`, because a formation holds a **list** of modules).
-- The dispatch registry `mxt:formation_action_type` is a **built-in registry** (default entry `none`), registered statically in code through `NewRegistryEvent`, and **not one of the 35 datapack registries in `MxtDatapackRegistries`**.
+- The dispatch registry `mxt:formation_action_type` is a **built-in registry** (default entry `none`), registered statically in code through `NewRegistryEvent`, and **not one of the 37 datapack registries in `MxtDatapackRegistries`**.
 - So: **a datapack can freely add `mxt:formation` entries (module combinations and parameters), but it cannot add a module type**. One more module kind = one record + one `DeferredRegister` registration, and the runtime dispatches on the record type, which is why the `data` package never touches the world.
 - There are currently only 5 legal `type`s, all registered in `MxtFormationActionTypes`: `mxt:none` (`NONE`, also the dispatch registry's default), `mxt:attack` (`ATTACK`), `mxt:buff` (`BUFF`), `mxt:protection` (`PROTECTION`), `mxt:range_display` (`RANGE_DISPLAY`).
 - Registration happens only once through `MxtFormationActionTypes.REGISTRY`; **do not register it again elsewhere, and do not build a second formation module registry**.
@@ -461,6 +462,28 @@ Key points:
 - **`empty` and `0L` are two different conclusions**: `empty` = not currency / no server / overflow / no definition found; `0L` = it is currency, but the stack is empty or it is currently unavailable; on the exchange side "no quotes" shows up as an **empty list**.
 - **A query without a holder treats any definition that writes `unavailable_when` as unavailable** (internally it requires that list to be empty); pass a holder to judge by conditions.
 - The quality multiplier is the **only** place where "item currency value meets quality": it multiplies the `value_multiplier` of the quality the priced stack resolves for itself; when the product is below 1, past the long ceiling, or no longer finite, the **declared denomination is kept** rather than clamped.
+
+## Alchemy {#alchemy}
+
+### `AlchemyWorkstationService` {#alchemyworkstationservice}
+
+Package `com.iafenvoy.mxt.runtime.alchemy`. The furnace's **one intake point**: previewing, lighting, aborting and the per-tick advance all live here, and the block entity only answers state (see [AlchemyWorkstation](interfaces/alchemy/alchemy-workstation.md)).
+
+| Method | Purpose | Notes |
+| --- | --- | --- |
+| `start(ServerPlayer player, AlchemyWorkstation station)` | Lights the furnace | Returns `StartResult(started, failure, qualityFailure)`. The materials are consumed only once the whole judgement chain has passed: structure, furnace spec, quality, where the inputs sit and how many there are, whether the temperature can be reached, the ambient aura, and whether the output bin can take the result; a cancellation from `alchemyCraft`'s `Pre`, or a listener that moved the real inventory, gives `CANCELLED` and **does not restore the inventory**. |
+| `preview(ServerPlayer player, AlchemyWorkstation station)` | Previews the same judgement and **takes no chosen recipe** | Returns `AlchemyPreview(mixture, candidates, resolvedRecipe, blocker, parameters, qualityFailure, successOutputs, failureOutputs)`; lighting uses that same `parameters`, so a preview and a real run never give two different answers. |
+| `abort(ServerLevel level, BlockPos pos, AlchemyWorkstation station)` / `abort(..., AlchemyFailure reason)` | Aborts the active batch | Settles it as a failure once, and the materials already consumed are not returned; a batch that is already `READY`, or already settled, is not settled a second time. |
+| `furnaceDefinition(Provider access, ItemStack stack)` | Resolves a furnace spec from a furnace item | An empty stack, no component, an empty id inside the component, or a definition that is not in the registry all give empty. |
+| `tick(ServerLevel level, BlockPos pos, AlchemyWorkstation station)` | Advances one tick | Called by the core block entity's own server tick; the temperature advance, the phase changes, the pending output and the settlement all happen here. |
+
+Result types: `StartResult`, `AlchemyPreview`, `Parameters` (the recipe vector evaluated once at lighting and frozen into the batch), and `enum AlchemyFailure {FURNACE_QUALITY, QUALITY_CONDITIONS, BINDING_CONDITIONS, UNBOUND, MAX_USES, COOLDOWN, NO_FURNACE, STRUCTURE, ACTIVE, CAPACITY, SLOTS, ZERO_POWER, NOT_HERB, INSUFFICIENT, CONFLICT, IMBALANCE, AMBIGUOUS, TEMPERATURE, ENVIRONMENT, INVALID_FORMULA, OUTPUT_CAPACITY, CANCELLED, DISABLED}` (23 values).
+
+Key points:
+
+- **The temperature and the outputs are not written in from outside**: `Parameters` is evaluated once at the moment of lighting and frozen, the active batch reads that frozen copy, and only a batch started after a `/reload` reads a new recipe.
+- **`start` and `preview` share one judgement**: temperature and output capacity only take part in accepting or rejecting the entry that has already been chosen, and never make the judgement pick a weaker recipe.
+- **A fire answers only two numbers**, see [AlchemyHeatSource](interfaces/alchemy/alchemy-heat-source.md).
 
 ## The server and client boundary {#boundary}
 

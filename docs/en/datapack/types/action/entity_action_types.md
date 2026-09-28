@@ -905,6 +905,23 @@ A non-living target is a silent no-op. A non-finite evaluated amount does nothin
 
 **The write lands even while the lifespan master switch is off**, because that switch only decides whether time flows. See [Lifespan](/en/player-guide/lifespan).
 
+### `mxt:modify_pill_toxicity`
+
+Rewrites the pill toxicity accumulated on the target.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | String | `add` | `add` or `set`. |
+| `amount` | Number provider | **required** | The amount. |
+
+```json
+{ "type": "mxt:modify_pill_toxicity", "mode": "add", "amount": -30 }
+```
+
+This is the **only** write in a data pack that puts numbers of your own choosing into the toxicity ledger. A negative `add` is how a pack clears toxicity, and the value never goes below `0`; a hard-coded constant under `set` must be non-negative or loading reports an error. A non-living target is a silent no-op, and a non-finite evaluated amount does nothing.
+
+Toxicity is normally accumulated by the consumption rules of [pill_binding](../../json/pill_binding.md); **Server Config → Alchemy → Natural toxicity decay per second** defaults to `0`, which means it never fades on its own.
+
 ### `mxt:reincarnate`
 
 Makes the target be **reborn** on the spot.

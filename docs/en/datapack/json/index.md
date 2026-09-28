@@ -1,11 +1,11 @@
 ---
 title: Dynamic Registries
-description: The mods 35 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
+description: All 37 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
 ---
 
 # Dynamic Registries
 
-The table below lists the mod's 35 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it. The `alchemy_recipe` and `spirit_crafting` rows are not datapack registries but recipe types built on the vanilla recipe system, listed here so they can be looked up in the same place. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
+The table below lists the mod's 37 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it. The `alchemy_recipe` and `spirit_crafting` rows are not datapack registries but recipe types built on the vanilla recipe system (`mxt:alchemy` and `mxt:spirit_shaped` / `mxt:spirit_shapeless`), listed here so they can be looked up in the same place: their JSON goes in `data/<namespace>/recipe/`, never in `mxt/alchemy_recipe/`. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
 
 | Registry | Directory | Purpose |
 | --- | --- | --- |
@@ -27,6 +27,9 @@ The table below lists the mod's 35 datapack registries. In the field tables, "De
 | `skill_stage` | `mxt/skill_stage` | One level of a skill mastery chain. |
 | `cultivate_action` | `mxt/cultivate_action` | One cultivation routine: which ambient aura it absorbs, what it does every tick, and what it costs and yields. |
 | `spirit_herb` | `mxt/spirit_herb` | Spirit herb metadata for existing items. |
+| `medicinal_property` | `mxt/medicinal_property` | Medicinal identities: a name and description for one medicinal effect. |
+| `alchemy_furnace` | `mxt/alchemy_furnace` | Furnace specifications: slots, per-batch capacity and cooling rate. |
+| `alchemy_wall_material` | `mxt/alchemy_wall_material` | Wall materials: the temperature limit of one casing block. |
 | `alchemy_recipe` | `recipe` (recipe type `mxt:alchemy`) | Alchemy recipes. |
 | `spirit_crafting` | `recipe` (recipe type `mxt:spirit_shaped` / `mxt:spirit_shapeless`) | Spirit crafting recipes, which only run in the Spirit Crafting Table (`mxt:spirit_crafting_table`). |
 | `formation` | `mxt/formation` | Formation lifecycle and aura overrides. |

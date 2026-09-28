@@ -153,6 +153,6 @@ The IDs `mxt:environment_concentration` and `mxt:actual_concentration` exist in 
 
 Datapack definitions do not write a `translation_key`; the display name is generated from the identifier as `<category>.<registry namespace>.<definition namespace>.<path>`. The category of `resource` is `resource`, and the registry namespace is always `mxt` for MiXianTu's own registries, so `example:qi` looks up `resource.mxt.example.qi`. A `/` in the path goes into the key **as written** (`example:foo/bar` gives `resource.mxt.example.foo/bar`); sorting definitions into subdirectories per category does not add a second set of translation-key rules.
 
-`resource` is one of the nineteen registries that may also carry an optional `name` / `description`: written, they use your text, and only when omitted does the generated key above apply (with `.description` appended for the description). Both fields are only stored and read today; nothing draws them yet.
+`resource` is one of the 23 registries that may also carry an optional `name` / `description`: written, they use your text, and only when omitted does the generated key above apply (with `.description` appended for the description). Both fields are only stored and read today; nothing draws them yet.
 
 :::

@@ -19,7 +19,7 @@ A stack's quality is the **first** of these that answers:
 
 1. A `mxt:quality` **component** on the stack (a whole quality object);
 2. the tier recorded by a forge result (`mxt:forging_result`) on the stack;
-3. a **definition default**: `quality` on an [artifact](/en/datapack/json/artifact) or on a [technique](/en/datapack/json/technique);
+3. a **definition default**: `quality` on an [artifact](/en/datapack/json/artifact), a [technique](/en/datapack/json/technique) or an [alchemy furnace](/en/datapack/json/alchemy_furnace);
 4. the **entry tier of the ladder** this stack sits on;
 5. the `quality` a matching [spirit herb](/en/datapack/json/spirit_herb) declares.
 

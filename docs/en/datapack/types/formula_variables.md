@@ -177,6 +177,15 @@ A context built from an entity can read that entity's lifespan ledger through tw
 
 They read the entity the formula is evaluated for (the context's caster, or the player when the context has no caster). A body with **no ledger** reads `NaN` for both, so a condition can tell "never accounted for" from "accounted for and already spent", which reads `0`. How a ledger comes to exist is on [Lifespan](/en/player-guide/lifespan).
 
+### Pill Toxicity and Herb Age
+
+| Variable | Available when | Description |
+| --- | --- | --- |
+| `pill_toxicity` | The context has an entity | Pill toxicity accumulated on the entity the formula is evaluated for. An entity that has never taken a pill reads `0` and does not gain an empty record for it; in a Level-only or empty context this name cannot be provided at all. |
+| `herb_age` | Only inside that herb's own potency formulas | The age of the stack, a non-negative integer. It is **local**: it is injected into `main_effects`, `auxiliary_effects` and `catalyst_power`, it cannot be read anywhere else, and the pipeline never multiplies age in a second time. |
+
+Write the age bonus into the expression yourself when a potency formula needs it, for example `"3 + herb_age / 50"`. The age is read from the stack's `mxt:herb_age` component, falling back to that herb's `default_age` when the component is absent.
+
 ## Where Each Variable Is Available
 
 Which variables a formula can read is decided by the objects the caller puts into the context. The table below lists the main evaluation sites.
@@ -193,7 +202,8 @@ Which variables a formula can read is decided by the objects the caller puts int
 | Cultivate action conditions and amounts | caster, plus a resource context for the per-resource fields | Entity family; resource family where a resource is bound |
 | Realm-stage and technique passive attribute modifiers | caster | Entity family |
 | Curse duration, tick interval, conditions, actions | caster (or the context of whatever applied the curse) | Entity family, plus the payload of the ability that applied it |
-| Item, weapon, pill and technique bindings, item quality, pill toxicity | the user or holder entity | Entity family, plus `target_health` / `target_is_living` on a weapon attack |
+| Item, weapon, pill and technique bindings, item quality, pill toxicity | the user or holder entity | Entity family (including `pill_toxicity`), plus `target_health` / `target_is_living` on a weapon attack |
+| Spirit herb potency (`main_effects`, `auxiliary_effects`, `catalyst_power`) | The stack itself, plus whatever context the caller supplies | The local `herb_age`; the entity family when the context carries an entity |
 | Forging, formations, contracts, creature profiles, secret realms, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for `entity_tick_action`; + the secret realm family inside an instance) |
 | Tribulation timeline entry duration and conditions | caster | Entity family + `aura_tribulation_modifier` |
 | Formulas evaluated from a Level alone instead of an entity: formation `tick_action` and `deactivate_action`, formation aura bonus, spirit crafting table costs, KubeJS block actions and conditions | nothing | `zero`, `random` only |

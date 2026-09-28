@@ -29,7 +29,7 @@ Java extensions should reuse the existing data definitions, actions, conditions,
 ## Next Steps
 
 - [Public API](./api.md) — the runtime services an addon calls into, from `AuraService` to `DefinitionText`.
-- [Interfaces](./interfaces/index.md) — one page per interface: aura storage, creature contracts, the wheel and keys, definitions and costs.
+- [Interfaces](./interfaces/index.md) — one page per interface: aura storage, creature contracts, the wheel and keys, definitions and costs, alchemy.
 - [Registries and Data Tables](./registries.md) — built-in type registries, the datapack registry list and the codec naming convention.
 - [Network Protocol and Server Authority](./network.md) — every C2S and S2C payload, and the one channel that carries item contents.
 - [Information Panel](./information-panel.md) — register your own lines in the character information panel.

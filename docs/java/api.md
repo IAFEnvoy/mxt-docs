@@ -32,12 +32,13 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 | 问"这一下会不会被阵法拦下" | [`FormationProtection`](#formationprotection) | `runtime.formation` |
 | 问"它算不算我的人" | [`FriendService`](#friendservice) | `runtime.friend` |
 | 算一件物品的货币价值 | [`CurrencyValueService`](#currencyvalueservice) | `runtime.economy` |
+| 预览一炉、开一炉、终止一炉 | [`AlchemyWorkstationService`](#alchemyworkstationservice) | `runtime.alchemy` |
 
 ## 数据定义怎么读 {#definitions}
 
 ### `MxtDatapackRegistries` {#mxtdatapackregistries}
 
-包 `com.iafenvoy.mxt.registry`。35 张原生数据包注册表的声明与统一读取入口，`/reload` 重建与客户端同步都交给原版注册表系统，这个类**不持有任何快照**。
+包 `com.iafenvoy.mxt.registry`。37 张原生数据包注册表的声明与统一读取入口，`/reload` 重建与客户端同步都交给原版注册表系统，这个类**不持有任何快照**。
 
 按 id / holder 取值（读服务端注册表）：
 
@@ -368,7 +369,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 阵法的框架（结构、半径、消耗）在 `Formation` 上，"这个阵法干什么"由它的 `actions` 列表决定，而列表里每一项就是一个**功能模块**。
 
 - `FormationActionType`（`com.iafenvoy.mxt.data.formation`）是模块的形状：一个 `codec()`，加一个按 JSON 的 `"type"` 字段分派的 `CODEC`（必须是 `Codec` 而不是 `MapCodec`，因为阵法持有的是模块**列表**）。
-- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `none`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那 35 张数据包注册表里**。
+- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `none`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那 37 张数据包注册表里**。
 - 于是：**数据包能自由新增 `mxt:formation` 条目（模块组合与参数），但新增不了模块类型**。多加一种模块 = 一条记录 + 一次 `DeferredRegister` 注册，运行时按记录类型分派，`data` 包因此不碰世界。
 - 现在合法 `type` 只有 5 个，都登记在 `MxtFormationActionTypes`：`mxt:none`（`NONE`，也是分派表默认项）、`mxt:attack`（`ATTACK`）、`mxt:buff`（`BUFF`）、`mxt:protection`（`PROTECTION`）、`mxt:range_display`（`RANGE_DISPLAY`）。
 - 注册只经 `MxtFormationActionTypes.REGISTRY` 一次，**别在别处再注册一遍，也别另建第二张阵法模块表**。
@@ -461,6 +462,28 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 - **`empty` 与 `0L` 是两种结论**：`empty` = 不是货币 / 没有服务端 / 溢出 / 找不到定义；`0L` = 是货币，但空堆或当前不可用；兑换那边"没有报价"表现为**空列表**。
 - **不带持有者的查询会把任何写了 `unavailable_when` 的定义当成不可用**（内部要求那份列表为空）；要按条件判定就传 holder。
 - 品质倍率是"物品货币价值遇见品质"的**唯一**地方：乘的是被定价那一堆自己解出的品质的 `value_multiplier`；乘积小于 1、越过 long 上界或不再有限时**保留声明面额**，而不是夹取。
+
+## 炼丹 {#alchemy}
+
+### `AlchemyWorkstationService` {#alchemyworkstationservice}
+
+包 `com.iafenvoy.mxt.runtime.alchemy`。丹炉的**唯一受理点**：预览、开炉、终止与每刻推进都在这里，方块实体只回答状态（见 [AlchemyWorkstation](interfaces/alchemy/alchemy-workstation.md)）。
+
+| 方法 | 作用 | 备注 |
+| --- | --- | --- |
+| `start(ServerPlayer player, AlchemyWorkstation station)` | 开一炉 | 返回 `StartResult(started, failure, qualityFailure)`。整条判定链跑完才扣料：结构、炉型、品质、投料摆放与容量、温度够不够得到、环境灵气、产物仓装不装得下；被 `alchemyCraft` 的 `Pre` 取消、或监听器改动了真实库存，都给 `CANCELLED` 且**不还原库存**。 |
+| `preview(ServerPlayer player, AlchemyWorkstation station)` | 预览同一套判定，**不接收所选配方** | 返回 `AlchemyPreview(mixture, candidates, resolvedRecipe, blocker, parameters, qualityFailure, successOutputs, failureOutputs)`；开炉走的就是同一份 `parameters`，所以预览与实跑不会给出两个答案。 |
+| `abort(ServerLevel level, BlockPos pos, AlchemyWorkstation station)` / `abort(..., AlchemyFailure reason)` | 终止活动批次 | 按失败结算一次，已投入的材料不返还；已经 `READY` 或已经结算过的批次不再结算第二次。 |
+| `furnaceDefinition(Provider access, ItemStack stack)` | 由一件炉体解析炉型规格 | 堆是空的、没有组件、组件里的 id 为空、或那条定义不在注册表里，都给空。 |
+| `tick(ServerLevel level, BlockPos pos, AlchemyWorkstation station)` | 每刻推进一次 | 由核心方块实体自己的服务端 tick 调；推炉温、进出阶段、生成待产出与结算都在这里。 |
+
+结果类型：`StartResult`、`AlchemyPreview`、`Parameters`（开炉时求值一次、冻结进批次的配方向量），以及 `enum AlchemyFailure {FURNACE_QUALITY, QUALITY_CONDITIONS, BINDING_CONDITIONS, UNBOUND, MAX_USES, COOLDOWN, NO_FURNACE, STRUCTURE, ACTIVE, CAPACITY, SLOTS, ZERO_POWER, NOT_HERB, INSUFFICIENT, CONFLICT, IMBALANCE, AMBIGUOUS, TEMPERATURE, ENVIRONMENT, INVALID_FORMULA, OUTPUT_CAPACITY, CANCELLED, DISABLED}`（23 个）。
+
+要点：
+
+- **温度与产物不是外部写进去的**：`Parameters` 在开炉那一刻求值一次并冻结，活动批次读的是这份冻结值，`/reload` 之后新批次才读新配方。
+- **`start` 与 `preview` 共用同一条判定**：温度与产物容量只在"接受还是拒绝已经选出的那一条"这一步参与，不会让判定改选一条更弱的配方。
+- **异火只回答两个数**，见 [AlchemyHeatSource](interfaces/alchemy/alchemy-heat-source.md)。
 
 ## 服务端与客户端的边界 {#boundary}
 

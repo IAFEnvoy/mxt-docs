@@ -88,4 +88,4 @@ aside: false
 
 :::
 
-`aura` 是可以自带可选 `name` / `description` 的十九张表之一，省略时用生成键；生成规则与语言文件的写法见[数据包开发总览](../overview.md)。
+`aura` 是可以自带可选 `name` / `description` 的 23 张表之一，省略时用生成键；生成规则与语言文件的写法见[数据包开发总览](../overview.md)。

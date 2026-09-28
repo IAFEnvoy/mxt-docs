@@ -1,0 +1,39 @@
+---
+title: AlchemyWorkstation
+---
+
+# AlchemyWorkstation
+
+The contract a **placed furnace core** (a block entity) implements (`com.iafenvoy.mxt.api`): the framework reads the nine logical slots, the two temperatures, the fire slot and the structure result from it, and then hands the lighting, the advance and the settlement to the server-side alchemy service. The core itself holds only the fire, the single furnace item and the active batch, while **the main, auxiliary and output bins keep their own items in their own block entities**, so `container()` is a live logical view rather than a copy of one inventory.
+
+| Member | Description |
+| --- | --- |
+| `Container container()` | A **live view of the nine logical slots** (main 0-1, auxiliary 2-3, catalyst 4, output 5-8), not a copied input list. |
+| `AlchemyWorkstationState state()` | The running batch and the two temperatures; this is what the server tick writes. |
+| `BlockPos getBlockPos()` | The core's position. |
+| `ItemStack furnaceItem()` | The single furnace item, count always `1`; callers **must not mutate it**. |
+| `Optional<Holder<AlchemyFurnaceDefinition>> furnaceDefinition()` | The furnace spec this item resolves to. |
+| `double temperature()` / `double targetTemperature()` | The current furnace temperature / the set temperature. |
+| `boolean setTargetTemperature(double temperature)` | The set temperature: accepted, returning `true`, only when it is finite and lies between `0` and `maximumTemperature()`. |
+| `void setTemperature(double temperature)` | Writes the current furnace temperature directly. |
+| `Container fireContainer()` | The fire slot: one slot, stack size capped at `1`. |
+| `boolean canPlaceFire(ItemStack stack)` | Whether this item may go into the fire slot right now. |
+| `boolean canTakeFire()` | Whether the fire may be taken out right now. |
+| `double wallTemperatureLimit()` | The **lowest** of the 22 wall ratings; `0` as soon as one wall is missing, unloaded, or has no material or no readable material definition. |
+| `double fireTemperatureLimit()` | The fire's maximum temperature; `0` when the slot is empty or that answer is not finite and positive. |
+| `double maximumTemperature()` | `min(wall, fire)`; `0` when either side is unavailable. |
+| `AlchemyFurnaceStructure.Status structureStatus()` | The structure result: formed, complete, missing blocks, unloaded chunks, cells claimed by another furnace. |
+| `AlchemyPhase phase()` | `IDLE` / `WARMING` / `RUNNING` / `READY`. |
+| `void setChanged()` | Marks the state dirty for saving and syncing after it changes. |
+
+**The fire slot holds one item, with its count pinned to `1`**: what goes in must implement [AlchemyHeatSource](./alchemy-heat-source.md), and `canPlaceFire` and `canTakeFire` both answer `false` while a batch is running, so a fire can neither be swapped nor taken out mid-batch; emptying the slot goes through `canTakeFire` as well.
+
+**The settable ceiling is the lower of two limits**: `wallTemperatureLimit()` takes the lowest of the 22 wall ratings, and one missing wall, one unloaded wall, or one unreadable wall material definition makes it `0` - a high-rated wall may not average away a weak spot; `fireTemperatureLimit()` reads the fire's own maximum, which is `0` when the slot is empty or the answer is not finite and positive; `maximumTemperature()` gives `min(wall, fire)` and `0` when either side is unavailable, in which case the set temperature can only sit at `0`. The set temperature must be finite and lie between `0` and that ceiling, and an illegal request is refused.
+
+**Advancing and settling belong to the server-side alchemy service**: reading the fire's `heatingPerTick`, pushing the temperature towards the set value without overshooting, entering and leaving `WARMING` / `RUNNING` / `READY`, generating the pending output, judging a batch as failed and settling it all happen there, so the core must not run a second temperature model in its own tick. **Lighting the furnace is not the core's job**: starting, previewing and aborting all go through `AlchemyWorkstationService` (`start` / `preview` / `abort`) in the [Public API](../../api.md), which takes the inputs it needs to decide from `container()`, `furnaceItem()`, `furnaceDefinition()`, `structureStatus()`, `getBlockPos()` and `state()` (busy or not, and which phase), plus `targetTemperature()` / `maximumTemperature()`; the core neither consumes the materials nor judges a recipe itself.
+
+**The structure check follows the framework's fixed shell**: 3×3×3, with the core at `(1,1,0)`, the main bin on the left, the auxiliary bin on the right, the output bin directly above the hollow centre (the middle of the top layer), and the other 22 cells as walls; `structureStatus()` answers that check as it stands, reporting missing blocks, unloaded chunks and cells claimed by another furnace separately. The framework uses that to decide between skipping one tick (unloaded) and settling the batch as failed once (missing or conflicting).
+
+**The core must not implement `Container`**: vanilla removal and hoppers would follow `Container` and eat the live stacks of the bins, so only the one logical transaction view, `container()`, may be handed out. `furnaceItem()` returns the live single item, and callers must not modify it in place.
+
+Furnace specs, slot numbering and the catalyst position are in [alchemy_furnace](/en/datapack/json/alchemy_furnace).

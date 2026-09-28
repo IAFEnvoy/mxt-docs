@@ -4,7 +4,7 @@ title: 动态注册表
 
 # 动态注册表
 
-下表列出本模组的 35 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。表格末尾的 `alchemy_recipe` 与 `spirit_crafting` 不是数据包注册表，而是使用原版配方系统的配方类型，一并列在此处便于查阅。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
+下表列出本模组的 37 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。表中的 `alchemy_recipe` 与 `spirit_crafting` 两行不是数据包注册表，而是使用原版配方系统的配方类型（`mxt:alchemy` 与 `mxt:spirit_shaped` / `mxt:spirit_shapeless`），一并列在此处便于查阅：它们的 JSON 放在 `data/<namespace>/recipe/`，不要放进 `mxt/alchemy_recipe/`。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
 
 | 注册表 | 文件目录 | 用途 |
 | --- | --- | --- |
@@ -26,6 +26,9 @@ title: 动态注册表
 | `skill_stage` | `mxt/skill_stage` | 技能水平链的单级定义。 |
 | `cultivate_action` | `mxt/cultivate_action` | 一次运功法门：吸收哪些环境灵气、每刻做什么、代价与收获。 |
 | `spirit_herb` | `mxt/spirit_herb` | 已有物品的灵植元数据。 |
+| `medicinal_property` | `mxt/medicinal_property` | 药性身份：一种药用效果的名字与描述。 |
+| `alchemy_furnace` | `mxt/alchemy_furnace` | 炉型规格：槽位、一炉容量与炉温回落速度。 |
+| `alchemy_wall_material` | `mxt/alchemy_wall_material` | 炉壁材料：一块炉壁的耐温上限。 |
 | `alchemy_recipe` | `recipe`（配方类型 `mxt:alchemy`） | 炼丹配方。 |
 | `spirit_crafting` | `recipe`（配方类型 `mxt:spirit_shaped` / `mxt:spirit_shapeless`） | 灵气合成配方，只在灵气工作台（`mxt:spirit_crafting_table`）里跑。 |
 | `formation` | `mxt/formation` | 阵法生命周期和灵气覆写。 |

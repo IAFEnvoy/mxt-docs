@@ -80,7 +80,7 @@ That is why the two zones here are both biome-level: the forest template simply 
 | `cultivate_condition` | An entity condition the environment must satisfy for cultivation. Note that `mxt:aura_range` requires `max` on every aura entry. |
 | `fluctuation` | Multiplies the concentration by `1 + amplitude * sin(2π * (time + offset_tick) / cycle)`, with a 24000-tick day cycle or a 192000-tick moon cycle. It only affects the queried concentration, never the stored inventory. |
 | `noise` | A seeded, reproducible Perlin offset so the map has gradients instead of hard borders. `scale` around `640`–`960` is recommended; `amplitude: 5` gives roughly a `-5..5` disturbance before the `/ 10 - 5` transform. |
-| `element_fit_bonus` / `element_conflict_penalty` | Adjust the cultivation modifier of a spirit root: `+ element_fit_bonus` when an aura whose `aura_type` is that root's element is present at the position, and `- element_conflict_penalty` when it is not. Both default to `0`. |
+| `element_fit_bonus` / `element_conflict_penalty` | Adjust the cultivation modifier of a spirit root: `+ element_fit_bonus` when an aura whose `aura_type` is that root's element is present at the position. The penalty multiplies the **opposition concentration** - the sum of the other elements in the zone that have an `overcomes` / `adapted_to` relation with the root's element - so with no opposing element (or in an empty area) it is `0`. Both default to `0`. |
 | `client_render` | Fog colour, the distance it is applied over (`8..256`) and how strongly it replaces the vanilla fog (`0..1`). The strength is also scaled by the concentration, so thin aura looks fainter. |
 | `client_hud` | Two optional bars: `stored_aura` reads the chunk inventory, `sensed_concentration` reads the environment template. They are drawn above the resource bars of the same side. |
 
@@ -92,11 +92,12 @@ The `rules` object adds environment policy:
 "rules": {
   "cultivate_suppress": false,
   "tribulation_modify": 0.15,
+  "spirit_plant_bonus": 0.25,
   "alchemy_env_bonus": true
 }
 ```
 
-`cultivate_suppress` aborts cultivation that is already running, and `tribulation_modify` injects the formula variable `aura_tribulation_modifier` into tribulation formulas. `alchemy_env_bonus` is settled: an area that sets it satisfies an alchemy recipe's `minimum_aura` requirement by itself, because the flag is a plain yes/no with no magnitude to scale an aura pool by. The other two fields — `spirit_plant_bonus` and `natural_spawn_herb` — have no consumer, because the mod has no spirit herb planting or growth system at all: growth, harvesting and generation are left to content mods.
+`cultivate_suppress` aborts cultivation that is already running, and `tribulation_modify` injects the formula variable `aura_tribulation_modifier` into tribulation formulas. With `alchemy_env_bonus` on, alchemy inside the area counts as satisfying a recipe's `minimum_aura` requirement: the flag is a plain yes/no with no magnitude to scale an aura pool by, so it stands in for the requirement rather than enlarging the pool. `spirit_plant_bonus` applies to spirit herbs planted in a **spirit herb plot**: the actual growth is `growth_rate × max(0, 1 + bonus)`, multiplied in once, so herbs in this area grow faster and nowhere outside it is affected.
 
 ## Step 2 — Aura From Blocks
 

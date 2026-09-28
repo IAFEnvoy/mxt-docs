@@ -81,6 +81,16 @@ MyBar bar = HudManager.register(new MyBar());
 
 内容那一侧是 `runtime/artifact/ArtifactStorageContainer`（`SimpleContainer` 子类）：开窗时从承载物的 `mxt:storage` 组件读进来——内容是其中按**这条储物技能自己的 id** 寻址的一条 `mxt:container` 记录（组件 `mxt:artifact_storage` 已删除），之后**每一次改动都在 `setChanged()` 里整份写回**（`ArtifactStorageService#replace`，一次组件更新而不是每格一次）。它**故意不持有那个物品堆**——法器的位置是会变的，往一个没人拿着的栈里写就是物品消失的经典成因：所以每次读写都按"这件法器还在不在玩家身上"重新解析（`ArtifactService#carried` 扫双手、背包与 Curios），`stillValid` 一旦为假，服务端每刻的菜单检查就会把窗口关掉。储物格数由定义给出：**按 9 向上取整、最多 6 行（54 格）**，容量与窗口永远是同一个数。
 
+## 丹炉的四个界面
+
+四个页面分别由核心、主药仓、辅药仓、产物仓打开，炉壁不打开任何界面。唯一开界面入口是 `AlchemyFurnaceMenus.open(ServerPlayer, BlockPos)`：方块右键时把访问位置交过去，它按那个位置的方块决定页面（核心＝监控、主药仓＝主药、辅药仓＝辅药、产物仓＝产物），别的方块什么都不开。
+
+布局不在 Java 里：四个页面各对应一份随模组发布的 `.ui.nbt` 模板——`assets/mxt/ui/alchemy_monitor.ui.nbt`、`alchemy_main_input.ui.nbt`、`alchemy_auxiliary_input.ui.nbt`、`alchemy_output.ui.nbt`。Java 只按稳定 ID 抓节点，然后绑状态、事件与真实槽位，**不手写布局树，也没有备用树**：四个模板都要有 `title`、`player_inventory` 与 `inventory_0`–`inventory_35`；监控页另有 `fire`、`monitor`、`temperature`、`limit`、`status`、`progress`、`target`、`apply`、`start`、`abort`，主药页有 `main_0` / `main_1`，辅药页有 `aux_0` / `aux_1` / `catalyst`，产物页有 `output_0`–`output_3`。模板缺了哪个必需节点，那一页就一个槽都不绑，并把缺的名字直接画在屏幕上——视觉重排随便改，这些 ID 不能改。
+
+模板会被种到游戏目录下的 `ldlib2/assets/mxt/ui/`，缺哪个补哪个、已有文件不覆盖，之后每次打开都从那里读当前文件。所以改模板就是改游戏目录里的那一份，改完重新打开丹炉界面即可生效；LDLib2 的 `/ldlib2_ui_editor` 只在单人世界可用，从编辑器资源管理器的 `assets/mxt/ui/` 打开同一份原生模板、保存再重开就行。
+
+监控页画的是服务端下发的只读读数（`AlchemyStateS2CPayload`，见[网络协议](./network.md)），界面自己不算配方，也不显示丹方名或丹方按钮；温度输入框、开始与终止只是把那三件事发回服务端。四个页面里的 `inventory_*` 是玩家物品栏的真实槽位，机器槽位与它们同在菜单里。
+
 ## 物品选择界面 `ItemPickerScreen`
 
 原版创造模式搜索 tab 的复刻，**只有内容是本 mod 的**：界面继承 `AbstractContainerScreen`，菜单 `PickerMenu` 就是 `CreativeModeInventoryScreen.ItemPickerMenu` 的形状——5×9 的槽位网格，内容是结果列表的一页窗口，外加底部一排 9 格的**玩家真实快捷栏**。物品、数量、模型种子、悬浮高亮（`container/slot_highlight_back/front`）和提示框全部由原版基类从槽位里读出来，界面自己一处都没画。
@@ -141,7 +151,7 @@ if (screen != null) Minecraft.getInstance().setScreen(screen);
 `ItemPickerManager` 只负责「注册表 → 可选项」的映射，现在只是**界面内容**的来源，服务端不再需要它。它产出的每一项是 `PickerItem(stack, names)`：**要画的堆**，加上**这一行能被哪些名字搜到**。堆本身保持原样，**不往物品上写任何东西**（没有自定义名称、没有后缀）——同一件替身物品代表好几个定义时靠搜索区分，不靠名字上的标记。名字交给目录自己给：
 
 - 物品/方块注册表的条目本身就是物品，堆上已经写着它叫什么，于是名字就是「它显示的名字 + 它的注册 id」；
-- 数据驱动定义没有自己的物品，堆上根本看不出它代表谁，于是名字由 `DefinitionText` 从它的 `Holder` / `ResourceKey` 生成翻译键得到——`mxt:fire` 在 `mxt:aura` 里就查 `aura.mxt.mxt.fire`——再补上它的 id。`resource`、`aura` 等 19 个注册表的定义自带 `name` / `description`，读字段本身；字段省略时由 `ContextNameCodec` 在加载期按 id 生成**同一套**键（描述再加 `.description`）；
+- 数据驱动定义没有自己的物品，堆上根本看不出它代表谁，于是名字由 `DefinitionText` 从它的 `Holder` / `ResourceKey` 生成翻译键得到——`mxt:fire` 在 `mxt:aura` 里就查 `aura.mxt.mxt.fire`——再补上它的 id。`resource`、`aura` 等 23 个注册表的定义自带 `name` / `description`，读字段本身；字段省略时由 `ContextNameCodec` 在加载期按 id 生成**同一套**键（描述再加 `.description`）；
 - 标签匹配展开出来的行，名字里既有那个物品自己的名字，也有它所属定义的名字和 id。
 
 用列表而不是单个名字，是因为一行可以有好几种叫法。界面不再需要从「注册表 key + 条目 id」去反推任何东西；只有 `over(...)` 那条路没有目录可问，界面自己补上「展示名 + item id」。

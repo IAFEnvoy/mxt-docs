@@ -19,7 +19,7 @@ title: /quality
 
 1. 堆上的 `mxt:quality` **组件**（整份品质对象）；
 2. 堆上的锻造结果 `mxt:forging_result` 记着的那一档；
-3. **定义默认档**：法器 [artifact](/datapack/json/artifact) 的 `quality`、功法 [technique](/datapack/json/technique) 的 `quality`；
+3. **定义默认档**：法器 [artifact](/datapack/json/artifact) 的 `quality`、功法 [technique](/datapack/json/technique) 的 `quality`，以及炉型 [alchemy_furnace](/datapack/json/alchemy_furnace) 的 `quality`；
 4. 这一栈所属**链条的入口档**；
 5. 匹配到的灵植 [spirit_herb](/datapack/json/spirit_herb) 声明的 `quality`。
 

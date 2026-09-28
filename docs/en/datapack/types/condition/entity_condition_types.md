@@ -441,6 +441,21 @@ Compares the entity's health divided by its maximum health.
 | `comparison` | Comparison operator | **required** | `==`, `!=`, `<`, `<=`, `>` or `>=`. |
 | `compare_to` | Double | **required** | The number to compare against. |
 
+### `mxt:pill_toxicity`
+
+Compares the pill toxicity accumulated on the entity.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `comparison` | Comparison operator | **required** | `==`, `!=`, `<`, `<=`, `>` or `>=`. |
+| `compare_to` | Double | **required** | The number to compare against. |
+
+```json
+{"type": "mxt:pill_toxicity", "comparison": ">=", "compare_to": 100}
+```
+
+Same shape as `mxt:health`. An entity that has never taken a pill reads `0` and does not gain an empty record for it. What raises toxicity, where the threshold sits and what is left after an overdose are on [pill_binding](../../json/pill_binding.md); to write the number directly, use `mxt:modify_pill_toxicity`.
+
 ### `mxt:fall_distance`
 
 Compares the entity's fall distance.

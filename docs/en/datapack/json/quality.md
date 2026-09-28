@@ -91,7 +91,7 @@ A stack's quality is taken as the **first one it can get**, in a fixed order:
 
 1. the `mxt:quality` **component** on the stack (a whole quality object) - what [`/quality set`](/en/player-guide/commands/quality) and [MxtQuality](/en/kubejs/api/quality) write, and what a successful `upgrade` writes too;
 2. the tier recorded by the forge result `mxt:forging_result` on the stack;
-3. the **definition default**: `quality` on an [artifact](./artifact.md) or a [technique](./technique.md);
+3. the **definition default**: `quality` on an [artifact](./artifact.md), a [technique](./technique.md) or an [alchemy furnace](./alchemy_furnace.md);
 4. the **entry tier of the ladder** this stack reads;
 5. the `quality` a matching [spirit herb](./spirit_herb.md) declares.
 

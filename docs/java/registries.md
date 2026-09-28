@@ -12,3 +12,5 @@ public static final DeferredRegister<MapCodec<? extends Cost>> REGISTRY =
 ```
 
 Definition 的 Holder Codec 命名为 `CODEC`，直接对象 Codec 命名为 `DIRECT_CODEC`。避免在静态字段初始化顺序中通过反向引用造成循环依赖。
+
+注册表按用途分成内容层与绑定层、一份定义从文件到一次结算经过什么、组件与声明谁压过谁，见[数据加载](/technical/data-loading)。

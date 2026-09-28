@@ -441,6 +441,21 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 | `comparison` | 比较运算符 | **必填** | `==`、`!=`、`<`、`<=`、`>` 或 `>=`。 |
 | `compare_to` | Double | **必填** | 比较的数值。 |
 
+### `mxt:pill_toxicity`
+
+比较实体身上累计的丹毒。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `comparison` | 比较运算符 | **必填** | `==`、`!=`、`<`、`<=`、`>` 或 `>=`。 |
+| `compare_to` | Double | **必填** | 比较的数值。 |
+
+```json
+{"type": "mxt:pill_toxicity", "comparison": ">=", "compare_to": 100}
+```
+
+形状与 `mxt:health` 相同。从未服过丹药的实体读 `0`，也不会因此多出一份空记录。丹毒怎么涨、阈值在哪、过量后剩多少写在 [pill_binding](../../json/pill_binding.md)；要直接改写这个数用 `mxt:modify_pill_toxicity`。
+
 ### `mxt:fall_distance`
 
 比较实体的下落距离。

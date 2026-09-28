@@ -153,6 +153,6 @@ aside: false
 
 数据包定义不写 `translation_key`，显示名由标识符自动生成：`<类别>.<注册表命名空间>.<定义命名空间>.<路径>`。`resource` 的类别就是 `resource`、注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`，所以 `example:qi` 查 `resource.mxt.example.qi`。路径里的 `/` **原样**进键（`example:foo/bar` 得到 `resource.mxt.example.foo/bar`），按类别分子文件夹不会多出第二套翻译键规则。
 
-`resource` 是可以自带可选 `name` / `description` 的十九张表之一，写了就用你的文本，省略才用上面的生成键（`description` 再加 `.description`）；这两个字段目前只被存储与读取，还没有地方绘制它们。
+`resource` 是可以自带可选 `name` / `description` 的 23 张表之一，写了就用你的文本，省略才用上面的生成键（`description` 再加 `.description`）；这两个字段目前只被存储与读取，还没有地方绘制它们。
 
 :::

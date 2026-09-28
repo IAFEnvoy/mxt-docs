@@ -69,17 +69,14 @@ Fluctuation only affects the queried environment concentration and never rewrite
 | --- | --- | --- | --- |
 | `cultivate_suppress` | Boolean | `false` | Whether cultivation is forbidden or aborted. |
 | `tribulation_modify` | Double | `0` | Tribulation difficulty modifier; a positive value makes it harder. |
-| `spirit_plant_bonus` | Double | `0` | Spirit herb growth multiplier modifier. |
-| `alchemy_env_bonus` | Boolean | `false` | Whether this zone counts as a favourable alchemy environment. |
-| `natural_spawn_herb` | Boolean | `false` | Whether natural spirit herb spawning is allowed. |
+| `spirit_plant_bonus` | Double | `0` | Spirit herb growth bonus. Must be finite and at least `-1`. |
+| `alchemy_env_bonus` | Boolean | `false` | Stands in for a pill recipe's environment gate `minimum_aura`. It does not pay a furnace's fuel. |
 
-`rules.cultivate_suppress` aborts cultivation that is already running. `tribulation_modify` injects the formula variable `aura_tribulation_modifier`. With `alchemy_env_bonus` on, a pill recipe whose position falls inside the zone **counts as satisfying** `minimum_aura` outright — it is a switch with no scalable quantity, so it can only stand in for the requirement rather than enlarge the pool; with it off, every entry is still compared against the recipe's own minimum.
+`rules.cultivate_suppress` aborts cultivation that is already running. `tribulation_modify` injects the formula variable `aura_tribulation_modifier`.
 
-::: warning Work in Progress
+`spirit_plant_bonus` multiplies the growth a spirit herb plot settles once every `20` ticks: `growth.growth_rate` from [spirit_herb](./spirit_herb.md) is evaluated first, then multiplied once by `max(0, 1 + spirit_plant_bonus)`, so do not multiply it again inside the expression. The value must be finite and at least `-1`; anything outside that is a load error.
 
-`spirit_plant_bonus` and `natural_spawn_herb` have no consumer today: the mod does not provide a spirit herb planting or growth system, and growth, harvesting and generation are by design left to content mods; `age` / `growth_rate` / `drop_chance` in [spirit_herb](./spirit_herb.md) are waiting on that same system. The two spirit herb classification tags (`element_tags` / `material_tags`) have nothing to do with these two fields — they are already wired up by `mxt:herb_tag`.
-
-:::
+With `alchemy_env_bonus` on, a pill recipe whose position falls inside the zone **counts as satisfying** `minimum_aura` outright — it is a switch with no scalable quantity, so it can only stand in for the requirement rather than enlarge the pool, and it supplies no heat to the furnace; with it off, every entry is still compared against the recipe's own minimum.
 
 ## `noise`
 
@@ -179,8 +176,7 @@ Environment resolution priority is fixed: **biome binding < dimension binding < 
     "cultivate_suppress": false,
     "tribulation_modify": 0.15,
     "spirit_plant_bonus": 0.2,
-    "alchemy_env_bonus": true,
-    "natural_spawn_herb": true
+    "alchemy_env_bonus": true
   },
   "element_fit_bonus": 0.25,
   "element_conflict_penalty": 0.2,

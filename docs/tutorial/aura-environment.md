@@ -80,7 +80,7 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 | `cultivate_condition` | 环境必须满足的实体条件，满足后才允许修炼。注意 `mxt:aura_range` 要求每条灵气都写 `max`。 |
 | `fluctuation` | 把浓度乘以 `1 + amplitude * sin(2π * (time + offset_tick) / cycle)`，周期为 24000 tick 的昼夜循环或 192000 tick 的月相循环。它只影响查询到的浓度，绝不改写已存的库存。 |
 | `noise` | 带种子、可复现的柏林噪声偏移，让地图有渐变而不是硬边界。`scale` 建议取 `640` 至 `960` 左右；`amplitude: 5` 在 `/ 10 - 5` 变换之前给出大约 `-5..5` 的扰动。 |
-| `element_fit_bonus` / `element_conflict_penalty` | 调整灵根的修炼修正：当位置上存在 `aura_type` 等于该灵根元素的灵气时 `+ element_fit_bonus`，不存在时 `- element_conflict_penalty`。两者默认都是 `0`。 |
+| `element_fit_bonus` / `element_conflict_penalty` | 调整灵根的修炼修正：位置上存在 `aura_type` 等于该灵根元素的灵气时 `+ element_fit_bonus`；惩罚项乘在**对立浓度**上——对立浓度是这片区域里与灵根元素有 `overcomes` / `adapted_to` 关系的**其它**元素的浓度之和，所以没有对立元素（或这处环境是空的）时惩罚是 `0`。两者默认都是 `0`。 |
 | `client_render` | 雾颜色、雾效作用的距离（`8..256`）以及它取代原版雾的强度（`0..1`）。强度还会按浓度缩放，所以稀薄的灵气看起来更淡。 |
 | `client_hud` | 两条可选的状态条：`stored_aura` 读区块库存，`sensed_concentration` 读环境模板。它们绘制在同一侧资源条的上方。 |
 
@@ -92,11 +92,12 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 "rules": {
   "cultivate_suppress": false,
   "tribulation_modify": 0.15,
+  "spirit_plant_bonus": 0.25,
   "alchemy_env_bonus": true
 }
 ```
 
-`cultivate_suppress` 会中止正在进行的修炼，`tribulation_modify` 把公式变量 `aura_tribulation_modifier` 注入天劫公式。`alchemy_env_bonus` 已经接上消费者：设置它的区域自己就满足炼丹配方的 `minimum_aura` 要求，因为这个标记只是纯粹的是/否，没有任何可用于缩放灵气池的量级。另外两个字段——`spirit_plant_bonus` 和 `natural_spawn_herb`——没有消费者，因为本模组完全没有灵植种植或生长系统：生长、采集与生成按设计留给内容模组。
+`cultivate_suppress` 会中止正在进行的修炼，`tribulation_modify` 把公式变量 `aura_tribulation_modifier` 注入天劫公式。`alchemy_env_bonus` 打开后，区域内的炼丹直接算满足配方的 `minimum_aura` 要求：它是开关、没有可缩放的量，所以只能顶替要求，不能把池子放大。`spirit_plant_bonus` 作用于种在**灵田**里的灵植：实际增长量是 `growth_rate × max(0, 1 + 这个值)`，只乘一次，所以这片区域里的药材长得更快，区域外不受影响。
 
 ## 第 2 步 —— 来自方块的灵气
 

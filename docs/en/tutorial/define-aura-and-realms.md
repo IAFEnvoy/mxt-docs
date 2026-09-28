@@ -250,7 +250,7 @@ The aura environment has enough depth to deserve its own page — that is [Build
 
 ## Step 6 — Names
 
-Display names are generated from the definition ID by default, so you do not have to write a translation key into the JSON — unless you want your own text: the definitions of 19 registries, including `resource`, `aura`, `realm_stage`, `element` and `cultivate_action`, may carry an optional `name` / `description`, both filled in from the id when omitted. Add the keys to your own language file:
+Display names are generated from the definition ID by default, so you do not have to write a translation key into the JSON — unless you want your own text: the definitions of 23 registries, including `resource`, `aura`, `realm_stage`, `element` and `cultivate_action`, may carry an optional `name` / `description`, both filled in from the id when omitted. Add the keys to your own language file:
 
 ```json
 // assets/example/lang/en_us.json

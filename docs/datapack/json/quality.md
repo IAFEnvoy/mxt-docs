@@ -91,7 +91,7 @@ aside: false
 
 1. 堆上的 `mxt:quality` **组件**（整份品质对象）——[`/quality set`](/player-guide/commands/quality) 与 [MxtQuality](/kubejs/api/quality) 写的就是它，`upgrade` 成功后也写它；
 2. 堆上的锻造结果 `mxt:forging_result` 记着的那一档；
-3. **定义默认档**：法器 [artifact](./artifact.md) 的 `quality`、功法 [technique](./technique.md) 的 `quality`；
+3. **定义默认档**：法器 [artifact](./artifact.md) 的 `quality`、功法 [technique](./technique.md) 的 `quality`，以及炉型 [alchemy_furnace](./alchemy_furnace.md) 的 `quality`；
 4. 这一栈所读链条的**入口档**；
 5. 匹配到的灵植 [spirit_herb](./spirit_herb.md) 声明的 `quality`。
 

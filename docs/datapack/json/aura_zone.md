@@ -69,17 +69,14 @@ aside: false
 | --- | --- | --- | --- |
 | `cultivate_suppress` | Boolean | `false` | 是否禁止或中止修炼。 |
 | `tribulation_modify` | Double | `0` | 天劫难度修正，正值提高难度。 |
-| `spirit_plant_bonus` | Double | `0` | 灵植生长倍率修正。 |
-| `alchemy_env_bonus` | Boolean | `false` | 这一带算不算「炼丹有利环境」。 |
-| `natural_spawn_herb` | Boolean | `false` | 是否允许自然刷新灵药。 |
+| `spirit_plant_bonus` | Double | `0` | 灵植生长加成。必须有限且 ≥ `-1`。 |
+| `alchemy_env_bonus` | Boolean | `false` | 顶替丹方的环境门槛 `minimum_aura`。不替丹炉支付燃料。 |
 
-`rules.cultivate_suppress` 会中止正在进行的修炼。`tribulation_modify` 注入公式变量 `aura_tribulation_modifier`。`alchemy_env_bonus` 开启后，位置落在该区域内的丹药配方**直接视为满足** `minimum_aura`——它是开关、没有可缩放的量，所以只能顶替要求，而不是把池子放大；关闭时仍按配方自己的最低值逐项比较。
+`rules.cultivate_suppress` 会中止正在进行的修炼。`tribulation_modify` 注入公式变量 `aura_tribulation_modifier`。
 
-::: warning 制作中
+`spirit_plant_bonus` 乘进灵田里每 `20` tick 一次的增长量：[spirit_herb](./spirit_herb.md) 的 `growth.growth_rate` 先按当前公式求值，再乘一次 `max(0, 1 + spirit_plant_bonus)`，所以公式里不要再乘它。这个值必须有限且不小于 `-1`，越界是加载错误。
 
-`spirit_plant_bonus` 与 `natural_spawn_herb` 目前没有消费者：本模组不提供灵植的种植与生长系统，生长、采集与生成按设计留给内容模组，[spirit_herb](./spirit_herb.md) 的 `age` / `growth_rate` / `drop_chance` 也在等同一套系统。灵植的两个分类标签（`element_tags` / `material_tags`）与这两个字段无关，它们已经由 `mxt:herb_tag` 接上。
-
-:::
+`alchemy_env_bonus` 开启后，位置落在该区域内的丹方**直接视为满足** `minimum_aura`——它是开关、没有可缩放的量，所以只能顶替要求，而不是把池子放大，也不替丹炉供热；关闭时仍按配方自己的最低值逐项比较。
 
 ## `noise`
 
@@ -179,8 +176,7 @@ aside: false
     "cultivate_suppress": false,
     "tribulation_modify": 0.15,
     "spirit_plant_bonus": 0.2,
-    "alchemy_env_bonus": true,
-    "natural_spawn_herb": true
+    "alchemy_env_bonus": true
   },
   "element_fit_bonus": 0.25,
   "element_conflict_penalty": 0.2,

@@ -105,6 +105,8 @@ export const sections = [
           { page: 'datapack/json/index', zh: '注册表总览', en: 'Registry Overview' },
           { page: 'datapack/json/ability', zh: 'ability（技能）', en: 'ability' },
           { page: 'datapack/json/alchemy_recipe', zh: 'alchemy_recipe（炼丹配方）', en: 'alchemy_recipe' },
+          { page: 'datapack/json/alchemy_furnace', zh: 'alchemy_furnace（炉型）', en: 'alchemy_furnace' },
+          { page: 'datapack/json/alchemy_wall_material', zh: 'alchemy_wall_material（炉壁材料）', en: 'alchemy_wall_material' },
           { page: 'datapack/json/artifact', zh: 'artifact（法器）', en: 'artifact' },
           { page: 'datapack/json/aura', zh: 'aura（灵气）', en: 'aura' },
           { page: 'datapack/json/aura_zone', zh: 'aura_zone（灵气区域）', en: 'aura_zone' },
@@ -122,6 +124,7 @@ export const sections = [
           { page: 'datapack/json/formation', zh: 'formation（阵法）', en: 'formation' },
           { page: 'datapack/json/item_aura', zh: 'item_aura（物品灵气）', en: 'item_aura' },
           { page: 'datapack/json/item_binding', zh: 'item_binding（物品绑定）', en: 'item_binding' },
+          { page: 'datapack/json/medicinal_property', zh: 'medicinal_property（药性）', en: 'medicinal_property' },
           { page: 'datapack/json/physique', zh: 'physique（体质）', en: 'physique' },
           { page: 'datapack/json/pill_binding', zh: 'pill_binding（丹药绑定）', en: 'pill_binding' },
           { page: 'datapack/json/quality', zh: 'quality（品质）', en: 'quality' },
@@ -268,6 +271,13 @@ export const sections = [
               { page: 'java/interfaces/definition/cost', zh: 'Cost', en: 'Cost' },
               { page: 'java/interfaces/definition/tooltip-appender', zh: 'TooltipAppender', en: 'TooltipAppender' }
             ]
+          },
+          {
+            text: { zh: '炼丹', en: 'Alchemy' },
+            items: [
+              { page: 'java/interfaces/alchemy/alchemy-heat-source', zh: 'AlchemyHeatSource', en: 'AlchemyHeatSource' },
+              { page: 'java/interfaces/alchemy/alchemy-workstation', zh: 'AlchemyWorkstation', en: 'AlchemyWorkstation' }
+            ]
           }
         ]
       },
@@ -284,6 +294,7 @@ export const sections = [
     text: { zh: '技术细节', en: 'Technical Details' },
     items: [
       { page: 'technical/index', zh: '总览', en: 'Overview' },
+      { page: 'technical/data-loading', zh: '数据加载', en: 'Data Loading' },
       { page: 'technical/damage', zh: '伤害系统', en: 'Damage System' },
       { page: 'technical/identification', zh: '敌我识别系统', en: 'Foe Identification' },
       { page: 'technical/aura', zh: '灵气计算', en: 'Aura Calculation' },

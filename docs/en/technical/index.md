@@ -19,6 +19,7 @@ It answers a different question from the other two categories:
 
 | Article | Contents |
 | --- | --- |
+| [Data Loading](./data-loading.md) | What one JSON file passes through on its way to a settlement: what the content and binding layers are, the four outcomes of decoding, where a world load and a `/reload` align the caches, where cross-entry validation reports, and why a component overrides a declaration. |
 | [Damage System](./damage.md) | The full path from a strike being dealt to a target losing health: why outgoing and incoming damage have to be settled in two different places, how element relations take part, which damage-dealing paths were folded into the pipeline, and the real order of operations behind a combat number. |
 | [Foe Identification](./identification.md) | How "does this entity count as mine" is answered: where the lists live, how the relation event overrides them, who answers for an offline player, how team mods plug in, and which callers ask the question today. |
 | [Aura Calculation](./aura.md) | How the aura value at a position is computed: how the static template is picked, how chunk stock and block emitters are merged, where the 140 µs of one query goes, how large the sub-chunk approximation error is (with two study charts), and why the client only ever sees a snapshot. |

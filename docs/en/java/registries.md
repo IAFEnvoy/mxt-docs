@@ -94,3 +94,5 @@ Every table the mod declares is listed — with its file directory, its purpose 
 ## Codecs
 
 A definition class exposes two codecs. `CODEC` reads and writes a `Holder<Definition>` reference and is what a field or another JSON file uses to point at a definition; `DIRECT_CODEC` reads and writes the whole object and is what a datapack registry uses for the entry itself. Read `DIRECT_CODEC` when you need the values of a definition, for example `Resource.DIRECT_CODEC` or `ItemQuality.DIRECT_CODEC`.
+
+How the registries split into a content layer and a binding layer, what one definition passes through from its file to a settlement, and whether a component or a declaration wins, is in [Data Loading](../technical/data-loading.md).

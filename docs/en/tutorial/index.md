@@ -67,7 +67,7 @@ data/example/
 | [Inscribe a Talisman](./inscribe-a-talisman.md) | Carrying abilities on an item, pouring aura into it, firing it, and the two rule sets for the hand and a display stand. | You want magic the player can carry around. |
 | [Bring Down a Tribulation](./bring-down-a-tribulation.md) | A tribulation timeline a breakthrough starts: wind-up, beats, coloured lightning, and what success and failure do. | You want a breakthrough to be dangerous. |
 | [Forge a Treasure](./forge-a-treasure.md) | A forge-table line that runs end to end: methods, tool bindings, a blueprint item, plus the meter, target range, finish pattern, quality ladder and failure settlement. | You want the player to *hammer* an item out rather than craft it. |
-| [Refine a Pill](./refine-a-pill.md) | A placeholder: the alchemy data format is settled but the workbench is not wired up, so this page lists the parts that exist and the entry points that are missing. | You want pills, and want to know how far you can get today. |
+| [Refine a Pill](./refine-a-pill.md) | Hand-build a 3×3×3 furnace, write a recipe that settles on the actual medicinal properties, and heat it into the target range with an exotic fire. | You want to make pills, herb plots and heat sources of your own. |
 
 ## Conventions
 
