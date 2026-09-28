@@ -95,7 +95,7 @@ The wind-up differs from a wait only in that it consumes no beats and writes no 
 | Field | Type | Default | Effect |
 | --- | --- | --- | --- |
 | `damage` | `NumberProvider` | `5` | Bolt damage, the vanilla number by default. |
-| `color` | colour | `#737380` | RGB, `#RRGGBB` or an integer — vanilla's cold white by default. |
+| `color` | colour | `#737380` | RGB, written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too) — vanilla's cold white by default. |
 | `palette` | colour[] | `[]` | A **gradient** from the sky end to the impact point, at most 16 entries; it **replaces** `color`. |
 | `alpha` | float `0..1` | `0.3` | The bolt's **brightness**, not transparency: vanilla draws it additively, so `RGB × alpha` is how hard it glows. |
 | `thickness` | float `0.1..4` | `1` | Bolt thickness multiplier. |

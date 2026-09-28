@@ -196,21 +196,21 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 
 每拍会被问一次，半径上限与"每个候选一次双实体条件"都是为了把这次扫描关住：建议只写在真的需要它的那条法门里。
 
-### `mxt:skill_stage`
+### `mxt:progression`
 
-检查已学功法爬到了哪一级。
+检查身体持有的进度爬到了哪一级。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `stage` | 技能水平 | **必填** | 点名一级。 |
+| `level` | 进度等级 id | **必填** | 点名一级。 |
 | `comparison?` | `exact` / `at_least` / `at_most` | `exact` | 怎么比，比较走缓存索引出来的链内序号。 |
-| `technique?` | 功法条目、`#标签` 或数组 | 每一门已学功法 | 把问题限定到某些功法。 |
+| `owner?` | 所有者定义 id，可写数组 | 这个身体持有的每一种进度 | 把问题限定到某些所有者。 |
 
 ```json
-{"type": "mxt:skill_stage", "stage": "example:stage_three", "comparison": "at_least", "technique": "example:azure_sword"}
+{"type": "mxt:progression", "level": "example:stage_three", "comparison": "at_least", "owner": "example:azure_sword"}
 ```
 
-不写 `technique` 就问每一门已学功法，任一命中即成立。读的是**身体到达过的那一级**，没有晋升过就是功法的 `default_stage`；没有 `default_stage`、或缓存没能索引出这条链的功法永远答否。
+不写 `owner` 就问这个身体持有的每一种进度，任一命中即成立。它只收所有者定义的 id（单个或数组），不收 `#标签`。读的是**身体到达过的那一级**，没有晋升过就是所有者的 `default_level`；没有 `default_level`、或缓存没能索引出这条链的所有者永远答否。
 
 ### `mxt:has_element`
 
@@ -454,7 +454,7 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 {"type": "mxt:pill_toxicity", "comparison": ">=", "compare_to": 100}
 ```
 
-形状与 `mxt:health` 相同。从未服过丹药的实体读 `0`，也不会因此多出一份空记录。丹毒怎么涨、阈值在哪、过量后剩多少写在 [pill_binding](../../json/pill_binding.md)；要直接改写这个数用 `mxt:modify_pill_toxicity`。
+形状与 `mxt:health` 相同。从未服过丹药的实体读 `0`，也不会因此多出一份空记录。丹毒怎么涨、阈值在哪、过量后剩多少写在 [pill](../../json/pill.md)；要直接改写这个数用 `mxt:modify_pill_toxicity`。
 
 ### `mxt:fall_distance`
 

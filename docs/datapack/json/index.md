@@ -4,7 +4,7 @@ title: 动态注册表
 
 # 动态注册表
 
-下表列出本模组的 37 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。表中的 `alchemy_recipe` 与 `spirit_crafting` 两行不是数据包注册表，而是使用原版配方系统的配方类型（`mxt:alchemy` 与 `mxt:spirit_shaped` / `mxt:spirit_shapeless`），一并列在此处便于查阅：它们的 JSON 放在 `data/<namespace>/recipe/`，不要放进 `mxt/alchemy_recipe/`。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
+下表列出本模组的 38 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。表中的 `alchemy_recipe` 与 `spirit_crafting` 两行不是数据包注册表，而是使用原版配方系统的配方类型（`mxt:alchemy` 与 `mxt:spirit_shaped` / `mxt:spirit_shapeless`），一并列在此处便于查阅：它们的 JSON 放在 `data/<namespace>/recipe/`，不要放进 `mxt/alchemy_recipe/`。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
 
 | 注册表 | 文件目录 | 用途 |
 | --- | --- | --- |
@@ -22,8 +22,8 @@ title: 动态注册表
 | `forging_blueprint` | `mxt/forging_blueprint` | 锻造目标和品质结算。 |
 | `tool_binding` | `mxt/tool_binding` | 认领工具物品，并给出它们解锁的锻打方式。 |
 | `blueprint_binding` | `mxt/blueprint_binding` | 认领图纸物品，并给出它们提供的锻造蓝图。 |
-| `technique` | `mxt/technique` | 功法定义：可学习、按水平授予能力与修炼修正。 |
-| `skill_stage` | `mxt/skill_stage` | 技能水平链的单级定义。 |
+| `technique` | `mxt/technique` | 功法定义：可学习、按进度等级授予能力与修炼修正。 |
+| `progression` | `mxt/progression` | 进度链的单级定义。 |
 | `cultivation` | `mxt/cultivation` | 一次运功法门：吸收哪些环境灵气、每 tick 做什么、结算成功那一拍做什么、代价与收获。 |
 | `spirit_herb` | `mxt/spirit_herb` | 已有物品的灵植元数据。 |
 | `medicinal_property` | `mxt/medicinal_property` | 药性身份：一种药用效果的名字与描述。 |
@@ -39,7 +39,8 @@ title: 动态注册表
 | `currency` | `mxt/currency` | 物品货币面值和兑换。 |
 | `item_binding` | `mxt/item_binding` | 现有物品到行为数组的绑定。 |
 | `weapon_binding` | `mxt/weapon_binding` | 现有物品的武器属性和行为。 |
-| `pill_binding` | `mxt/pill_binding` | 现有物品的丹药和丹毒规则。 |
+| `pill` | `mxt/pill` | 一份丹药的作用：食用行为、丹毒增量、过量阈值与过量后的残留。 |
+| `pill_binding` | `mxt/pill_binding` | 认领一族已有物品当同一份丹药，并给出服用次数与冷却。 |
 | `technique_binding` | `mxt/technique_binding` | 现有物品到功法学习的绑定。 |
 | `aura_zone` | `mxt/aura_zone` | 环境灵气模板。 |
 | `block_aura` | `mxt/block_aura` | 方块提供的灵气。 |

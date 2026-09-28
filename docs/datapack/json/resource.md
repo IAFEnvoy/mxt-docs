@@ -22,7 +22,7 @@ aside: false
 | `min` | `NumberProvider` | `0` | 数值下限。 |
 | `max` | `NumberProvider` | **必填** | 数值上限。 |
 | `icon` | **图标引用** | 无 | 可选图标，画在灵气轮盘里这一条数值上。 |
-| `particle_color` | `RGBColor` | `#FFFFFF` | 灵力射线使用的粒子颜色。可写 `#RRGGBB` 或 `0..16777215` 整数。 |
+| `particle_color` | `RGBColor` | `#FFFFFF` | 灵力射线使用的粒子颜色。写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受），一律按不透明处理。 |
 | `bars` | 资源条数组 | `[]` | 内联资源条；为空时不显示该数值。 |
 
 数值可以做这些事：作为消耗数组里的 `mxt:resource` 条目被扣掉（见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)）、用 `mxt:resource_compare` 比较（判定"当前值 **≥** 你写的 `min`"，没有上界比较）、在公式里以 `caster_<压平后的数值 id>` 读取（见[公式变量](../types/formula_variables.md)）、用 `mxt:add_resource` 行为增减、把**该值所对应的灵气**（`aura` 定义）存入物品。能进物品的是灵气：存取接口交换的是灵气身份，所以没有灵气定义的计数器存不进物品，但它照样能进玩家自己的池子，因为池子按值开键。

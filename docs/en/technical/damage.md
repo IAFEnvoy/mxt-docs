@@ -44,7 +44,7 @@ Layer one has exactly one entry point, `deal`, so no path this mod deals damage 
 
 Both layers read the same answer to "what is this strike made of", but they compute it next to two different entities. That is forced by the data, not a matter of taste:
 
-- **Shaping needs information only the dealing side has**: which ability is being cast, what mastery multiplier this casting carries, what the attacker's spirit roots are, and who the target is. The defender-side event sees a `DamageSource` and a number, and cannot reconstruct any of that.
+- **Shaping needs information only the dealing side has**: which ability is being cast, what progression level multiplier this casting carries, what the attacker's spirit roots are, and who the target is. The defender-side event sees a `DamageSource` and a number, and cannot reconstruct any of that.
 - **Reduction needs information only the receiving side has**: the target's own adaptation relations, and **every** hit that arrives — including vanilla's and other mods', which never go through `deal` at all. Putting it at the dealing side would make it apply to our own attacks only.
 
 The cost is that the two must not overlap: `DamageEventBridge` therefore lives on an event that fires exactly once per damage sequence, and no dealing path applies reduction on its own.
@@ -69,7 +69,7 @@ The diagram below lays that fixed order out end to end and marks where the pack'
 ```mermaid
 flowchart LR
     BASE["Base value<br/>from the pack or a formula"] --> SPLIT["The boundary<br/>the pipeline multiplies these"]
-    SPLIT --> MULT["× damage_multiplier<br/>the skill stage of this casting"]
+    SPLIT --> MULT["× damage_multiplier<br/>the progression level of this casting"]
     MULT --> ELEM["× element_modifier<br/>this casting, from the roots<br/>do not write it yourself"]
     ELEM --> CONFLICT["× conflict_multiplier<br/>when a root conflicts with the held item's element"]
     CONFLICT --> DEALT["× damage_dealt_multiplier<br/>the attacker's active physiques"]
@@ -79,7 +79,7 @@ flowchart LR
     TAKEN --> DONE["The result of layer two<br/>what the hit is finally worth"]
 ```
 
-- **`damage_multiplier` belongs to the casting.** `AbilityService#withAbilityScaling` writes it into the formula context, and its value comes from `SkillStageService#damageMultiplier`: it walks the holder's learned techniques, keeps the ones whose current stage actually unlocks this ability, and takes the **largest** multiplier among them — several techniques do not stack their multipliers, because only one strike is being dealt. A `skill_stage` defaults `damage_multiplier` to `1.0`, and a negative or non-finite value is rejected while loading.
+- **`damage_multiplier` belongs to the casting.** Casting an ability writes it into the formula context, and the value is read at runtime from the level the holder currently stands on: it walks every progression the holder carries, keeps the ones whose current level actually grants this ability, and takes the **largest** multiplier among them — several owners do not stack their multipliers, because only one strike is being dealt. A `progression` defaults `damage_multiplier` to `1.0`, and a negative or non-finite value is rejected while loading.
 - **`element_modifier` is the spirit-root half, and it belongs to the casting as well.** The same `withAbilityScaling` folds "the `element_ability_modifier` of the matching roots" into one value through `element_affinity_mode` (average or best) and writes it into the context, and `elementMultiplier(context)` multiplies it straight in. It is **not only** a variable for formulas to read — whether content writes `"damage": 12` or `"damage": "12 * element_modifier"`, the latter now multiplies twice, so **do not write it by hand again**. When the ability carries no `element_affinity`, or the damage does not come from a casting (a formation tick, a curse, a vanilla attack), the context has no such value and it reads `1.0`; a root that writes this multiplier as `0` means "this element of mine deals nothing", and this layer still multiplies by `0` (the same reading the casting gate uses).
 - **`damage_dealt_multiplier` / `damage_taken_multiplier` belong to the person.** They come from active `physique` definitions: layer one reads the attacker's "dealt" multiplier and layer two reads the target's "taken" one, and several active physiques **multiply** (each one is an independent source). They are evaluated in the **holder's own** formula context rather than the other side's — how much this body takes cannot depend on who is asking. A literal number is validated as finite and non-negative while loading, and a negative or non-finite value produced by a formula counts as "no contribution" (the same rule, for the same class of formula, as passive attributes); `0` is legal and means immunity, or that nothing can be dealt.
 - **`conflict_multiplier` belongs to the element being wielded**: when an active spirit root of the attacker lists **the element of their main-hand item** in `conflicting_elements`, that element's own `conflict_multiplier` (default `1.0`) is multiplied in. The item's element is read the way [weapon_binding](/en/datapack/json/weapon_binding) describes it — the stack's own `mxt:element` component unioned with the `element` a definition declares, falling back to the `aura_type` of the aura the stack carries only when neither exists. It is applied **once per element** however many roots conflict with it (two conflicting roots would otherwise square it), and it deliberately does **not** require the strike to be made of that element: fighting your own weapon weakens whatever you channel through it, which is the point of the rule. A pack that never writes the field is never affected by it.
@@ -141,7 +141,7 @@ Keeping this here rather than at every call site makes "who this hit belongs to"
 
 **Deliberately outside layer one**: `mxt:spawn_lightning` (vanilla computes the bolt's damage, and `cause` only decides attribution) and the block form of `mxt:explode` — neither goes through `deal` at all. A projectile spawned by `mxt:spawn_projectile` records the caster as its owner but still leaves its impact damage to vanilla (an arrow's power is not datapack-driven). All of them still pass through layer two, so as long as an element claims those damage types (lightning, explosion, lava, fall…), their element is still computed; the projectile case additionally still has the attacker, so its element is read either way.
 
-**Why the explosion wraps a calculator**: vanilla computes a separate damage number per entity, and the only place to intervene is `ExplosionDamageCalculator#getEntityDamageAmount`. So `mxt:explode` wraps the vanilla calculator and overrides that one method — block destruction and "should this entity be damaged" are forwarded unchanged. Without it, a caster's explosion would be the one hit in the mod that ignores their mastery and their spirit roots.
+**Why the explosion wraps a calculator**: vanilla computes a separate damage number per entity, and the only place to intervene is `ExplosionDamageCalculator#getEntityDamageAmount`. So `mxt:explode` wraps the vanilla calculator and overrides that one method — block destruction and "should this entity be damaged" are forwarded unchanged. Without it, a caster's explosion would be the one hit in the mod that ignores their progression level and their spirit roots.
 
 ## Declaring a hit in the datapack
 
@@ -216,7 +216,7 @@ This lives here for the same reason the reduction does: a lava bath and another 
 ## See also
 
 - [element](../datapack/json/element.md) — every field of `overcomes` / `adapted_to` / `damage_types` / `attachment_*`, and how a damage type gets claimed.
-- [skill_stage](../datapack/json/skill_stage.md) — how `damage_multiplier` is chosen.
+- [progression](../datapack/json/progression.md) — how `damage_multiplier` is chosen.
 - [Formula Variables](../datapack/types/formula_variables.md) — reading `damage_multiplier` inside a definition's own formulas.
 - [Entity Actions](../datapack/types/action/entity_action_types.md) and [Bi-entity Actions](../datapack/types/action/bientity_action_types.md) — the full field tables of `mxt:damage` and `mxt:damage_target`.
 - [Java API](../java/api.md) — `DamageCalculationService` and its method signatures.

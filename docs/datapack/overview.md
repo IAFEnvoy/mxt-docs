@@ -68,7 +68,7 @@ data/example/mxt/artifact/charm/ward_jade_talisman.json
 data/mxt/tags/damage_type/no_bonus.json
 ```
 
-被列进 `mxt:no_bonus` 的伤害类型不参与伤害加成结算：不乘技能水平与亲和倍率、不乘体质倍率、不读 `overcomes`/`adapted_to` 关系，也不留元素附着。数值原样交给原版，而原版自己的减免（护甲、附魔、抗性、吸收、无敌帧）照旧生效。默认收两条：虚空伤害 `minecraft:out_of_world`，以及模组自己用于寿元耗尽的 `mxt:lifespan`；内容包可以在同一路径上追加（`replace: false`）或整体替换（`replace: true`）。详见[伤害系统](/technical/damage)。
+被列进 `mxt:no_bonus` 的伤害类型不参与伤害加成结算：不乘进度等级与亲和倍率、不乘体质倍率、不读 `overcomes`/`adapted_to` 关系，也不留元素附着。数值原样交给原版，而原版自己的减免（护甲、附魔、抗性、吸收、无敌帧）照旧生效。默认收两条：虚空伤害 `minecraft:out_of_world`，以及模组自己用于寿元耗尽的 `mxt:lifespan`；内容包可以在同一路径上追加（`replace: false`）或整体替换（`replace: true`）。详见[伤害系统](/technical/damage)。
 
 ## 数值字段
 
@@ -92,10 +92,10 @@ data/mxt/tags/damage_type/no_bonus.json
 
 | 分类 | 注册表 |
 | --- | --- |
-| 资源与修炼 | `resource`、`aura`、`element`、`element_reaction`、`realm_stage`、`spirit_root`、`physique`、`technique`、`skill_stage`、`cultivation` |
+| 资源与修炼 | `resource`、`aura`、`element`、`element_reaction`、`realm_stage`、`spirit_root`、`physique`、`technique`、`progression`、`cultivation` |
 | 技能与规则 | `ability`、`curse`、`formation`、`tribulation`、`trigger`、`talisman` |
 | 灵气与世界 | `aura_zone`、`block_aura`、`item_aura`、`secret_realm` |
-| 物品与品质 | `item_binding`、`weapon_binding`、`pill_binding`、`technique_binding`、`tool_binding`、`blueprint_binding`、`artifact`、`quality` |
+| 物品与品质 | `pill`、`pill_binding`、`item_binding`、`weapon_binding`、`technique_binding`、`tool_binding`、`blueprint_binding`、`artifact`、`quality` |
 | 炼丹与灵植 | `medicinal_property`、`spirit_herb`、`alchemy_furnace`、`alchemy_wall_material` |
 | 经济与内容 | `currency`、`forging_method`、`forging_blueprint`、`creature_profile`、`contract_type` |
 
@@ -114,11 +114,11 @@ data/mxt/tags/damage_type/no_bonus.json
 
 ## 加载与覆盖
 
-37 个数据包注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。从磁盘上的文件到玩家看到的结果就是下面这条路径。
+38 个数据包注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。从磁盘上的文件到玩家看到的结果就是下面这条路径。
 
 ```mermaid
 flowchart TD
-    A["数据包定义文件<br/>一份 JSON 一个条目"] --> B["37 个数据包注册表<br/>NeoForge 原版数据包注册表"]
+    A["数据包定义文件<br/>一份 JSON 一个条目"] --> B["38 个数据包注册表<br/>NeoForge 原版数据包注册表"]
     B --> C["世界加载时读取并校验<br/>JSON / 引用 / 字段校验"]
     C --> D["解码失败：世界无法加载<br/>修好该文件后才能再次进入"]
     C --> E["neoforge:conditions<br/>条件不成立的条目根本不进注册表"]
@@ -134,7 +134,7 @@ flowchart TD
 - 原版标签使用 `replace: false` 时，值按数据包合并顺序追加；除品质排序标签外，玩法不依赖标签值顺序。
 - 数据包只读，定义中没有通用的 `schema_version`、`enabled` 或 `tags` 字段；「这一条现在要不要进注册表」由加载期的 `neoforge:conditions` 回答。
 - 数据驱动定义的显示名称由标识符自动生成翻译键 `<类别>.<注册表命名空间>.<定义命名空间>.<路径>`。类别默认取注册表自己的 path；**注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`**（这些注册表的键都写作 `mxt:<路径>`），所以 `aura` 里的 `mxt:fire` 查 `aura.mxt.mxt.fire`，`resource` 里的 `example:qi` 查 `resource.mxt.example.qi`，`talisman` 里的 `mxt_test:flame_sigil` 查 `talisman.mxt.mxt_test.flame_sigil`。类别就是注册表自己的 path，没有例外表（`example:refined` 在 `mxt:quality` 里查 `quality.mxt.example.refined`）。路径里的 `/` **原样**进入键中，不会转成 `.`（`example:foo/bar` 得到的键是 `resource.mxt.example.foo/bar`），所以按类别分子文件夹不会多出第二套翻译键规则。JSON 不填写 `translation_key`，请在 `assets/<命名空间>/lang/zh_cn.json` 和 `en_us.json` 中提供对应翻译。
-- 下面这 18 个注册表的定义还可以自带可选的 `name` 与 `description`（写法与其它组件字段相同：裸字符串当翻译键、对象当完整组件）：`resource`、`aura`、`realm_stage`、`element`、`spirit_root`、`physique`、`ability`、`curse`、`technique`、`skill_stage`、`cultivation`、`artifact`、`formation`、`tribulation`、`secret_realm`、`contract_type`、`talisman`、`quality`。写了就用你自己的文本，省略才用上一条的生成键——`description` 省略时是生成键再接 `.description`。这对字段的意义是数据包可以**翻译生成键、也可以自己写文本**（从而避开名字冲突）；**`description` 只被存储与读取，除 `quality`（品质描述那一行）以外没有任何界面或提示框绘制它**。其余注册表仍然只有生成键。
+- 下面这 24 个注册表的定义还可以自带可选的 `name` 与 `description`（写法与其它组件字段相同：裸字符串当翻译键、对象当完整组件）：`resource`、`aura`、`realm_stage`、`element`、`spirit_root`、`physique`、`ability`、`curse`、`technique`、`progression`、`cultivation`、`artifact`、`medicinal_property`、`spirit_herb`、`alchemy_furnace`、`alchemy_wall_material`、`pill`、`pill_binding`、`formation`、`tribulation`、`secret_realm`、`contract_type`、`talisman`、`quality`。写了就用你自己的文本，省略才用上一条的生成键——`description` 省略时是生成键再接 `.description`。这对字段的意义是数据包可以**翻译生成键、也可以自己写文本**（从而避开名字冲突）；**`description` 只被存储与读取，除 `quality`（品质描述那一行）以外没有任何界面或提示框绘制它**。其余注册表仍然只有生成键。
 - `realm_stage` 用整数写法声明 `minor_stages` 时，子阶段名同样带注册表命名空间：`realm_stage.mxt.<定义命名空间>.<路径>.minor_stage.<下标>`（下标从 `0` 起）。
 - 每个数据包注册表的界面标题另有固定键 `mxt.registry.<注册表 path>`（如 `mxt.registry.aura`、`mxt.registry.quality`），由本模组自己的语言文件提供；数据包只需要为自己的定义提供上面那个键。
 - 必填的单个条目引用不存在时，整个数据包加载失败；可选引用和容错列表引用按各自的口径处理。

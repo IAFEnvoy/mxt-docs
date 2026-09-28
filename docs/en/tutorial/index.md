@@ -52,7 +52,8 @@ data/example/
 │   ├── quality/flawless.json
 │   ├── item_binding/qi_pill.json            Bindings attach rules to real items
 │   ├── item_binding/root_pellet.json
-│   ├── pill_binding/qi_pill.json
+│   ├── pill/qi_pill.json                   What the pill does: dose action, toxicity, overdose
+│   ├── pill_binding/qi_pill.json            Which items are that pill, and their cap and cooldown
 │   ├── weapon_binding/spirit_sword.json
 │   ├── technique_binding/azure_manual.json
 │   └── contract_type/spirit_familiar.json   Conditions, costs and caps for one beast

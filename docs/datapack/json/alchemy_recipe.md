@@ -80,7 +80,7 @@ aside: false
     {
       "id": "mxt:pill",
       "count": 1,
-      "components": { "mxt:pill": { "binding": "example:warming_pill" } }
+      "components": { "mxt:pill": { "pill": "example:warming_pill" } }
     }
   ],
   "failure_outputs": [{ "id": "mxt:alchemy_dregs" }],
@@ -96,6 +96,6 @@ aside: false
 
 ## 与其他系统的关系
 
-丹方是后端药性规则，不是固定物品 ID 清单。药性由[药性](./medicinal_property.md)定义，材料要能被认成[灵植](./spirit_herb.md)才有药力，产出的丹药规则由[丹药绑定](./pill_binding.md)给。
+丹方是后端药性规则，不是固定物品 ID 清单。药性由[药性](./medicinal_property.md)定义，材料要能被认成[灵植](./spirit_herb.md)才有药力，产出的丹药作用是[丹药](./pill.md)，而它绑到哪些物品、能服用几次由[丹药绑定](./pill_binding.md)给。
 
 炼丹与[灵气合成](./spirit_crafting.md)是两条互不相通的路：`mxt:alchemy` 只有丹炉会读，`mxt:spirit_shaped` / `mxt:spirit_shapeless` 只有灵气工作台会读。

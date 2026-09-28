@@ -14,7 +14,7 @@ aside: false
 | --- | --- | --- | --- |
 | `name` | Text Component | `quality.mxt.<命名空间>.<路径>` | 品质名称。 |
 | `description` | Text Component | `quality.mxt.<命名空间>.<路径>.description` | 品质描述，画在品质名下面。 |
-| `color` | Color | 无 | 品质颜色，6 位十六进制 `"#RRGGBB"` 或整数。 |
+| `color` | Color | 无 | 品质颜色，写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受），一律按不透明处理。 |
 | `value_multiplier` | `Modifier` | `1` | 货币价值修正。 |
 | `forging_modifier` | `Modifier` | `1` | 锻造修正。 |
 | `alchemy_modifier` | `Modifier` | `1` | 炼丹修正。 |

@@ -30,7 +30,7 @@ The filename is its ID. For example, `data/example/mxt/element/fire.json` has th
 | `color` | `RGBColor` | `#ffffff` | Display colour, used for text such as aura costs. |
 | `conflict_multiplier` | Double | `1.0` | What this element is worth in the hand of a holder whose **spirit root conflicts with it**: when the striker's active spirit root lists it in `conflicting_elements`, the damage that striker deals is multiplied by this number. |
 
-`attachment_decay`, `damage_attachment`, `conflict_multiplier` and every relation's `multiplier` have to be **finite and non-negative** at load time, and a relation's `elements` may not be empty — otherwise the whole definition fails to load and the server does not start, rather than the value being clamped at runtime. `color` accepts `#RRGGBB` or an integer in `0..16777215`.
+`attachment_decay`, `damage_attachment`, `conflict_multiplier` and every relation's `multiplier` have to be **finite and non-negative** at load time, and a relation's `elements` may not be empty — otherwise the whole definition fails to load and the server does not start, rather than the value being clamped at runtime. `color` is written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too) and is always treated as opaque.
 
 ## Relation Entries
 

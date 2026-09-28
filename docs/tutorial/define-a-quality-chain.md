@@ -13,7 +13,7 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
 | --- | --- | --- |
 | `name` | `quality.mxt.<命名空间>.<路径>` | 品质显示名。 |
 | `description` | 上面那个键再加 `.description` | 品质名下面那一行，非空才画。 |
-| `color` | 无 | 给品质名上色，`"#RRGGBB"` 或整数 `0` 到 `16777215`。 |
+| `color` | 无 | 给品质名上色，写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受），一律按不透明处理。 |
 | `value_multiplier` | `1` | 货币价值修正。 |
 | `forging_modifier` | `1` | 锻造修正，用来除锻造读取的额外步数。 |
 | `alchemy_modifier` | `1` | 炼丹修正，用来除酿造时长。 |

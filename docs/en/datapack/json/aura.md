@@ -84,4 +84,4 @@ Cultivation absorption by default only restores the value that belongs to the cu
 The chain belongs to this aura definition: every `realm_stage` points back at it with its `aura` field, and the chain's entry is given by `first_realm`, so reading realm state never has to look the value up again. `first_realm` must be a stage on that value's chain, and the server checks this while it builds the realm index. An aura without `first_realm` has no chain, and only `regen`'s natural recovery is left.
 :::
 
-`aura` is one of the 23 registries that may also carry an optional `name` / `description`; omitting them falls back to the generated key. The generation rules and how to write the language files are in [Datapack Overview](../overview.md).
+`aura` is one of the 24 registries that may also carry an optional `name` / `description`; omitting them falls back to the generated key. The generation rules and how to write the language files are in [Datapack Overview](../overview.md).

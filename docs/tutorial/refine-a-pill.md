@@ -22,7 +22,8 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 | `data/example/mxt/alchemy_furnace/basic.json` | 炉型规格：槽位、容量与冷却。 |
 | `data/example/mxt/alchemy_wall_material/basic_wall.json` | 炉壁材料的耐温。 |
 | `data/example/recipe/warming.json` | 丹方：药性阈值、寒热容限、目标炉温与容差、时长与产物。 |
-| `data/example/mxt/pill_binding/warming_pill.json` | 丹药绑定：药效、次数、冷却与丹毒。 |
+| `data/example/mxt/pill/warming_pill.json` | 丹药作用：药效、丹毒与过量。 |
+| `data/example/mxt/pill_binding/warming_pill.json` | 丹药绑定：认领这一族物品，并给出服用次数与冷却。 |
 
 ## 第 1 步 —— 编写药性
 
@@ -169,7 +170,7 @@ give @s mxt:alchemy_furnace_casing[mxt:alchemy_wall_material="example:basic_wall
     {
       "id": "mxt:pill",
       "count": 1,
-      "components": { "mxt:pill": { "binding": "example:warming_pill" } }
+      "components": { "mxt:pill": { "pill": "example:warming_pill" } }
     }
   ],
   "failure_outputs": [{ "id": "mxt:alchemy_dregs" }]
@@ -190,14 +191,12 @@ give @s mxt:alchemy_furnace_casing[mxt:alchemy_wall_material="example:basic_wall
 
 ## 第 6 步 —— 丹药与丹毒
 
-丹药绑定可以不认领物品，只靠堆上的组件：上面那条丹方的产物已经把 `mxt:pill` 的 `binding` 写在组件里了。
+丹药分成两份写：**作用**写在 `pill` 里，**哪些物品是它、能服用几次**写在 `pill_binding` 里。上面那条丹方的产物用组件点名了这份作用。
 
 ```json
-// data/example/mxt/pill_binding/warming_pill.json
+// data/example/mxt/pill/warming_pill.json
 {
-  "name": "pill_binding.example.warming_pill",
-  "max_uses": 2,
-  "cooldown": 20,
+  "color": "#FF9955",
   "toxicity_gain": 25,
   "toxicity_threshold": 100,
   "toxicity_after_overdose": 20,
@@ -205,16 +204,29 @@ give @s mxt:alchemy_furnace_casing[mxt:alchemy_wall_material="example:basic_wall
 }
 ```
 
+```json
+// data/example/mxt/pill_binding/warming_pill.json
+{
+  "name": "pill_binding.example.warming_pill",
+  "items": ["mxt:pill"],
+  "pill": "example:warming_pill",
+  "max_uses": 2,
+  "cooldown": 20
+}
+```
+
 手边没有成丹时可以直接发一枚：
 
 ```mcfunction
-give @s mxt:pill[mxt:pill={binding:"example:warming_pill"}]
+give @s mxt:pill[mxt:pill={pill:"example:warming_pill"}]
 ```
 
 - 服用次数按**这条绑定**计，不按物品 ID，所以换一件别的物品当载体也绕不过上限。次数与冷却记在身体上，死亡、换维度、重新登录都不清。
+- **身份只由绑定的 `items` 认领产生**：只写效果键、或组件指名了定义而这件物品没有被任何绑定认领时，这一口不计次数、也没有冷却。所以上面那条绑定点名了本体丹药载体 `mxt:pill`。组件的 `pill` 优先于绑定指名的定义，五个效果键再按字段覆盖。
 - 丹毒也是每个身体一份的账：`toxicity_gain` 是每次服丹加多少，累计达到 `toxicity_threshold` 才触发 `on_overdose`，`toxicity_after_overdose` 是触发之后剩下的量。阈值是"达到就触发"，不是"禁止再吃"。
 - 排毒用实体行为 `mxt:modify_pill_toxicity` 的负 `add`，它不清服用次数；读丹毒用实体条件 `mxt:pill_toxicity` 或公式变量 `pill_toxicity`。
 - 默认丹毒不会自己退。服务端配置「炼丹 → 每秒丹毒自然消退」设成正数后，已经有丹毒的活跃实体每累计 20 刻退一次，离线不退，也不会给没服过丹的实体建一份空账。
+- 本体载体 `mxt:pill` 的图标按这份丹药的 `color` 上色，所以同一份作用挂到几件物品上时，只有本体那颗丹看得出颜色。别的物品照旧用它们自己的贴图，一个字都不改。
 
 ## 在游戏里验证
 
@@ -255,6 +267,7 @@ give @s mxt:pill[mxt:pill={binding:"example:warming_pill"}]
 - [alchemy_recipe（炼丹配方）](../datapack/json/alchemy_recipe.md) —— 丹方的完整字段，以及匹配、时长与产物的规则。
 - [alchemy_furnace（炉型）](../datapack/json/alchemy_furnace.md) 与 [alchemy_wall_material（炉壁材料）](../datapack/json/alchemy_wall_material.md) —— 槽位、容量、冷却与耐温。
 - [medicinal_property（药性）](../datapack/json/medicinal_property.md) 与 [spirit_herb（灵植）](../datapack/json/spirit_herb.md) —— 药性、药力、寒热、药龄与种植。
-- [pill_binding（丹药绑定）](../datapack/json/pill_binding.md) —— 服用次数、冷却、丹毒与过量后的残留。
+- [pill（丹药）](../datapack/json/pill.md) —— 服用行为、丹毒、阈值与过量后的残留。
+- [pill_binding（丹药绑定）](../datapack/json/pill_binding.md) —— 认领物品、服用次数与冷却。
 - [quality（品质）](../datapack/json/quality.md) —— `alchemy_modifier` 怎么缩短开炉时长。
 - [内置物品与组件](../player-guide/items.md) —— 丹炉各部件、灵田与丹药载体在游戏里怎么用。

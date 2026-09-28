@@ -80,7 +80,7 @@ When the reachable temperature ceiling and the recipe's required range do not ov
     {
       "id": "mxt:pill",
       "count": 1,
-      "components": { "mxt:pill": { "binding": "example:warming_pill" } }
+      "components": { "mxt:pill": { "pill": "example:warming_pill" } }
     }
   ],
   "failure_outputs": [{ "id": "mxt:alchemy_dregs" }],
@@ -96,6 +96,6 @@ When the reachable temperature ceiling and the recipe's required range do not ov
 
 ## Related Systems
 
-A pill recipe is a back-end property rule, not a fixed list of item IDs. Medicinal properties come from [Medicinal Property](./medicinal_property.md), a material only has power once it is recognised as a [Spirit Herb](./spirit_herb.md), and the pills it produces get their rules from [Pill Binding](./pill_binding.md).
+A pill recipe is a back-end property rule, not a fixed list of item IDs. Medicinal properties come from [Medicinal Property](./medicinal_property.md), a material only has power once it is recognised as a [Spirit Herb](./spirit_herb.md), the pills it produces get what they do from [Pill](./pill.md), and which items they hang on and how often they may be taken from [Pill Binding](./pill_binding.md).
 
 Alchemy and [Spirit Crafting](./spirit_crafting.md) are two paths that never meet: `mxt:alchemy` is only read by the furnace, and `mxt:spirit_shaped` / `mxt:spirit_shapeless` only by the spirit crafting table.

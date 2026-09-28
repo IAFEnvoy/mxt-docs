@@ -114,7 +114,7 @@ A furnace is not one block: it is a fixed 3x3x3 you build by hand. The core carr
 | Alchemy Output | `mxt:alchemy_output` | Top centre. Four take-only output slots. |
 | Alchemy Furnace Casing | `mxt:alchemy_furnace_casing` | The other 22 cells, each carrying its own wall material. Casing opens no screen. |
 | Spirit Herb Plot | `mxt:spirit_herb_plot` | One plant per plot: right-click with seeds to plant, right-click a mature plant to harvest, sneak with an empty hand to take the seeds back. |
-| Pill | `mxt:pill` | The pill carrier: vanilla eating, a name and a tooltip. What a pill does, how many times it can be taken and how much toxicity it adds all come from its pill binding. |
+| Pill | `mxt:pill` | The pill carrier: vanilla eating, a name and a tooltip. What a dose does is on [Pill](../datapack/json/pill.md); which items are that pill, how many times it can be taken and how much toxicity it adds come from its [Pill Binding](../datapack/json/pill_binding.md). |
 
 The hand feel is: **exotic fire in the core, main ingredients in the left store, auxiliary ingredients and the catalyst in the right store, and the result taken from the output store.** Loading materials never starts a batch by itself; a player presses Start on the core's page. The centre cell must stay empty, and a shell with a missing cell, an invalid wall material or a cell claimed by another furnace does not form and cannot run.
 
@@ -122,7 +122,7 @@ The hand feel is: **exotic fire in the core, main ingredients in the left store,
 
 Neither the input stores nor the core's fire slot accept hoppers; the output store can only be pulled from its bottom face, and once the furnace is formed that face looks onto the centre air cell, so no hopper fits there. Removing casing or a store while a batch is running settles that batch as a failure once and does not return the materials already loaded; removing a store only drops that store's own contents.
 
-Eating a pill accumulates toxicity: what a pill does, where the threshold sits and what is left after an overdose are on [pill_binding](../datapack/json/pill_binding.md), and the mod only keeps the ledger. Toxicity does not fade on its own by default; with **Server Config → Alchemy → Natural toxicity decay per second** set to a positive number, an active entity that already has toxicity loses some once every 20 ticks, nothing happens offline, and an entity that has never taken a pill does not gain an empty ledger.
+Eating a pill accumulates toxicity: what a dose does, where the threshold sits and what is left after an overdose are on [Pill](../datapack/json/pill.md), and the mod only keeps the ledger. Toxicity does not fade on its own by default; with **Server Config → Alchemy → Natural toxicity decay per second** set to a positive number, an active entity that already has toxicity loses some once every 20 ticks, nothing happens offline, and an entity that has never taken a pill does not gain an empty ledger.
 
 ## Item Bindings
 
@@ -132,14 +132,15 @@ MiXianTu does not create logical datapack items. Physical items must be register
 |---|---|
 | `item_binding` | Attaches behaviour, conditions, spirit roots or generic display to an existing item. |
 | `weapon_binding` | Adds vanilla attribute modifiers (a weapon's own attack damage and speed go here too) plus attack, use and tick behaviour. |
-| `pill_binding` | Configures pill consumption and behaviour. |
+| `pill` | What one pill does: the dose action, its toxicity gain, the overdose threshold and what an overdose leaves behind. |
+| `pill_binding` | Claims a family of existing items as one pill, with its use cap and cooldown. |
 | `tool_binding` | Claims tool items and lists the forging methods they unlock. |
 | `blueprint_binding` | Claims blueprint items and lists the forging blueprints they offer. |
 | `technique_binding` | Describes how one technique is **read** — the hold length, pose, sound, quality group and conditions, plus the item the mod generates as its carrier. Whether a stack is a manual, and which technique it teaches, follows the stack's own `mxt:technique` data component first and a declaration's `items` second. |
 
 Item matching accepts a single item, a vanilla item tag, wildcards, regular expressions and mixed arrays. `carrier_item` is the exception: it takes one item ID only. A `technique_binding` declaration is matched by technique id, and its `items` is the optional route.
 
-**Per-stack additions are data components**: `mxt:quality` (single value — a whole quality object, changing both the tier and the ladder this stack reads), `mxt:element` (a list — unioned with the definition), `mxt:pill` (field-by-field override of a pill definition), `mxt:technique_reading` (field-by-field override of the reading parameters), `mxt:forging_methods` and `mxt:forging_blueprints` (lists — unioned with the definition). They are written for one stack only. `conditions` and a weapon's numbers and actions have **no** component: a per-stack change means writing a definition that names that stack through `items`, and per-stack weapon numbers go through vanilla `minecraft:attribute_modifiers`. See [Item Binding](../datapack/json/item_binding.md) for the shared matching, condition and quality rules, and [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) for the fields of each binding type.
+**Per-stack additions are data components**: `mxt:quality` (single value — a whole quality object, changing both the tier and the ladder this stack reads), `mxt:element` (a list — unioned with the definition), `mxt:pill` (an optional `pill` naming a pill definition, plus `on_consume` / `toxicity_gain` / `toxicity_threshold` / `on_overdose` / `toxicity_after_overdose` overlaid field by field), `mxt:technique_reading` (field-by-field override of the reading parameters), `mxt:forging_methods` and `mxt:forging_blueprints` (lists — unioned with the definition). They are written for one stack only. `conditions` and a weapon's numbers and actions have **no** component: a per-stack change means writing a definition that names that stack through `items`, and per-stack weapon numbers go through vanilla `minecraft:attribute_modifiers`. See [Item Binding](../datapack/json/item_binding.md) for the shared matching, condition and quality rules, and [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) for the fields of each binding type.
 
 ## Item Aura
 

@@ -30,7 +30,7 @@ aside: false
 | `color` | `RGBColor` | `#ffffff` | 显示色，用于灵气消耗等文本。 |
 | `conflict_multiplier` | Double | `1.0` | 持有者**灵根与它相冲**时，这个元素在手里值多少：攻击者在效灵根的 `conflicting_elements` 列出了它时，攻击者打出的伤害乘上这个数。 |
 
-`attachment_decay`、`damage_attachment`、`conflict_multiplier` 与每条关系的 `multiplier` 都必须在加载期是**有限且非负**的数，关系里的 `elements` 不能为空，否则整份定义加载失败、服务器不启动，而不是运行期夹取。`color` 可以写 `#RRGGBB` 或 `0..16777215` 的整数。
+`attachment_decay`、`damage_attachment`、`conflict_multiplier` 与每条关系的 `multiplier` 都必须在加载期是**有限且非负**的数，关系里的 `elements` 不能为空，否则整份定义加载失败、服务器不启动，而不是运行期夹取。`color` 可以写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受），一律按不透明处理。
 
 ## 关系条目
 

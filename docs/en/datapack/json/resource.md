@@ -22,7 +22,7 @@ Resource files go in `data/<namespace>/mxt/resource/` inside your datapack. The 
 | `min` | `NumberProvider` | `0` | Lower bound of the value. |
 | `max` | `NumberProvider` | **required** | Upper bound of the value. |
 | `icon` | **Icon Reference** | none | Optional icon, drawn on this value's entry on the wheel. |
-| `particle_color` | `RGBColor` | `#FFFFFF` | Particle colour used by spirit power rays. May be written as `#RRGGBB` or as an integer in `0..16777215`. |
+| `particle_color` | `RGBColor` | `#FFFFFF` | Particle colour used by spirit power rays. Written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too); always treated as opaque. |
 | `bars` | Resource bar list | `[]` | Inline resource bars; when empty, the value is not displayed. |
 
 A value can be spent as the `mxt:resource` entry of a cost array (see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost)), compared with `mxt:resource_compare` (it tests whether the current value is **≥** the `min` you write; there is no upper-bound comparison), read in a formula as `caster_<flattened value id>` (see [Formula Variables](../types/formula_variables.md)), raised or lowered by the `mxt:add_resource` action, and stored into an item as **the aura this value corresponds to** (its `aura` definition). What an item can hold is an aura: the access interfaces exchange aura identities, so a counter with no aura definition cannot go into an item — but it still enters the player's own pool, because a pool is keyed by the value.
@@ -153,6 +153,6 @@ The IDs `mxt:environment_concentration` and `mxt:actual_concentration` exist in 
 
 Datapack definitions do not write a `translation_key`; the display name is generated from the identifier as `<category>.<registry namespace>.<definition namespace>.<path>`. The category of `resource` is `resource`, and the registry namespace is always `mxt` for MiXianTu's own registries, so `example:qi` looks up `resource.mxt.example.qi`. A `/` in the path goes into the key **as written** (`example:foo/bar` gives `resource.mxt.example.foo/bar`); sorting definitions into subdirectories per category does not add a second set of translation-key rules.
 
-`resource` is one of the 23 registries that may also carry an optional `name` / `description`: written, they use your text, and only when omitted does the generated key above apply (with `.description` appended for the description). Both fields are only stored and read today; nothing draws them yet.
+`resource` is one of the 24 registries that may also carry an optional `name` / `description`: written, they use your text, and only when omitted does the generated key above apply (with `.description` appended for the description). Both fields are only stored and read today; nothing draws them yet.
 
 :::

@@ -145,7 +145,7 @@ Placeholder render data with no visual output.
 {"type": "mxt:missing"}
 ```
 
-A segmented bar is `segments * 8 + (segments - 1) * gap` pixels wide, and a radial bar occupies `radius * 2 + thickness` pixels in both directions. `mxt:boss_bar`, `mxt:text_only` and `mxt:missing` use the default 71x8, `mxt:textured_bar` uses the width and height it declares. Colors accept `#RRGGBB` or an integer from `0` to `16777215`. Drawing happens on the client, and only values synchronized from the server are shown.
+A segmented bar is `segments * 8 + (segments - 1) * gap` pixels wide, and a radial bar occupies `radius * 2 + thickness` pixels in both directions. `mxt:boss_bar`, `mxt:text_only` and `mxt:missing` use the default 71x8, `mxt:textured_bar` uses the width and height it declares. Colors are written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too) and are always treated as opaque. Drawing happens on the client, and only values synchronized from the server are shown.
 
 `sprite_location` of `mxt:boss_bar` and both artwork fields of `mxt:textured_bar` take a [`SpriteIcon`](../shared_data_types.md#spriteicon), not a bare Identifier. A bare string keeps the field's original meaning: `sprite_location` is a **texture path**, while `background_sprite` / `fill_sprite` are **GUI atlas sprites**. The object form names either a GUI atlas sprite with `{"sprite": ...}` or one texture with `{"texture": ...}`.
 

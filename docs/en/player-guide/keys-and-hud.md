@@ -131,11 +131,11 @@ The **Techniques** panel (`screen.mxt.technique_panel`) lists every technique yo
 | Mastery | Your mastery against what the next level asks for, as `<current> / <required>`, or `Mastered` at the top of a chain. |
 | Progress bar | How far along that requirement you are, tinted with the mastery resource's particle colour. |
 
-Hovering a row shows the technique's full name, the level's ID and the technique's grade as `Grade: <name>`, or `Grade: -` when the technique declares no `quality` at all. A grade is no longer free-form text: it is the [quality](../datapack/json/quality.md) entry the technique names, so its name **and** its colour come from that one definition and the panel simply reads them. A technique that defines no mastery chain is listed with `Level -` and no progress; a technique with a chain but no `mastery_resource` shows `No mastery`.
+Hovering a row shows the technique's full name, the level's ID and the technique's grade as `Grade: <name>`, or `Grade: -` when the technique declares no `quality` at all. A grade is no longer free-form text: it is the [quality](../datapack/json/quality.md) entry the technique names, so its name **and** its colour come from that one definition and the panel simply reads them. A technique that defines no progression chain is listed with `Level -` and no progress; a technique with a chain but no `mastery_resource` shows `No mastery`.
 
 Two things decide what the bar measures, and the client setting **Client Settings → Techniques → Progress Display** switches between them:
 
-- **Total Mastery** (the default) measures your stored value against the next level's requirement, so the bar spans the whole climb and the numbers match the `mastery` field of [`skill_stage`](../datapack/json/skill_stage.md).
+- **Total Mastery** (the default) measures your stored value against the next level's requirement, so the bar spans the whole climb and the numbers match the `mastery` field of [`progression`](../datapack/json/progression.md).
 - **Within Level** subtracts what the current level already asked for, so every level starts from an empty bar.
 
 The panel is a view over synchronized state — learned techniques, their levels and their mastery values all reach the client already — so it never asks the server for anything and refreshes on the same interval as the character information panel.

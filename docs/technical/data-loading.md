@@ -12,7 +12,7 @@ description: 源码级说明：数据包注册表怎么分成内容层与绑定�
 | 类 | 职责 |
 | --- | --- |
 | `registry.MxtResourceKeys` | 每张表的 `ResourceKey`，与注册表实例、注册事件分开，好让 codec 与运行时服务不必依赖注册类。 |
-| `registry.MxtDatapackRegistries` | 37 张数据包注册表的登记与统一读取入口；**不持有任何快照**，重载与同步都交给原版注册表系统。 |
+| `registry.MxtDatapackRegistries` | 38 张数据包注册表的登记与统一读取入口；**不持有任何快照**，重载与同步都交给原版注册表系统。 |
 | `registry.MxtRegistries` | 固有注册表的 `DeferredRegister`：`type` 那一层的分派（行为、条件、消耗、技能类型……）。 |
 | `registry.MxtDataComponents` | 物品数据组件的登记：每个组件同时声明持久化 codec 与网络 codec。 |
 | `runtime.ServerCache` | 世界加载与 `/reload` 之后的唯一重建点：跨条目索引 + 校验报告。 |
@@ -29,7 +29,7 @@ description: 源码级说明：数据包注册表怎么分成内容层与绑定�
 | 层 | 表 | 回答什么 |
 | --- | --- | --- |
 | 内容层 | `artifact`、`spirit_herb`、`item_aura`、`currency` | "这件物品**是**什么"。定义自己就是那个东西（注册表 id 就是它的名字），并认领一批物品当自己的载体。 |
-| 内容层 | `resource`、`aura`、`realm_stage`、`element`、`spirit_root`、`physique`、`ability`、`technique`、`quality`、`formation`、`talisman` 等其余各表 | 别的定义按 id 引用它们；它们不认领物品。 |
+| 内容层 | `resource`、`aura`、`realm_stage`、`element`、`spirit_root`、`physique`、`ability`、`technique`、`quality`、`formation`、`talisman`、`pill` 等其余各表 | 别的定义按 id 引用它们；它们不认领物品。 |
 | 绑定层 | `item_binding`、`weapon_binding`、`pill_binding`、`tool_binding`、`blueprint_binding`、`technique_binding` | "这件**已经有**的物品，在本模组里还算什么"。 |
 
 绑定层六张表形状一致：`items` 是匹配器，`priority` 决定谁赢，剩下的是各自要加的规则；它们**从不定义物品本身**。物理物品由原版、模组或 KubeJS 注册，绑定只往上接规则——`ItemStack` 里**从来不存一份逻辑物品定义**，只存组件。
@@ -42,7 +42,7 @@ description: 源码级说明：数据包注册表怎么分成内容层与绑定�
 | --- | --- | --- |
 | `item_binding` | 用完一件物品后的行为数组、条件、物品的构成元素 | `LivingEntityUseItemEvent.Finish` |
 | `weapon_binding` | 攻击 / 右键 / 每 tick 的行为、`attributes`（写进堆的 `ATTRIBUTE_MODIFIERS`） | 攻击、右键、每 tick 刷新 |
-| `pill_binding` | 丹药与丹毒的规则 | 服下之后 |
+| `pill_binding` | 这一族物品是哪一份丹药，以及它自己的服用次数上限与冷却 | 服丹时（闸门与计次） |
 | `technique_binding` | 这件物品教哪门功法，以及读它的时长、姿势与门槛 | 读功法 |
 | `tool_binding` | 这件工具解锁哪些锻打方式 | 锻造 |
 | `blueprint_binding` | 这件图纸提供哪些锻造蓝图 | 锻造 |
@@ -56,7 +56,7 @@ flowchart TD
     B -->|是| C["该表的 codec 解码"]
     C -->|"未知键丢弃 · 空表与非法值拒收 · 坏列表项打日志丢弃"| D["注册表条目"]
     D --> E["ServerCache.rebuild：世界加载 与 /reload 之后"]
-    E --> F["跨条目索引：境界链 / 技能链 / 触发器 / 品质阶梯 / 法器认领"]
+    E --> F["跨条目索引：境界链 / 进度链 / 触发器 / 品质阶梯 / 法器认领"]
     E --> G["problems：每条带 data 路径，一次性打印，不中断加载"]
     D --> H["ItemBindingService.resolve：匹配器 + priority"]
     I["ItemStack 上的组件"] --> H
@@ -78,15 +78,15 @@ flowchart TD
 
 **注册表实例在重载后可能还是同一个对象**——`ServerCache` 的注释正是按"重载后的包可能保留实例"写的——所以按注册表实例开键的缓存不能指望自己发现重载，必须有人显式作废。
 
-`ServerCache.onDatapackLoaded`（`TagsUpdatedEvent.ServerDataLoad`）就是那个唯一的重建点：它先把四个实例键缓存 `invalidate()`（`DamageElements`、`ElementReactionService`、`FormulaNames`、`ChainCache`），再重建跨条目索引——境界链、技能链、按信号索引的触发器、品质阶梯、法器的物品认领表。
+`ServerCache.onDatapackLoaded`（`TagsUpdatedEvent.ServerDataLoad`）就是那个唯一的重建点：它先把四个实例键缓存 `invalidate()`（`DamageElements`、`ElementReactionService`、`FormulaNames`、`ChainCache`），再重建跨条目索引——境界链、进度链、按信号索引的触发器、品质阶梯、法器的物品认领表。
 
 **跨条目的问题只能在这一步发现**，因为一条定义看不到别的条目：
 
-- 链只认直线：`next_realm` / `next_stage` / 品质的 `next` 指向不存在的条目、跨了链、被两处写成后继（分叉）、成环、接不到入口。
+- 链只认直线：`next_realm` / `next_level` / 品质的 `next` 指向不存在的条目、被两处写成后继（分叉）、成环、接不到入口（境界链与品质链另有各自的跨链检查）。
 - 两件 `artifact` 在**同一个 `priority`** 上认领同一个物品时，靠注册表顺序决定，这是一个真实的歧义，报出来。
 - `quality` 的一档写了 `upgrade_costs` / `upgrade_condition` 却没有 `next`——这份升级数据永远不会被读到。
 - `trigger` 没写 action（默认是 `mxt:no_op`）——照设计读得通，但几乎一定是漏了字段。
-- 一门功法进了一个技能水平、却配不全它后面必须走的每一级。
+- 一门功法进了一个进度等级、却配不全它后面必须走的每一级。
 
 每条问题都带 `data/<命名空间>/mxt/<表>/<条目>` 这样的路径，收集齐了一次性打日志，**不中断加载**：有问题的条目不进索引，它周围的定义照常可用。单条目自己的问题（字段值非法、空表）在解码期就拒了，不会留到这一步。
 
@@ -103,9 +103,9 @@ flowchart TD
 | 组件 | 压过谁 | 怎么压 |
 | --- | --- | --- |
 | `mxt:quality` | 一切 | 品质解析的第一个槽位，它在，就它说了算。 |
-| `mxt:pill` | 匹配到的 `pill_binding` | `applyTo(...)` 把组件写下的字段盖到声明上（没有声明时从 `defaults()` 起）。 |
+| `mxt:pill` | 匹配到的 `pill_binding` 与它指名的 `pill` | 组件里写下的 `pill` 先指名一份定义，五个效果键再按字段盖上去；次数与冷却不在这张表里，仍只认匹配到的绑定。 |
 | `mxt:technique` | 匹配到的 `technique_binding` | 有它时**不再按匹配器挑声明**，而是点名 `technique` 等于它的那一条；一条都没有就用 `TechniqueBinding.defaults(...)`。 |
-| `mxt:technique_reading` | 上一步挑出的声明 | 再 `applyTo` 一层阅读参数。 |
+| `mxt:technique_reading` | 上一步挑出的声明 | 再按字段覆盖一层阅读参数。 |
 
 其余组件（`mxt:spirit_storage`、`mxt:artifact_state`、`mxt:curse_container`、`mxt:contract_bell`…）只装状态，不参与"哪条声明适用"。
 

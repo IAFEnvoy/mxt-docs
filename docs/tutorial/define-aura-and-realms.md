@@ -250,7 +250,7 @@ realm_stage chain             progress + conditions + costs → next realm
 
 ## 第 6 步 —— 名称
 
-显示名称默认由定义 ID 自动生成，所以你不需要把翻译键写进 JSON —— 除非你想自己写名字：`resource`、`aura`、`realm_stage`、`element`、`cultivation` 等 23 个注册表的定义都可以写可选的 `name` / `description`（两者都可省略，省略时按 id 生成键）。把这些键加到你自己的语言文件里：
+显示名称默认由定义 ID 自动生成，所以你不需要把翻译键写进 JSON —— 除非你想自己写名字：`resource`、`aura`、`realm_stage`、`element`、`cultivation` 等 24 个注册表的定义都可以写可选的 `name` / `description`（两者都可省略，省略时按 id 生成键）。把这些键加到你自己的语言文件里：
 
 ```json
 // assets/example/lang/en_us.json

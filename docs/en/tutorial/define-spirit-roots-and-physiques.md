@@ -135,7 +135,7 @@ Like every other data pack registry, these two are read and validated while the 
 /mxt attachment status        → how many are held
 ```
 
-- `/mxt registries validate` **does not check** these two tables. It covers realm chains, trigger rules, ability chains, quality ladders and artifact ownership, so do not use it as a validator for spirit roots or physiques; use `/mxt registries list` for the counts.
+- `/mxt registries validate` **does not check** these two tables. It covers realm chains, trigger rules, progression chains, quality ladders and artifact ownership, so do not use it as a validator for spirit roots or physiques; use `/mxt registries list` for the counts.
 - `/mxt spirit_root list` and `/mxt physique list` read the records on the body, so a switched-off entry is still listed — the "in effect" column is what tells them apart.
 
 Then walk it through in game:
@@ -156,7 +156,7 @@ The test pack ships a probe, `/mxt_test identity`, which asserts held / in effec
 | Element fields on a physique do nothing at all | A physique has only the keys in its field table. `element`, `cultivation_multiplier`, `damage_types` and the like are **silently ignored — no error, and almost nothing in the log**. A mistyped field name is never caught; that one entry simply has no effect. |
 | One ability or element vanished from an array | A bad entry inside an array such as `granted_abilities` / `conflicting_elements` is dropped with one `Ignoring invalid list element` line and the rest of the file loads normally; a **single bad id** (not an array) fails the whole definition instead. |
 | One action fails to parse | The `spirit_root` / `physique` field of the action names an id the current pack does not provide. After a definition is deleted, commands and scripts **can still remove it by the reference recorded on the body**, because the body stores the reference itself. |
-| `/mxt registries validate` reports nothing | It does not check these two tables (it covers realm chains, trigger rules, ability chains, quality ladders and artifact ownership). |
+| `/mxt registries validate` reports nothing | It does not check these two tables (it covers realm chains, trigger rules, progression chains, quality ladders and artifact ownership). |
 | The file is there but the definition is not in game | An entry blocked by `neoforge:conditions` never enters the table, and the log holds only a DEBUG line. |
 | A switched-off root seems to be "lost" | Switching off only disables it: it is still on the body, can still be removed, and is still listed by everything that reads only "held". |
 

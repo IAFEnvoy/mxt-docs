@@ -93,7 +93,7 @@ A triggered ability fires when the world does something to its owner. The trigge
 }
 ```
 
-- `triggers` is a list of built-in matchers: `tick`, `attack`, `hurt`, `kill`, `block_break`, `block_use`, `item_use`, `equip`, `death`, `breakthrough` and `technique_stage`. None of them takes a field of its own.
+- `triggers` is a list of built-in matchers: `tick`, `attack`, `hurt`, `kill`, `block_break`, `block_use`, `item_use`, `equip`, `death`, `breakthrough` and `progression_level`. None of them takes a field of its own.
 - `chance` is a number provider, `1` by default, and it is rolled once per matching trigger: a formula that throws or does not evaluate to a finite number means **not allowed**, `<= 0` is not allowed, `>= 1` always is, and anything in between rolls the entity's random once. **Do not confuse it with the `chance` of the same name in the `mxt/trigger` rule table** — there a value that cannot be computed counts as `1`.
 - The `hurt` trigger adds `damage` — the damage actually inflicted — which is why the heal can scale with the hit, and the variables a trigger injects are just as readable to this ability's own action fields. The other triggers add their own names: `target_health` and `target_is_living` for `attack`, `block_x/y/z` for block events, `use_duration` for `item_use`, and so on.
 

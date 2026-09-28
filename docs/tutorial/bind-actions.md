@@ -7,7 +7,7 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 
 [KubeJS 创建物品并绑定行为](./create-items-with-kubejs.md)讲的是"物品怎么注册"和"哪张表认领它"。这页接着往下走，只回答一个问题：**钩子里的行为到底什么时候跑。**
 
-四张绑定表各自挂在自己的时机上，谁也不等谁：物品的表在"用完"之后跑，武器的三个钩子分别挂在右键、命中和每 tick 上，丹药的表在吃完之后接上。写错一行代码不会报错——它只是永远不执行。
+四张绑定表各自挂在自己的时机上，谁也不等谁：物品的表在"用完"之后跑，武器的三个钩子分别挂在右键、命中和每 tick 上，丹药的行为在吃完之后接上（它们写在丹药定义上，不写在绑定上）。写错一行代码不会报错——它只是永远不执行。
 
 ## 你要搭建什么
 
@@ -18,9 +18,9 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 | `data/example/mxt/item_binding/qi_pill.json` | 两个有先后关系的实体行为。 |
 | `data/example/mxt/item_binding/root_pellet.json` | 一条带描述、会在提示框里显示勾叉的条件。 |
 | `data/example/mxt/weapon_binding/spirit_sword.json` | 右键、命中、每 tick 三个钩子各一个行为。 |
-| `data/example/mxt/pill_binding/qi_pill.json` | 过量那一行的行为。 |
+| `data/example/mxt/pill/qi_pill.json` | 过量那一行的行为。 |
 
-## 第 1 步 —— 四张表各有哪些钩子
+## 第 1 步 —— 各表各有哪些钩子
 
 | 表 | 钩子 | 类型 | 可省 |
 | --- | --- | --- | --- |
@@ -28,15 +28,15 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 | `weapon_binding` | `use_action` | 实体行为 | 是 |
 | `weapon_binding` | `attack_action` | 双实体行为 | 是 |
 | `weapon_binding` | `tick_action` | 实体行为 | 是 |
-| `pill_binding` | `on_consume` | 实体行为 | 是 |
-| `pill_binding` | `on_overdose` | 实体行为 | 是 |
+| `pill` | `on_consume` | 实体行为 | 是 |
+| `pill` | `on_overdose` | 实体行为 | 是 |
 | `technique_binding` | —— | 没有任何行为钩子 | —— |
 
 三条要先记住的：
 
 - **省略一个钩子不是"什么都不写"，而是写入一个空操作。** 空操作什么都不做，也不会报错，所以"我明明没写"和"我写了但没生效"在日志里长得一样。
 - **单个行为与行为数组**：除 `item_binding.actions` 之外，其余钩子两种写法都收；`actions` **只能写数组**，写单个对象会让那份文件解码失败。
-- **钩子写在不对的表里会被静默丢掉。** 表不声明某个键时，那个键就是未知键，加载时直接忽略——`item_binding` 里写 `use_action`、`pill_binding` 里写 `actions`，都不会报错，也都不会生效。
+- **钩子写在不对的表里会被静默丢掉。** 表不声明某个键时，那个键就是未知键，加载时直接忽略——`item_binding` 里写 `use_action`、`pill_binding` 里写 `on_consume`，都不会报错，也都不会生效。
 
 ## 第 2 步 —— 通用绑定的行为
 
@@ -96,7 +96,7 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 
 ## 第 4 步 —— 丹药的钩子
 
-`on_consume` 在正常消耗流程结束之后跑，`on_overdose` 只在丹毒累积越线时才跑。两者与 `item_binding` 的行为彼此独立：同一枚丹药同时挂两张表时**两个都会跑**，顺序是 `item_binding` 的行为在前、`on_consume` 在后，`on_overdose` 在丹毒越线之后。
+丹药的两个行为钩子写在**丹药定义**（[pill](../datapack/json/pill.md)）上，不写在绑定上：`on_consume` 在正常消耗流程结束之后跑，`on_overdose` 只在丹毒累积越线时才跑。两者与 `item_binding` 的行为彼此独立：同一枚丹药同时挂两张表时**两个都会跑**，顺序是 `item_binding` 的行为在前、`on_consume` 在后，`on_overdose` 在丹毒越线之后。哪一族物品是这份丹药、能服用几次由[丹药绑定](../datapack/json/pill_binding.md)给。
 
 ## 第 5 步 —— 条件的两副面孔
 
@@ -130,7 +130,7 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 ## 第 6 步 —— 先后顺序
 
 - **同一张表里：先条件，后行为。** 条件不成立就整条不跑。
-- **同一次使用周期里：**`item_binding` 的行为 → `pill_binding.on_consume` → 丹毒累积 → 越线才 `on_overdose`。
+- **同一次使用周期里：**`item_binding` 的行为 → `pill.on_consume` → 丹毒累积 → 越线才 `pill.on_overdose`。
 - **跨表之间没有统一顺序。** 每张表挂在自己的事件上，谁先谁后由事件决定，不要依赖"功法学习和物品行为谁先跑"这种顺序。
 
 ## 在游戏里验证

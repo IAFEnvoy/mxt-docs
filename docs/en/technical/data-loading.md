@@ -12,7 +12,7 @@ This page follows **one JSON file from disk to the object a settlement reads**: 
 | Class | Responsibility |
 | --- | --- |
 | `registry.MxtResourceKeys` | The `ResourceKey` of every table, kept apart from the registry instances and the registration events so codecs and runtime services can read registry identity without depending on a registration class. |
-| `registry.MxtDatapackRegistries` | Registration and the single reading entry point for the 37 datapack registries; it holds **no snapshot**, because reloading and client synchronisation belong to the vanilla registry system. |
+| `registry.MxtDatapackRegistries` | Registration and the single reading entry point for the 38 datapack registries; it holds **no snapshot**, because reloading and client synchronisation belong to the vanilla registry system. |
 | `registry.MxtRegistries` | The `DeferredRegister`s of the built-in registries: the `type` dispatch layer (actions, conditions, costs, ability types, …). |
 | `registry.MxtDataComponents` | Registration of the item data components; each one declares a persistent codec and a network codec. |
 | `runtime.ServerCache` | The one rebuild point after a world load or `/reload`: cross-entry indexes plus the validation report. |
@@ -29,7 +29,7 @@ The registries are split by **the question they answer**, and the two layers are
 | Layer | Tables | What they answer |
 | --- | --- | --- |
 | Content | `artifact`, `spirit_herb`, `item_aura`, `currency` | "What this item **is**". The definition itself is that thing (its registry id is its name), and it claims a set of items as its carriers. |
-| Content | `resource`, `aura`, `realm_stage`, `element`, `spirit_root`, `physique`, `ability`, `technique`, `quality`, `formation`, `talisman` and the rest | Other definitions refer to them by id; they claim no items. |
+| Content | `resource`, `aura`, `realm_stage`, `element`, `spirit_root`, `physique`, `ability`, `technique`, `quality`, `formation`, `talisman`, `pill` and the rest | Other definitions refer to them by id; they claim no items. |
 | Binding | `item_binding`, `weapon_binding`, `pill_binding`, `tool_binding`, `blueprint_binding`, `technique_binding` | "What this **already existing** item also counts as here." |
 
 The six binding tables share one shape: `items` is a matcher, `priority` decides who wins, and the rest are the rules the entry adds. They **never define the item itself**. The physical item was registered by vanilla, a mod or KubeJS, and a binding only attaches rules to it — an `ItemStack` **never stores a logical item definition**, only components.
@@ -42,7 +42,7 @@ What each binding table adds:
 | --- | --- | --- |
 | `item_binding` | Actions after finishing an item, conditions, what the item is made of | `LivingEntityUseItemEvent.Finish` |
 | `weapon_binding` | Attack / use / per-tick actions, plus `attributes` written into the stack's `ATTRIBUTE_MODIFIERS` | On attack, on use, refreshed every tick |
-| `pill_binding` | Pill and pill-toxicity rules | After being consumed |
+| `pill_binding` | Which pill this item family is, plus its own use cap and cooldown | On a dose (gate and count) |
 | `technique_binding` | Which technique the item teaches, and how long, in what pose and behind which conditions it is read | When a technique is read |
 | `tool_binding` | Which forging methods the tool unlocks | Forging |
 | `blueprint_binding` | Which forging blueprints the item provides | Forging |
@@ -56,7 +56,7 @@ flowchart TD
     B -->|Yes| C["Decoded by that table's codec"]
     C -->|"unknown keys dropped · empty tables and illegal values refused · bad list entries logged and dropped"| D["Registry entry"]
     D --> E["ServerCache.rebuild: after a world load and after /reload"]
-    E --> F["Cross-entry indexes: realm chains / skill chains / triggers / quality ladders / artifact claims"]
+    E --> F["Cross-entry indexes: realm chains / progression chains / triggers / quality ladders / artifact claims"]
     E --> G["problems: one path per line under data, reported at once, loading continues"]
     D --> H["ItemBindingService.resolve: matcher + priority"]
     I["Components on the ItemStack"] --> H
@@ -78,15 +78,15 @@ flowchart TD
 
 **A registry instance may still be the same object after a reload** - the comment in `ServerCache` is written for exactly that case, a reloaded pack that keeps its instances - so a cache keyed by the registry instance cannot be expected to notice a reload, and something has to invalidate it explicitly.
 
-`ServerCache.onDatapackLoaded` (on `TagsUpdatedEvent.ServerDataLoad`) is that one rebuild point. It first invalidates the four instance-keyed caches (`DamageElements`, `ElementReactionService`, `FormulaNames`, `ChainCache`) and then rebuilds the cross-entry indexes: realm chains, skill chains, trigger rules indexed by signal, quality ladders, and the artifact item claim table.
+`ServerCache.onDatapackLoaded` (on `TagsUpdatedEvent.ServerDataLoad`) is that one rebuild point. It first invalidates the four instance-keyed caches (`DamageElements`, `ElementReactionService`, `FormulaNames`, `ChainCache`) and then rebuilds the cross-entry indexes: realm chains, progression chains, trigger rules indexed by signal, quality ladders, and the artifact item claim table.
 
 **Cross-entry problems can only be found here**, because one definition cannot see the other entries:
 
-- Chains have to be straight lines: a `next_realm` / `next_stage` / quality `next` pointing at an entry that does not exist, crossing into another chain, written as the successor in two places (a fork), forming a cycle, or never reaching an entry.
+- Chains have to be straight lines: a `next_realm` / `next_level` / quality `next` pointing at an entry that does not exist, written as the successor in two places (a fork), forming a cycle, or never reaching an entry (realm and quality chains have cross-chain checks of their own on top).
 - Two `artifact` definitions claiming the same item **on the same `priority`** leave the winner to registry order, which is a real ambiguity and gets reported.
 - A `quality` tier declaring `upgrade_costs` / `upgrade_condition` without a `next`: that upgrade data will never be read.
 - A `trigger` with no action (the default is `mxt:no_op`) is readable by design, but is almost always a forgotten field.
-- A technique entering a skill stage while not configuring every level it must walk through afterwards.
+- A technique entering a progression level while not configuring every level it must walk through afterwards.
 
 Every problem carries a path like `data/<namespace>/mxt/<table>/<entry>`, they are collected and logged in one go, and **loading is not aborted**: a problematic entry is simply not indexed while the definitions around it keep working. Problems a single entry has with itself (an illegal value, an empty list) were already refused while decoding and never reach this step.
 
@@ -103,9 +103,9 @@ Within one operation, "which declarations apply to this stack" is resolved once:
 | Component | Overrides | How |
 | --- | --- | --- |
 | `mxt:quality` | everything | It is the first slot of quality resolution: if it is there, it decides. |
-| `mxt:pill` | the matched `pill_binding` | `applyTo(...)` lays the fields written on the component over the declaration (and starts from `defaults()` when there is no declaration). |
+| `mxt:pill` | the matched `pill_binding` and the `pill` it names | the `pill` written on the component names a definition first, then the five effect keys are laid over it field by field; the use cap and cooldown are not part of this and still follow the matched binding only. |
 | `mxt:technique` | the matched `technique_binding` | With it, the declaration is **no longer picked by the matcher**: the one whose `technique` equals it is named, and when there is none, `TechniqueBinding.defaults(...)` is used. |
-| `mxt:technique_reading` | the declaration picked above | One more `applyTo` for the reading parameters. |
+| `mxt:technique_reading` | the declaration picked above | One more field-by-field overlay for the reading parameters. |
 
 The remaining components (`mxt:spirit_storage`, `mxt:artifact_state`, `mxt:curse_container`, `mxt:contract_bell`, …) only carry state and take no part in "which declaration applies".
 

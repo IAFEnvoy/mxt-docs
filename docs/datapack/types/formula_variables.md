@@ -119,7 +119,7 @@ description: 公式能读到的每一个名字、由谁提供，以及写错名�
 | 变量 | 什么时候有 | 说明 |
 | --- | --- | --- |
 | `element_modifier` | 技能声明了非空的 `element_affinity` | 为施法者算出的元素亲和倍率。[伤害系统](../../technical/damage.md)第一层会把它乘进这次施放打出的伤害，所以伤害公式里**不要**手写 `* element_modifier`——那是同一个数的第二次相乘。它仍然可以在不是伤害的地方读，例如消耗与时长 |
-| `damage_multiplier` | 这次施放落在一条授予该技能的技能水平链上 | 施法者当前所在那一级的 `damage_multiplier`，伤害系统也拿它乘这次施放的伤害。体质自己的 `damage_dealt_multiplier` / `damage_taken_multiplier` **不进公式上下文**，只有管线读它们 |
+| `damage_multiplier` | 这次施放落在一条授予该技能的进度链上 | 施法者当前所在那一级的 `damage_multiplier`，伤害系统也拿它乘这次施放的伤害。体质自己的 `damage_dealt_multiplier` / `damage_taken_multiplier` **不进公式上下文**，只有管线读它们 |
 | `aura_radius` | `mxt:aura` 求值它的目标行为 | 这一轮脉冲解析出的半径 |
 | `distance` | `mxt:aura` 求值它的目标行为 | 施法者与当前目标之间的格数 |
 
@@ -138,7 +138,7 @@ description: 公式能读到的每一个名字、由谁提供，以及写错名�
 | `item_use` | `use_duration` | 这次使用物品跑了多少 tick |
 | `equip` | `equipment_slot` | 变化的装备槽序号 |
 | `breakthrough` | `breakthrough` | 恒为 `1`，所以能当标志用 |
-| `technique_stage` | `stage` | 刚到达的那一级的序号，从 `0` 起；这个信号还会把 `technique` 的 ID 作为扩展值带给脚本匹配器 |
+| `progression_level` | `level` | 刚到达的那一级的序号，从 `0` 起；这个信号还会把 `owner` 的 ID 作为扩展值带给脚本匹配器 |
 
 ### 其他系统
 
@@ -190,7 +190,7 @@ description: 公式能读到的每一个名字、由谁提供，以及写错名�
 
 | 公式 | 上下文对象 | 能读的变量 |
 | --- | --- | --- |
-| 技能的施法时间、冷却、充能、引导间隔、条件、目标选择 | 施法者 | 实体族；技能声明了 `element_affinity` 时有 `element_modifier`（伤害系统会自己拿它乘这次施放的伤害，所以这里只用来算不是伤害的数）；有授予该技能的技能水平链时有 `damage_multiplier`；启动这条技能的那个触发器带的载荷 |
+| 技能的施法时间、冷却、充能、引导间隔、条件、目标选择 | 施法者 | 实体族；技能声明了 `element_affinity` 时有 `element_modifier`（伤害系统会自己拿它乘这次施放的伤害，所以这里只用来算不是伤害的数）；有授予该技能的进度链时有 `damage_multiplier`；启动这条技能的那个触发器带的载荷 |
 | 技能的 `target_condition` 与 `bi_entity_action` | 施法者 + 目标 | 实体族与目标族；同一份事件载荷 |
 | `mxt:aura` 的间隔与半径 | 施法者 | 实体族 |
 | 技能 `costs` 里的 `mxt:resource` 条目 | 施法者 + 被扣的那个数值 | 实体族 + 那个数值的资源族 |

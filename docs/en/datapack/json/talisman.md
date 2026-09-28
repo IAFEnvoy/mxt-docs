@@ -12,7 +12,7 @@ File location: `data/<namespace>/mxt/talisman/<path>.json`
 
 A talisman definition says what happens once it is inscribed onto a carrier: which abilities invoking it grants, how much aura the carrier can hold, and what every invocation pays.
 
-**`abilities` is the only effect field.** Every skill-like effect in this mod lands on an ability, so a talisman needs no effect vocabulary of its own. The other five optional fields each answer one thing: `capacity` is the carrier's pour capacity multiplier (see [Pouring and Firing](#pouring-and-firing)), `durability` / `consume` are its wear (see [Wear](#wear)), `costs` is what every invocation pays (see [Cost](#cost)), and `quality` is its tier (see [Tier](#tier)).
+**`abilities` is the only effect field.** Every skill-like effect in this mod lands on an ability, so a talisman needs no effect vocabulary of its own. The other six optional fields each answer one thing: `capacity` is the carrier's pour capacity multiplier (see [Pouring and Firing](#pouring-and-firing)), `durability` / `consume` are its wear (see [Wear](#wear)), `costs` is what every invocation pays (see [Cost](#cost)), `condition` is whether this holder may use the talisman right now (see [Condition](#condition)), and `quality` is its tier (see [Tier](#tier)).
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -23,7 +23,8 @@ A talisman definition says what happens once it is inscribed onto a carrier: whi
 | `durability` | int | `0` | How much wear this talisman gives a carrier once it is written on, with entries on one carrier **adding up**. `0` or omitted means this talisman keeps no wear account, and the carrier is still spent as one whole item per invocation. It cannot be negative. |
 | `consume` | int | `1` | How much wear one invocation takes off, at least 1. It only means anything while `durability > 0`. |
 | `quality` | Quality id | none | The tier of this talisman, used to grade talisman paper and talisman treasures. |
-| `costs` | Array, entries as in [`Cost`](../types/shared_data_types.md#cost) | `[]` | What **one invocation** pays, with the entries on one carrier adding up. |
+| `condition` | [Entity condition](../types/condition/entity_condition_types.md) | `mxt:always` | Whether this holder **may use the talisman**, unrelated to its price. It is tested against the **holder** and comes **before `costs`**: when it fails, the invocation is refused with nothing moved at all — the carrier is not spent, no wear is taken, the store is not drawn on and the holder's account is untouched. **Every inscription on one carrier has to pass**, so one of them saying "not now" refuses the whole carrier. It can also be written as an array of conditions (an implicit AND). |
+| `costs` | Array, entries as in [`Cost`](../types/shared_data_types.md#cost) | `[]` | What **one invocation** pays, with the entries on one carrier adding up. Anything that cannot be paid refuses that invocation; "when it may not be used at all" goes in `condition`. |
 
 `capacity` is roughly how many times in a row the carrier can fire: the capacity is one invocation's aura amount × the multiplier that really applies, and that multiplier is `min(the written value, the uses the carrier has left)`. The uses left come out of wear (see [Wear](#wear)): a carrier declaring no wear counts as exactly 1, and one with wear counts as at least 1, so the multiplier only means anything on a talisman with wear, and writing it too large never wastes a pour. The default `1` is "exactly one invocation".
 
@@ -33,7 +34,7 @@ It is a **multiplier, not an aura table**: the capacity comes out of `costs` its
 
 The tier on a carrier is decided by the **first entry in inscription order that declares one**, through the ordinary quality module, and nothing has to be written onto the stack as a component.
 
-An `mxt:aura` entry in `costs` comes out of the **store poured into the carrier itself**, and short of it means "not charged", which refuses the invocation; `mxt:resource` / `mxt:item` / `mxt:js` entries are charged to the **holder** when it fires. Anything that cannot be paid **refuses the invocation** — a threshold such as "not enough spirit power to use this" goes here rather than in a condition field of its own.
+An `mxt:aura` entry in `costs` comes out of the **store poured into the carrier itself**, and short of it means "not charged", which refuses the invocation; `mxt:resource` / `mxt:item` / `mxt:js` entries are charged to the **holder** when it fires. Anything that cannot be paid **refuses the invocation**. A threshold that has nothing to do with the price — a realm, the weather, an item in hand, a chance — belongs in `condition`, which is asked before `costs`; see [Condition](#condition).
 
 A definition has **no** switch of that kind for "does it answer an invocation": whether a carrier fires the moment it is full or banks the charge until you act is a **mode on the carrier itself (on the stack)**, not a property of the definition. The same inscriptions can go onto one talisman that fires when full and onto another that sits and waits. The modes are under [Carrier Mode](#carrier-mode) below and on [Items](/en/player-guide/items).
 
@@ -89,7 +90,7 @@ The position enters the ability's formula context as `block_x`/`block_y`/`block_
 
 Controlled by **Server Config → Talisman → Use Cooldown**, not by the data pack. It is in ticks, range `0..72000`, default `20` (1 second); `0` turns it off.
 
-- **One "attempt" starts it**: a click an ability refused because of its own cooldown or an unpayable cost still counts, since that click really was an attempt to invoke; a blank carrier and one whose store cannot cover a single invocation **never became an attempt** and cost no cooldown — those cases only give the player a line of explanation and can be retried at once.
+- **One "attempt" starts it**: a click an ability refused because of its own cooldown or an unpayable cost, or one the talisman's own `condition` refused, still counts, since that click really was an attempt to invoke; a blank carrier and one whose store cannot cover a single invocation **never became an attempt** and cost no cooldown — those cases only give the player a line of explanation and can be retried at once.
 - **It only gates the "hand" path**: a pour that fills the carrier and fires it automatically is limited by it just the same. Filling it inside the window does not fire it, and that tick's aura is **not poured in at all** (pouring it in would be paying for an attempt that is bound to be refused), so what you see inside the window is a talisman that does not move, and once the window passes the same pour fires normally.
 - **The display stand path ignores it entirely**: a talisman on a stand is in nobody's hand, and fires the moment it is full — it is neither refused because the filler is inside a window, nor does it record a window for anybody.
 - The cooldown rides vanilla's item cooldown, so the hotbar's grey sweep and the `mxt:on_cooldown` item condition both read it directly. And because every carrier in this mod is the same item `mxt:talisman`, this cooldown is recorded **per player** and per item: the other talismans in hand cannot be pressed inside the window either, which is exactly the "clicking through a stack of talismans within one second" it is there to block.
@@ -108,11 +109,19 @@ Controlled by **Server Config → Talisman → Use Cooldown**, not by the data p
 - **The invocation that takes the wear to or past the cap destroys that carrier**: the aura this invocation owes is **still taken** (it really did fire), and afterwards **the part that was never spent** in the store is returned to that invocation's actor at the price it was poured in for, 1 unit of aura = 1 point of the resource it is counted in. Whatever cannot be taken is lost with the talisman paper and does not fail the invocation. A carrier declaring no wear is still spent as one whole item per invocation and returns the unspent part the same way; its store is **shared by the whole stack**, so in that case it only comes back once the whole stack is used up.
 - The tooltip has a line of its own, "Durability: left / cap", and it can read the summed value from the definitions even before the components are written.
 
+### Condition
+
+`condition` asks whether **this holder may use the talisman right now**, unrelated to its price, and is written exactly like every other condition field (see [entity condition types](../types/condition/entity_condition_types.md); an array of conditions means all of them have to pass). It is tested against the **holder** (for a talisman on a display stand, whoever filled it), it can read the `block_x` / `block_y` / `block_z` position values, and it comes **before `costs`**: when it fails the invocation is refused with the action bar saying "its invocation condition is not met", and **nothing has moved** — the carrier is not spent, no wear is taken, the store is not drawn on and the holder's account is untouched, so a condition can never make anybody pay for nothing.
+
+**Every condition on one carrier has to pass**: one of them saying "not now" refuses the whole carrier rather than firing only the inscriptions that allow it. It and an ability's own `condition` are two gates: the talisman's is asked first, the ability's is still asked as each ability fires, and that one only affects the ability it belongs to.
+
+It gates **firing** alone: pouring and storing are unaffected, so a carrier whose condition fails can still be poured full and used once it is met.
+
 ### Cost
 
 `costs` is what **one invocation** pays, in the same shape as an ability's own `costs` (`mxt:resource` / `mxt:aura` / `mxt:item` / `mxt:js`) and settled by the same transaction — there is no second payment path. It splits into two routes: **aura entries come out of the carrier's own store** (the container `capacity` sizes, bought in while pouring at 1 point of the holder's own aura per unit), while **every other entry is charged to the holder when it fires**.
 
-The latter is planned **before** the invocation: anything that cannot be paid **refuses that invocation**, with the action bar saying whether it is "not enough spirit power" or "the required items are missing", and the carrier, its wear and its store all stay untouched. This is a threshold such as "not enough spirit power to use this" **set by the definition**, which is why the mod adds no condition field of its own for it. The plan is read-only, and the real deduction happens **after at least one ability has really fired**; one invocation may write several entries at once, and the `costs` of several inscriptions on one carrier add up. Aura entries are taken **at the amount written**, fractions included — it is the capacity side that rounds up, because one pour only moves whole units.
+The latter is planned **before** the invocation: anything that cannot be paid **refuses that invocation**, with the action bar saying whether it is "not enough spirit power" or "the required items are missing", and the carrier, its wear and its store all stay untouched. This is a threshold such as "not enough spirit power to use this" **set by the definition**, while "when it may not be used at all" goes in `condition`, which is asked ahead of it. The plan is read-only, and the real deduction happens **after at least one ability has really fired**; one invocation may write several entries at once, and the `costs` of several inscriptions on one carrier add up. Aura entries are taken **at the amount written**, fractions included — it is the capacity side that rounds up, because one pour only moves whole units.
 
 ### Tier
 
@@ -137,6 +146,7 @@ Example:
 {
   "abilities": ["example:qingxiao_firebolt"],
   "capacity": 10,
+  "condition": {"type": "mxt:resource_compare", "resource": "example:true_essence", "min": 2},
   "costs": [
     {"type": "mxt:aura", "aura": "example:qi", "amount": 12},
     {"id": "example:true_essence", "amount": 2}
@@ -147,6 +157,6 @@ Example:
 }
 ```
 
-This talisman takes 12 `example:qi` per invocation and charges the holder another 2 `example:true_essence`; its capacity multiplier is 10 (= 120 units, good for 10 invocations) and its wear is 10 points at 1 per invocation — one full pour uses up exactly its wear. Writing 20 would change nothing: only 10 uses are left, so the multiplier that applies is stuck at 10.
+This talisman takes 12 `example:qi` per invocation and charges the holder another 2 `example:true_essence`; its capacity multiplier is 10 (= 120 units, good for 10 invocations) and its wear is 10 points at 1 per invocation — one full pour uses up exactly its wear. Writing 20 would change nothing: only 10 uses are left, so the multiplier that applies is stuck at 10. Its `condition` asks for 2 `example:true_essence` in the holder's hands (exactly the sum one invocation charges): short of it the condition refuses first and the account does not move at all, and only once it is met does `costs` settle.
 
 Which talismans are already inscribed is kept in the item component `mxt:talisman`: a list of `talisman` entries in the order they were appended, plus a `mode` field (`"fire"` (the default) or `"store"`), and an empty list is the blank carrier a freshly made one is. The component stores **concrete entries**, so it cannot name a tag. Pouring progress is kept separately in `mxt:spirit_storage`, the storage component shared with spirit stones, recording the units poured so far by **aura**; when it is absent, nothing has been poured. The component and the carrier are described under [Items](/en/player-guide/items).

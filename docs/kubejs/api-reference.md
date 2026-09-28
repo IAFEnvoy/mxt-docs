@@ -25,7 +25,7 @@ MiXianTu 的 KubeJS 桥接**按领域一个全局对象**，不提供承载全�
 | `MxtElements` | 读实体身上的元素与元素附着，并施加附着。 | [MxtElements](/kubejs/api/elements) |
 | `MxtSpiritRoots` | 查询、授予、移除与开关灵根。 | [MxtSpiritRoots](/kubejs/api/spirit_roots) |
 | `MxtPhysiques` | 查询、授予、移除与开关体质。 | [MxtPhysiques](/kubejs/api/physiques) |
-| `MxtTechniques` | 查询、学习与遗忘功法，并读它的技能水平。 | [MxtTechniques](/kubejs/api/techniques) |
+| `MxtTechniques` | 查询、学习与遗忘功法，并读它的进度等级。 | [MxtTechniques](/kubejs/api/techniques) |
 | `MxtQuality` | 读物品堆解析出的品质与所属链条，写覆盖组件或沿链条升一档。 | [MxtQuality](/kubejs/api/quality) |
 | `MxtSouls` | 回收实体可转移的魂魄。 | [MxtSouls](/kubejs/api/souls) |
 | `MxtLifespan` | 读寿元账本（剩余刻数与上限），改写或增减它，也能让身体当场转世。 | [MxtLifespan](/kubejs/api/lifespan) |

@@ -5,7 +5,7 @@ description: Register real items in a KubeJS startup script, then attach MiXianT
 
 # KubeJS Items and Bindings
 
-MiXianTu never registers an item. KubeJS registers the item itself in a startup script, and MiXianTu attaches behaviour, conditions, aura, currency and tooltips to its real item ID through the binding tables. Do not create a `mxt:item`, `mxt:pill` or `mxt:weapon` file: those registries do not exist.
+MiXianTu never registers an item. KubeJS registers the item itself in a startup script, and MiXianTu attaches behaviour, conditions, aura, currency and tooltips to its real item ID through the binding tables. Do not create a `mxt:item` or `mxt:weapon` file: those registries do not exist. `mxt:pill` is three different things — a built-in carrier item, an item component and a registry — and all three only describe **what a dose does**, see [Pill](../datapack/json/pill.md); none of them registers the item itself.
 
 ## Registering the Item
 
@@ -49,7 +49,7 @@ MiXianTu owns behaviour, conditions, aura, currency and tooltips; the binding ta
 | --- | --- | --- |
 | Item binding | `mxt/item_binding/` | Ordered entity actions and tooltip conditions for any item. |
 | Weapon binding | `mxt/weapon_binding/` | Vanilla attribute modifiers (attack damage and speed go here too), weapon actions. |
-| Pill binding | `mxt/pill_binding/` | Consumption behaviour and toxicity for an edible item. |
+| Pill binding | `mxt/pill_binding/` | Claims this family of edible items as one pill and gives it a use cap and cooldown; what a dose does is in [Pill](../datapack/json/pill.md). |
 | Tool binding | `mxt/tool_binding/` | Claims tool items and lists the forging methods they unlock. |
 | Blueprint binding | `mxt/blueprint_binding/` | Claims blueprint items and lists the forging blueprints they offer. |
 | Technique binding | `mxt/technique_binding/` | How one technique is read: hold length, pose, sound, quality chain and conditions, plus the item the mod generates as its carrier. A manual's identity is the stack's `mxt:technique` component; `items` is the optional second route. |
@@ -82,15 +82,24 @@ Bind a weapon's attribute modifiers (attack damage and attack speed go here too)
 }
 ```
 
-Bind a pill's toxicity:
+Write what a pill does, then claim it on that item:
+
+```json
+// kubejs/data/example/mxt/pill/returning_pill.json
+{
+  "toxicity_gain": 10,
+  "toxicity_threshold": 100,
+  "toxicity_after_overdose": 25
+}
+```
 
 ```json
 // kubejs/data/example/mxt/pill_binding/returning_pill.json
 {
   "items": "kubejs:returning_pill",
-  "toxicity_gain": 10,
-  "toxicity_threshold": 100,
-  "toxicity_after_overdose": 25
+  "pill": "example:returning_pill",
+  "max_uses": 3,
+  "cooldown": 40
 }
 ```
 
@@ -104,7 +113,7 @@ Bind a cultivation technique to its carrier item:
 }
 ```
 
-The first five tables match the item themselves: `items` accepts an item ID, an item tag or a mixed array, so one file can cover a whole family of items (the same holds for `tool_binding` / `blueprint_binding`, which just hand out forging methods and blueprints instead). A `technique_binding` declaration is matched by technique id, and its `items` is the optional second route: what makes a stack a manual is its own `mxt:technique` component, and only without one does the `items` of a declaration decide — so the item above can either be handed out as the generated carrier from `/picker mxt:technique`, or its id can be written into the declaration's `items` directly. A binding table **declares no quality ladder**: the ladder's name is written on the `quality` entry itself (that tier's `quality`), so an item sits on whichever ladder its resolved tier belongs to, see [quality](../datapack/json/quality). When a binding names an item ID that does not exist, the data pack fails to load, so no unresolvable item rule is created. The full field list of each table is in [Item Binding](../datapack/json/item_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md), [Tool Binding](../datapack/json/tool_binding.md), [Blueprint Binding](../datapack/json/blueprint_binding.md) and [Technique Binding](../datapack/json/technique_binding.md).
+The first five tables match the item themselves: `items` accepts an item ID, an item tag or a mixed array, so one file can cover a whole family of items (the same holds for `tool_binding` / `blueprint_binding`, which just hand out forging methods and blueprints instead). A `technique_binding` declaration is matched by technique id, and its `items` is the optional second route: what makes a stack a manual is its own `mxt:technique` component, and only without one does the `items` of a declaration decide — so the item above can either be handed out as the generated carrier from `/picker mxt:technique`, or its id can be written into the declaration's `items` directly. A binding table **declares no quality ladder**: the ladder's name is written on the `quality` entry itself (that tier's `quality`), so an item sits on whichever ladder its resolved tier belongs to, see [quality](../datapack/json/quality). When a binding names an item ID that does not exist, the data pack fails to load, so no unresolvable item rule is created. The full field list of each table is in [Item Binding](../datapack/json/item_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md), [Pill](../datapack/json/pill.md), [Pill Binding](../datapack/json/pill_binding.md), [Tool Binding](../datapack/json/tool_binding.md), [Blueprint Binding](../datapack/json/blueprint_binding.md) and [Technique Binding](../datapack/json/technique_binding.md).
 
 ## Reloading
 

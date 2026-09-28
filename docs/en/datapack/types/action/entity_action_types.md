@@ -858,7 +858,7 @@ Strikes a coloured lightning bolt at the acting position plus an offset; what th
 | `offset_x` | Number provider | `0` | The X offset from the acting position. |
 | `offset_y` | Number provider | `0` | The Y offset from the acting position. |
 | `offset_z` | Number provider | `0` | The Z offset from the acting position. |
-| `color` | Colour | `0x737380` | The bolt colour, written as `#RRGGBB` or an integer. |
+| `color` | Colour | `0x737380` | The bolt colour, written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too); always treated as opaque. |
 | `alpha` | Float | `0.3` | The glow strength, `0`–`1`. |
 | `thickness` | Float | `1` | The strand thickness, `0.1`–`4`. |
 | `palette` | RGB colour array | `[]` | A gradient of at most `16` entries. |
@@ -877,7 +877,7 @@ It needs no fields at all: the bolt lands on the acting position itself, since t
 All four number fields (the three offsets and `damage`) must evaluate to finite values, otherwise no bolt is struck. A `damage` that evaluates negative is treated as `0`.
 
 ::: info Colours and Gradients
-`color` accepts the same `#RRGGBB` or integer form as an aura colour, `alpha` is `0..1`, and `thickness` is `0.1..4`.
+`color` accepts the same form as an aura colour (`#RRGGBB`; an integer or an `[r,g,b]` float array is accepted too), `alpha` is `0..1`, and `thickness` is `0.1..4`.
 
 `palette` **replaces** the single `color` with a gradient: it is a group of RGB colours, the first at the top of the strand and the last at the ground, at most 16 entries. The renderer colours the bolt seam by seam and interpolates between neighbouring entries; because the branches read the same seams, a branch matches the trunk at the height where it leaves it. `alpha` is still one glow value shared by the whole bolt rather than one per colour.
 
@@ -920,7 +920,7 @@ Rewrites the pill toxicity accumulated on the target.
 
 This is the **only** write in a data pack that puts numbers of your own choosing into the toxicity ledger. A negative `add` is how a pack clears toxicity, and the value never goes below `0`; a hard-coded constant under `set` must be non-negative or loading reports an error. A non-living target is a silent no-op, and a non-finite evaluated amount does nothing.
 
-Toxicity is normally accumulated by the consumption rules of [pill_binding](../../json/pill_binding.md); **Server Config → Alchemy → Natural toxicity decay per second** defaults to `0`, which means it never fades on its own.
+Toxicity is normally accumulated by the consumption rules of [pill](../../json/pill.md); **Server Config → Alchemy → Natural toxicity decay per second** defaults to `0`, which means it never fades on its own.
 
 ### `mxt:reincarnate`
 

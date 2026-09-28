@@ -22,7 +22,8 @@ This page adds one minimal production line to the example pack: two medicinal pr
 | `data/example/mxt/alchemy_furnace/basic.json` | The furnace spec: slots, capacity and cooling. |
 | `data/example/mxt/alchemy_wall_material/basic_wall.json` | The temperature the wall material withstands. |
 | `data/example/recipe/warming.json` | The recipe: property thresholds, thermal tolerance, target heat and tolerance, duration and outputs. |
-| `data/example/mxt/pill_binding/warming_pill.json` | The pill binding: effect, uses, cooldown and toxicity. |
+| `data/example/mxt/pill/warming_pill.json` | What the pill does: effect, toxicity and overdose. |
+| `data/example/mxt/pill_binding/warming_pill.json` | The pill binding: claims this item family and gives it a use cap and cooldown. |
 
 ## Step 1 — Write the Properties First
 
@@ -169,7 +170,7 @@ A recipe uses the vanilla recipe type `mxt:alchemy` and lives at `data/<namespac
     {
       "id": "mxt:pill",
       "count": 1,
-      "components": { "mxt:pill": { "binding": "example:warming_pill" } }
+      "components": { "mxt:pill": { "pill": "example:warming_pill" } }
     }
   ],
   "failure_outputs": [{ "id": "mxt:alchemy_dregs" }]
@@ -190,14 +191,12 @@ Loading materials never starts a batch. The player checks on the core's page whe
 
 ## Step 6 — The Pill and Its Toxicity
 
-A pill binding does not have to claim any item: the output of the recipe above already writes the `binding` of `mxt:pill` into the component.
+A pill is written in two halves: **what it does** goes into `pill`, and **which items are it and how often they may be taken** goes into `pill_binding`. The output of the recipe above names that effect through a component.
 
 ```json
-// data/example/mxt/pill_binding/warming_pill.json
+// data/example/mxt/pill/warming_pill.json
 {
-  "name": "pill_binding.example.warming_pill",
-  "max_uses": 2,
-  "cooldown": 20,
+  "color": "#FF9955",
   "toxicity_gain": 25,
   "toxicity_threshold": 100,
   "toxicity_after_overdose": 20,
@@ -205,16 +204,29 @@ A pill binding does not have to claim any item: the output of the recipe above a
 }
 ```
 
+```json
+// data/example/mxt/pill_binding/warming_pill.json
+{
+  "name": "pill_binding.example.warming_pill",
+  "items": ["mxt:pill"],
+  "pill": "example:warming_pill",
+  "max_uses": 2,
+  "cooldown": 20
+}
+```
+
 With no finished pill at hand you can hand one out directly:
 
 ```mcfunction
-give @s mxt:pill[mxt:pill={binding:"example:warming_pill"}]
+give @s mxt:pill[mxt:pill={pill:"example:warming_pill"}]
 ```
 
 - The use cap counts per **binding**, not per item ID, so carrying the effect on another item does not get around it. Uses and cooldown are recorded on the body: death, a dimension change and logging back in all leave them alone.
+- **The identity only comes from a binding's `items` match**: a stack that writes only effect keys, or one whose component names a pill while no binding claims the item, counts no uses and has no cooldown. That is why the binding above names the built-in pill carrier `mxt:pill`. The component's `pill` wins over the definition the binding names, and the five effect keys are then laid over it field by field.
 - Toxicity is a per-body ledger too: `toxicity_gain` is added by each dose, `on_overdose` only fires once the total reaches `toxicity_threshold`, and `toxicity_after_overdose` is what is left afterwards. The threshold means "reaching it fires", not "no more pills allowed".
 - Clear toxicity with a negative `add` on the entity action `mxt:modify_pill_toxicity`, which does not touch the use count; read it with the entity condition `mxt:pill_toxicity` or the formula variable `pill_toxicity`.
 - Toxicity does not fade on its own by default. With **Server Config → Alchemy → Natural toxicity decay per second** set to a positive number, an active entity that already has toxicity loses some once every 20 ticks, nothing happens offline, and an entity that has never taken a pill does not gain an empty ledger.
+- The built-in carrier `mxt:pill` paints its icon with this pill's `color`, so when one effect hangs on several items only the built-in pill shows a colour. Every other item keeps its own texture, untouched.
 
 ## Verify
 
@@ -255,6 +267,7 @@ How a batch **settles once it has started** has not been checked item by item in
 - [alchemy_recipe](../datapack/json/alchemy_recipe.md) — the full field list, plus how matching, duration and outputs behave.
 - [alchemy_furnace](../datapack/json/alchemy_furnace.md) and [alchemy_wall_material](../datapack/json/alchemy_wall_material.md) — slots, capacity, cooling and the temperature ceiling.
 - [medicinal_property](../datapack/json/medicinal_property.md) and [spirit_herb](../datapack/json/spirit_herb.md) — properties, power, thermal bias, age and planting.
-- [pill_binding](../datapack/json/pill_binding.md) — use caps, cooldown, toxicity and what is left after an overdose.
+- [pill](../datapack/json/pill.md) — the dose action, toxicity, the threshold and what is left after an overdose.
+- [pill_binding](../datapack/json/pill_binding.md) — which items are claimed, the use cap and the cooldown.
 - [quality](../datapack/json/quality.md) — how `alchemy_modifier` shortens a batch.
 - [Items and Blocks](../player-guide/items.md) — how the furnace parts, the plot and the pill carrier behave in game.

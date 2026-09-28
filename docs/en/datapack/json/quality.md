@@ -14,7 +14,7 @@ One `quality` is one tier. What it is called is for the interface to show; `valu
 | --- | --- | --- | --- |
 | `name` | Text Component | `quality.mxt.<namespace>.<path>` | The tier's name. |
 | `description` | Text Component | `quality.mxt.<namespace>.<path>.description` | The tier's description, drawn under its name. |
-| `color` | Color | none | The tier's colour, either `"#RRGGBB"` or an integer. |
+| `color` | Color | none | The tier's colour, written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too); always treated as opaque. |
 | `value_multiplier` | `Modifier` | `1` | Currency value modifier. |
 | `forging_modifier` | `Modifier` | `1` | Forging modifier. |
 | `alchemy_modifier` | `Modifier` | `1` | Alchemy modifier. |

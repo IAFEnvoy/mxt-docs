@@ -137,16 +137,16 @@ description: 触发器匹配器 mxt:trigger_type 与消耗 mxt:cost_type 的全�
 {"type": "mxt:breakthrough"}
 ```
 
-### `mxt:technique_stage`
+### `mxt:progression_level`
 
-已学会的功法达到新的水平。
+某个所有者达到新的进度等级。一次晋升提交之后才发布，所以反应方读到的是新等级。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | — | — | — | 没有字段。 |
 
 ```json
-{"type": "mxt:technique_stage"}
+{"type": "mxt:progression_level"}
 ```
 
 ### `mxt:js`

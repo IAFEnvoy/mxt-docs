@@ -121,7 +121,7 @@ These names are provided as explicit context values by the system that starts th
 | Variable | Available when | Description |
 |----------|----------------|-------------|
 | `element_modifier` | The ability declares a non-empty `element_affinity` | The element affinity multiplier computed for the caster. Layer one of the [damage system](../../technical/damage.md) multiplies this value into the damage that cast deals itself, so a damage formula must **not** write `* element_modifier` by hand — that would be the same number multiplied twice. It is still readable where the value is not damage, such as costs or durations |
-| `damage_multiplier` | The cast belongs to a mastery chain that grants the ability | The `damage_multiplier` of the level the caster stands on, which the [damage system](../../technical/damage.md) also applies to the damage this cast deals. A physique's own `damage_dealt_multiplier` / `damage_taken_multiplier` are **not** put into the formula context: only the pipeline reads them |
+| `damage_multiplier` | The cast belongs to a progression chain that grants the ability | The `damage_multiplier` of the level the caster stands on, which the [damage system](../../technical/damage.md) also applies to the damage this cast deals. A physique's own `damage_dealt_multiplier` / `damage_taken_multiplier` are **not** put into the formula context: only the pipeline reads them |
 | `aura_radius` | `mxt:aura` evaluates its target action | The radius resolved for this pulse |
 | `distance` | `mxt:aura` evaluates its target action | Distance in blocks between the caster and the current target |
 
@@ -140,7 +140,7 @@ An ability with the `mxt:triggered` type is evaluated when its trigger fires, an
 | `item_use` | `use_duration` | Ticks the used item took to finish |
 | `equip` | `equipment_slot` | Ordinal of the changed equipment slot |
 | `breakthrough` | `breakthrough` | Always `1`, so it can be used as a flag |
-| `technique_stage` | `stage` | Zero-based rank of the level that was just reached; the signal also carries the `technique` ID as an extension value for scripted matchers |
+| `progression_level` | `level` | Zero-based rank of the level that was just reached; the signal also carries the `owner` ID as an extension value for scripted matchers |
 
 ### Values From Other Systems
 
@@ -192,7 +192,7 @@ Which variables a formula can read is decided by the objects the caller puts int
 
 | Formula | Context objects | Variables available |
 |---------|-----------------|---------------------|
-| Ability cast time, cooldown, charges, channel interval, conditions, target selection | caster | Entity family; `element_modifier` when the ability declares `element_affinity` (the damage system applies that value to the cast's own damage, so read it here only for non-damage numbers); `damage_multiplier` when a mastery chain granting the ability is known; the payload of the trigger that started the ability |
+| Ability cast time, cooldown, charges, channel interval, conditions, target selection | caster | Entity family; `element_modifier` when the ability declares `element_affinity` (the damage system applies that value to the cast's own damage, so read it here only for non-damage numbers); `damage_multiplier` when a progression chain granting the ability is known; the payload of the trigger that started the ability |
 | An ability's `target_condition` and `bi_entity_action` (the four action fields are declared and run by each type that runs actions) | caster + target | Entity and target families; the same event payload |
 | `mxt:aura` interval and radius | caster | Entity family |
 | The `mxt:resource` entry of an ability's `costs` | caster + the spent value | Entity family + resource family of that value |

@@ -62,13 +62,14 @@ The four action fields are written at the ability's own top level (see [Ability 
 | `durability` | int | `0` | How much wear it gives the carrier, summed over everything written onto one carrier; `0` or omitted means no wear account and the carrier is still burned one per use. |
 | `consume` | int | `1` | How much wear one invocation takes off (at least 1); it only means anything with a `durability` above zero. |
 | `quality` | `Holder<quality>` | none | The tier of this talisman (talisman paper and talisman treasures are graded this way), resolved through the ordinary quality module. |
-| `costs` | `Cost[]` | `[]` | What **one invocation** takes: an `mxt:aura` entry comes out of the carrier's own store, every other entry from the **holder**; a price that cannot be paid refuses the invocation, which is where a threshold goes. |
+| `condition` | Entity condition | `mxt:always` | Whether **this holder may use the talisman right now**, unrelated to its price; tested against the holder and asked **before `costs`**, and when it fails the invocation is refused with nothing moved. |
+| `costs` | `Cost[]` | `[]` | What **one invocation** takes: an `mxt:aura` entry comes out of the carrier's own store, every other entry from the **holder**; a price that cannot be paid refuses the invocation. |
 
 Three semantics worth keeping:
 
 - **The multiplier only means anything with wear.** A carrier with no durability is burned whole on its first invocation, so it counts as one and a larger multiplier changes nothing — write `durability` / `consume` alongside it to fire several times.
 - **The aura entries are evaluated in an empty formula context**, because the client has to compute the same number to draw the pose. Anything that only has a value when somebody holds the item — `"realm_rank * 4"` — therefore resolves to `0` and is treated as **not counted**; a carrier left with no aura entry at all is a free talisman.
-- **Capacity and per-invocation amount are two fields.** The multiplier is how many invocations the carrier holds (reaching it is what "full" means) and the aura entries of `costs` are what one invocation takes. The example's 12 x 5 means **one full pour fires five times**; for "exactly one shot at a time", leave the multiplier out (it defaults to `1`). Write `durability` / `consume` to make it last (see "Durability" in step 4), `costs` for a threshold, and `quality` for a tier — all three are described in full under [the talisman definition](../../datapack/json/talisman.md).
+- **Capacity and per-invocation amount are two fields.** The multiplier is how many invocations the carrier holds (reaching it is what "full" means) and the aura entries of `costs` are what one invocation takes. The example's 12 x 5 means **one full pour fires five times**; for "exactly one shot at a time", leave the multiplier out (it defaults to `1`). Write `durability` / `consume` to make it last (see "Durability" in step 4), `costs` to gate it by price and `condition` to gate it by anything else (a realm, the weather, what is in hand), and `quality` for a tier — all four are described in full under [the talisman definition](../../datapack/json/talisman.md).
 
 ## Step 3 — Handing the Talisman to a Player
 
@@ -151,6 +152,7 @@ Datapack registries are read while the **world loads**, so reopen the world firs
 | --- | --- |
 | Right-clicking only reports that nothing is inscribed | The carrier is blank (that is what `/talisman blank` gives); such a click is not an attempt and costs no cooldown. |
 | Right-click says there is not enough aura | The store cannot cover one invocation's aura entries; hold right-click to pour, or use `/talisman give … charged`. |
+| Right-click says the invocation condition is not met | The inscribed definition's `condition` does not hold for this holder (the realm is too low, the weather is wrong, and so on). It is asked **before `costs`**, so nothing was paid; the same talisman fires as usual once the condition holds. |
 | The ability is reported as disabled | The ability definition that was inscribed is not in the current pack (its file was deleted, or a `neoforge:conditions` block keeps it out); a talisman does not bypass that. |
 | The element affinity is reported as a mismatch | The ability's `element_affinity` does not match the caster's spirit roots — a talisman does not bypass that either. |
 | It says the ability needs a cast or a channel | An ability with `cast_time > 0` or `mxt:channelled` cannot be carried. |

@@ -19,7 +19,7 @@ actions, conditions, quality, aura, tooltips
 
 ::: warning
 
-Do not invent `mxt:item`, `mxt:pill` or `mxt:weapon` files out of thin air. Those registries do not exist. Every binding table matches items that are already registered. A single unknown item ID fails the load; an unknown ID written inside an array only logs one line and is then dropped, with the rest of the file loading as usual — so a typo inside an array loses that match silently.
+Do not invent `mxt:item` or `mxt:weapon` files out of thin air. Those registries do not exist. Every binding table matches items that are already registered. A single unknown item ID fails the load; an unknown ID written inside an array only logs one line and is then dropped, with the rest of the file loading as usual — so a typo inside an array loses that match silently.
 
 :::
 
@@ -33,7 +33,8 @@ Do not invent `mxt:item`, `mxt:pill` or `mxt:weapon` files out of thin air. Thos
 | `data/example/mxt/spirit_root/fire_root.json` | What the pellet grants. |
 | `data/example/mxt/technique/azure_breath.json` | What the manual teaches. |
 | `data/example/mxt/item_binding/qi_pill.json`, `root_pellet.json` | Generic bindings: what using this item does. |
-| `data/example/mxt/pill_binding/qi_pill.json` | Pill-only fields: toxicity and overdose. |
+| `data/example/mxt/pill/qi_pill.json` | What the pill does: dose action, toxicity and overdose. |
+| `data/example/mxt/pill_binding/qi_pill.json` | Which pill this item family is, plus its cap and cooldown. |
 | `data/example/mxt/weapon_binding/spirit_sword.json` | Weapon attribute modifiers and combat behaviour. |
 | `data/example/mxt/technique_binding/azure_manual.json` | How that technique is read, and which item the mod generates as its carrier. |
 
@@ -64,7 +65,7 @@ StartupEvents.registry('item', event => {
 ```
 
 - Items registered without a namespace live under `kubejs`, so `event.create('qi_pill')` produces `kubejs:qi_pill`. Every binding has to use that ID.
-- A pill must have `.food(...)`. The binding table itself does not require an item to be edible, but **the generic binding's actions only run at the end of one full use cycle**, and a plain item has no use cycle; `pill_binding` also only matches edible items. A pill without `.food(...)` looks perfectly fine and its actions never run.
+- A pill must have `.food(...)`. The binding table itself does not require an item to be edible, but **the generic binding's actions only run at the end of one full use cycle**, and a plain item has no use cycle; a `pill`'s effect also only runs on that closing tick. A pill without `.food(...)` looks perfectly fine and its actions never run.
 - Editing this file needs a **game restart**: startup scripts run before the game registers items, and `/reload` never re-runs them.
 
 Recipes are not a registry, so they do reload with `/reload` — the script below registers them from a server script:
@@ -91,7 +92,7 @@ All four tables claim items through `items`, but they do different jobs and thei
 | Table | What it covers | Main fields beyond claiming items |
 | --- | --- | --- |
 | `item_binding` | The generic "what happens when this item is used up" | `conditions`, `actions` |
-| `pill_binding` | Toxicity and overdose, which only pills have | `on_consume`, `on_overdose`, `toxicity_gain`, `toxicity_threshold`, `toxicity_after_overdose`, `max_uses`, `cooldown` |
+| `pill_binding` | Which pill this item family is, plus its use cap and cooldown | `pill`, `max_uses`, `cooldown`, `priority` |
 | `weapon_binding` | Attributes and actions while it is used as a weapon | `attributes`, `use_action`, `attack_action`, `tick_action` |
 | `technique_binding` | How the technique is read, and which item is its carrier | `technique`, `carrier_item`, `learn_time`, `hold_animation`, `hold_sound` |
 
@@ -158,14 +159,13 @@ A pellet that grants a spirit root:
 
 The spirit root is what makes the fire element mean anything: it changes the cultivation multiplier, and its `element_ability_modifier` scales any ability whose `element_affinity` includes fire — the damage side is multiplied in automatically by the [damage pipeline](/en/technical/damage), so an ability definition only has to write its base number. The full spirit root and physique fields are in [Define Spirit Roots and Physiques](./define-spirit-roots-and-physiques.md).
 
-## Step 4 — Pill Bindings
+## Step 4 — Pills
 
-A pill binding adds the fields that only pills have. It is a table of its own because not one of its fields is shared with the other bindings.
+A pill takes two tables: `pill` says what eating it does, and `pill_binding` says which items are it and how often this family may be taken. Neither shares a field with the other bindings.
 
 ```json
-// data/example/mxt/pill_binding/qi_pill.json
+// data/example/mxt/pill/qi_pill.json
 {
-  "items": "kubejs:qi_pill",
   "on_consume": {"type": "mxt:no_op"},
   "toxicity_gain": 10,
   "toxicity_threshold": 100,
@@ -178,11 +178,22 @@ A pill binding adds the fields that only pills have. It is a table of its own be
 }
 ```
 
-- `toxicity_gain` accumulates on the player; when it goes past `toxicity_threshold`, `on_overdose` runs and toxicity is reset to `toxicity_after_overdose` rather than to `0`, so repeated overdosing keeps hurting.
+```json
+// data/example/mxt/pill_binding/qi_pill.json
+{
+  "items": "kubejs:qi_pill",
+  "pill": "example:qi_pill",
+  "max_uses": 3,
+  "cooldown": 40
+}
+```
+
+- `toxicity_gain` accumulates on the player; once the total reaches `toxicity_threshold`, `on_overdose` runs and toxicity is set to `toxicity_after_overdose` rather than to `0`, so repeated overdosing keeps hurting.
 - The default threshold is `Double.MAX_VALUE`, which means "never overdoses". Set it on purpose.
 - `on_consume` runs after the normal consumption flow has finished, independently of the `item_binding` actions: when one pill hits both tables, both run — the `item_binding` actions first, `on_consume` after them, and `on_overdose` once toxicity has crossed the line.
+- **Uses and cooldown follow the binding only.** A stack that writes only effect keys, or one whose item no binding claims, counts no uses and has no cooldown; a binding has exactly one entry, `items`, so the one above has to name `kubejs:qi_pill`.
 
-Both tables can be used on the same item; they carry different fields, and neither overrides the other.
+`item_binding` and these two tables can be used on the same item; they carry different fields, and neither overrides the other.
 
 ## Step 5 — Weapon Bindings
 
@@ -252,7 +263,7 @@ Right-clicking the manual attempts to learn `example:azure_breath`. Every techni
 (restart the game)                     → the four items now exist
 (load the world again)                 → the bindings load
 /mxt registries validate               → no codec errors
-/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, …
+/mxt registries list                   → mxt:pill=1, mxt:pill_binding=1, mxt:item_binding=2, mxt:weapon_binding=1, mxt:technique_binding=1, …
 ```
 
 The two halves each need their own restart: KubeJS registers items at startup, and the binding tables are data pack registries that Minecraft reads while the world loads. `/reload` does neither — it only refreshes recipes, loot tables, advancements, functions and KubeJS server scripts.
@@ -288,5 +299,5 @@ Then in game:
 - [Bind Actions with KubeJS](./bind-actions.md) — which hooks each of the four tables has, when they run, and how conditions and their order work.
 - [Define a Quality Chain](./define-a-quality-chain.md) — how the three tiers are written, and which tier carries the price of the step up.
 - [Define an Ability](./add-an-ability.md) — give these items somewhere to spend the aura they store.
-- [Item Binding](../datapack/json/item_binding.md), [Pill Binding](../datapack/json/pill_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) — the full field lists.
+- [Item Binding](../datapack/json/item_binding.md), [Pill](../datapack/json/pill.md), [Pill Binding](../datapack/json/pill_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) — the full field lists.
 - [KubeJS API Reference](../kubejs/api-reference.md) — the script objects, if you want to write the rules themselves in a script.

@@ -93,7 +93,7 @@ When a chunk is loaded for the first time it is initialised as `max(0, (that aur
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `fog_color` | `RGBColor` | `#FFFFFF` | Fog colour; accepts `#RRGGBB` or an integer in `0..16777215`. |
+| `fog_color` | `RGBColor` | `#FFFFFF` | Fog colour; written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too); always treated as opaque. |
 | `render_distance` | Integer | `64` | Distance the fog affects, range `8..256`. |
 | `fog_strength` | Float | `0.35` | Proportion by which the vanilla fog is overridden, range `0..1`. |
 

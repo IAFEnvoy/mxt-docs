@@ -22,6 +22,7 @@ description: 多个注册表共用的复杂值：Cost、AuraGain、AttributeEntr
 | 条目或标签 | 字符串或字符串数组 | 单个 id、单个 `#标签`，或两者混在一个数组里。 |
 | `ItemMatcher` | ID、标签或混合数组 | 物品绑定表的 `items` 字段；匹配现有物品，不创建物品。 |
 | `Text Component` | 字符串或文本对象 | 支持翻译键字符串和原版文本组件。 |
+| `RGBColor` | `"#RRGGBB"` | 颜色，用原版十六进制写法：`#RRGGBB`（整数与 `[r,g,b]` 浮点数组也接受）。**值域是 RGB、没有 alpha**，写下的颜色一律按不透明处理——要透明度的字段自己另开键（雷的 `alpha` 是发光强度，不是颜色透明度）。 |
 | `ItemStackTemplate` | `{"id":"minecraft:stone"}` 或 `"minecraft:stone"` | 物品堆模板：可只写裸物品 ID，也可写对象（`id` 必填，可带 `count` 与 `components`）。数据包注册表**早于物品组件绑定**解析，所以数据包定义里的物品堆一律用它。 |
 | `ItemStack` | `{"id":"minecraft:amethyst_shard"}` | 原版物品堆，**必须写成对象**（`id` 必填，可带 `count` 与 `components`），不接受裸物品 ID 字符串；它要求物品组件已绑定，所以只用于附件与存档状态，数据包定义请用 `ItemStackTemplate`。 |
 | `NumberProvider` | 数字、字符串或对象 | 常量、exp4j 表达式或固有数值提供器，见[数值提供器](./number_provider_types)。 |

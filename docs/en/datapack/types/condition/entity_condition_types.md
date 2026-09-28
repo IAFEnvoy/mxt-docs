@@ -196,21 +196,21 @@ The fields have the same shape as `mxt:riding`, so `mxt:friend`, `mxt:distance`,
 
 It is asked every tick, and both the radius cap and the per-candidate bi-entity condition exist to keep that scan bounded: write it only in the method that really needs it.
 
-### `mxt:skill_stage`
+### `mxt:progression`
 
-Checks how far a learned technique has climbed.
+Checks how far a progression the body holds has climbed.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `stage` | Skill stage | **required** | Names one level. |
+| `level` | Progression level ID | **required** | Names one level. |
 | `comparison?` | `exact` / `at_least` / `at_most` | `exact` | How to compare, by the in-chain index the server cached. |
-| `technique?` | Technique entry, `#` tag or array | Every learned technique | Narrows the question to certain techniques. |
+| `owner?` | Owner definition ID, or an array | Every progression the body holds | Narrows the question to certain owners. |
 
 ```json
-{"type": "mxt:skill_stage", "stage": "example:stage_three", "comparison": "at_least", "technique": "example:azure_sword"}
+{"type": "mxt:progression", "level": "example:stage_three", "comparison": "at_least", "owner": "example:azure_sword"}
 ```
 
-Without `technique` every learned technique is asked and one hit is enough. It reads **the level the body reached**, which is the technique's `default_stage` while it never advanced; a technique without a `default_stage`, or one whose chain the cache could not index, never answers true.
+Without `owner` every progression the body holds is asked and one hit is enough. It takes owner definition IDs only — one or an array — and does not accept a `#` tag. It reads **the level the body reached**, which is the owner's `default_level` while it never advanced; an owner without a `default_level`, or one whose chain the cache could not index, never answers true.
 
 ### `mxt:has_element`
 
@@ -454,7 +454,7 @@ Compares the pill toxicity accumulated on the entity.
 {"type": "mxt:pill_toxicity", "comparison": ">=", "compare_to": 100}
 ```
 
-Same shape as `mxt:health`. An entity that has never taken a pill reads `0` and does not gain an empty record for it. What raises toxicity, where the threshold sits and what is left after an overdose are on [pill_binding](../../json/pill_binding.md); to write the number directly, use `mxt:modify_pill_toxicity`.
+Same shape as `mxt:health`. An entity that has never taken a pill reads `0` and does not gain an empty record for it. What raises toxicity, where the threshold sits and what is left after an overdose are on [pill](../../json/pill.md); to write the number directly, use `mxt:modify_pill_toxicity`.
 
 ### `mxt:fall_distance`
 

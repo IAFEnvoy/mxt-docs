@@ -137,16 +137,16 @@ The entity completed a breakthrough.
 {"type": "mxt:breakthrough"}
 ```
 
-### `mxt:technique_stage`
+### `mxt:progression_level`
 
-A learned technique reached a new stage.
+An owner reached a new progression level. Published after the advancement has been committed, so a reactor reads the new level.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | — | — | — | Takes no fields. |
 
 ```json
-{"type": "mxt:technique_stage"}
+{"type": "mxt:progression_level"}
 ```
 
 ### `mxt:js`

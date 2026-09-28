@@ -85,7 +85,7 @@ Strikes a bolt at the actor's position. Colour aside, it **is the vanilla lightn
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `color` | color | `#737380` | RGB colour of the bolt, written as `#RRGGBB` or an integer. The default is the vanilla cold white (rounded to 8 bits per channel). |
+| `color` | color | `#737380` | RGB colour of the bolt, written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too); always treated as opaque. The default is the vanilla cold white (rounded to 8 bits per channel). |
 | `alpha` | Float `0..1` | `0.3` | **Brightness** of the bolt. Vanilla lightning uses additive blending, and the vertex colour's `RGB × alpha` is its glow strength, so this field is not opacity: turn it up for a harsher bolt, down for a dimmer one. |
 | `thickness` | Float `0.1..4` | `1` | Thickness multiplier of the bolt column. |
 | `palette` | color[] | `[]` | **Gradient**: a colour sequence from the top to the impact point, the first entry at the bolt's origin (sky side) and the last at the impact point, at most 16 entries. Once given it replaces the colouring from `color`. |
@@ -94,7 +94,7 @@ Strikes a bolt at the actor's position. Colour aside, it **is the vanilla lightn
 | `cause` | Boolean | `true` | When the actor is a player, the strike counts as caused by them, which can trigger the vanilla `channeled_lightning` advancement. |
 | `offset_x` / `offset_y` / `offset_z` | `NumberProvider` | `0` | Offset of the impact point relative to the actor. |
 
-A `palette` **replaces** the single colour from `color`: rendering takes a colour per segment from the bolt column's nine horizontal seams, interpolating linearly between adjacent entries (one entry = flat colour, two = a gradient between the ends, more = several gradient segments). The four overlay layers and the two forks read the same set of seams, so a fork matches the trunk at the height where it leaves. Colours are written the same way as `color` (`#RRGGBB` or an integer); `alpha` is still the glow strength shared by the whole bolt, not a per-colour opacity. More than 16 entries or an illegal colour fails outright at **decode time** rather than being silently dropped: a typo in a gradient should be visible.
+A `palette` **replaces** the single colour from `color`: rendering takes a colour per segment from the bolt column's nine horizontal seams, interpolating linearly between adjacent entries (one entry = flat colour, two = a gradient between the ends, more = several gradient segments). The four overlay layers and the two forks read the same set of seams, so a fork matches the trunk at the height where it leaves. Colours are written the same way as `color` (`#RRGGBB`; an integer or an `[r,g,b]` float array is accepted too); `alpha` is still the glow strength shared by the whole bolt, not a per-colour opacity. More than 16 entries or an illegal colour fails outright at **decode time** rather than being silently dropped: a typo in a gradient should be visible.
 
 ```json
 {

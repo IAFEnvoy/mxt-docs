@@ -44,7 +44,7 @@ flowchart TD
 
 两层读的是同一份「这一击是什么」，但算在两个不同的实体旁边，这是被数据逼出来的，不是风格选择：
 
-- **出力需要的信息只有发伤害的地方有**：正在施放哪个能力、这次施放的技能水平倍率是多少、攻击者的灵根是什么、目标是谁。受击侧的事件只看得到一个 `DamageSource` 和一个数字，构造不出这些。
+- **出力需要的信息只有发伤害的地方有**：正在施放哪个能力、这次施放的进度等级倍率是多少、攻击者的灵根是什么、目标是谁。受击侧的事件只看得到一个 `DamageSource` 和一个数字，构造不出这些。
 - **减免需要的信息只有受击的地方有**：受击者自己的适应关系，以及**所有**打过来的伤害——包括原版的与别的模组的，它们根本不会经过 `deal`。写在发伤害处就等于只对自己的攻击生效。
 
 代价是两处不能互相重复：`DamageEventBridge` 因此挂在「每次伤害序列只触发一次」的事件上，任何发伤害的路径都不再自己做减免。
@@ -69,7 +69,7 @@ public static double outgoing(@Nullable Entity attacker, Entity target, double a
 ```mermaid
 flowchart LR
     BASE["基础值<br/>数据包或公式自己乘出来的数"] --> SPLIT["分界<br/>以下由管线统一乘"]
-    SPLIT --> MULT["× damage_multiplier<br/>这次施放，来自技能水平"]
+    SPLIT --> MULT["× damage_multiplier<br/>这次施放，来自进度等级"]
     MULT --> ELEM["× element_modifier<br/>这次施放，来自灵根<br/>公式里不要再写一遍"]
     ELEM --> CONFLICT["× conflict_multiplier<br/>灵根与手上物品的元素相冲时"]
     CONFLICT --> DEALT["× damage_dealt_multiplier<br/>来自攻击方的在效体质"]
@@ -79,7 +79,7 @@ flowchart LR
     TAKEN --> DONE["第二层的结果<br/>这一击最后值多少"]
 ```
 
-- **`damage_multiplier` 属于「这次施放」**，由 `AbilityService#withAbilityScaling` 写进公式上下文，值来自 `SkillStageService#damageMultiplier`：它遍历持有者已学的功法，挑出「当前所处水平确实授予了这个能力」的那些，取其中**最大的**倍率——几个功法各给一份倍率不会相乘，因为打出去的只有一击。`skill_stage` 的 `damage_multiplier` 默认 `1.0`，负数或非有限值在加载期就被拒。
+- **`damage_multiplier` 属于「这次施放」**，施放能力时写进公式上下文，运行期按持有者当前所处的那一级取值：它遍历持有者持有的每一种进度，挑出「当前所处那一级确实授予了这个能力」的那些，取其中**最大的**倍率——几个所有者各给一份倍率不会相乘，因为打出去的只有一击。`progression` 的 `damage_multiplier` 默认 `1.0`，负数或非有限值在加载期就被拒。
 - **`element_modifier` 是灵根的那一半，也属于「这次施放」**：同一个 `withAbilityScaling` 把「匹配灵根的 `element_ability_modifier`」按 `element_affinity_mode`（平均或取最好）算成一个值写进上下文，`elementMultiplier(context)` 直接乘进去。它**不只是**给公式看的变量——内容是写 `"damage": 12` 还是 `"damage": "12 * element_modifier"`，现在后者会乘两次，所以**不要再手写**。能力不带 `element_affinity` 或伤害不是由施放产生（阵法 tick、诅咒、原版攻击）时上下文里没有这个值，读作 `1.0`；灵根把这个倍率写成 `0` 表示「我这门元素打不出东西」，这一层照样乘 `0`（与施放门槛同一套读法）。
 - **`damage_dealt_multiplier` / `damage_taken_multiplier` 属于「这个人」**：它们来自在效 `physique` 定义，第一层读加害者的「打出」倍率、第二层读受击者的「受到」倍率，多条生效体质**相乘**（每一条都是一个独立来源）。求值用的是**持有者自己的**公式上下文，不是对方的——「这个身体挨多少」不能取决于谁在问。写死的数字在加载期校验有限非负，公式算出的负数或非有限值按不贡献处理（与被动属性同一类公式同一条规则）；`0` 合法，等于免疫或打不动。
 - **`conflict_multiplier` 属于「被握着的那个元素」**：攻击者在效灵根的 `conflicting_elements` 列出了**主手物品的元素**时，先乘上那个元素自己的 `conflict_multiplier`（默认 `1.0`）。物品元素按 [weapon_binding](/datapack/json/weapon_binding) 的「物品的元素」读（堆上的 `mxt:element` 组件与定义声明的 `element` 取并集；两者都没有时才回落到它携带的灵气的 `aura_type`）。同一个元素无论几条灵根与它相冲**只乘一次**（否则两条相冲灵根会把它平方），而且**不要求这一击用的就是那个元素**——跟自己的武器较劲，打什么属性都弱，这正是这条规则的意思。没写这个字段的包完全不受影响。
@@ -141,7 +141,7 @@ public static double incoming(LivingEntity target, Set<Holder<Element>> attackin
 
 **故意不走第一层的**：`mxt:spawn_lightning`（闪电的伤害量由原版算，写 `cause` 只决定归属）与方块版 `mxt:explode`——这两种根本没经过 `deal`。`mxt:spawn_projectile` 生成的投掷物虽然把施法者记为 owner，命中的伤害量仍由原版算（箭的威力不读数据包）。它们仍然走第二层，所以只要元素认领了那些伤害类型（闪电、爆炸、岩浆、摔落……），属性照样算得出来；投掷物那一类的优势是攻击者还在，元素适应也照样能读。
 
-**爆炸为什么要套一层计算器**：原版爆炸会给每个实体算一个自己的伤害数字，唯一能插手的地方就是 `ExplosionDamageCalculator#getEntityDamageAmount`。所以 `mxt:explode` 把原版计算器包起来，只改写这一个方法——方块破坏、要不要伤害某个实体都照原样转交。不这么做的话，施法者的爆炸就会是全模组唯一无视他技能水平与灵根的一击。
+**爆炸为什么要套一层计算器**：原版爆炸会给每个实体算一个自己的伤害数字，唯一能插手的地方就是 `ExplosionDamageCalculator#getEntityDamageAmount`。所以 `mxt:explode` 把原版计算器包起来，只改写这一个方法——方块破坏、要不要伤害某个实体都照原样转交。不这么做的话，施法者的爆炸就会是全模组唯一无视他进度等级与灵根的一击。
 
 ## 在数据包里声明这一击
 
@@ -216,7 +216,7 @@ data/mxt/tags/damage_type/no_bonus.json
 ## 相关阅读
 
 - [element（元素）](/datapack/json/element)：`overcomes` / `adapted_to` / `damage_types` / `attachment_*` 的每个字段，以及伤害类型怎么被认领。
-- [skill_stage（技能水平）](/datapack/json/skill_stage)：`damage_multiplier` 的取值规则。
+- [progression（进度链）](/datapack/json/progression)：`damage_multiplier` 的取值规则。
 - [公式变量](/datapack/types/formula_variables)：`damage_multiplier` 在定义自己的公式里怎么读。
 - [实体行为](/datapack/types/action/entity_action_types)与[双实体行为](/datapack/types/action/bientity_action_types)：`mxt:damage`、`mxt:damage_target` 的完整字段表。
 - [Java API](/java/api)：`DamageCalculationService` 与方法签名。

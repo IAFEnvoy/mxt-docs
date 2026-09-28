@@ -74,7 +74,7 @@ With **On expiry** set to `reincarnate`, these switches decide what the rebirth 
 | **Server Config → Reincarnation → Cancel a running tribulation** | on | Drops a tribulation in progress without its success or its failure action. |
 | **Server Config → Reincarnation → Clear resource values** | off | Empties every resource value (each is re-initialized from its definition on the next read). The base leaves resources alone by default, because which value counts as cultivation progress is a data pack's decision. |
 | **Server Config → Reincarnation → Keep spirit roots and physiques** | on | Keeps spirit roots, physiques and their enabled/disabled state; off clears them too. |
-| **Server Config → Reincarnation → Keep techniques** | on | Keeps learned techniques and their mastery levels — the memory stays while the foundation is rebuilt; off clears them too. |
+| **Server Config → Reincarnation → Keep techniques** | on | Keeps learned techniques and their progression levels — the memory stays while the foundation is rebuilt; off clears them too. |
 | **Server Config → Reincarnation → Keep the four soul values** | on | Keeps karma, heart demon, soul strength and soul sense range; off returns all four to zero. |
 
 ## Related

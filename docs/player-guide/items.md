@@ -16,14 +16,15 @@ MiXianTu 不为每个玩法预设具体数值，但提供少量通用承载物�
 | --- | --- |
 | `item_binding` | 给现有物品附加行为、条件、灵根或通用显示。 |
 | `weapon_binding` | 给武器附加原版属性修正（攻击力与攻速也写在这里）与攻击/使用/Tick 行为。 |
-| `pill_binding` | 配置丹药消耗和行为。 |
+| `pill` | 一份丹药的作用：食用行为、丹毒增量、过量阈值与过量后的残留。 |
+| `pill_binding` | 把一族已有物品认成同一份丹药，并给出服用次数与冷却。 |
 | `tool_binding` | 认领工具物品，并给出它们解锁的锻打方式。 |
 | `blueprint_binding` | 认领图纸物品，并给出它们提供的锻造蓝图。 |
 | `technique_binding` | 描述一门功法**怎么被读**——长按时长、姿势、音效、品质链与条件，以及本体替它生成载体时用哪个物品。**哪一叠是手册、教的是哪门功法，先看堆上的物品组件 `mxt:technique`；没有组件时才看声明的 `items`。** |
 
 物品匹配支持单个物品、原版物品标签、通配符、正则和混合数组。`carrier_item` 是例外：它只接受单个物品 id。`technique_binding` 的声明按功法 id 匹配，它的 `items` 是可选的那条路。
 
-**逐件附加的内容走物品组件**：`mxt:quality`（单值，整份品质对象；档位与这一堆读的链一起换）、`mxt:element`（列表，与定义取并集）、`mxt:pill`（按字段覆盖丹药定义）、`mxt:technique_reading`（按字段覆盖功法阅读参数）、`mxt:forging_methods` 与 `mxt:forging_blueprints`（列表，与定义取并集）——它们只写给这一堆。`conditions` 与武器的数值/动作**没有**组件：想逐件改就为那一堆写一条定义、用 `items` 点名，武器的属性数值则写原版 `minecraft:attribute_modifiers`。
+**逐件附加的内容走物品组件**：`mxt:quality`（单值，整份品质对象；档位与这一堆读的链一起换）、`mxt:element`（列表，与定义取并集）、`mxt:pill`（可选 `pill` 指名一份丹药定义，`on_consume` / `toxicity_gain` / `toxicity_threshold` / `on_overdose` / `toxicity_after_overdose` 再按字段覆盖）、`mxt:technique_reading`（按字段覆盖功法阅读参数）、`mxt:forging_methods` 与 `mxt:forging_blueprints`（列表，与定义取并集）——它们只写给这一堆。`conditions` 与武器的数值/动作**没有**组件：想逐件改就为那一堆写一条定义、用 `items` 点名，武器的属性数值则写原版 `minecraft:attribute_modifiers`。
 
 ## 灵气物品
 
@@ -82,7 +83,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 丹炉产物仓 | `mxt:alchemy_output` | 顶部中心，四个输出格，只能取出。 |
 | 丹炉炉壁 | `mxt:alchemy_furnace_casing` | 其余 22 格，每块带自己的炉壁材料；炉壁不打开界面。 |
 | 灵田 | `mxt:spirit_herb_plot` | 一格一株：持种苗右键种下，成熟后右键采收，潜行空手拔回种苗。 |
-| 丹药 | `mxt:pill` | 丹药载体，提供原版食用、名字与 Tooltip；药效、服用次数与丹毒由丹药绑定给。 |
+| 丹药 | `mxt:pill` | 丹药载体，提供原版食用、名字与 Tooltip；吃下去做什么写在 [pill](../datapack/json/pill.md) 上，服用次数与冷却由 [pill_binding](../datapack/json/pill_binding.md) 给。 |
 
 手感是：**异火放进核心，主药放左侧仓，辅药与药引放右侧仓，成品从产物仓取。** 放进材料不会自己开炉，要玩家在核心那一页点「开炉」。中心那一格必须留空；壳不齐、炉壁材料无效、格子被另一座炉占了，都不算成型，也就开不了炉。
 
@@ -90,7 +91,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 
 投料仓和核心里的异火都不接受漏斗；产物仓只能从它的下侧面抽出，而那一面成型后正对着中心的空气格，所以那里放不进漏斗。活动批次里拆炉壁或拆一座仓，这一批按失败结算一次，已经投进去的材料不返还；拆一座仓只掉这座仓自己的物品。
 
-丹药吃完会累计丹毒：服丹的药效、阈值与过量后剩多少写在 [pill_binding](../datapack/json/pill_binding.md) 里，本体只负责记账。默认丹毒不会自己退；服务端配置「炼丹 → 每秒丹毒自然消退」设成正数后，已经有丹毒的活跃实体每累计 20 刻退一次，离线不退，也不会给没服过丹的实体建一份空账。
+丹药吃完会累计丹毒：服丹的药效、阈值与过量后剩多少写在 [pill](../datapack/json/pill.md) 里，本体只负责记账。默认丹毒不会自己退；服务端配置「炼丹 → 每秒丹毒自然消退」设成正数后，已经有丹毒的活跃实体每累计 20 刻退一次，离线不退，也不会给没服过丹的实体建一份空账。
 
 ## 数据组件示例
 

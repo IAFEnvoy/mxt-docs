@@ -7,7 +7,7 @@ description: "The hooks each of the four binding tables offers, when they run, w
 
 [Create Items and Bind Actions with KubeJS](./create-items-with-kubejs.md) covered how an item gets registered and which table claims it. This page picks up from there and answers one question only: **when does the action inside a hook actually run?**
 
-Each of the four binding tables hangs on a moment of its own, and none of them waits for another: the item table runs after the item is used up, the weapon's three hooks sit on right click, on a hit and on every tick respectively, and the pill table picks up after the pill has been eaten. One wrong line raises no error — it simply never executes.
+Each of the four binding tables hangs on a moment of its own, and none of them waits for another: the item table runs after the item is used up, the weapon's three hooks sit on right click, on a hit and on every tick respectively, and the pill's actions pick up after the pill has been eaten (they live on the pill definition, not on a binding). One wrong line raises no error — it simply never executes.
 
 ## What You Are Building
 
@@ -18,7 +18,7 @@ This page keeps using the four items from the main page, and the changes land in
 | `data/example/mxt/item_binding/qi_pill.json` | Two entity actions with an order between them. |
 | `data/example/mxt/item_binding/root_pellet.json` | One condition with a description that draws a check mark in the tooltip. |
 | `data/example/mxt/weapon_binding/spirit_sword.json` | One action for each of the three hooks: right click, hit, every tick. |
-| `data/example/mxt/pill_binding/qi_pill.json` | The action on the overdose line. |
+| `data/example/mxt/pill/qi_pill.json` | The action on the overdose line. |
 
 ## Step 1 — Which Hooks Each Table Has
 
@@ -28,15 +28,15 @@ This page keeps using the four items from the main page, and the changes land in
 | `weapon_binding` | `use_action` | Entity action | Yes |
 | `weapon_binding` | `attack_action` | Bi-entity action | Yes |
 | `weapon_binding` | `tick_action` | Entity action | Yes |
-| `pill_binding` | `on_consume` | Entity action | Yes |
-| `pill_binding` | `on_overdose` | Entity action | Yes |
+| `pill` | `on_consume` | Entity action | Yes |
+| `pill` | `on_overdose` | Entity action | Yes |
 | `technique_binding` | —— | No action hooks at all | —— |
 
 Three things to remember first:
 
 - **Leaving a hook out is not "writing nothing" — it writes a no-op action.** A no-op does nothing and reports no error, so "I never wrote it" and "I wrote it but it never fires" look exactly the same in the log.
 - **A single action versus an array of actions**: every hook except `item_binding.actions` accepts both forms; `actions` **only accepts an array**, and a single object there makes that file fail to decode.
-- **A hook written into the wrong table is dropped silently.** When a table does not declare a key, that key is simply unknown and is ignored at load — writing `use_action` in `item_binding`, or `actions` in `pill_binding`, neither reports an error nor has any effect.
+- **A hook written into the wrong table is dropped silently.** When a table does not declare a key, that key is simply unknown and is ignored at load — writing `use_action` in `item_binding`, or `on_consume` in `pill_binding`, neither reports an error nor has any effect.
 
 ## Step 2 — The Generic Binding's Actions
 
@@ -96,7 +96,7 @@ Conditions are checked once, at the "start using" gate. **They are not re-checke
 
 ## Step 4 — The Pill Hooks
 
-`on_consume` runs after the normal consumption flow has finished, while `on_overdose` only runs when accumulated toxicity crosses the line. Both are independent of the `item_binding` actions: when one pill hangs on both tables **both of them run** — the `item_binding` actions first, `on_consume` after them, and `on_overdose` once toxicity has crossed the line.
+The pill's two action hooks live on the **pill definition** ([pill](../datapack/json/pill.md)), not on the binding: `on_consume` runs after the normal consumption flow has finished, while `on_overdose` only runs when accumulated toxicity crosses the line. Both are independent of the `item_binding` actions: when one pill hangs on both tables **both of them run** — the `item_binding` actions first, `on_consume` after them, and `on_overdose` once toxicity has crossed the line. Which item family is that pill, and how often it may be taken, come from [pill_binding](../datapack/json/pill_binding.md).
 
 ## Step 5 — The Two Faces of a Condition
 
@@ -130,7 +130,7 @@ Two easy traps:
 ## Step 6 — Ordering
 
 - **Within one table: conditions first, actions second.** If a condition does not hold, none of it runs.
-- **Within one use cycle:** the `item_binding` actions → `pill_binding.on_consume` → toxicity accumulates → `on_overdose` only once the line is crossed.
+- **Within one use cycle:** the `item_binding` actions → `pill.on_consume` → toxicity accumulates → `pill.on_overdose` only once the line is crossed.
 - **There is no shared order across tables.** Each table hangs on its own event, and that event decides who goes first, so do not rely on an order such as "does the technique get learned before the item's actions run".
 
 ## Verify

@@ -13,7 +13,7 @@ The order of the tiers is written nowhere else. No table holds the ladder on its
 | --- | --- | --- |
 | `name` | `quality.mxt.<namespace>.<path>` | The tier's display name. |
 | `description` | That same key plus `.description` | The line under the name; drawn only when non-empty. |
-| `color` | none | Tints the name, `"#RRGGBB"` or an integer from `0` to `16777215`. |
+| `color` | none | Tints the name, written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too); always treated as opaque. |
 | `value_multiplier` | `1` | Multiplies the item's currency value. |
 | `forging_modifier` | `1` | Divides the extra steps forging reads. |
 | `alchemy_modifier` | `1` | Divides the brewing duration. |

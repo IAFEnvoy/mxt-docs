@@ -19,7 +19,7 @@ actions, conditions, quality, aura, tooltips
 
 ::: warning
 
-不要凭空造 `mxt:item`、`mxt:pill` 或 `mxt:weapon` 文件。这些注册表并不存在。每张绑定表匹配的都是已经注册的物品。单个未知的物品 ID 会让加载失败；写在数组里的未知 ID 则只记一行日志后被丢弃，文件其余部分照常加载——所以数组里的拼写错误会静默地丢掉那次匹配。
+不要凭空造 `mxt:item` 或 `mxt:weapon` 文件。这两张注册表并不存在。每张绑定表匹配的都是已经注册的物品。单个未知的物品 ID 会让加载失败；写在数组里的未知 ID 则只记一行日志后被丢弃，文件其余部分照常加载——所以数组里的拼写错误会静默地丢掉那次匹配。
 
 :::
 
@@ -33,7 +33,8 @@ actions, conditions, quality, aura, tooltips
 | `data/example/mxt/spirit_root/fire_root.json` | 这枚丹药赋予什么。 |
 | `data/example/mxt/technique/azure_breath.json` | 手册传授什么。 |
 | `data/example/mxt/item_binding/qi_pill.json`、`root_pellet.json` | 通用绑定：使用这件物品会做什么。 |
-| `data/example/mxt/pill_binding/qi_pill.json` | 丹药专有的字段：丹毒与过量。 |
+| `data/example/mxt/pill/qi_pill.json` | 丹药作用：食用行为、丹毒与过量。 |
+| `data/example/mxt/pill_binding/qi_pill.json` | 这族物品是哪一份丹药，以及它的次数与冷却。 |
 | `data/example/mxt/weapon_binding/spirit_sword.json` | 武器属性修正与战斗行为。 |
 | `data/example/mxt/technique_binding/azure_manual.json` | 这门功法怎么被读，以及本体生成的载体用哪件物品。 |
 
@@ -64,7 +65,7 @@ StartupEvents.registry('item', event => {
 ```
 
 - 没有命名空间注册的物品位于 `kubejs`，所以 `event.create('qi_pill')` 产生 `kubejs:qi_pill`。所有绑定都必须使用这个 ID。
-- 丹药必须有 `.food(...)`。绑定表本身不要求可食用，但**通用绑定的行为只在一次完整的使用周期结束时执行**，而普通物品没有使用周期；`pill_binding` 也只匹配可食用物品。没有 `.food(...)` 的丹药看起来一切正常，行为却永远不会跑。
+- 丹药必须有 `.food(...)`。绑定表本身不要求可食用，但**通用绑定的行为只在一次完整的使用周期结束时执行**，而普通物品没有使用周期；`pill` 的药效也在一次使用周期结束那一拍才跑。没有 `.food(...)` 的丹药看起来一切正常，行为却永远不会跑。
 - 改这个文件需要**重启游戏**：启动脚本在游戏注册物品之前运行，`/reload` 永远不会重跑它们。
 
 配方不是注册表，所以它们确实会随 `/reload` 重载——下面的脚本在服务端脚本里注册配方：
@@ -91,7 +92,7 @@ ServerEvents.recipes(event => {
 | 表 | 管什么 | 认领之外的主要字段 |
 | --- | --- | --- |
 | `item_binding` | 通用的"用掉这件物品会怎样" | `conditions`、`actions` |
-| `pill_binding` | 只有丹药才有的丹毒与过量 | `on_consume`、`on_overdose`、`toxicity_gain`、`toxicity_threshold`、`toxicity_after_overdose`、`max_uses`、`cooldown` |
+| `pill_binding` | 这族物品是哪一份丹药，以及服用次数与冷却 | `pill`、`max_uses`、`cooldown`、`priority` |
 | `weapon_binding` | 当武器用时的属性与动作 | `attributes`、`use_action`、`attack_action`、`tick_action` |
 | `technique_binding` | 这门功法怎么被读、载体用哪件物品 | `technique`、`carrier_item`、`learn_time`、`hold_animation`、`hold_sound` |
 
@@ -158,14 +159,13 @@ ServerEvents.recipes(event => {
 
 灵根才是让火元素变得有意义的东西：它改变修炼倍率，而它的 `element_ability_modifier` 会缩放 `element_affinity` 包含火的技能——伤害那一侧由[伤害管线](/technical/damage)自动乘上，技能定义里写基础数值就够了。灵根与体质的完整字段见[定义灵根与体质](./define-spirit-roots-and-physiques.md)。
 
-## 第 4 步 —— 丹药绑定
+## 第 4 步 —— 丹药
 
-丹药绑定补充只有丹药才有的字段。它之所以是单独一张表，是因为它的字段没有一个与其它绑定共用。
+丹药是两张表：`pill` 写"吃下去发生什么"，`pill_binding` 写"哪些物品是它、这一族能用几次"。两张表都不与其它绑定共用字段。
 
 ```json
-// data/example/mxt/pill_binding/qi_pill.json
+// data/example/mxt/pill/qi_pill.json
 {
-  "items": "kubejs:qi_pill",
   "on_consume": {"type": "mxt:no_op"},
   "toxicity_gain": 10,
   "toxicity_threshold": 100,
@@ -178,11 +178,22 @@ ServerEvents.recipes(event => {
 }
 ```
 
-- `toxicity_gain` 在玩家身上累积；当它超过 `toxicity_threshold` 时执行 `on_overdose`，并把毒性重置为 `toxicity_after_overdose` 而不是 `0`，所以反复过量会持续受到伤害。
+```json
+// data/example/mxt/pill_binding/qi_pill.json
+{
+  "items": "kubejs:qi_pill",
+  "pill": "example:qi_pill",
+  "max_uses": 3,
+  "cooldown": 40
+}
+```
+
+- `toxicity_gain` 在玩家身上累积；累计值达到 `toxicity_threshold` 时执行 `on_overdose`，并把丹毒设成 `toxicity_after_overdose` 而不是 `0`，所以反复过量会持续受到伤害。
 - 默认阈值是 `Double.MAX_VALUE`，意思是"永不过量"。请有意地设置它。
 - `on_consume` 在正常消耗流程结束之后执行，与 `item_binding` 的行为彼此独立：同一枚丹药同时命中两张表时两个都会跑，`item_binding` 的行为在前、`on_consume` 在后，`on_overdose` 在丹毒越线之后。
+- **次数与冷却只跟绑定走。** 只写组件、或者这件物品没有被任何绑定认领时，这一口不计次数也没有冷却；绑定只有 `items` 这一条入口，所以上面那条必须点名 `kubejs:qi_pill`。
 
-两张表可以用在同一个物品上；它们携带不同的字段，谁也不覆盖谁。
+`item_binding` 与这两张表可以用在同一个物品上；它们携带不同的字段，谁也不覆盖谁。
 
 ## 第 5 步 —— 武器绑定
 
@@ -252,7 +263,7 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 （重启游戏） → 四件物品这时才存在
 （重新打开世界） → 绑定表这时才加载
 /mxt registries validate               → 没有 Codec 错误
-/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, …
+/mxt registries list                   → mxt:pill=1, mxt:pill_binding=1, mxt:item_binding=2, mxt:weapon_binding=1, mxt:technique_binding=1, …
 ```
 
 两半各需要各自的重启：KubeJS 在启动时注册物品，而绑定表是 Minecraft 在加载世界时读取的数据包注册表。`/reload` 两者都做不到——它只刷新配方、战利品表、进度、函数和 KubeJS 服务端脚本。
@@ -288,5 +299,5 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 - [KubeJS 绑定行为](./bind-actions.md) —— 四张表各有哪些钩子、什么时候执行、条件与顺序怎么算。
 - [定义品质链](./define-a-quality-chain.md) —— 这三档是怎么写出来的，以及升级那一步的代价放在哪一档。
 - [定义技能](./add-an-ability.md) —— 让这些物品有地方花掉它们储存的灵气。
-- [物品绑定](../datapack/json/item_binding.md)、[丹药绑定](../datapack/json/pill_binding.md)、[武器绑定](../datapack/json/weapon_binding.md) 和 [功法绑定](../datapack/json/technique_binding.md) —— 完整字段列表。
+- [物品绑定](../datapack/json/item_binding.md)、[丹药](../datapack/json/pill.md)、[丹药绑定](../datapack/json/pill_binding.md)、[武器绑定](../datapack/json/weapon_binding.md) 和 [功法绑定](../datapack/json/technique_binding.md) —— 完整字段列表。
 - [KubeJS API 参考](../kubejs/api-reference.md) —— 脚本对象，如果你想用脚本写规则本身。

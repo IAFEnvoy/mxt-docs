@@ -135,7 +135,7 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
 /mxt attachment status        → 持有条数
 ```
 
-- `/mxt registries validate` **不校验**这两张表。它管的是境界链、触发器规则、技能链、品质阶梯与法器归属，别拿它当灵根体质的校验器；条目数看 `/mxt registries list`。
+- `/mxt registries validate` **不校验**这两张表。它管的是境界链、触发器规则、进度链、品质阶梯与法器归属，别拿它当灵根体质的校验器；条目数看 `/mxt registries list`。
 - `/mxt spirit_root list` 与 `/mxt physique list` 读的是身体上的记录，所以关掉的条目照样列出，只是在「是否生效」那一栏上看得出来。
 
 在游戏里逐条试一遍：
@@ -156,7 +156,7 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
 | 体质里的元素字段毫无动静 | 体质只有字段表里那几个键。`element`、`cultivation_multiplier`、`damage_types` 之类写进体质**静默忽略，不报错也几乎不留日志**。字段名写错不会被发现，只会「那一项不生效」。 |
 | 数组里的一条技能或元素莫名其妙不见了 | `granted_abilities` / `conflicting_elements` 这类数组里的坏条目会被丢掉，并记一行 `Ignoring invalid list element`，文件其余部分照常加载；但**写成单个坏 id**（不是数组）会让整份定义失败。 |
 | 某条行为解析失败 | 行为里的 `spirit_root` / `physique` 写成了当前包里不存在的 id。定义被删掉之后，命令与脚本**仍然能按身体里记着的引用移除它**，因为身体存的是引用本身。 |
-| `/mxt registries validate` 什么都没报 | 它不校验这两张表（只管境界链、触发器规则、技能链、品质阶梯、法器归属）。 |
+| `/mxt registries validate` 什么都没报 | 它不校验这两张表（只管境界链、触发器规则、进度链、品质阶梯、法器归属）。 |
 | 文件明明在，游戏里却没有这条定义 | 被 `neoforge:conditions` 挡掉的定义根本不进表，日志里只有一行 DEBUG。 |
 | 关掉的灵根「拿不回来」 | 关闭只是停用，它还在身上、还能被移除，也仍然会被只读持有的条件与命令列出。 |
 

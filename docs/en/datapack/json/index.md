@@ -1,11 +1,11 @@
 ---
 title: Dynamic Registries
-description: All 37 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
+description: All 38 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
 ---
 
 # Dynamic Registries
 
-The table below lists the mod's 37 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it. The `alchemy_recipe` and `spirit_crafting` rows are not datapack registries but recipe types built on the vanilla recipe system (`mxt:alchemy` and `mxt:spirit_shaped` / `mxt:spirit_shapeless`), listed here so they can be looked up in the same place: their JSON goes in `data/<namespace>/recipe/`, never in `mxt/alchemy_recipe/`. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
+The table below lists the mod's 38 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it. The `alchemy_recipe` and `spirit_crafting` rows are not datapack registries but recipe types built on the vanilla recipe system (`mxt:alchemy` and `mxt:spirit_shaped` / `mxt:spirit_shapeless`), listed here so they can be looked up in the same place: their JSON goes in `data/<namespace>/recipe/`, never in `mxt/alchemy_recipe/`. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
 
 | Registry | Directory | Purpose |
 | --- | --- | --- |
@@ -23,8 +23,8 @@ The table below lists the mod's 37 datapack registries. In the field tables, "De
 | `forging_blueprint` | `mxt/forging_blueprint` | Forging targets and quality settlement. |
 | `tool_binding` | `mxt/tool_binding` | Claims tool items and lists the forging methods they unlock. |
 | `blueprint_binding` | `mxt/blueprint_binding` | Claims blueprint items and lists the forging blueprints they offer. |
-| `technique` | `mxt/technique` | Cultivation technique definitions: learnable, granting abilities and cultivation modifiers by level. |
-| `skill_stage` | `mxt/skill_stage` | One level of a skill mastery chain. |
+| `technique` | `mxt/technique` | Cultivation technique definitions: learnable, granting abilities and cultivation modifiers by progression level. |
+| `progression` | `mxt/progression` | One level of a progression chain. |
 | `cultivation` | `mxt/cultivation` | One cultivation routine: which ambient aura it absorbs, what it does every tick and on a tick that settles, and what it costs and yields. |
 | `spirit_herb` | `mxt/spirit_herb` | Spirit herb metadata for existing items. |
 | `medicinal_property` | `mxt/medicinal_property` | Medicinal identities: a name and description for one medicinal effect. |
@@ -40,7 +40,8 @@ The table below lists the mod's 37 datapack registries. In the field tables, "De
 | `currency` | `mxt/currency` | Item currency denominations and exchange. |
 | `item_binding` | `mxt/item_binding` | Bindings from existing items to action arrays. |
 | `weapon_binding` | `mxt/weapon_binding` | Weapon attributes and actions for existing items. |
-| `pill_binding` | `mxt/pill_binding` | Pill and pill toxicity rules for existing items. |
+| `pill` | `mxt/pill` | What one pill does: the dose action, its toxicity gain, the overdose threshold and what an overdose leaves behind. |
+| `pill_binding` | `mxt/pill_binding` | Claims a family of existing items as one pill, with its use cap and cooldown. |
 | `technique_binding` | `mxt/technique_binding` | Bindings from existing items to cultivation technique learning. |
 | `aura_zone` | `mxt/aura_zone` | Environment aura templates. |
 | `block_aura` | `mxt/block_aura` | Aura provided by blocks. |

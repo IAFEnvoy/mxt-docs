@@ -93,7 +93,7 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 }
 ```
 
-- `triggers` 是内置匹配器的列表：`tick`、`attack`、`hurt`、`kill`、`block_break`、`block_use`、`item_use`、`equip`、`death`、`breakthrough` 和 `technique_stage`。它们都不带自己的字段。
+- `triggers` 是内置匹配器的列表：`tick`、`attack`、`hurt`、`kill`、`block_break`、`block_use`、`item_use`、`equip`、`death`、`breakthrough` 和 `progression_level`。它们都不带自己的字段。
 - `chance` 是数值提供器，默认 `1`，每命中一次触发器掷一次：公式抛异常或算不出有限值时这一次**不放行**，`≤0` 不放行，`≥1` 必放行，中间值按实体随机数掷。**别与 `mxt/trigger` 规则表里同名的 `chance` 混起来**——那边算不出数按 `1` 处理。
 - `hurt` 触发器注入 `damage`——实际造成的伤害——所以治疗量可以随这一击缩放；触发器注入的变量同样能被这条技能自己的动作字段读到。其他触发器注入各自的名字：`attack` 注入 `target_health` 与 `target_is_living`，方块事件注入 `block_x/y/z`，`item_use` 注入 `use_duration`，等等。
 

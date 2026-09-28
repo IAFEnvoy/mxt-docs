@@ -145,7 +145,7 @@ Origins 风格的条加图标：从一张贴图集里切出背景、填充与一
 {"type": "mxt:missing"}
 ```
 
-分段条的宽度是 `segments * 8 + (segments - 1) * gap` 像素；环形条在两个方向上都占 `radius * 2 + thickness` 像素；`mxt:boss_bar`、`mxt:text_only` 与 `mxt:missing` 用默认的 71x8；`mxt:textured_bar` 用自己声明的宽高。颜色一律可写 `#RRGGBB` 或 `0` 到 `16777215` 的整数。绘制在客户端进行，只显示服务端同步过来的数值。
+分段条的宽度是 `segments * 8 + (segments - 1) * gap` 像素；环形条在两个方向上都占 `radius * 2 + thickness` 像素；`mxt:boss_bar`、`mxt:text_only` 与 `mxt:missing` 用默认的 71x8；`mxt:textured_bar` 用自己声明的宽高。颜色一律写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受），一律按不透明处理。绘制在客户端进行，只显示服务端同步过来的数值。
 
 `mxt:boss_bar` 的 `sprite_location` 与 `mxt:textured_bar` 的两个贴图字段都是 [`SpriteIcon`](../shared_data_types.md#spriteicon)，不是裸 Identifier。裸字符串沿用字段本来的含义：`sprite_location` 是**贴图路径**，`background_sprite` / `fill_sprite` 是 **GUI 图集精灵**。对象形式要么写 `{"sprite": ...}` 点名图集精灵，要么写 `{"texture": ...}` 点名一张贴图。
 

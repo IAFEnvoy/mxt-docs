@@ -93,7 +93,7 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `fog_color` | `RGBColor` | `#FFFFFF` | 雾颜色；支持 `#RRGGBB` 或 `0..16777215` 整数。 |
+| `fog_color` | `RGBColor` | `#FFFFFF` | 雾颜色；写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受），一律按不透明处理。 |
 | `render_distance` | Integer | `64` | 雾效影响距离，范围 `8..256`。 |
 | `fog_strength` | Float | `0.35` | 覆盖原版雾的比例，范围 `0..1`。 |
 
