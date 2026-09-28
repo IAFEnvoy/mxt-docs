@@ -50,4 +50,4 @@ title: /contract
 
 ## 失败原因
 
-卷轴、御兽铃、灵兽袋与这组命令打的是**同一张**文案表，键是 `contract.mxt.failure.<小写枚举名>`：`already_bound`、`not_contractable`、`owner_conditions`、`creature_conditions`、`limit_reached`、`insufficient_cost`、`not_bound`、`not_owner`、`recall_cooldown`、`cancelled`、`unsupported_behavior`（这只生物不认这条命令）、`behavior_refused`（它认，但拒绝了这次）。
+卷轴、御兽铃、灵兽袋与这组命令打的是**同一张**文案表，键是 `contract.mxt.failure.<小写枚举名>`：`already_bound`、`not_contractable`、`owner_conditions`、`creature_conditions`、`limit_reached`、`insufficient_cost`、`not_bound`、`not_owner`、`recall_cooldown`、`recall_pending`（召回闩已经置上、还没落地）、`cancelled`、`unsupported_behavior`（这只生物不认这条命令）、`behavior_refused`（它认，但拒绝了这次）。

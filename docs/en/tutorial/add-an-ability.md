@@ -1,9 +1,9 @@
 ---
-title: Add an Ability
+title: Define an Ability
 description: Define an active and a triggered ability, give them costs, conditions and targets, grant them from realms or items, and put them on the wheel.
 ---
 
-# Add an Ability
+# Define an Ability
 
 An `ability` is the unit of gameplay a player spends aura on. It carries its own costs, cooldown and condition, and it also carries its own **action fields** (`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`), so "when it happens" and "what it does" are written in **one ability**. That way a single JSON file can describe a bolt, a buff, a passive bonus or a reaction to being hit.
 
@@ -64,7 +64,7 @@ The four action fields always run in this order: `entity_action` first, then `ta
 
 A few more fields are worth knowing about:
 
-- `charges` is the only state parameter left on the definition: writing `{"maximum": ..., "recharge_ticks": ...}` (both required) makes the ability **pay per use** — one charge per payment, refused at zero (failure reason `NO_CHARGES`) — and the remaining count is state rather than a declaration. **Only a payment on the cast pipeline spends one**; a key going through the shared gate (`mxt:flight_control` / `mxt:storage`) spends no charge. Which state kinds can be held is declared by the `type` in code, so **there is no `components` to write any more** (deleted 2026-09-27: writing one is silently ignored like any unknown key); see [Ability Casting](/en/technical/ability) for the kinds and the conditions that read them.
+- `charges` is the only state parameter left on the definition: writing `{"maximum": ..., "recharge_ticks": ...}` (both required) makes the ability **pay per use** — one charge per payment, refused at zero (failure reason `NO_CHARGES`) — and the remaining count is state rather than a declaration. **Only a payment on the cast pipeline spends one**; a key going through the shared gate (`mxt:flight_control` / `mxt:storage`) spends no charge. Which state kinds can be held is declared by the `type` in code, so **there is no `components` to write any more** (writing one is silently ignored like any unknown key); see [Ability Casting](/en/technical/ability) for the kinds and the conditions that read them.
 - `element_affinity` lists elements (or element tags) the ability belongs to. When it is not empty, the formula variable `element_modifier` becomes available; the **damage** side is handled for you — layer one of the [damage pipeline](/en/technical/damage) multiplies it in itself, so do not write `* element_modifier` by hand when writing a damage number (that would be the same number multiplied twice). Read the variable explicitly only when scaling something that is not damage, such as **costs** or **duration**.
 - `hidden` is skipped **only in an artifact's tooltip** and is still granted and still works; it **takes no part in the wheel's filter** (the pool only offers pressable types), so a pressable ability with it still takes a wheel cell.
 
@@ -147,7 +147,7 @@ Active abilities can be put on the twelve-sector wheel that abilities and spirit
 2. Hold "Wheel Menu" (`R` by default) and point at that cell - pointing is what changes the **selection**, which is never empty: the wheel opens with the **first cell that holds anything** already selected (that is where the gold frame sits before you move the pointer), and pointing at an empty cell leaves the selection where it was. Letting go of `R` only closes the wheel and casts nothing. Press "Use Wheel Selection" (`V` by default) to cast it, and the wheel stays open so you can move to another cell and press it again; with the wheel closed `V` spends **the cell the number you chose stands for right now** (a number addressing a page that is gone falls back to the last cell holding anything, and is never rewritten), and a left click is the same as `V`. The "Wheel Grid" on the left of the screen is a four-column view of the whole wheel, one row per three cells of a page, and the cell outlined in gold is what `V` would spend.
 3. Everything is server-authoritative: the client only sends which kind and which id was used, and the server decides the grant, the conditions, the costs, the cooldown, the duration and the effects.
 
-## Step 5 — Verify
+## Verify
 
 Abilities are a data pack registry, so load the world again rather than running `/reload`:
 
@@ -175,7 +175,7 @@ Abilities are a data pack registry, so load the world again rather than running 
 | `mxt:word` does nothing | It is a terminal, code-whitelisted effect (`self_heal`, `purge_self_curses`) and requires an operator by default. It is not a way to run commands. |
 | Everyone has the ability immediately | It was granted by a `granted_abilities` list on a spirit root, physique or technique that everybody satisfies — those lists apply while the definition is held. |
 | The actions never happen and nothing errors | `entity_action` (or `target_selector` / `target_condition` / `bi_entity_action`) was written on a type that **runs no actions** (`mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` / `mxt:composite` / `mxt:word`). Those four fields are declared by the **five types that run actions** (`mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` / `mxt:interval`), so on any other type they are keys nobody reads (no error, no effect): make the ability one of the acting types, or move those keys onto the ability that should really run them. |
-| An `"effect": "..."` line does nothing | The ability-reference `effect` field **is withdrawn** (2026-09-27) and is a key nobody reads today: write the four action fields on the firing type itself and delete the `effect` line; the `effect` of `mxt:word` is a different thing (its own effect enum) and is unaffected. |
+| An `"effect": "..."` line does nothing | The ability-reference `effect` field **is a key nobody reads**: write the four action fields on the firing type itself and leave the `effect` line out; the `effect` of `mxt:word` is a different thing (its own effect enum) and is unaffected. |
 | A targeted skill only says "no target matches" when pressed | The `target_selector` of the `mxt:targeted` ability picked no entity at all, or every pick was filtered out by the payload ability's `target_condition`: check the selector's distance (`mxt:area`'s `radius`, `mxt:ray` / `mxt:cone`'s `length`). Landing on nobody is decided **before anything is paid**, so it costs nothing; an ability that cannot act on a target reports the other reason, "the ability it names cannot act on a target". |
 
 ## Next

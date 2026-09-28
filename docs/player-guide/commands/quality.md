@@ -11,7 +11,7 @@ title: /quality
 | `/quality set <targets> <quality>`（= `/mxt quality set …`） | 把品质**覆盖组件**写到目标主手的物品上（需要 gamemaster 权限）。它盖过定义默认档，`/quality clear` 摘掉；这一档能不能用仍由它自己的 `condition` 与所属链条决定。 |
 | `/quality clear <targets>`（= `/mxt quality clear …`） | 摘掉主手物品上的覆盖组件，让它回到定义默认档（需要 gamemaster 权限）。本来就没有覆盖时逐个目标报失败。 |
 | `/quality upgrade <targets>`（= `/mxt quality upgrade …`） | 把主手物品在它所属的链条上**往上推一档**（需要 gamemaster 权限）：先过**下一档**自己写的 `upgrade_condition`，代价就是它的 `upgrade_costs`（`plan` → `commit` **整组原子**，付不出就一点不动、也不写档）。已经在顶端、或解析出的档不在链上时都会逐个目标报出原因。 |
-| `/quality chain <quality>`（= `/mxt quality chain …`） | 打印这一档所在的**整条品质链**，不需要权限：链上在它之前的是灰色、它自己是绿色、之后的是白色。一档只属于一条链（它自己声明的 `quality`）；没有链或链条没走通时报"没有品质链包含它"，当前包不提供这一档时同样会被拒绝。 |
+| `/quality chain <quality>`（= `/mxt quality chain …`） | 打印这一档所在的**整条品质链**，不需要权限：链上在它之前的是灰色、它自己是绿色、之后的是白色。一档只属于一条链（运行时沿 `next` 走出来的那一条）；不在任何链上或链条没走通时报「没有品质链包含它」，当前包不提供这一档时同样会被拒绝。链名写在入口档上，入口档没有名字时这一行开头的链名显示成 `null`。 |
 
 ## 品质是哪一档
 
@@ -19,13 +19,12 @@ title: /quality
 
 1. 堆上的 `mxt:quality` **组件**（整份品质对象）；
 2. 堆上的锻造结果 `mxt:forging_result` 记着的那一档；
-3. **定义默认档**：法器 [artifact](/datapack/json/artifact) 的 `quality`、功法 [technique](/datapack/json/technique) 的 `quality`，以及炉型 [alchemy_furnace](/datapack/json/alchemy_furnace) 的 `quality`；
-4. 这一栈所属**链条的入口档**；
-5. 匹配到的灵植 [spirit_herb](/datapack/json/spirit_herb) 声明的 `quality`。
+3. **定义默认档**，依次查：法器 [artifact](/datapack/json/artifact) 的 `quality`、符箓载体上铭刻的符所声明的档位、功法 [technique](/datapack/json/technique) 的 `quality`，以及炉型 [alchemy_furnace](/datapack/json/alchemy_furnace) 的 `quality`；
+4. 匹配到的灵植 [spirit_herb](/datapack/json/spirit_herb) 声明的 `quality`。
 
-链条看这一堆解析出的那一档：链名写在 `quality` 自己身上，所以绑定表与组件都不必声明链，见[品质](/datapack/json/quality)。
+链条看这一堆解析出的那一档：链名写在档位自己身上（写在入口档），所以绑定表与组件都不必声明链，见[品质](/datapack/json/quality)。四格都没有答案时这一堆就是没有品质，**不会去补某条链的入口档**。
 
-`set` 写的就是第 1 格那个覆盖组件，所以它盖过后面四步；`clear` 之后物品回到定义默认档。`upgrade` 成功后也把新的那一档写进同一个覆盖组件——所以升级过的物品从此以覆盖组件为准，`/quality clear` 能把它退回定义默认档。
+`set` 写的就是第 1 格那个覆盖组件，所以它盖过后面三步；`clear` 之后物品回到定义默认档。`upgrade` 成功后也把新的那一档写进同一个覆盖组件——所以升级过的物品从此以覆盖组件为准，`/quality clear` 能把它退回定义默认档。
 
 ## 升级只升一档
 

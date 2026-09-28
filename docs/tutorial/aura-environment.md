@@ -1,9 +1,9 @@
 ---
-title: 搭建灵气环境
+title: 定义灵气环境
 description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪声和波动驱动浓度，并把结果呈现在 HUD、雾效和命令上。
 ---
 
-# 搭建灵气环境
+# 定义灵气环境
 
 [定义灵气与境界](./define-aura-and-realms.md) 只给你留下一个覆盖整个主世界、灵气处处相同的区域。本页让世界真正产生差异：更稠密的区域、灵石矿脉、打坐时可以燃烧的物品，以及告诉玩家"自己站在哪"的客户端呈现。
 
@@ -21,6 +21,15 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 区块第一次加载时，每种数值都从 `max(0, (amount + noise) / 10 - 5)` 开始，其中 `noise` 是模板的柏林噪声值（噪声关闭时为 `0`）。因此裸写的 `amount` 是一个**基础值**，它比最终产生的浓度大十倍——`amount: 200` 的模板初始浓度约为 `15`。容量来自 `max`，除非你写死一个固定数值，否则它由该初始值解析得到。
 
 修炼进度与玩家获得的灵气都会乘以所处位置的浓度倍率：有限上限用 `concentration / maximum`，`{"type": "mxt:unlimited"}` 用 `concentration / (concentration + 1)`。
+
+## 你要搭建什么
+
+| 文件 | 用途 |
+| --- | --- |
+| `data/example/mxt/aura_zone/misty_valley.json` | 森林级别的稠密区域：浓度、噪声、波动，以及客户端看到的样子。 |
+| `data/example/mxt/block_aura/spirit_stone_ore.json` | 让方块给它所在的区块补容量。 |
+| `data/example/mxt/item_aura/spirit_stone.json` | 让物品在修炼时被消耗、换成灵气。 |
+| `kubejs/server_scripts/mxt_areas.js` | 运行时创建与移除人工区域，并读某一处解析后的灵气。 |
 
 ## 第 1 步 —— 更稠密的群系区域
 
@@ -158,7 +167,7 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 
 :::
 
-## 第 4 步 —— 它在哪里显示
+## 第 4 步 —— 显示位置
 
 | 位置 | 显示内容 |
 | --- | --- |
@@ -173,10 +182,10 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 命令上：
 
 ```text
-/mxt aura query              → every aura at your feet, with its element marker
-/mxt aura query example:qi   → one aura
-/mxt aura vein               → the size and tier of the connected spirit stone vein you stand on
-/mxt aura cache clear 8      → rebuild the cached aura of nearby chunks (radius in chunks, default 3, 0..32)
+/mxt aura query              → 你脚下每一门灵气各自的浓度与元素标记
+/mxt aura query example:qi   → 只看一门灵气
+/mxt aura vein               → 你脚下那条连成一片的灵石矿脉的大小与档位
+/mxt aura cache clear 8      → 重建附近区块缓存的灵气（半径按区块计，默认 3，范围 0..32）
 ```
 
 ## 第 5 步 —— 用脚本创建区域
@@ -187,17 +196,17 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 // kubejs/server_scripts/mxt_areas.js
 const area = MxtAura.addBox(
   player.level, 'example:misty_valley',
-  0, 64, 0,                  // minimum corner
-  64, 128, 64,               // maximum corner
-  10                         // priority
+  0, 64, 0,                  // 最小角
+  64, 128, 64,               // 最大角
+  10                         // 优先级
 )
 console.info(`Created aura area ${area}`)
 
-// Read the resolved aura at a position, including every source.
+// 读取某个位置解析后的灵气，包含所有来源。
 const aura = MxtAura.get(player.level, player.blockPosition())
 console.info(`Concentration: ${aura.concentration()}, maximum: ${aura.maximum()}`)
 
-// Later, or from another script:
+// 稍后，或在另一个脚本里：
 // MxtAura.remove(player.level, area)
 ```
 
@@ -229,14 +238,14 @@ MxtEvents.auraZone(event => {
 
 活跃阵法覆盖其控制者周围的区域，因此它的 `aura_zone` 覆写所有更低层级，而 `max_bonus` 会加到它所列灵气的区块有效上限上。
 
-## 第 6 步 —— 验证
+## 在游戏里验证
 
 重新加载世界——这些是数据包注册表，`/reload` 不会读取它们——然后运行：
 
 ```text
-(load the world again)
+（重新打开世界）
 /mxt registries validate
-/mxt aura query example:qi     → a forest should read higher than a plains
+/mxt aura query example:qi     → 森林应当比平原高
 ```
 
 1. 白天站在森林里查看 `/mxt aura query`；睡到夜晚再查一次。数值会变化最多 ±30%，这是 `fluctuation` 造成的。
@@ -255,7 +264,7 @@ MxtEvents.auraZone(event => {
 | 方块灵气似乎毫无作用 | 它增加的是容量，不是可见的浓度，对本来就环境上限很高的区块尤其如此。把模板的 `amount` 调低，让方块承担差额。 |
 | 灵气总是回到模板值 | 波动、噪声和回复都会重新计算模板；已存的库存只会因修炼、物品燃料和回复而变化。 |
 
-## 下一步
+## 接下来
 
-- [用 KubeJS 创建物品并绑定它们](./create-items-with-kubejs.md) —— 这些表所引用的灵石与丹药。
+- [KubeJS 创建物品并绑定行为](./create-items-with-kubejs.md) —— 这些表所引用的灵石与丹药。
 - [灵气区域](../datapack/json/aura_zone.md)、[方块灵气](../datapack/json/block_aura.md) 和 [物品灵气](../datapack/json/item_aura.md) —— 其余全部字段。

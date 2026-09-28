@@ -1,9 +1,9 @@
 ---
-title: Bring Down a Tribulation
+title: Define a Tribulation
 description: Write a tribulation that a breakthrough starts — the gate, the wind-up countdown, the three kinds of beat, a coloured lightning bolt, and what success and failure each do.
 ---
 
-# Bring Down a Tribulation
+# Define a Tribulation
 
 A tribulation is the price of a breakthrough: a trial consumed beat by beat, where surviving it means the next realm and failing it is settled by whatever you wrote. It is built from two halves — **the definition of a tribulation** and **a breakthrough that references it**. Nothing starts a tribulation on its own.
 
@@ -52,12 +52,12 @@ There are four kinds of beat:
 The timeline is a **stored cursor**: it is copied into the entity's attachment when the run starts, and one beat is walked per tick, advancing each time it finishes. **The cursor is saved** (`mxt:branch` can move it to any beat, backwards included), so a `/reload` **cannot** change a run already in progress — but `difficulty_scale` and the two outcome actions are still read from the definition live. The `if_true` / `if_false` indices count from the **first beat of the copied timeline** (`0`-based), and an index out of range is refused **at start**.
 
 ::: tip `mxt:wait_for` can have a deadline
-Without a `timeout` the old behaviour stands: if the condition never passes, the tribulation waits on that beat forever — it neither advances nor fails — so keep conditions reachable (something like `mxt:exposed_to_sky` rather than a combination that may never be true).
+Without a `timeout` there is no deadline: if the condition never passes, the tribulation waits on that beat forever — it neither advances nor fails — so keep conditions reachable (something like `mxt:exposed_to_sky` rather than a combination that may never be true).
 
 With a `timeout` (in ticks) it is a **deadline**: when it runs out, `on_timeout` decides — `fail` (the default) fails the run, `finish` moves past the beat. It is a deadline rather than the length of a beat, so it is resolved from `timeout` alone, **without `difficulty_scale` and without the aura modifier**: difficulty should not decide how long a player has to meet a condition. A `timeout` that does not resolve to a positive number rejects the whole start.
 :::
 
-## Step 2 — Making It Wait
+## Step 2 — Adding a Wind-Up Wait
 
 Both `mxt:idle` and `windup` are converted with the same rule:
 
@@ -66,7 +66,7 @@ duration × difficulty_scale × max(0, 1 + aura_tribulation_modifier)
 ```
 
 - `difficulty_scale` defaults to `1` and scales the whole tribulation.
-- `aura_tribulation_modifier` comes from the environment (it is the `tribulation_modify` of the aura zone rules): the thicker the aura, the harder the trial. It is the one formula variable this system adds, and the multiplier is floored at 0 so a wait can never become negative.
+- `aura_tribulation_modifier` comes from the environment: it is `rules.tribulation_modify` of the aura zone the run stands in (default `0`), so the thicker the aura the harder the trial. It is the only formula variable this rule adds, and the multiplier is floored at `max(0, …)` — a modifier below `-1` makes the multiplier `0`, so the duration fails to resolve and the whole start is refused rather than producing a negative length.
 - **The conversion happens once, when the beat starts**: a random duration is rolled a single time, and a change in ambient aura mid-wait neither stretches nor shortens it. The countdown the player sees is therefore the number of ticks that will really pass.
 
 **Every beat is asked "can you run now?" before the run starts**, and an `mxt:idle` whose duration cannot be resolved, an `mxt:wait_for` whose `timeout` cannot be resolved, or an `mxt:branch` aimed out of range rejects the whole start — a broken definition must not surface after the player has already paid for the breakthrough.
@@ -121,11 +121,11 @@ Swapping the second bolt for a gradient makes "this one hurts more" visible at a
 
 - **Success**: once the cursor walks off the end of the timeline, `success_action` runs. The example hands back 50 aura — surviving the trial leaves the pool fuller than before.
 - **Failure**: when a beat decides it cannot continue (its `mxt:idle` state is gone, the beat itself reports failure, or an `mxt:wait_for` `timeout` runs out with `on_timeout: "fail"`), `fail_action` runs. There is **no built-in punishment at all** — no realm loss, no experience taken — everything is what you write in `fail_action`.
-- **Dying is not failing**: the attachment is `copyOnDeath()`, so **death does not clear a tribulation**; it carries on with the respawned entity ("the tribulation is still striking after I died" is expected). If it should end with death, arrange that separately, or write the punishment as "dying wastes the attempt".
+- **Dying is not failing**: the attachment is `copyOnDeath()`, so **death does not clear a tribulation**; it carries on with the respawned entity (a tribulation that keeps striking after death is expected). If it should end with death, arrange that separately, or write the punishment as "dying wastes the attempt".
 - **`/mxt tribulation stop` does not settle either**: it only clears the run, so neither `success_action` nor `fail_action` runs. Worth knowing while testing, so a stopped run is not mistaken for a successful one.
 - Both may be left as `mxt:no_op`, in which case the tribulation is pure theatre and the punishment lives elsewhere.
 
-To make failure hurt, compose existing actions — here damage first, then take experience:
+To make failure hurt, compose existing actions — here `mxt:damage` first, then `mxt:add_resource` to take experience:
 
 ```json
 "fail_action": {
@@ -155,7 +155,7 @@ Then add a gate — `condition` is evaluated **once**, when the run is started, 
 
 "Thin aura cannot host a tribulation" is thereby a datapack rule rather than a special case in code. When the gate refuses, **the breakthrough still happens** — there is simply no tribulation; requiring one is the job of `realm_stage`'s `breakthrough.conditions`.
 
-## Step 7 — Verify
+## Verify
 
 Reopen the world first (datapack registries are read while the **world loads**, so `/reload` is not enough), then:
 
@@ -191,6 +191,9 @@ Reopen the world first (datapack registries are read while the **world loads**, 
 | It stopped advancing on its own | Advancement is driven by the entity's tick, so it **pauses in unloaded chunks** (the attachment is saved) and resumes where it left off. |
 | `difficulty_scale` of `0` or a negative number | Not a load error, but waits resolve to `-1`: with any `mxt:idle` present the start is refused (`invalid_entry`); a timeline of only `mxt:action` beats instead "succeeds" instantly. |
 | A formula using bare `level` gives `0` | Tribulation formulas run in an entity context, where `level` / `realm_rank` (which need a resource context) are unavailable. Use `caster_level` for the caster's vanilla experience level. |
+| A timeline edit does not change a run in progress | The timeline is copied into the attachment when the run starts, so `/reload` only affects the next one. |
+| Writing `mxt:entry_began` / `mxt:idle_countdown` with `mxt:modify_storage` does nothing | Those two kinds belong to the tribulation's own timeline state and no ability type declares them, so `mxt:modify_storage` cannot write them; only a WARN is logged. |
+| The sky does not darken | `darken_sky` is written as `false`, or no **player** nearby is running a tribulation — both the darkening and the countdown read the attachment on players: your own run always counts, another player's counts within 160 blocks, and a tribulation on a mob takes no part. |
 
 ## Next
 

@@ -100,5 +100,5 @@ MxtActions.entity('example:heal', (entity, params, context) => {
 - [物品与绑定](/kubejs/items) —— 四张绑定表的字段与示例。
 - [KubeJS API 参考](/kubejs/api-reference) —— 18 个全局对象，一个对象一个页面。
 - [综合示例](/kubejs/examples) —— 把几个对象组合起来用的完整脚本。
-- [用 KubeJS 创建物品](/tutorial/create-items-with-kubejs) —— 分步教程。
+- [KubeJS 创建物品并绑定行为](/tutorial/create-items-with-kubejs) —— 分步教程。
 - [物品一览](/player-guide/items) —— 本体自己提供的物品。

@@ -226,6 +226,6 @@ The repository ships a single `block_aura` entry (the spirit stone block, `amoun
 ## See also
 
 - [aura](../datapack/json/aura.md) / [aura_zone](../datapack/json/aura_zone.md) / [block_aura](../datapack/json/block_aura.md) / [item_aura](../datapack/json/item_aura.md) — what every field means.
-- [Build the Aura Environment](../tutorial/aura-environment.md) — putting the pieces together into a working pack.
+- [Define the Aura Environment](../tutorial/aura-environment.md) — putting the pieces together into a working pack.
 - Scripted entry points: [MxtAura](../kubejs/api/aura.md); Java side: [Java API](../java/api.md) — `AuraService` and `AuraLookup`.
 - [Foe Identification](./identification.md) and [Damage System](./damage.md) — the other two source-level walkthroughs.

@@ -69,8 +69,8 @@ export const sections = [
   {
     text: { zh: '开发教程', en: 'Tutorials' },
     items: [
-      { page: 'tutorial/index', zh: '教程索引', en: 'Tutorials' },
-      { page: 'tutorial/add-an-ability', zh: '定义一个技能', en: 'Add an Ability' },
+      { page: 'tutorial/index', zh: '教程', en: 'Tutorials' },
+      { page: 'tutorial/add-an-ability', zh: '定义技能', en: 'Define an Ability' },
       // The dual cultivation page is a follow-up to the aura tutorial and only uses what that
       // one built, so it hangs under it as a child; the parent stays a link to its own page.
       {
@@ -78,19 +78,34 @@ export const sections = [
         zh: '定义灵气与境界',
         en: 'Define Aura and Realms',
         items: [
-          { page: 'tutorial/dual-cultivation', zh: '做一门双修功法', en: 'Write a Dual Cultivation Technique' }
+          { page: 'tutorial/dual-cultivation', zh: '编写双修功法', en: 'Write a Dual Cultivation Method' }
         ]
       },
-      { page: 'tutorial/aura-environment', zh: '搭建灵气环境', en: 'Build the Aura Environment' },
-      { page: 'tutorial/create-items-with-kubejs', zh: '用 KubeJS 创建物品', en: 'Create Items with KubeJS' },
-      { page: 'tutorial/define-a-formation', zh: '定义一个阵法', en: 'Define a Formation' },
-      { page: 'tutorial/open-a-realm', zh: '开一个秘境', en: 'Open a Secret Realm' },
-      { page: 'tutorial/inscribe-a-talisman', zh: '刻一张符箓', en: 'Inscribe a Talisman' },
-      { page: 'tutorial/bring-down-a-tribulation', zh: '让突破引来天劫', en: 'Bring Down a Tribulation' },
-      { page: 'tutorial/forge-a-treasure', zh: '锻造一件法器', en: 'Forge a Treasure' },
+      { page: 'tutorial/define-spirit-roots-and-physiques', zh: '定义灵根与体质', en: 'Define Spirit Roots and Physiques' },
+      { page: 'tutorial/aura-environment', zh: '定义灵气环境', en: 'Define the Aura Environment' },
+      // The binding page is the deep dive into the four tables' hooks, so it hangs under the item
+      // tutorial the same way dual cultivation hangs under the aura one.
+      {
+        page: 'tutorial/create-items-with-kubejs',
+        zh: 'KubeJS 创建物品并绑定行为',
+        en: 'Create Items and Bind Actions with KubeJS',
+        items: [
+          { page: 'tutorial/bind-actions', zh: 'KubeJS 绑定行为', en: 'Bind Actions with KubeJS' }
+        ]
+      },
+      { page: 'tutorial/define-a-quality-chain', zh: '定义品质链', en: 'Define a Quality Chain' },
+      { page: 'tutorial/define-a-formation', zh: '定义阵法', en: 'Define a Formation' },
+      { page: 'tutorial/open-a-realm', zh: '定义秘境', en: 'Define a Secret Realm' },
+      { page: 'tutorial/inscribe-a-talisman', zh: '定义符箓', en: 'Define a Talisman' },
+      { page: 'tutorial/bring-down-a-tribulation', zh: '定义天劫', en: 'Define a Tribulation' },
+      { page: 'tutorial/define-a-curse', zh: '定义诅咒', en: 'Define a Curse' },
+      { page: 'tutorial/forge-a-treasure', zh: '锻造法器', en: 'Forge a Treasure' },
       // Deliberately a placeholder: the page lists what the alchemy system is made of and is honest
       // about the tutorial not being written yet, so the sidebar slot exists before the content does.
-      { page: 'tutorial/refine-a-pill', zh: '炼制一枚丹药', en: 'Refine a Pill' }
+      { page: 'tutorial/refine-a-pill', zh: '炼制丹药', en: 'Refine a Pill' },
+      { page: 'tutorial/contract-a-beast', zh: '契约灵兽', en: 'Contract a Beast' },
+      { page: 'tutorial/storage-and-spirit-vessels', zh: '储物与灵器', en: 'Storage and Spirit Vessels' },
+      { page: 'tutorial/rifts', zh: '裂隙', en: 'Rifts' }
     ]
   },
   {

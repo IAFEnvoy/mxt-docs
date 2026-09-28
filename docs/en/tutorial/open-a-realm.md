@@ -1,9 +1,9 @@
 ---
-title: Open a Secret Realm
+title: Define a Secret Realm
 description: Write a secret realm template — how the dimension is generated, where its border is, where players land, who may enter and claim it, when it is deleted, and what aura, formations and rifts do inside.
 ---
 
-# Open a Secret Realm
+# Define a Secret Realm
 
 A secret realm is a pocket world that is either throwaway or claimable: **the definition is only a template**, and every instance of it is a real, separate runtime dimension. Players can leave and come back to the same terrain — for as long as somebody claims it.
 
@@ -19,7 +19,7 @@ A secret realm is a pocket world that is either throwaway or claimable: **the de
 | --- | --- |
 | `data/example/mxt/secret_realm/trial_realm.json` | A template: generation, border, landing points, lifetime. |
 
-## Step 1 — Making the World
+## Step 1 — The World Template
 
 ```json
 // data/example/mxt/secret_realm/trial_realm.json
@@ -141,7 +141,7 @@ A missing structure is not a load error: it returns `MISSING_STRUCTURE` on the w
 - **Formations and aura stock** live in that dimension's own `data/`, so deleting an `owned: false` instance takes them with it.
 - **Rifts** (`mxt:rift`) can target a secret realm dimension: when the target is **not loaded** (a dormant claimed instance, a deleted one) the rift does not teleport — a deliberate safety valve, so a teleport never drags a world back open.
 
-## Step 7 — Verify
+## Verify
 
 ```text
 /mxt registries validate

@@ -1,9 +1,9 @@
 ---
-title: Build the Aura Environment
+title: Define the Aura Environment
 description: Layer aura zones, add aura from blocks and items, drive concentration with noise and fluctuation, and put the result on the HUD, the fog and the command line.
 ---
 
-# Build the Aura Environment
+# Define the Aura Environment
 
 [Define Aura and Realms](./define-aura-and-realms.md) left you with one zone that covers the whole Overworld with the same amount of aura. This page makes the world matter: denser regions, spirit stone veins, items you can burn while meditating, and the client-side presentation that tells a player where they are standing.
 
@@ -21,6 +21,15 @@ Two different numbers are involved, and confusing them is the usual source of su
 When a chunk is initialised, each resource starts at `max(0, (amount + noise) / 10 - 5)`, where `noise` is the Perlin value of the template (or `0` when noise is off). The bare `amount` is therefore a *base* value ten times larger than the concentration it produces — a template with `amount: 200` starts around `15`. Capacity comes from `max`, which is resolved from that initial value unless you write a fixed number.
 
 Cultivation progress and the aura a player gains are multiplied by the concentration multiplier at their position: `concentration / maximum` for a finite maximum, and `concentration / (concentration + 1)` for `{"type": "mxt:unlimited"}`.
+
+## What You Are Building
+
+| File | Purpose |
+| --- | --- |
+| `data/example/mxt/aura_zone/misty_valley.json` | A forest-level dense zone: concentration, noise, fluctuation and how it looks on the client. |
+| `data/example/mxt/block_aura/spirit_stone_ore.json` | Lets a block add capacity to the chunk it sits in. |
+| `data/example/mxt/item_aura/spirit_stone.json` | Lets an item be spent while cultivating and turn into aura. |
+| `kubejs/server_scripts/mxt_areas.js` | Creates and removes artificial areas at runtime, and reads the resolved aura at a position. |
 
 ## Step 1 — A Denser Biome Zone
 
@@ -229,7 +238,7 @@ Formations can also carry their own zone, which is the top level of the resoluti
 
 An active formation covers the area around its controller, so its `aura_zone` overrides every lower level, while `max_bonus` is added to the effective chunk maximum of the auras it names.
 
-## Step 6 — Verify
+## Verify
 
 Load the world again — these are data pack registries, so `/reload` does not pick them up — then run:
 
@@ -257,5 +266,5 @@ Load the world again — these are data pack registries, so `/reload` does not p
 
 ## Next
 
-- [Create Items with KubeJS and Bind Them](./create-items-with-kubejs.md) — the spirit stones and pills these tables refer to.
+- [Create Items and Bind Actions with KubeJS](./create-items-with-kubejs.md) — the spirit stones and pills these tables refer to.
 - [Aura Zone](../datapack/json/aura_zone.md), [Block Aura](../datapack/json/block_aura.md) and [Item Aura](../datapack/json/item_aura.md) — every remaining field.

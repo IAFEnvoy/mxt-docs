@@ -7,14 +7,14 @@ description: 读一栈物品解析出的品质与它所属的链条，或写覆�
 
 品质长在**物品堆**上，所以这几个方法都点名它们作用的那一栈；`entity` 只是注册表查询的起点。写操作只在服务端生效，客户端一律返回 `null` / `false` 且不改动任何东西。
 
-解析顺序是固定的五步：堆上的 **覆盖组件** → 锻造结果 → **定义默认档**（法器 / 功法的 `quality`）→ 所属**链条的入口档** → 匹配到的**灵植**声明的 `quality`。完整口径见[品质](/datapack/json/quality)。
+解析顺序是固定的四步：堆上的 **覆盖组件** → 锻造结果 → **定义默认档**（依次是法器、符箓载体上铭刻的符、功法、炉型各自的 `quality`）→ 匹配到的**灵植**声明的 `quality`。完整口径见[品质](/datapack/json/quality)。
 
 ## 方法
 
 | 方法 | 参数 | 返回值 | 说明 |
 | --- | --- | --- | --- |
 | `get(entity, stack)` | `Entity`、`ItemStack` | `String` 或 `null` | 这一栈现在解析出的品质 ID；没有则为 `null`。 |
-| `chain(entity, stack)` | `Entity`、`ItemStack` | `String` 或 `null` | 这一栈的品质所属的**链条** ID：就是这一档所在那条链的名字；它不在任何链上时返回 `null`。 |
+| `chain(entity, stack)` | `Entity`、`ItemStack` | `String` 或 `null` | 这一栈的品质所属的**链条** ID：就是这一档所在那条链的名字；它不在任何链上、或那条链的入口档没写名字时返回 `null`。 |
 | `next(entity, stack)` | `Entity`、`ItemStack` | `String` 或 `null` | 链条上的下一档 ID；已经在顶端或没有链条时为 `null`。 |
 | `set(entity, stack, quality)` | `Entity`、`ItemStack`、品质 ID | `boolean` | 把品质**覆盖组件**写到这一栈上，盖过定义默认档；ID 解析不出来或客户端调用返回 `false`。 |
 | `clear(entity, stack)` | `Entity`、`ItemStack` | `boolean` | 摘掉覆盖组件，回到定义默认档；本来就没有覆盖时返回 `false`。 |
@@ -31,7 +31,7 @@ if (result.changed) {
 } else {
   console.warn(`upgrade refused: ${result.failure}`)
 }
-// 直接覆盖某一档（无视链条入口档），clear 之后回到定义默认。
+// 直接覆盖某一档，clear 之后回到定义默认。
 MxtQuality.set(player, event.item, 'mxt_test:excellent')
 ```
 

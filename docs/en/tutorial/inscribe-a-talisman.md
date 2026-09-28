@@ -1,9 +1,9 @@
 ---
-title: Inscribe a Talisman
+title: Define a Talisman
 description: Write a talisman definition, hand it to a player, pour aura into it and fire it — capacity and cost as two fields, the two carrier modes, the hand and display-stand rules, and why inscribing is still command-only.
 ---
 
-# Inscribe a Talisman
+# Define a Talisman
 
 A talisman carries abilities on an item: it inscribes a few abilities, you fill the carrier's own store of aura, and it casts them for you. **The definition only says what is inscribed, how much fits and what one invocation costs**; whether it fires the moment it is full or waits for you to act is a **property of the carrier** (on the item stack), not of the definition.
 
@@ -70,7 +70,7 @@ Three semantics worth keeping:
 - **The aura entries are evaluated in an empty formula context**, because the client has to compute the same number to draw the pose. Anything that only has a value when somebody holds the item — `"realm_rank * 4"` — therefore resolves to `0` and is treated as **not counted**; a carrier left with no aura entry at all is a free talisman.
 - **Capacity and per-invocation amount are two fields.** The multiplier is how many invocations the carrier holds (reaching it is what "full" means) and the aura entries of `costs` are what one invocation takes. The example's 12 x 5 means **one full pour fires five times**; for "exactly one shot at a time", leave the multiplier out (it defaults to `1`). Write `durability` / `consume` to make it last (see "Durability" in step 4), `costs` for a threshold, and `quality` for a tier — all three are described in full under [the talisman definition](../../datapack/json/talisman.md).
 
-## Step 3 — Handing It to a Player
+## Step 3 — Handing the Talisman to a Player
 
 ```text
 /talisman blank                                 one blank carrier
@@ -128,7 +128,7 @@ A talisman that declares a `durability` turns both paths into **wear** instead (
 
 The position enters the formula context as `block_x`/`block_y`/`block_z` and is handed to position-driven behaviours as this invocation's **origin** (`spawn_projectile`, `spawn_particles`, `explode`, the centre of an `mxt:area` box…); projectiles still travel along the **actor's** facing — the position is where it comes from, the facing is who is aiming. Aura put into a stand **cannot be taken back** (extracting from it is a no-op); to recover the item, right-click it empty-handed or break the block.
 
-## Step 6 — Verify
+## Verify
 
 Datapack registries are read while the **world loads**, so reopen the world first, then:
 
@@ -164,4 +164,4 @@ Datapack registries are read while the **world loads**, so reopen the world firs
 - [talisman](../datapack/json/talisman.md) — the full field list and every pouring/firing rule.
 - [Items](../player-guide/items.md) — how talismans, brushes and stands behave in game.
 - [item_aura](../datapack/json/item_aura.md) — the storage shared with spirit stones.
-- [Add an Ability](./add-an-ability.md) — writing the abilities that get inscribed.
+- [Define an Ability](./add-an-ability.md) — writing the abilities that get inscribed.

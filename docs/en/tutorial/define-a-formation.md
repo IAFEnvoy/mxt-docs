@@ -123,7 +123,7 @@ There are five module types in total: `mxt:none` (a placeholder), `mxt:attack`, 
 
 At the top level there is also **`spare_friends`** (default `false`): when true, the runtime lets **every owner** and their friends through. Note that it is a different field from the same-named one inside the module — the top-level one decides whether the whole array skips friends, the module one decides whether protection stops them. Identification itself is also gated by **Server Config → Formations → Friend or Foe**: with that off, the top-level switch does nothing (and `DEFAULT` still stands the array down).
 
-**Ownership is a set of UUIDs** (since 2026-09-25): an array can have several owners and every one of them counts. Activating it writes the player who raised it; after that, add or remove owners with `/mxt formation owners <pos> add|remove <player>` (needs the `gamemaster` permission), and `/mxt formation list` prints the whole list comma-separated.
+**Ownership is a set of UUIDs**: an array can have several owners and every one of them counts. Activating it writes the player who raised it; after that, add or remove owners with `/mxt formation owners <pos> add|remove <player>` (needs the `gamemaster` permission), and `/mxt formation list` prints the whole list comma-separated.
 
 ## Step 4 — Costs, Storage and Activation
 
@@ -158,7 +158,7 @@ Activation and dismantling need no commands:
 3. Right-click the controller while holding the bound plate. **An unbound plate identifies the formation under your feet by itself** (it compares every structure its allow list admits and the nearest wins; on by default, switchable with **Server Config → Formations → Plate Auto-Detect**).
 4. Use the plate on an active controller again to dismantle it. You must be the owner or an operator; with **Server Config → Formations → Teammates Can Dismantle** on, the owner's friends may do it too.
 
-## Step 5 — Letting the Array React to People
+## Step 5 — Letting the Owner Be Affected Too
 
 To make an array do something to the owner's own side, use the top-level `entity_enter_action`, `entity_tick_action`, `entity_exit_action` (per entity) and `activate_action`, `tick_action`, `deactivate_action` (for the array itself). They are ordinary entity and block actions, so a formation is exactly as expressive as the action types are.
 
@@ -181,7 +181,7 @@ A useful opener: a sound on the way in and on the way out.
 
 Per-entity actions fire only for entities **actually inside the sphere** and only for loaded entities; an unloaded chunk produces a spurious leave-and-enter pair, so enter actions should be **idempotent** — replaying a sound is fine, handing out a reward again is not.
 
-## Step 6 — Verify
+## Verify
 
 ```text
 /mxt registries validate

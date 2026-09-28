@@ -122,4 +122,4 @@ ServerEvents.loaded(event => {
 - [KubeJS](./index.md) — how the integration fits together.
 - [KubeJS API Reference](./api-reference.md) — the script objects, their methods and the events.
 - [KubeJS Examples](./examples.md) — complete scripts.
-- [Create Items with KubeJS and Bind Them](../tutorial/create-items-with-kubejs.md) — the same material as a step-by-step walkthrough.
+- [Create Items and Bind Actions with KubeJS](../tutorial/create-items-with-kubejs.md) — the same material as a step-by-step walkthrough.

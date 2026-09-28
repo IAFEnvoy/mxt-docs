@@ -88,4 +88,4 @@ An operation that only makes sense on the server refuses to run from a client sc
 - [KubeJS overview](/en/kubejs/index) — when you need a script at all, and how content is registered.
 - [Items and Bindings](/en/kubejs/items) — attach the items a script registers to the binding tables.
 - [Examples](/en/kubejs/examples) — complete scripts that combine several objects.
-- Full walkthrough: [Create Items with KubeJS](/en/tutorial/create-items-with-kubejs).
+- Full walkthrough: [Create Items and Bind Actions with KubeJS](/en/tutorial/create-items-with-kubejs).

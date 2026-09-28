@@ -233,7 +233,7 @@ A failure settlement is **two independent rolls**: first `input_return_ratio` de
 
 The **cancel** button does **not** go through this settlement. It goes through a cancellation policy (by default the session's locked materials go back into the input slots), but `fail_action` still runs — cancelling counts as having produced nothing. That policy is a Java-side seam, so a data pack cannot change it.
 
-## Step 6 — Verify
+## Verify
 
 ```text
 /give @s mxt:forging_table

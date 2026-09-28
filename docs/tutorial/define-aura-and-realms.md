@@ -15,7 +15,7 @@ description: "用 JSON 搭建核心修炼循环：一个灵气、一个元素、
 
 :::
 
-## 循环的形状
+## 核心循环的形状
 
 ```text
 aura_zone / block_aura        the world supplies aura per chunk
@@ -246,7 +246,7 @@ realm_stage chain             progress + conditions + costs → next realm
 - `biomes` 与 `dimensions` 决定模板在哪里生效；`#minecraft:is_overworld` 覆盖主世界的全部群系。维度级绑定优先于群系级，两者都低于手动区域和阵法。
 - `cultivate_condition` 是环境自己给修炼加上的条件；它默认恒为真，想让某处要求浓度就在区域里写 `mxt:aura_range`。行为自己的 `start_condition`/`tick_condition` 是同一个判定的另一侧。
 
-灵气环境的深度值得单独一篇页面——那就是[搭建灵气环境](./aura-environment.md)，你会在那里加入更浓的区域、方块来源、物品燃料以及客户端的雾效和 HUD。
+灵气环境的深度值得单独一篇页面——那就是[定义灵气环境](./aura-environment.md)，你会在那里加入更浓的区域、方块来源、物品燃料以及客户端的雾效和 HUD。
 
 ## 第 6 步 —— 名称
 
@@ -269,17 +269,17 @@ realm_stage chain             progress + conditions + costs → next realm
 
 定义自带文本字段时用的是**同一个键**：`quality` 的 `name` / `description` 省略时拿到 `quality.mxt.<命名空间>.<路径>`（描述再加 `.description`，例如 `mxt_test:poor` 是 `quality.mxt.mxt_test.poor`），`realm_stage` 用整数写法声明子境界时拿到 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`。除了 `quality` 的 `description`（品质名下面那一行），这些字段目前只被存储与读取，还没有地方绘制它们。
 
-## 第 7 步 —— 加载与校验
+## 在游戏里验证
 
 数据包注册表在世界加载时读取，所以只执行 `/reload` 不够：退回标题界面重新打开世界（或重启服务器），并留意日志里的 Codec 错误。无法解码的文件会让世界加载不了，所以如果世界打不开，先读日志里最后一条错误并修好那个文件。
 
 ```text
-(load the world again)
-/mxt registries validate          → registries loaded, no errors
-/mxt registries list              → mxt:resource=1, mxt:aura=1, mxt:realm_stage=3, mxt:element=1, mxt:cultivate_action=1, mxt:aura_zone=1, … (every registry the mod registers is listed, most of them empty)
+（重新打开世界）
+/mxt registries validate          → 注册表已加载，没有错误
+/mxt registries list              → mxt:resource=1, mxt:aura=1, mxt:realm_stage=3, mxt:element=1, mxt:cultivate_action=1, mxt:aura_zone=1, …（本模组注册的每张表都会列出，多数为空）
 /mxt resource example:qi          → 0
-/mxt aura query example:qi        → the aura inventory of your chunk
-/mxt cultivate status             → the selected behaviour and the progress per aura
+/mxt aura query example:qi        → 你所在区块的灵气库存
+/mxt cultivate status             → 选中的法门与各灵气下的进度
 ```
 
 然后在游戏里：
@@ -309,6 +309,6 @@ realm_stage chain             progress + conditions + costs → next realm
 
 ## 接下来
 
-- [做一门双修功法](./dual-cultivation.md) —— 在同一个包上再加一条"身边有人才出成果"的修炼法门。
-- [搭建灵气环境](./aura-environment.md) —— 让浓度随地点、方块和时间变化，并把它放到 HUD 上。
+- [编写双修功法](./dual-cultivation.md) —— 在同一个包上再加一条"身边有人才出成果"的修炼法门。
+- [定义灵气环境](./aura-environment.md) —— 让浓度随地点、方块和时间变化，并把它放到 HUD 上。
 - [resource（资源）](../datapack/json/resource.md)与 [realm_stage（境界阶段）](../datapack/json/realm_stage.md) —— 所有剩下的字段，包括资源条、换算和天劫。

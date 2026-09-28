@@ -15,7 +15,7 @@ Read [Datapack Overview](../datapack/overview.md) first if you have not yet. It 
 
 :::
 
-## The Shape of the Loop
+## The Shape of the Core Loop
 
 ```text
 aura_zone / block_aura        the world supplies aura per chunk
@@ -246,7 +246,7 @@ Without an aura zone the world contains no aura, so there is nothing for the med
 - `biomes` and `dimensions` decide where the template applies; `#minecraft:is_overworld` covers every Overworld biome. A dimension-level binding beats a biome-level one, and both sit below manual areas and formations.
 - `cultivate_condition` is the condition the environment itself puts on cultivation; it defaults to always true, and a zone that wants to require a concentration writes `mxt:aura_range` here. The action's own `start_condition`/`tick_condition` are the other side of the same test.
 
-The aura environment has enough depth to deserve its own page — that is [Build the Aura Environment](./aura-environment.md), where you will add denser zones, block sources, item fuel and the client-side fog and HUD.
+The aura environment has enough depth to deserve its own page — that is [Define the Aura Environment](./aura-environment.md), where you will add denser zones, block sources, item fuel and the client-side fog and HUD.
 
 ## Step 6 — Names
 
@@ -269,7 +269,7 @@ The pattern is always `<category>.<registry namespace>.<namespace>.<path>`, wher
 
 A definition whose text field is omitted uses the **same key**: `quality`'s `name` / `description` read as `quality.mxt.<namespace>.<path>` (the description adds `.description`, so `mxt_test:poor` is `quality.mxt.mxt_test.poor`), and a `realm_stage` counting its layers in an integer reads `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`. Apart from `quality`'s `description` (the line under the quality name), those fields are stored and read today but nothing draws them yet.
 
-## Step 7 — Load and Verify
+## Verify
 
 Data pack registries are read while the world loads, so `/reload` is not enough: leave to the title screen and open the world again (or restart the server) and watch the log for codec errors. A file that cannot be decoded stops the world from loading, so if the world refuses to open, read the last error in the log and fix that file first.
 
@@ -309,6 +309,6 @@ Then, in game:
 
 ## Next
 
-- [Write a Dual Cultivation Technique](./dual-cultivation.md) — add a method to the same pack that only yields while somebody is beside you.
-- [Build the Aura Environment](./aura-environment.md) — make the concentration vary by place, block and time, and put it on the HUD.
+- [Write a Dual Cultivation Method](./dual-cultivation.md) — add a method to the same pack that only yields while somebody is beside you.
+- [Define the Aura Environment](./aura-environment.md) — make the concentration vary by place, block and time, and put it on the HUD.
 - [Resource](../datapack/json/resource.md) and [Realm Stage](../datapack/json/realm_stage.md) — every remaining field, including resource bars, conversions and tribulations.

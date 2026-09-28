@@ -1,9 +1,9 @@
 ---
-title: Write a Dual Cultivation Technique
+title: Write a Dual Cultivation Method
 description: "A cultivation method that only yields while somebody is beside you: how the test is assembled, how both bodies get in, what happens when one walks away, and how to check it in game."
 ---
 
-# Write a Dual Cultivation Technique
+# Write a Dual Cultivation Method
 
 This page follows [Define Aura and Realms](./define-aura-and-realms.md): that one built the single-body cultivation loop, this one adds a method to the same pack that **only yields results while somebody is nearby**. The framework grants dual cultivation no bonus of its own — it is just a test, and how much faster, how much it costs and what it gives are yours to write.
 
@@ -55,7 +55,7 @@ The inner `mxt:target_condition` applies an **entity condition** to the candidat
 
 Note that `mxt:main_hand_item` only reads the **main hand**: a manual in the off hand does not count, and an empty hand is false.
 
-## Step 2 — Never Put "My Partner Is Cultivating" in the Test
+## Step 2 — Keeping "My Partner Is Cultivating" Out of the Test
 
 This is the one thing that is easy to get wrong on this method. `start_condition` and `cultivate_condition` are asked **while the method is being picked** (can a body sit down, and would sitting down yield anything), while "my partner is cultivating too" is necessarily false before anybody has sat down:
 
@@ -80,7 +80,7 @@ So "can we share in the results right now" has to ask **what the other body hold
 
 Without this part, dual cultivation is "each cultivates alone, only somebody has to be around"; with it, it is "two bodies settle in together, and one leaving ends the other".
 
-## Step 3 — A Place to Sit, If You Want One
+## Step 3 — Using start_condition When You Need a Place
 
 A requirement like "you have to be sitting on a cushion" goes in `start_condition`, which decides only whether a body can sit down and is not asked again afterwards:
 
@@ -93,9 +93,9 @@ A requirement like "you have to be sitting on a cushion" goes in `start_conditio
 
 The tag file goes at `data/example/tags/block/meditation_seats.json` and lists the blocks you allow. For "riding something" instead, use `mxt:riding` around a bi-entity condition shaped exactly like the inner part of `mxt:partner`.
 
-## Step 4 — Where Both Bodies Get the Manual
+## Step 4 — Where Both Manuals Come From
 
-The test asks whether the stack in hand is a technique manual, so both bodies need one in the main hand. A manual's identity is the `mxt:technique` component on the stack, no dedicated item required — the technique the pack already has will do:
+The test asks whether the stack in hand is a technique manual, so both bodies need one in the main hand. A manual's identity is the `mxt:technique` component on the stack, no dedicated item required — the technique the pack already has is enough:
 
 ```mcfunction
 give @p mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
@@ -107,7 +107,7 @@ To pin it to "the manual of that one technique", give the technique a [technique
 { "type": "mxt:item_id", "item": "example:dual_manual" }
 ```
 
-## Step 5 — Make Pairing Up Worth It
+## Step 5 — Raising the Yield
 
 Two ready-made outlets, both in the same definition:
 

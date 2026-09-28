@@ -122,4 +122,4 @@ ServerEvents.loaded(event => {
 - [KubeJS 总览](/kubejs/index) —— 这个桥接整体怎么用。
 - [KubeJS API 参考](/kubejs/api-reference) —— 脚本对象、方法与事件。
 - [综合示例](/kubejs/examples) —— 完整脚本。
-- [用 KubeJS 创建物品](/tutorial/create-items-with-kubejs) —— 同样的材料，走一遍分步教程。
+- [KubeJS 创建物品并绑定行为](/tutorial/create-items-with-kubejs) —— 同样的材料，走一遍分步教程。

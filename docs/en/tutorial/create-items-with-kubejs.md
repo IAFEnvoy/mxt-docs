@@ -1,13 +1,13 @@
 ---
-title: Create Items with KubeJS and Bind Them
-description: Register real items in a KubeJS startup script, then attach MiXianTu gameplay to them with the item, pill, weapon and technique binding tables.
+title: Create Items and Bind Actions with KubeJS
+description: "Register real items in a KubeJS startup script, then hang MiXianTu's rules and behaviour on them with four binding tables."
 ---
 
-# Create Items with KubeJS and Bind Them
+# Create Items and Bind Actions with KubeJS
 
-MiXianTu does not create items. It creates **rules for items**, and those rules always point at a real, registered item ID, whether that item comes from vanilla, another mod or a KubeJS script.
+MiXianTu does not create items. What it creates is **rules for items**, and those rules always point at a real, registered item ID — whether that item comes from vanilla, another mod or a KubeJS script.
 
-That split is deliberate: an item has to exist before a data pack can refer to it, and the two are registered at different times. Both end up in the same place, though — an item registered by a script is only visible to the game after a restart, and the binding tables are data pack registries that are read when the world loads:
+That split is deliberate: before a data pack can refer to an item, the item has to exist, and the two are registered at different moments. They do meet in the same place in the end, though — an item registered by a script only becomes visible to the game after a restart, while the binding tables are data pack registries read when the world loads:
 
 ```text
 kubejs/startup_scripts/          the item itself      (game restart)
@@ -19,7 +19,7 @@ actions, conditions, quality, aura, tooltips
 
 ::: warning
 
-Do not invent a `mxt:item`, `mxt:pill` or `mxt:weapon` file. Those registries do not exist. Every binding table matches items that are already registered. A single unknown item id fails the load; an unknown id written inside an array is dropped with a log line instead, and the rest of the file still loads — so a typo in an array loses the match silently.
+Do not invent `mxt:item`, `mxt:pill` or `mxt:weapon` files out of thin air. Those registries do not exist. Every binding table matches items that are already registered. A single unknown item ID fails the load; an unknown ID written inside an array only logs one line and is then dropped, with the rest of the file loading as usual — so a typo inside an array loses that match silently.
 
 :::
 
@@ -27,20 +27,21 @@ Do not invent a `mxt:item`, `mxt:pill` or `mxt:weapon` file. Those registries do
 
 | File | Purpose |
 | --- | --- |
-| `kubejs/startup_scripts/mxt_items.js` | Four items: a qi pill, a spirit root pellet, a sword and a manual. |
-| `kubejs/server_scripts/mxt_recipes.js` | Recipes for them. |
-| `data/example/mxt/quality/common.json`, `refined.json`, `flawless.json` | Quality tiers: the name and modifiers, plus the ladder's name and each tier's next one. |
-| `data/example/mxt/element/fire.json` | Element used by the spirit root. |
+| `kubejs/startup_scripts/mxt_items.js` | Four items: a qi gathering pill, a spirit root pellet, a sword and a technique manual. |
+| `kubejs/server_scripts/mxt_recipes.js` | Their recipes. |
+| `data/example/mxt/element/fire.json` | The element the spirit root uses. |
 | `data/example/mxt/spirit_root/fire_root.json` | What the pellet grants. |
 | `data/example/mxt/technique/azure_breath.json` | What the manual teaches. |
-| `data/example/mxt/item_binding/qi_pill.json`, `root_pellet.json` | Consumption behaviour. |
-| `data/example/mxt/pill_binding/qi_pill.json` | Pill toxicity. |
-| `data/example/mxt/weapon_binding/spirit_sword.json` | Weapon attribute modifiers and combat actions. |
+| `data/example/mxt/item_binding/qi_pill.json`, `root_pellet.json` | Generic bindings: what using this item does. |
+| `data/example/mxt/pill_binding/qi_pill.json` | Pill-only fields: toxicity and overdose. |
+| `data/example/mxt/weapon_binding/spirit_sword.json` | Weapon attribute modifiers and combat behaviour. |
 | `data/example/mxt/technique_binding/azure_manual.json` | How that technique is read, and which item the mod generates as its carrier. |
+
+Quality tiers are not on this page: they have a chain and upgrade rules of their own, see [Define a Quality Chain](./define-a-quality-chain.md). The four items here use the three tiers built there.
 
 ## Step 1 — Register the Items
 
-Items are registered once, at startup, so this script belongs in `kubejs/startup_scripts/`:
+Items are registered only once, at startup, so this script belongs in `kubejs/startup_scripts/`:
 
 ```js
 // kubejs/startup_scripts/mxt_items.js
@@ -62,11 +63,11 @@ StartupEvents.registry('item', event => {
 })
 ```
 
-- Items registered without a namespace live in `kubejs`, so `event.create('qi_pill')` produces `kubejs:qi_pill`. That is the ID every binding must use.
-- `.food(...)` is required for a pill: `pill_binding` only matches edible items.
+- Items registered without a namespace live under `kubejs`, so `event.create('qi_pill')` produces `kubejs:qi_pill`. Every binding has to use that ID.
+- A pill must have `.food(...)`. The binding table itself does not require an item to be edible, but **the generic binding's actions only run at the end of one full use cycle**, and a plain item has no use cycle; `pill_binding` also only matches edible items. A pill without `.food(...)` looks perfectly fine and its actions never run.
 - Editing this file needs a **game restart**: startup scripts run before the game registers items, and `/reload` never re-runs them.
 
-Recipes are not a registry, so those do reload with `/reload` — the script below registers them from a server script:
+Recipes are not a registry, so they do reload with `/reload` — the script below registers them from a server script:
 
 ```js
 // kubejs/server_scripts/mxt_recipes.js
@@ -83,46 +84,24 @@ ServerEvents.recipes(event => {
 })
 ```
 
-## Step 2 — Quality Tiers
+## Step 2 — What Each of the Four Binding Tables Covers
 
-An `quality` is a tier an item can carry. Its **order, entry tier, membership and upgrade path are all written on the tiers themselves** — `next` is the tier above, `quality` names the ladder and `upgrade_costs` is the price of that step:
+All four tables claim items through `items`, but they do different jobs and their fields barely overlap:
 
-```json
-// data/example/mxt/quality/common.json
-{
-  "next": "example:refined",
-  "upgrade_costs": [{ "id": "example:qi", "amount": 20 }]
-}
-```
+| Table | What it covers | Main fields beyond claiming items |
+| --- | --- | --- |
+| `item_binding` | The generic "what happens when this item is used up" | `conditions`, `actions` |
+| `pill_binding` | Toxicity and overdose, which only pills have | `on_consume`, `on_overdose`, `toxicity_gain`, `toxicity_threshold`, `toxicity_after_overdose`, `max_uses`, `cooldown` |
+| `weapon_binding` | Attributes and actions while it is used as a weapon | `attributes`, `use_action`, `attack_action`, `tick_action` |
+| `technique_binding` | How the technique is read, and which item is its carrier | `technique`, `carrier_item`, `learn_time`, `hold_animation`, `hold_sound` |
 
-```json
-// data/example/mxt/quality/refined.json
-{
-  "quality": "example:pill",
-  "next": "example:flawless",
-  "value_multiplier": {
-    "description": "quality.mxt.example.refined.value",
-    "modifier": 1.25
-  },
-  "alchemy_modifier": {
-    "description": "quality.mxt.example.refined.alchemy",
-    "modifier": 1.1
-  }
-}
-```
+Three rules they share:
 
-```json
-// data/example/mxt/quality/flawless.json
-{}
-```
+- `items` accepts a single ID, a single tag (`"#example:pills"`) or a mixed array, so one file can cover a whole family of items.
+- Every table decides who wins by `priority`, and **only one definition per item per table ever runs** (the one with the highest priority) — it is not "all of them stacked". Two definitions in the same table can both be written correctly and still not both execute.
+- When a table's `items` is missing, or matches nothing, that definition never applies and **no error is reported**.
 
-- A binding **declares no ladder**: the name is written on the `quality` entry itself (on `refined` above), which puts all three tiers on `example:pill`, and the binding only has to claim the items.
-- **The entry tier is automatically the one nothing points at** (here `common`), and it is also the default tier: with neither a `mxt:quality` component nor a forge result an item falls to it.
-- `upgrade_costs` is what **this tier to the next one** costs and requires (the condition field is `upgrade_condition`, `mxt:always` when omitted): here common to refined spends 20 `example:qi` through the global cost transaction, **atomic as a whole** — a step that cannot be paid moves nothing and writes no tier. To make a tier the top, leave its `next` out; a tier that writes `next` without `upgrade_costs` still has that step, at an empty price.
-- Both `name` and `description` may be omitted: they are then generated from the entry id as `quality.mxt.<namespace>.<path>` (and `…description`), and `description` on a modifier appears in the item tooltip only when it is written — omit it and that line is simply not drawn. `modifier` is the value used at runtime: `value_multiplier` scales the item's currency unit value, `forging_modifier` divides the extra steps the forging quality is read from, and `alchemy_modifier` divides the brewing duration. Each reads the quality of the stack it settles — for forging and alchemy the **lowest** quality among the session's own materials — and a missing or unusable modifier behaves as `1`.
-- One name per ladder, so do not write two different names on one chain; a cycle or a pointer at an entry that does not exist is reported when the server rebuilds the data pack index.
-- To give one stack a tier of its own (a sword that simply is `example:refined`), write `mxt:quality="example:refined"` on that stack: the component holds a **whole quality object**, so it decides both the tier and the ladder it belongs to, and the binding table needs no change.
-- A ladder that only orders tiers, with no upgrades at all, simply leaves every `upgrade_costs` out; to make a tier the top, leave its `next` out.
+When the hooks run, and how conditions are written and ordered, get a page of their own: [Bind Actions with KubeJS](./bind-actions.md).
 
 ## Step 3 — Generic Bindings
 
@@ -144,11 +123,11 @@ An `quality` is a tier an item can carry. Its **order, entry tier, membership an
 }
 ```
 
-- `items` accepts one ID, one tag (`"#example:pills"`) or a mixed array, so a single file can cover a whole family of items.
-- `conditions` gate the use. An entry written as a plain condition is silent; an entry written as `{condition, description}` is shown in the tooltip with a green `✓` or a red `✗`, which is the cheapest way to tell a player why an item refuses to work.
-- `actions` run in order when the item is consumed or the binding event fires. Any [entity action](../datapack/types/action/entity_action_types.md) works here.
+- `conditions` decides whether the item can be used. An entry written as a plain condition is silent; an entry written as `{condition, description}` is drawn in the item tooltip as a green `✔` or a red `✖`, and `description` is a **language key** (`condition.example.needs_qi_chain` in the example above). If you want to know why a player cannot use an item, this is the cheapest way to find out.
+- `conditions` are checked once, at the "start using" gate. **They are not re-checked when the actions run**, so a condition that changes after the use began neither cancels this settlement nor causes a second one.
+- `actions` is an **array** (a single object is not allowed here) and runs in order at the end of one full use cycle. For a pill that means "after it has been eaten". Any entity action can go here.
 
-A pellet that hands out a spirit root:
+A pellet that grants a spirit root:
 
 ```json
 // data/example/mxt/element/fire.json
@@ -177,11 +156,11 @@ A pellet that hands out a spirit root:
 }
 ```
 
-The spirit root is what makes the fire element matter: it changes the cultivation multiplier, and its `element_ability_modifier` scales abilities whose `element_affinity` includes fire — that damage side is applied automatically by the [damage pipeline](../technical/damage.md), so a skill definition only has to write its base number.
+The spirit root is what makes the fire element mean anything: it changes the cultivation multiplier, and its `element_ability_modifier` scales any ability whose `element_affinity` includes fire — the damage side is multiplied in automatically by the [damage pipeline](/en/technical/damage), so an ability definition only has to write its base number. The full spirit root and physique fields are in [Define Spirit Roots and Physiques](./define-spirit-roots-and-physiques.md).
 
 ## Step 4 — Pill Bindings
 
-A pill binding adds the fields that only pills have. It is a separate table because none of its fields are shared with the other bindings.
+A pill binding adds the fields that only pills have. It is a table of its own because not one of its fields is shared with the other bindings.
 
 ```json
 // data/example/mxt/pill_binding/qi_pill.json
@@ -199,11 +178,11 @@ A pill binding adds the fields that only pills have. It is a separate table beca
 }
 ```
 
-- `toxicity_gain` accumulates on the player; when it passes `toxicity_threshold`, `on_overdose` runs and toxicity is reset to `toxicity_after_overdose` instead of `0`, so repeated overdosing keeps hurting.
-- The default threshold is `Double.MAX_VALUE`, which means "never overdoses". Set it deliberately.
-- `on_consume` runs after the normal consumption finishes, independently of the `item_binding` actions.
+- `toxicity_gain` accumulates on the player; when it goes past `toxicity_threshold`, `on_overdose` runs and toxicity is reset to `toxicity_after_overdose` rather than to `0`, so repeated overdosing keeps hurting.
+- The default threshold is `Double.MAX_VALUE`, which means "never overdoses". Set it on purpose.
+- `on_consume` runs after the normal consumption flow has finished, independently of the `item_binding` actions: when one pill hits both tables, both run — the `item_binding` actions first, `on_consume` after them, and `on_overdose` once toxicity has crossed the line.
 
-Both tables can be used on the same item; they carry different fields and neither overrides the other.
+Both tables can be used on the same item; they carry different fields, and neither overrides the other.
 
 ## Step 5 — Weapon Bindings
 
@@ -224,16 +203,14 @@ Both tables can be used on the same item; they carry different fields and neithe
 }
 ```
 
-- A weapon's own attack damage and attack speed are written as `attributes` entries too (`minecraft:attack_damage` / `minecraft:attack_speed`), and they are **added on top of** the modifiers the item already ships with; changing the base item's own numbers means editing its `minecraft:attribute_modifiers` (a component patch or KubeJS), because this layer never replaces them.
-- `use_action` is an entity action run on right click; `attack_action` is a bi-entity action run on a successful hit, so `mxt:target_action` here applies an extra 3 damage to the target.
-- `tick_action` runs every tick while the weapon is held, which is the place for upkeep, particles or aura drain.
-- `attributes` entries have the vanilla `AttributeModifier` shape; an entry with a `value` formula is recalculated every tick.
-
-The `example:weapon` chain from Step 2 defines which qualities this weapon may carry, and the tier it falls to when no override component is written.
+- A weapon's own attack damage and attack speed are written as `attributes` entries too (`minecraft:attack_damage` / `minecraft:attack_speed`), and they are **added on top of** the modifiers the item itself carries; to change the numbers the base item ships with you edit its `minecraft:attribute_modifiers` (a component patch or KubeJS), because this layer does not replace them.
+- `use_action` is the entity action run on right click; `attack_action` is the bi-entity action run on a successful hit, so the `mxt:target_action` here deals 3 extra damage to the target; `tick_action` runs every tick while the weapon is held, and is the place for upkeep, particles or aura drain.
+- All three hooks are **main hand only**, and `use_action` does not fire while you are aiming at a block or a creature (that right click never takes the "use item" route at all). If you want them to work in the off hand, only `attributes` will apply.
+- Entries in `attributes` have the same shape as vanilla attribute modifiers; an entry with a `value` formula is recalculated every tick.
 
 ## Step 6 — Techniques and Manuals
 
-A technique is the logic; `technique_binding` describes how one is **read** — hold length, pose, sound, quality chain and conditions — and names the item the mod generates as its carrier.
+A technique is the logic; `technique_binding` describes **how that technique is read** — hold duration, pose, sound, quality chain and conditions — and declares which item the mod generates as its carrier. It has **no action hooks at all**, which is where it differs from the other three tables.
 
 ```json
 // data/example/mxt/technique/azure_breath.json
@@ -261,50 +238,55 @@ A technique is the logic; `technique_binding` describes how one is **read** — 
 }
 ```
 
-**Whether a stack is a manual comes from its data component first, and from this file second.** The `carrier_item` above only tells the mod which item to generate as this technique's carrier (under `/picker mxt:technique`; **the creative tab does not generate carriers**); what actually teaches the technique is the `mxt:technique` component on the stack, so take the manual out with the item component syntax:
+**Whether a stack is a manual is decided by the component on the stack first, and by this table only second.** The `carrier_item` above only asks the mod to generate a carrier for this technique (under `/picker mxt:technique`; **the creative inventory does not generate carriers**); what actually teaches the technique is the `mxt:technique` component on the stack, so a manual is handed out with the item component syntax:
 
 ```mcfunction
 give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 ```
 
-Right-clicking the manual attempts to learn `example:azure_breath`. Every learned technique stays active at the same time, and a stack carrying the component claims the interaction even when learning fails, so a player cannot bypass the technique's own `learn_condition`, exclusivity tags or the learning event. `items` is the **optional second route**: write it into the declaration (`"items": "kubejs:azure_manual"`) and that item counts as a manual for this technique **without any component**, while the stack's `mxt:technique` component still wins. It was deleted on 2026-09-22 and came back as optional on 2026-09-26.
+Right-clicking the manual attempts to learn `example:azure_breath`. Every technique already learned stays active at the same time, and a stack carrying the component claims the interaction even when learning fails, so a player cannot get around the technique's own `learn_condition`, its exclusivity tags or the learning event. `items` is the **optional second route**: write it into the declaration (`"items": "kubejs:azure_manual"`) and that item counts as a manual for this technique **even with no component**, while the `mxt:technique` component on the stack still wins.
 
-## Step 7 — Load and Verify
+## Verify
 
 ```text
 (restart the game)                     → the four items now exist
 (load the world again)                 → the bindings load
 /mxt registries validate               → no codec errors
-/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, mxt:quality=2, …
+/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, …
 ```
 
-Both halves need their own restart: KubeJS registers items at startup, and the binding tables are data pack registries that Minecraft reads while the world loads. `/reload` does neither — it only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts.
+The two halves each need their own restart: KubeJS registers items at startup, and the binding tables are data pack registries that Minecraft reads while the world loads. `/reload` does neither — it only refreshes recipes, loot tables, advancements, functions and KubeJS server scripts.
 
 Then in game:
 
-1. `/give @s kubejs:qi_pill`. The tooltip shows a quality line and, when the condition is described, a coloured `✓` or `✗`. With `mxt:has_realm` unmet, the pill is refused.
-2. Cultivate until you have entered the chain, then eat a pill: qi rises by `25`, and pill toxicity rises by `10`. `/mxt attachment status` shows the accumulated toxicity.
+1. `/give @s kubejs:qi_pill`. The tooltip draws a quality line, and a described condition also draws a coloured `✔` or `✖`. While `mxt:has_realm` is unmet, the pill is refused.
+2. Cultivate until you have entered the realm chain, then eat one pill: aura goes up by `25` and pill toxicity by `10`. `/mxt attachment status` shows the accumulated toxicity.
 3. Eat ten of them and the overdose line runs.
 4. Eat a `kubejs:root_pellet`: the fire spirit root is granted, and `/mxt attachment status` lists it. The `+25%` cultivation multiplier applies from the next cultivation tick.
-5. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]`, then right-click it and check that the technique is learned and its `+2 max health` appears. A stack from a plain `/give @s kubejs:azure_manual` (or from the creative search tab) carries **no component**: right-clicking it does nothing and no technique shows in its tooltip.
-6. Hold `kubejs:spirit_sword` and check the attack damage and speed in its tooltip, then hit something to see the extra damage from `attack_action`.
+5. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]`, then right-click it and confirm the technique was learned and its `+2 max health` has appeared. A stack from a plain `/give @s kubejs:azure_manual` (or taken from the creative inventory as `kubejs:azure_manual`) carries **no component**: right-clicking it does nothing and no technique shows up in its tooltip.
+6. Hold `kubejs:spirit_sword`, check the attack damage and speed in its tooltip, then hit any target and watch the extra damage `attack_action` deals.
 
 ## Common Mistakes
 
 | Symptom | Cause |
 | --- | --- |
-| The world refuses to load with an unknown item | A binding names an item id that is not registered. As a single id this fails the load; inside an array the unreadable element is dropped with a log line instead. |
-| The rule silently never matches | `example:qi_pill` was written while the script produced `kubejs:qi_pill` (or any other typo) inside an `items` array, so that element was dropped and the file loaded without it. Use the real registered ID. |
-| The item has no behaviour at all | The rule was put in a binding table that does not match the item, or that stack resolves no quality at all (no `mxt:quality` component, no definition default and no spirit herb declaration). |
-| The quality ladder does not walk | A pointer at an entry that does not exist, a cycle, two different names on one ladder, or a tier that writes `quality` but cannot be reached from its entry is reported when the server rebuilds the data pack index. |
-| A pill cannot be eaten | `pill_binding` only matches edible items, so the item needs `.food(...)`. |
+| The world refuses to load with an unknown item | Some binding wrote an item ID that is not registered. As a single ID it fails the load; inside an array the element that cannot be read is dropped and one line is logged. |
+| The rule silently never matches | `example:qi_pill` was written inside an `items` array while the script produces `kubejs:qi_pill` (or any other typo), so that element was dropped and the file loaded as usual. Use the ID that is really registered. |
+| Two definitions of the same table on one item, and only one applies | Every table takes exactly one entry, chosen by `priority`. To run both, merge them into one file or write them as one array. |
+| The item has no behaviour at all | The rule was put into a binding table that does not match this item, or the quality of that stack cannot be resolved. |
+| A pill's `actions` never run | The item has no use cycle. Give it `.food(...)`, or write it a `minecraft:consumable` component. |
+| `conditions` is clearly false and the actions still ran | Conditions are checked once, when use starts, and not re-checked after that. |
+| Some hooks are written and do nothing | The hook was written into a table that does not declare it (for instance `use_action` in `item_binding`). An undeclared key is ignored silently. |
+| The check marks in the tooltip are not what you expected | A quality can carry conditions of its own, so that `✖` may come from the quality rather than from the binding. |
 | New items do not appear after `/reload` | Item registration happens at startup; restart the game. |
-| Edited bindings do not change anything | `/reload` does not re-read data pack registries; load the world again. |
-| The manual has no effect but also no error | First check whether the stack carries the `mxt:technique` component — a plain item without it teaches nothing. If it does, check whether learning failed instead: `learn_condition`, an already-learned duplicate or an exclusivity conflict. |
-| The `items` field on the manual does nothing | `items` is the **optional** second route, and the stack's `mxt:technique` component still wins. Every item id in it has to match the id the script really registered (do not drop the `kubejs:` namespace), or nothing claims that stack. |
+| Edited bindings change nothing | `/reload` does not re-read data pack registries; load the world again. |
+| The manual has no effect and no error | First check whether that stack carries the `mxt:technique` component — a plain item without it teaches nothing. If it does, look at whether learning failed instead: `learn_condition`, a technique already learned, or an exclusivity conflict. |
+| The manual's `items` field does nothing | `items` is the **optional** second route, and the `mxt:technique` component on the stack still wins. Every item id written there has to match the id the script really registered (do not drop the `kubejs:` namespace), or it claims nothing. |
 
 ## Next
 
-- [Add an Ability](./add-an-ability.md) — give these items something to do with the aura they store.
+- [Bind Actions with KubeJS](./bind-actions.md) — which hooks each of the four tables has, when they run, and how conditions and their order work.
+- [Define a Quality Chain](./define-a-quality-chain.md) — how the three tiers are written, and which tier carries the price of the step up.
+- [Define an Ability](./add-an-ability.md) — give these items somewhere to spend the aura they store.
 - [Item Binding](../datapack/json/item_binding.md), [Pill Binding](../datapack/json/pill_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) — the full field lists.
-- [KubeJS API Reference](../kubejs/api-reference.md) — the script objects, if you want the rules themselves in a script.
+- [KubeJS API Reference](../kubejs/api-reference.md) — the script objects, if you want to write the rules themselves in a script.

@@ -47,7 +47,7 @@ The mod walks the `mxt:technique` registry and **generates one carrier per techn
 
 To use an item of your own as a manual, both routes work: write `carrier_item: "namespace:item"` and let the picker generate that stack with the `mxt:technique` component already on it; or, more directly, put the item into the declaration's `items`, and that stack is the manual **without any component**.
 
-How long a read takes, which pose it plays and which sound it makes come from the **declaration**; a stack that should read differently writes the `mxt:technique_reading` component (same keys as the table above, all optional, overriding the declaration **field by field**). Which quality ladder this family sits on is not decided here: the ladder's name is written on the `quality` entry itself, and every tier that names it, plus every tier below one that does, belongs to that ladder.
+How long a read takes, which pose it plays and which sound it makes come from the **declaration**; a stack that should read differently writes the `mxt:technique_reading` component (same keys as the table above, all optional, overriding the declaration **field by field**). Which quality ladder this family sits on is not decided here: the ladder's name is written on the `quality` entry itself — on the entry tier — and the runtime carries it along `next` to every tier above it.
 
 **A technique can have no declaration at all.** Declarations are matched by technique id, and a technique with no `technique_binding` file is still read, with the defaults: learn on the first right-click, default pose and sound, no quality chain, no conditions, the jade slip as carrier. Such a technique can still be learned through the component — it just reads in the plainest possible way.
 

@@ -1,9 +1,9 @@
 ---
-title: 用 KubeJS 创建物品
-description: 在 KubeJS 启动脚本里注册真实物品，再用物品、丹药、武器和功法绑定表把 MiXianTu 的玩法挂到它们身上。
+title: KubeJS 创建物品并绑定行为
+description: "在 KubeJS 启动脚本里注册真实物品，再用四张绑定表把 MiXianTu 的规则与行为挂到它们身上。"
 ---
 
-# 用 KubeJS 创建物品
+# KubeJS 创建物品并绑定行为
 
 MiXianTu 不创建物品。它创建的是**物品的规则**，而这些规则始终指向一个真实、已注册的物品 ID，无论该物品来自原版、其它模组还是 KubeJS 脚本。
 
@@ -23,20 +23,21 @@ actions, conditions, quality, aura, tooltips
 
 :::
 
-## 你要搭建的东西
+## 你要搭建什么
 
 | 文件 | 用途 |
 | --- | --- |
 | `kubejs/startup_scripts/mxt_items.js` | 四个物品：一枚聚气丹、一枚灵根丹、一把剑和一本功法手册。 |
 | `kubejs/server_scripts/mxt_recipes.js` | 它们的配方。 |
-| `data/example/mxt/quality/common.json`、`refined.json`、`flawless.json` | 品质档位：名字、修正，以及链名与每一档的下一档。 |
 | `data/example/mxt/element/fire.json` | 灵根使用的元素。 |
 | `data/example/mxt/spirit_root/fire_root.json` | 这枚丹药赋予什么。 |
 | `data/example/mxt/technique/azure_breath.json` | 手册传授什么。 |
-| `data/example/mxt/item_binding/qi_pill.json`、`root_pellet.json` | 消耗行为。 |
-| `data/example/mxt/pill_binding/qi_pill.json` | 丹药毒性。 |
+| `data/example/mxt/item_binding/qi_pill.json`、`root_pellet.json` | 通用绑定：使用这件物品会做什么。 |
+| `data/example/mxt/pill_binding/qi_pill.json` | 丹药专有的字段：丹毒与过量。 |
 | `data/example/mxt/weapon_binding/spirit_sword.json` | 武器属性修正与战斗行为。 |
 | `data/example/mxt/technique_binding/azure_manual.json` | 这门功法怎么被读，以及本体生成的载体用哪件物品。 |
+
+品质档位不在这页：它有自己的链与升级规则，见[定义品质链](./define-a-quality-chain.md)。这页的四件物品用那篇建立的三档。
 
 ## 第 1 步 —— 注册物品
 
@@ -63,7 +64,7 @@ StartupEvents.registry('item', event => {
 ```
 
 - 没有命名空间注册的物品位于 `kubejs`，所以 `event.create('qi_pill')` 产生 `kubejs:qi_pill`。所有绑定都必须使用这个 ID。
-- 丹药必须有 `.food(...)`：`pill_binding` 只匹配可食用物品。
+- 丹药必须有 `.food(...)`。绑定表本身不要求可食用，但**通用绑定的行为只在一次完整的使用周期结束时执行**，而普通物品没有使用周期；`pill_binding` 也只匹配可食用物品。没有 `.food(...)` 的丹药看起来一切正常，行为却永远不会跑。
 - 改这个文件需要**重启游戏**：启动脚本在游戏注册物品之前运行，`/reload` 永远不会重跑它们。
 
 配方不是注册表，所以它们确实会随 `/reload` 重载——下面的脚本在服务端脚本里注册配方：
@@ -83,46 +84,24 @@ ServerEvents.recipes(event => {
 })
 ```
 
-## 第 2 步 —— 品质档位
+## 第 2 步 —— 四张绑定表各自管什么
 
-`quality` 是物品可以携带的档位。品质的**顺序、入口档、成员资格与升级路径都写在档位自己身上**——上一档是 `next`，链名是字段 `quality`，那一步的代价是 `upgrade_costs`：
+四张表都靠 `items` 认领物品，但用途不同，字段也几乎不重叠：
 
-```json
-// data/example/mxt/quality/common.json
-{
-  "next": "example:refined",
-  "upgrade_costs": [{ "id": "example:qi", "amount": 20 }]
-}
-```
+| 表 | 管什么 | 认领之外的主要字段 |
+| --- | --- | --- |
+| `item_binding` | 通用的"用掉这件物品会怎样" | `conditions`、`actions` |
+| `pill_binding` | 只有丹药才有的丹毒与过量 | `on_consume`、`on_overdose`、`toxicity_gain`、`toxicity_threshold`、`toxicity_after_overdose`、`max_uses`、`cooldown` |
+| `weapon_binding` | 当武器用时的属性与动作 | `attributes`、`use_action`、`attack_action`、`tick_action` |
+| `technique_binding` | 这门功法怎么被读、载体用哪件物品 | `technique`、`carrier_item`、`learn_time`、`hold_animation`、`hold_sound` |
 
-```json
-// data/example/mxt/quality/refined.json
-{
-  "quality": "example:pill",
-  "next": "example:flawless",
-  "value_multiplier": {
-    "description": "quality.mxt.example.refined.value",
-    "modifier": 1.25
-  },
-  "alchemy_modifier": {
-    "description": "quality.mxt.example.refined.alchemy",
-    "modifier": 1.1
-  }
-}
-```
+三条共同规则：
 
-```json
-// data/example/mxt/quality/flawless.json
-{}
-```
+- `items` 接受单个 ID、单个标签（`"#example:pills"`）或混合数组，所以一个文件就能覆盖整个物品家族。
+- 每张表都按 `priority` 决定谁生效，**同一张表里对同一件物品只有一条定义会跑**（优先级最高的那条），不是"全部叠加"。两份同表定义都写对了也不会都执行。
+- 一张表的 `items` 没写、或写成匹配不到的东西时，那条定义永远不生效，而且**不会报错**。
 
-- 绑定里**不再声明链**：链名写在 `quality` 自己身上（上面写在 `refined` 上），这三档就都属于 `example:pill`，绑定只要认领物品即可。
-- **入口档自动是「没有任何一档指向它」的那一档**（这里就是 `common`），它同时就是默认档：没有 `mxt:quality` 组件、也没有锻造结果时，物品落到它上面。
-- `upgrade_costs` 写的是**从这一档往上一档**要付什么与要满足什么条件（条件的字段是 `upgrade_condition`，省略即 `mxt:always`）：这里从 `common` 升到 `refined` 要花 20 点 `example:qi`，走全局消耗事务，**整组原子**——付不出就一点不动，也不会写档。想让某一档当顶端就不写 `next`；写了 `next` 却没写 `upgrade_costs` 时那一步仍在，代价是空的。
-- `name` 与 `description` 都可以省略：省略时按条目 id 自动生成 `quality.mxt.<命名空间>.<路径>`（描述再加 `.description`），修正项上的 `description` 只有写了才会出现在物品 Tooltip 里（省略就不画那一行）。`modifier` 是运行时使用的数值：`value_multiplier` 缩放物品的货币单位价值，`forging_modifier` 用来除锻造品质读取的额外步骤数，`alchemy_modifier` 用来除酿造时长。三者都读取它所结算的那堆物品的品质——锻造和炼丹取该次会话自身材料中**最低**的品质——修正项缺失或不可用时按 `1` 处理。
-- 链名一条链上只写一次，别在两档上写不同的名字；成环或指向不存在的条目会在服务器重建数据包索引时报出来。
-- 想让某一堆单独定档（比如一把剑就是 `example:refined`），直接在那一堆上写 `mxt:quality="example:refined"`：组件装的是**整份品质对象**，所以它同时决定档位与所属的链，不必再动绑定表。
-- 只想用链来排序、不开升级，就把 `upgrade_costs` 全部省掉；想让某一档当顶端，就不写它的 `next`。
+钩子的执行时机、条件的写法与顺序另有一篇：[KubeJS 绑定行为](./bind-actions.md)。
 
 ## 第 3 步 —— 通用绑定
 
@@ -144,9 +123,9 @@ ServerEvents.recipes(event => {
 }
 ```
 
-- `items` 接受单个 ID、单个标签（`"#example:pills"`）或混合数组，所以一个文件就能覆盖整个物品家族。
-- `conditions` 决定能不能使用。写成裸条件的条目是静默的；写成 `{condition, description}` 的条目会在 Tooltip 里显示绿色 `✓` 或红色 `✗`，这是告诉玩家某件物品为什么不能用最省事的办法。
-- `actions` 在物品被消耗或绑定事件触发时按顺序执行。任何[实体行为](../datapack/types/action/entity_action_types.md)都可以放在这里。
+- `conditions` 决定能不能使用。写成裸条件的条目是静默的；写成 `{condition, description}` 的条目会在物品提示框里显示绿色的 `✔` 或红色的 `✖`，`description` 是**语言键**（上例就是 `condition.example.needs_qi_chain`）。想知道玩家为什么用不了这件物品，这是最省事的办法。
+- `conditions` 只在"开始使用"这道门上查一次。**行为执行时不复查**，所以开始使用之后条件发生变化，既不会撤销这一次结算，也不会补跑。
+- `actions` 是一个**数组**（这里不能写单个对象），在一次完整的使用周期结束时按顺序执行。对丹药来说就是"吃掉之后"。任何实体行为都可以放在这里。
 
 一枚赋予灵根的丹药：
 
@@ -177,7 +156,7 @@ ServerEvents.recipes(event => {
 }
 ```
 
-灵根才是让火元素变得有意义的东西：它改变修炼倍率，而它的 `element_ability_modifier` 会缩放 `element_affinity` 包含火的技能——伤害那一侧由[伤害管线](/technical/damage)自动乘上，技能定义里写基础数值就够了。
+灵根才是让火元素变得有意义的东西：它改变修炼倍率，而它的 `element_ability_modifier` 会缩放 `element_affinity` 包含火的技能——伤害那一侧由[伤害管线](/technical/damage)自动乘上，技能定义里写基础数值就够了。灵根与体质的完整字段见[定义灵根与体质](./define-spirit-roots-and-physiques.md)。
 
 ## 第 4 步 —— 丹药绑定
 
@@ -201,7 +180,7 @@ ServerEvents.recipes(event => {
 
 - `toxicity_gain` 在玩家身上累积；当它超过 `toxicity_threshold` 时执行 `on_overdose`，并把毒性重置为 `toxicity_after_overdose` 而不是 `0`，所以反复过量会持续受到伤害。
 - 默认阈值是 `Double.MAX_VALUE`，意思是"永不过量"。请有意地设置它。
-- `on_consume` 在正常消耗流程结束之后执行，与 `item_binding` 的行为彼此独立。
+- `on_consume` 在正常消耗流程结束之后执行，与 `item_binding` 的行为彼此独立：同一枚丹药同时命中两张表时两个都会跑，`item_binding` 的行为在前、`on_consume` 在后，`on_overdose` 在丹毒越线之后。
 
 两张表可以用在同一个物品上；它们携带不同的字段，谁也不覆盖谁。
 
@@ -225,15 +204,13 @@ ServerEvents.recipes(event => {
 ```
 
 - 武器自己的攻击力与攻速也写成 `attributes` 条目（`minecraft:attack_damage` / `minecraft:attack_speed`），它们是**加法叠加**在物品自身的修正之上；想改掉底材自带的数值要改物品的 `minecraft:attribute_modifiers`（组件补丁或 KJS），这一层不替换它。
-- `use_action` 是右键时执行的实体行为；`attack_action` 是命中成功时执行的双实体行为，所以这里的 `mxt:target_action` 会对目标额外造成 3 点伤害。
-- `tick_action` 在手持该武器时每 tick 执行，是放置维护、粒子或灵气抽取的地方。
-- `attributes` 里的条目和原版 `AttributeModifier` 同形；带 `value` 公式的条目每 tick 重新计算。
-
-第 2 步里的 `example:weapon` 链定义这把武器可以携带哪些品质，以及没写覆盖组件时的默认档。
+- `use_action` 是右键使用时执行的实体行为；`attack_action` 是命中成功时执行的双实体行为，所以这里的 `mxt:target_action` 会对目标额外造成 3 点伤害；`tick_action` 在手持该武器时每 tick 执行，是放置维护、粒子或灵气抽取的地方。
+- 三个钩子**只认主手**，而且 `use_action` 在你瞄准方块或生物时不触发（那一次右键不会走"使用物品"这条路）。想放在副手上用，只有 `attributes` 会生效。
+- `attributes` 里的条目和原版属性修饰符同形；带 `value` 公式的条目每 tick 重新计算。
 
 ## 第 6 步 —— 功法与手册
 
-功法是逻辑；`technique_binding` 描述这门功法**怎么被读**——长按时长、姿势、音效、品质链与条件，并顺便声明本体为它生成的载体用哪件物品。
+功法是逻辑；`technique_binding` 描述这门功法**怎么被读**——长按时长、姿势、音效、品质链与条件，并声明本体为它生成的载体用哪件物品。它**没有任何行为钩子**，这一点和另外三张表不同。
 
 ```json
 // data/example/mxt/technique/azure_breath.json
@@ -267,27 +244,27 @@ ServerEvents.recipes(event => {
 give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 ```
 
-右键手册会尝试学习 `example:azure_breath`。所有已学会的功法会同时保持生效，而在堆上带组件时即使学习失败也会占用这次交互，所以玩家无法绕过功法自己的 `learn_condition`、互斥标签或学习事件。`items` 则是**可选的第二条路**：把它写进声明（`"items": "kubejs:azure_manual"`），那件物品**不带组件**也算这门功法的手册，而堆上的 `mxt:technique` 组件依然优先。它曾在 2026-09-22 被删除，2026-09-26 以可选的形式回来。
+右键手册会尝试学习 `example:azure_breath`。所有已学会的功法会同时保持生效，而在堆上带组件时即使学习失败也会占用这次交互，所以玩家无法绕过功法自己的 `learn_condition`、互斥标签或学习事件。`items` 则是**可选的第二条路**：把它写进声明（`"items": "kubejs:azure_manual"`），那件物品**不带组件**也算这门功法的手册，而堆上的 `mxt:technique` 组件依然优先。
 
-## 第 7 步 —— 加载与验证
+## 在游戏里验证
 
 ```text
-(restart the game)                     → the four items now exist
-(load the world again)                 → the bindings load
-/mxt registries validate               → no codec errors
-/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, mxt:quality=2, …
+（重启游戏） → 四件物品这时才存在
+（重新打开世界） → 绑定表这时才加载
+/mxt registries validate               → 没有 Codec 错误
+/mxt registries list                   → mxt:item_binding=2, mxt:pill_binding=1, mxt:weapon_binding=1, mxt:technique_binding=1, …
 ```
 
 两半各需要各自的重启：KubeJS 在启动时注册物品，而绑定表是 Minecraft 在加载世界时读取的数据包注册表。`/reload` 两者都做不到——它只刷新配方、战利品表、进度、函数和 KubeJS 服务端脚本。
 
 然后在游戏里：
 
-1. `/give @s kubejs:qi_pill`。Tooltip 会显示品质行，条件带描述时还会显示彩色的 `✓` 或 `✗`。`mxt:has_realm` 不满足时，这枚丹药会被拒绝使用。
+1. `/give @s kubejs:qi_pill`。提示框会显示品质行，条件带描述时还会显示彩色的 `✔` 或 `✖`。`mxt:has_realm` 不满足时，这枚丹药会被拒绝使用。
 2. 修炼到进入境界链，然后吃一枚丹药：灵气上升 `25`，丹药毒性上升 `10`。`/mxt attachment status` 显示累积的毒性。
 3. 吃十枚，过量那一行就会执行。
 4. 吃一枚 `kubejs:root_pellet`：火灵根被赋予，`/mxt attachment status` 会列出它。`+25%` 的修炼倍率从下一个修炼 tick 开始生效。
-5. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]`，然后右键它，确认功法已学会、其 `+2 最大生命值` 已出现。直接 `/give @s kubejs:azure_manual`（或从创造模式物品栏拿 `kubejs:azure_manual`）拿到的那一叠**不带组件**，右键不会有任何反应，Tooltip 里也不会出现功法。
-6. 手持 `kubejs:spirit_sword`，在它的 Tooltip 里查看攻击伤害和速度，然后打一下什么东西，看看 `attack_action` 带来的额外伤害。
+5. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]`，然后右键它，确认功法已学会、其 `+2 最大生命值` 已出现。直接 `/give @s kubejs:azure_manual`（或从创造模式物品栏拿 `kubejs:azure_manual`）拿到的那一叠**不带组件**，右键不会有任何反应，提示框里也不会出现功法。
+6. 手持 `kubejs:spirit_sword`，在它的提示框里查看攻击伤害和速度，然后攻击任意目标，观察 `attack_action` 带来的额外伤害。
 
 ## 常见错误
 
@@ -295,16 +272,21 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 | --- | --- |
 | 世界带着未知物品拒绝加载 | 某个绑定写了一个没有注册的物品 ID。作为单个 ID 会让加载失败；写在数组里则会丢弃那条读不出来的元素并记一行日志。 |
 | 规则静默地从不匹配 | 在 `items` 数组里写成了 `example:qi_pill`，而脚本产生的是 `kubejs:qi_pill`（或任何其它拼写错误），于是那个元素被丢弃、文件照常加载。请使用真正注册的 ID。 |
-| 物品完全没有行为 | 规则被放进了与该物品不匹配的绑定表，或者那一堆的品质解析不出来（没有 `mxt:quality` 组件，也没有定义默认档或灵植声明）。 |
-| 品质链没有走通 | `next` 指向不存在的条目、成环、同一条链上出现两个链名，或有档写了 `quality` 却接不到入口，都会在服务器重建数据包索引时报出来。 |
-| 丹药吃不了 | `pill_binding` 只匹配可食用物品，所以物品需要有 `.food(...)`。 |
+| 同一件物品上写了两个同表定义，只有一个生效 | 每张表按 `priority` 取唯一一条。想让两条都跑就合并成一个文件，或写成一个数组。 |
+| 物品完全没有行为 | 规则被放进了与该物品不匹配的绑定表，或者那一堆的品质解析不出来。 |
+| 丹药的 `actions` 从不执行 | 物品没有使用周期。给它加 `.food(...)`，或给它写一个 `minecraft:consumable` 组件。 |
+| `conditions` 明明是假的，行为还是跑了 | 条件只在开始使用时查一次，之后不再复查。 |
+| 有些钩子写了却没反应 | 钩子写在了不声明它的那张表上（例如 `item_binding` 里写 `use_action`）。未声明的键会被静默忽略。 |
+| 提示框里的勾叉和预期不符 | 品质自己也能带条件，那一个 `✖` 可能来自品质而不是绑定。 |
 | 新物品在 `/reload` 后不出现 | 物品注册发生在启动阶段；请重启游戏。 |
 | 改过的绑定没有任何变化 | `/reload` 不会重新读取数据包注册表；请重新加载世界。 |
 | 手册没有效果也没有报错 | 先确认那一叠上有没有 `mxt:technique` 组件——没有组件的普通物品什么都不教。有组件时再看学习是否失败：`learn_condition`、是否已经学过同一门功法，或互斥冲突。 |
 | 手册的 `items` 字段没起作用 | `items` 是**可选**的第二条路，而且堆上的 `mxt:technique` 组件优先。写进去的物品 id 必须与脚本注册的真实 id 一致（`kubejs:` 命名空间别漏），否则它认领不到那一堆。 |
 
-## 下一步
+## 接下来
 
-- [添加技能](./add-an-ability.md) —— 让这些物品有地方花掉它们储存的灵气。
+- [KubeJS 绑定行为](./bind-actions.md) —— 四张表各有哪些钩子、什么时候执行、条件与顺序怎么算。
+- [定义品质链](./define-a-quality-chain.md) —— 这三档是怎么写出来的，以及升级那一步的代价放在哪一档。
+- [定义技能](./add-an-ability.md) —— 让这些物品有地方花掉它们储存的灵气。
 - [物品绑定](../datapack/json/item_binding.md)、[丹药绑定](../datapack/json/pill_binding.md)、[武器绑定](../datapack/json/weapon_binding.md) 和 [功法绑定](../datapack/json/technique_binding.md) —— 完整字段列表。
 - [KubeJS API 参考](../kubejs/api-reference.md) —— 脚本对象，如果你想用脚本写规则本身。

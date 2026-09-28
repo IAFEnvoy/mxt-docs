@@ -1,9 +1,9 @@
 ---
-title: 添加技能
+title: 定义技能
 description: 定义一个主动技能与一个触发技能，为它们设置消耗、条件与目标，从境界或物品授予它们，再把它们放上轮盘。
 ---
 
-# 添加技能
+# 定义技能
 
 `ability` 是玩家消耗灵气的玩法单位。它自带消耗、冷却与条件，也自带**动作字段**（`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`），也就是说"什么时候放"与"放出去做什么"写在**同一条技能**里。照着这个形状，一条 JSON 就能描述一发灵力弹、一个增益、一条被动加成，或一次受击反应。
 
@@ -64,7 +64,7 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 
 还有几个字段值得了解：
 
-- `charges` 是唯一留在定义上的状态参数：写 `{"maximum": ..., "recharge_ticks": ...}`（两个都必填）就让这条技能**按次数花**——每次付款扣一次，扣到 0 就拒付（失败原因 `NO_CHARGES`），剩下的次数是状态而不是声明。**只有走施放管线的付款扣它**；走共用闸门的按键（`mxt:flight_control` / `mxt:storage`）不扣充能。能存哪些状态种类由 `type` 在代码里声明，**不用也不该再写 `components`**（2026-09-27 删除：写了与未知键一样被静默忽略）；六种状态与读取它们的条件见[技能施放](/technical/ability)。
+- `charges` 是唯一留在定义上的状态参数：写 `{"maximum": ..., "recharge_ticks": ...}`（两个都必填）就让这条技能**按次数花**——每次付款扣一次，扣到 0 就拒付（失败原因 `NO_CHARGES`），剩下的次数是状态而不是声明。**只有走施放管线的付款扣它**；走共用闸门的按键（`mxt:flight_control` / `mxt:storage`）不扣充能。能存哪些状态种类由 `type` 在代码里声明，**不用也不该再写 `components`**（写了与未知键一样被静默忽略）；六种状态与读取它们的条件见[技能施放](/technical/ability)。
 - `element_affinity` 列出该技能所属的元素（或元素标签）。它非空时，公式变量 `element_modifier` 就可用；**伤害**这一侧不用你操心——[伤害管线](/technical/damage)第一层会自己乘上它，所以写伤害数字时不要再手写 `* element_modifier`（那是同一个数的第二次相乘）。要拿它缩放**消耗、时长**之类不是伤害的东西，才需要显式读这个变量。
 - `hidden` 只在**法器的提示框**里被跳过，照常生效、照常授予；它**不参与轮盘那道筛选**（轮盘池筛的是按键型），所以写了它一条按键技能照样占轮盘。
 
@@ -139,7 +139,7 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 
 :::
 
-## 第 4 步 —— 把技能放上轮盘并使用
+## 第 4 步 —— 将技能放入轮盘并使用
 
 主动技能可以放进 12 扇轮盘（技能与灵气共用的那个，主盘 + 随装备出现的从盘）：
 
@@ -147,15 +147,15 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 2. 按住「轮盘选择」（默认 `R`）让指针指向那一格——指针决定**选中**哪一格，而选中永远不会空着：轮盘打开时就已经选中**第一个有内容的格子**（金框一开始就画在那里），指针停在空格子上不会改变已有选择。松开 `R` 只关掉轮盘，不会施放。按「轮盘使用」（默认 `V`）才施放，而且轮盘不关，可以接着换一格再按；轮盘关着时按 `V` 会施放**你上次选的那个编号此刻代表的那一格**（页没了就落到最后一个有东西的格子，编号本身不改），鼠标左键等同于 `V`。屏幕左侧那块「轮盘格」是**四列、行数随页数往下长**的整张轮盘一览，其中金色边框那一格就是"现在按 `V` 会放什么"。
 3. 一切都是服务端权威：客户端只发送"用了哪一类的哪个 id"，授予、条件、消耗、冷却、时长与效果都由服务端决定。
 
-## 第 5 步 —— 校验
+## 在游戏里验证
 
 技能是数据包注册表，所以要重新加载世界，而不是执行 `/reload`：
 
 ```text
-(load the world again)
-/mxt registries validate              → no codec errors
-/mxt attachment status                → lists the abilities the entity holds
-/mxt ability cast example:qi_bolt     → forces the cast (gamemaster permission)
+（重新打开世界）
+/mxt registries validate              → 没有 Codec 错误
+/mxt attachment status                → 列出这个实体持有的技能
+/mxt ability cast example:qi_bolt     → 强制施放一次（需要 gamemaster 权限）
 ```
 
 1. 在进入境界链之前，`/mxt ability cast example:qi_bolt` 会失败：`condition` 拒绝了它。
@@ -175,7 +175,7 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 | `mxt:word` 什么都不做 | 它是终端效果、由代码白名单限定（`self_heal`、`purge_self_curses`），并且默认需要管理员权限。它不是执行命令的手段。 |
 | 所有人一开始就有这个技能 | 它是被某个灵根、体质或功法上的 `granted_abilities` 列表授予的，而所有人都满足那个定义——这些列表在定义被持有期间生效。 |
 | 动作完全没有发生，也不报错 | `entity_action`（或 `target_selector` / `target_condition` / `bi_entity_action`）被写在了一个**不跑动作的类型**上（`mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` / `mxt:composite` / `mxt:word`）。这四个字段由**会跑动作的五个类型**（`mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` / `mxt:interval`）各自声明，写在别的类型上是没人读的键（不报错也不生效）——把这条技能换成会跑动作的类型，或把这些键搬到真正要跑它们的那条技能上。 |
-| 写了 `"effect": "..."` 但什么也没发生 | 技能引用的 `effect` 字段**已经取消**（2026-09-27），今天它是没人读的键：把四个动作字段直接写在发动型自己身上，再删掉 `effect` 一行；`mxt:word` 的 `effect` 是另一回事（它自己的效果枚举），不受影响。 |
+| 写了 `"effect": "..."` 但什么也没发生 | 技能引用的 `effect` 字段**没人读**：把四个动作字段直接写在发动型自己身上，不要写 `effect` 一行；`mxt:word` 的 `effect` 是另一回事（它自己的效果枚举），不受影响。 |
 | 定向技能按下去只报「没有符合条件的目标」 | `mxt:targeted` 的 `target_selector` 一个实体都没圈到，或者圈到的都被载荷技能的 `target_condition` 挡掉了：检查选择器的距离（`mxt:area` 的 `radius`、`mxt:ray` / `mxt:cone` 的 `length`）。这种落空**在付款之前**判，所以不花钱；点名的技能不能作用在目标身上时报的是另一条原因「指定的技能不能作用在目标身上」。 |
 
 ## 接下来

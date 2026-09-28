@@ -88,4 +88,4 @@ MxtActions.entity('example:heal', (entity, params) => {
 - [KubeJS 总览](/kubejs/index) —— 什么时候需要脚本、怎么注册内容。
 - [物品与绑定](/kubejs/items) —— 把脚本注册的物品接到绑定表上。
 - [综合示例](/kubejs/examples) —— 把几个对象组合起来用的完整脚本。
-- 用脚本注册物品的完整教程：[用 KubeJS 创建物品](/tutorial/create-items-with-kubejs)。
+- 用脚本注册物品的完整教程：[KubeJS 创建物品并绑定行为](/tutorial/create-items-with-kubejs)。

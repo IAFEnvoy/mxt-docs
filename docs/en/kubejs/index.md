@@ -100,5 +100,5 @@ MxtActions.entity('example:heal', (entity, params, context) => {
 - [Items and Bindings](./items.md) — the fields and examples of the four binding tables.
 - [KubeJS API Reference](./api-reference.md) — 18 global objects, one page each.
 - [Examples](./examples.md) — complete scripts that combine several objects.
-- [Create Items with KubeJS](../tutorial/create-items-with-kubejs.md) — the step-by-step walkthrough.
+- [Create Items and Bind Actions with KubeJS](../tutorial/create-items-with-kubejs.md) — the step-by-step walkthrough.
 - [Items](../player-guide/items.md) — the items the mod itself provides.

@@ -50,4 +50,4 @@ The player's entry point is the **Beast Taming Bell**: right-clicking one of you
 
 ## Refusal reasons
 
-The scroll, the bell, the bag and this command all print from **one** table of texts, keyed `contract.mxt.failure.<lowercase enum name>`: `already_bound`, `not_contractable`, `owner_conditions`, `creature_conditions`, `limit_reached`, `insufficient_cost`, `not_bound`, `not_owner`, `recall_cooldown`, `cancelled`, `unsupported_behavior` (the creature does not take that order) and `behavior_refused` (it takes it, but refused this one).
+The scroll, the bell, the bag and this command all print from **one** table of texts, keyed `contract.mxt.failure.<lowercase enum name>`: `already_bound`, `not_contractable`, `owner_conditions`, `creature_conditions`, `limit_reached`, `insufficient_cost`, `not_bound`, `not_owner`, `recall_cooldown`, `recall_pending` (the latch is already set and has not landed yet), `cancelled`, `unsupported_behavior` (the creature does not take that order) and `behavior_refused` (it takes it, but refused this one).

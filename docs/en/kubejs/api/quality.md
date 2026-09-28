@@ -7,14 +7,14 @@ description: Read the quality a stack resolves to and the chain it belongs to, o
 
 Quality lives on the **item stack**, so these methods all name the stack they act on; `entity` is only the starting point for registry lookups. Writes only take effect on the server, where a client call answers `null` / `false` and changes nothing.
 
-Resolution is a fixed five-step order: the **override component** on the stack, then a forge result, then a **definition default** (`quality` on an artifact or a technique), then the **entry tier of the ladder**, then the `quality` a matching **spirit herb** declares. The full rules are on [Quality](/en/datapack/json/quality).
+Resolution is a fixed four-step order: the **override component** on the stack, then a forge result, then a **definition default** (in order: `quality` on an artifact, the tier the inscriptions on a talisman carrier declare, `quality` on a technique, `quality` on an alchemy furnace), then the `quality` a matching **spirit herb** declares. The full rules are on [Quality](/en/datapack/json/quality).
 
 ## Methods
 
 | Method | Parameters | Return value | Description |
 | --- | --- | --- | --- |
 | `get(entity, stack)` | `Entity`, `ItemStack` | `String` or `null` | The quality ID this stack resolves to right now; `null` when it has none. |
-| `chain(entity, stack)` | `Entity`, `ItemStack` | `String` or `null` | The **ladder** this stack's quality belongs to: the name of the ladder that tier sits on; `null` when it sits on none. |
+| `chain(entity, stack)` | `Entity`, `ItemStack` | `String` or `null` | The **ladder** this stack's quality belongs to: the name of the ladder that tier sits on; `null` when it sits on none, or when the ladder's entry tier carries no name. |
 | `next(entity, stack)` | `Entity`, `ItemStack` | `String` or `null` | The next tier up that ladder; `null` when it is already at the top or has no ladder. |
 | `set(entity, stack, quality)` | `Entity`, `ItemStack`, quality ID | `boolean` | Writes the quality **override component** onto this stack, outranking the definition default; an unresolvable ID or a client call answers `false`. |
 | `clear(entity, stack)` | `Entity`, `ItemStack` | `boolean` | Removes the override component so the stack falls back to its definition default; `false` when there was no override. |
@@ -31,7 +31,7 @@ if (result.changed) {
 } else {
   console.warn(`upgrade refused: ${result.failure}`)
 }
-// Override one tier directly (ignoring the ladder's entry tier); clear returns it to the definition default.
+// Override one tier directly; clear returns it to the definition default.
 MxtQuality.set(player, event.item, 'mxt_test:excellent')
 ```
 

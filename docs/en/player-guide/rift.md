@@ -32,19 +32,19 @@ The 26-neighbour reach is much denser than linking along a line: the eight block
 
 - **Touching the block teleports immediately** (it implements the vanilla `Portal`, `getPortalTransitionTime` is 0, so there is none of a nether portal's warm-up): `mxt:rift` has no collision and can be walked through, and an entity is sent on as soon as it touches the block. There is no plane to line up with, so entering from any side is the same.
 - The landing point is scaled between dimensions and clamped to the world border, and then the game **looks for an existing rift that already leads back** to where you came from (within 16 blocks horizontally and 8 vertically, loaded chunks only): if it finds one you land next to it, and only otherwise does it carve a new rift there that leads back. So a round trip returns you where you started instead of opening a new door on every crossing. The search only looks at loaded chunks; it never generates terrain just to find one.
-- On arrival you get 600 ticks of slow falling and a portal sound. The landing spot is chosen in the order "the rift itself → two blocks above → the four horizontal neighbours", taking the first that has a floor; if none has one you land at the rift itself, with the slow falling as the fallback.
+- On arrival you get 600 ticks of slow falling and a portal sound. The landing spot is the first **standable** candidate in the order "the four horizontal neighbours (north → south → east → west) → one block above → two blocks above → the rift itself" (standable = something solid below, and no collision and no fluid here); if none of the seven works you land at the rift itself, with the slow falling as the fallback. Looking beside the rift first is what keeps a traveller out of the return rift they just arrived at.
 
 ## Placing and Breaking
 
 - Orientation does not matter: there is nothing to think about while placing, and two rifts link up as soon as they are next to each other.
-- Breaking a rift drops an `mxt:rift` item that **keeps the rift's destination and colour** (the block has no loot table; it handles its own drop), so a wall of rifts can be taken down and moved elsewhere.
+- **A rift cannot be taken down.** Its breaking speed is `-1` (the same setting bedrock has) and its blast resistance is `3600000`, so survival cannot mine it and explosions cannot remove it; creative mode can break it, but the block has **no loot table**, so it drops nothing. Decide where a rift goes before placing it — moving one means replacing that block with a command (`/setblock <pos> air`) and placing a fresh one.
 - Random ticks spawn particles around the point **tinted by that rift's own colour** (the vanilla portal particle wearing the rift's colour instead of the portal's violet), and a rift plays **no ambient sound**.
 
 ## Placing and Adjusting: Two Items
 
 | Item | Purpose |
 | --- | --- |
-| Rift (`mxt:rift`, the block's own item) | **Places rift blocks and nothing else**: right-click with it to put one down. If the stack carries a `mxt:rift` component (from a data pack, KubeJS, or the item a broken rift dropped) it is placed with that destination and colour, otherwise with the defaults (the overworld, colour following the dimension). |
+| Rift (`mxt:rift`, the block's own item) | **Places rift blocks and nothing else**: right-click with it to put one down. If the stack carries a `mxt:rift` component (written by a data pack, KubeJS or a command) it is placed with that destination and colour, otherwise with the defaults (the overworld, colour following the dimension). |
 | Rift Anchor (`mxt:rift_anchor`) | **Adjusts rifts and nothing else**: it carries a destination and a colour and never places a block. |
 
 What the Rift Anchor does:

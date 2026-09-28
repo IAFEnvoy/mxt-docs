@@ -1,6 +1,6 @@
 ---
 title: Quality (quality)
-description: A quality entry names one tier, carries its three modifiers, and marks the tier above it plus what one step up costs.
+description: One tier of quality — its name, colour and three modifiers, plus where it sits on the ladder, what names that ladder, and what one step up costs.
 aside: false
 ---
 
@@ -8,7 +8,7 @@ aside: false
 
 File location: `data/<namespace>/mxt/quality/<path>.json`
 
-One `quality` is one tier. What it is called is for the interface to show; `value_multiplier` / `forging_modifier` / `alchemy_modifier` are what the economy, forging and alchemy settlements read. A tier is also one link of a quality ladder: `next` points at the tier above it, and `quality` gives that ladder a name.
+One `quality` is one tier. What it is called is for the interface to show; `value_multiplier` / `forging_modifier` / `alchemy_modifier` are what the economy, forging and alchemy settlements read. A tier is also one link of a quality ladder: `next` points at the tier above it, and `quality` is that ladder's name, written on the entry tier.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -19,10 +19,10 @@ One `quality` is one tier. What it is called is for the interface to show; `valu
 | `forging_modifier` | `Modifier` | `1` | Forging modifier. |
 | `alchemy_modifier` | `Modifier` | `1` | Alchemy modifier. |
 | `condition` | `EntityCondition` | `mxt:always` | The condition for using this tier. |
-| `next` | `quality` id | none | The tier above this one; omitted on the highest tier. |
-| `upgrade_costs` | `Cost` array | `[]` | What one step up along `next` costs, through the same transaction abilities use: `plan` → `commit`, **the whole group atomically**, so a refused payment moves nothing and writes no tier. |
-| `upgrade_condition` | `EntityCondition` | `mxt:always` | Whether the step may be taken, asked before anything is paid. |
-| `quality` | Identifier | none | The ladder's name. **Writing it once is enough**: every tier that writes it, and every tier below one that does, belongs to that ladder. |
+| `next` | `quality` id | none | The tier above this one, that is the tier one step up targets; omitted on the highest tier. |
+| `upgrade_costs` | `Cost` array | `[]` | What it costs **to reach this tier** (written on the target tier), through the same transaction abilities use: `plan` → `commit`, **the whole group atomically**, so a refused payment moves nothing and writes no tier. |
+| `upgrade_condition` | `EntityCondition` | `mxt:always` | Whether the step **into this tier** may be taken, asked before anything is paid. |
+| `quality` | Identifier | none | The ladder's name, **written on the entry tier** (the entry tier is the one nothing writes as its `next`). The name is read from the entry tier alone, so writing it on another tier does not name the ladder. |
 
 Both `name` and `description` may be omitted: omitting one uses the key generated from the entry id in the table above, writing one uses your own text (a bare string is a translation key, an object is a full component).
 
@@ -54,35 +54,36 @@ At settlement, `alchemy_modifier` decides the brewing duration as `duration = de
 
 ## The quality ladder {#ladder}
 
-Where a tier sits is not written anywhere else: each tier points at the tier above with `next`, and the order, the entry and the ladder's identity are all walked out of those links at runtime. The ladder's name only has to be written on **one** tier:
+Where a tier sits is not written anywhere else: each tier points at the tier above with `next`, and the order, the entry and the ladder's identity are all walked out of those links at runtime. The ladder's name is the `quality` field, **written on the entry tier**:
 
 ```json
 // data/example/mxt/quality/common.json
 {
-  "next": "example:refined",
-  "upgrade_costs": [{ "id": "example:qi", "amount": 20 }]
+  "quality": "example:pill",
+  "next": "example:refined"
 }
 
 // data/example/mxt/quality/refined.json
 {
-  "quality": "example:pill",
   "next": "example:flawless",
-  "upgrade_costs": [{ "id": "example:qi", "amount": 60 }]
+  "upgrade_costs": [{ "id": "example:qi", "amount": 20 }]
 }
 
 // data/example/mxt/quality/flawless.json
 {}
 ```
 
-- All three tiers belong to one ladder, `example:pill`: `refined` names it, and `common` and `flawless` follow it. Renaming the ladder means editing that one place.
-- **The entry tier is automatically the one nothing points at** (here `common`), and it is also the ladder's default tier. A ladder therefore needs no `default`, and its lowest tier needs no `next`.
-- **To make a tier the top, leave `next` out.** A tier that writes `next` without `upgrade_costs` still has that step; its cost is simply an empty array.
+- All three tiers belong to one ladder, `example:pill`: the name is written on the entry tier `common`, and the runtime carries it along `next` to `refined` and `flawless`. Renaming the ladder means editing that one place.
+- **The entry tier is automatically the one nothing points at** (here `common`). It decides the ladder's order only and **supplies no default tier to an item that has none**; a ladder therefore needs no `default`, and its lowest tier needs no `next`.
+- **The name is read from the entry tier alone.** Write `quality` on a middle tier instead and the entry tier has no name, so **the whole ladder has no name** (`/quality chain` shows `null`). This is **not an error**: the copy on the middle tier only takes part in the "one tier receives two different names" check below.
+- **A step's price and condition belong to the tier it steps into.** `common → refined` reads `refined`'s `upgrade_costs` and `upgrade_condition`. Written on the source tier they mean "step into itself", and nothing can step into the entry tier, so that price is never charged — the step is in fact free, and again **no error is reported**.
+- **To make a tier the top, leave `next` out.** A tier that writes `next` without `upgrade_costs` still has that step; its cost is simply an empty array. The other way round, a tier with no `next` that still writes `upgrade_costs` or an `upgrade_condition` other than `mxt:always` is reported, because that data could never be read.
 - **A ladder is a straight line.** A tier writes one `next`, so every tier has at most one tier above it; **two tiers naming the same `next`** (a fork) is reported, naming the tier and both tiers it follows — after a fork there is no single answer to "what is below this tier", so it belongs to the line that was walked first. The tier above and the tier below are both looked up in the walked order, so the two directions are symmetric.
 - **One name per ladder.** A tier that receives two different names (its own plus one from the tier above it) is reported, and so is a cycle, a pointer at an entry that does not exist, or a chain that cannot be reached from its start (`/reload` runs the check again).
 - **A tier on no ladder still works**: one tier with neither `next` nor `quality` stands alone, shows its name, and is read by a `mxt:quality` component as well as the three modifiers, but it has no order and cannot be climbed.
 
 ::: tip Two things share the name
-`quality` is the **field on a tier** (the ladder's name, a plain string); `mxt:quality` is the **component on an item** (a whole quality object). The binding table's `quality_chain` writes that same string.
+`quality` is the **field on a tier** (the ladder's name, a plain string); `mxt:quality` is the **component on an item** (a whole quality object). The two names look alike, but they are not the same thing.
 :::
 
 ## Which tier an item is {#resolution}
@@ -91,13 +92,12 @@ A stack's quality is taken as the **first one it can get**, in a fixed order:
 
 1. the `mxt:quality` **component** on the stack (a whole quality object) - what [`/quality set`](/en/player-guide/commands/quality) and [MxtQuality](/en/kubejs/api/quality) write, and what a successful `upgrade` writes too;
 2. the tier recorded by the forge result `mxt:forging_result` on the stack;
-3. the **definition default**: `quality` on an [artifact](./artifact.md), a [technique](./technique.md) or an [alchemy furnace](./alchemy_furnace.md);
-4. the **entry tier of the ladder** this stack reads;
-5. the `quality` a matching [spirit herb](./spirit_herb.md) declares.
+3. the **definition default**, asked in order: `quality` on an [artifact](./artifact.md), the tier the inscriptions on a talisman carrier declare, `quality` on a [technique](./technique.md), and `quality` on an [alchemy furnace](./alchemy_furnace.md);
+4. the `quality` a matching [spirit herb](./spirit_herb.md) declares.
 
-Step 4 asks "which ladder does this stack's tier sit on", and a ladder is named only on the tier itself: whatever ladder the definition's default tier belongs to is the one the item falls back on its entry tier for. A tier on no ladder leaves that step unanswered. No binding table declares a ladder, and there is no second place that could.
+The ladder follows the tier the stack resolves to: a ladder is named on the tier itself, so neither a binding table nor a component has to declare one. When none of the four answers, the stack simply **has no quality**; no ladder's entry tier is supplied for it.
 
-To gate on a tier, use the item condition `mxt:item_quality` (**that is the condition; the component is `mxt:quality`**): its `quality` accepts entries, `#tags` or an array (at least one; an empty list is refused at load), and it reads the result of the five steps above. An item that resolves to no tier at all answers no rather than falling back to the lowest one.
+To gate on a tier, use the item condition `mxt:item_quality` (**that is the condition; the component is `mxt:quality`**): its `quality` accepts entries, `#tags` or an array (at least one; an empty list is refused at load), and it reads the result of the four steps above. An item that resolves to no tier at all answers no rather than falling back to the lowest one.
 
 Vanilla tags take no part in quality resolution: the `group/<name>` tag is not read and neither is `tooltip_order`, and nothing in the interface sorts by quality order, so it is not an ordering input. `color` only affects the places that draw a tier's name.
 

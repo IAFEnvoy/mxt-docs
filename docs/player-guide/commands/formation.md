@@ -11,6 +11,7 @@ title: /formation
 | `/mxt formation upkeep`（= `/formation upkeep`） | 列出覆盖玩家所在位置的阵法**下一期还差的份额**：把地脉供给与阵法存量扣掉之后，真正要向阵主账户收的那部分，写法是 `数量 资源id`。它是维护账单的预告口，与真正扣费走的是**同一份计划**（`FormationService.MaintainRule.remaining`），所以看到的数就是要收的数；`owed=-` 表示这一期已经付得出来。 |
 | `/mxt formation owners <pos>`（= `/formation owners`） | 打印该阵心上的**归属名单**（一组 UUID）。 |
 | `/mxt formation owners <pos> add\|remove <player>` | 加 / 减一位阵主（需要 gamemaster 权限）。归属是一组 UUID：名单上的人都算阵主，因此 `mxt:formation_owner`、拆除权限、逐实体行为的"给阵主"与"给队友"都按这一组判定；好友系统也改成问**每一位**阵主（任一位认得你就算队友）。加一位已经在名单上的、或减一位不在名单上的，会照实回答且不改动。 |
+| `/mxt formation show <formation>`（= `/formation show`） | 在客户端打开一个**结构预览界面**：把该阵法声明的形状按层搭出来，可拖动旋转、可点时间轴跳到某一层。需由玩家执行，不需要权限。形状在服务端解析后随网络包发过去（`structure_template` 属于服务端数据，客户端不一定有同一份包）；方块取模板的**第一套 palette**，空气格不显示。`structure_check: always` 的阵法没有声明形状，会直接说明而不是打开空界面。鼠标悬停到某一格会高亮该方块（白框）并显示它的物品提示。 |
 | `/mxt formation bind <formation>`（= `/formation bind`） | 把指定阵法写入**主手**的阵盘（需要 gamemaster 权限）。阵盘是唯一能把阵法带进世界的物品，而它的绑定存在物品组件里；这条命令是生存流程里取得可用阵盘的入口。Tab 补全列出注册表里的全部阵法（不再只列白名单内那些），但**白名单仍在写盘之前把关**：不在名单里的会被拒绝且不修改阵盘；重复绑定会覆盖原值，ID 写错时连解析都过不去，阵盘自然保持原样。 |
 
 ## 阵盘
