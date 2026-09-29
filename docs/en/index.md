@@ -39,7 +39,7 @@ The project is still in development. Datapack formats and other interfaces are n
 |---|---|
 | Minecraft | `26.1.2` |
 | NeoForge | `26.1.2.99` |
-| Dependencies | Jupiter is required; other required dependencies are bundled with the mod |
+| Dependencies | Jupiter and ApricityUI are required; other required dependencies are bundled with the mod |
 | Optional | KubeJS (scripted content), JEI (recipe viewer), Jade (block information) |
 
 ## Module status

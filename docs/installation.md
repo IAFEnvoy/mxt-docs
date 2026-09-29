@@ -19,11 +19,12 @@ MiXianTu 是 NeoForge 模组，安装方式与其他模组相同：先准备与�
 
 ## 必需前置
 
-Jupiter 是必需前置，且**没有**打进模组 Jar，需要与 MiXianTu 一起单独安装；其余必需前置都通过 Jar-in-Jar 打包在 MiXianTu 内部，无需手动下载。
+Jupiter 与 ApricityUI 是必需前置，且**没有**打进模组 Jar，需要与 MiXianTu 一起单独安装（ApricityUI 只在客户端需要，专用服务端可以不装）；其余必需前置都通过 Jar-in-Jar 打包在 MiXianTu 内部，无需手动下载。
 
 | 前置 | 状态 |
 | --- | --- |
 | Jupiter | 必需，需单独安装 |
+| ApricityUI | 必需，需单独安装（仅客户端） |
 | Curios API `15.0.0+26.1.2` | 必需，随模组打包 |
 | 其他必需库 | 随模组打包 |
 

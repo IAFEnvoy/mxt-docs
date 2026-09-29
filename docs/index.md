@@ -39,7 +39,7 @@ MiXianTu（觅仙途，模组 ID `mxt`）是一个 NeoForge **修仙模组框架
 | --- | --- |
 | Minecraft | `26.1.2` |
 | NeoForge | `26.1.2.99` |
-| 必需前置 | Jupiter 需单独安装；Curios API 等其余必需前置随模组打包 |
+| 必需前置 | Jupiter 与 ApricityUI 需单独安装；Curios API 等其余必需前置随模组打包 |
 | 可选兼容 | KubeJS（脚本内容）、JEI（配方查看）、Jade（方块信息） |
 
 ## 模块完成度

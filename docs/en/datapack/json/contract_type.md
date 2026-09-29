@@ -1,6 +1,6 @@
 ---
 title: Contract Type (contract_type)
-description: Defines the two sides conditions, the behaviour at each of four moments, the signing price and the two caps of a contract.
+description: Defines the two sides conditions, what runs at each moment on the beast side and the owner side, the abilities granted to the owner while the contract lasts, the signing price and the two caps.
 aside: false
 ---
 
@@ -8,9 +8,9 @@ aside: false
 
 File location: `data/<namespace>/mxt/contract_type/<path>.json`
 
-A `contract_type` describes one contract from the moment it is signed to the moment it is released: what each side has to satisfy, what runs at each of the four moments, what signing costs, how many one owner may hold at once, and how long a recall has to wait.
+A `contract_type` describes one contract from the moment it is signed to the moment it is released: what each side has to satisfy, what runs at each of the four moments on the spirit beast's side and the three on the owner's side, which abilities the owner holds while the contract lasts, what signing costs, how many one owner may hold at once, and how long a recall has to wait.
 
-**Who may sign is a code fact**: the target creature has to support contracts itself (see [Interfaces](../../java/interfaces/index.md)), and no data pack can hand an entity that eligibility. Who owns it is answered by the creature as well - the mod stores no owner. A data pack gets three levers: narrow either side with the `*_condition` fields below, charge a price with `costs`, and narrow the list with an **entity type tag** - the tag reuses the contract type's own id, written `#<namespace>:contract/<path>` (file `data/<namespace>/tags/entity_type/contract/<path>.json`). **A tag that is absent, or written empty, places no restriction.**
+**Who may sign is a code fact**: the target creature has to support contracts itself (see [Interfaces](../../java/interfaces/index.md)), and no data pack can hand an entity that eligibility. Who owns it is answered by the creature as well - the mod stores no owner. A data pack gets four levers: narrow either side with the `*_condition` fields below, charge a price with `costs`, narrow the list with an **entity type tag**, and grant the owner abilities for as long as the contract lasts with `owner_abilities` - the tag reuses the contract type's own id, written `#<namespace>:contract/<path>` (file `data/<namespace>/tags/entity_type/contract/<path>.json`). **A tag that is absent, or written empty, places no restriction.**
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -22,6 +22,10 @@ A `contract_type` describes one contract from the moment it is signed to the mom
 | `combat_action` | `BiEntityAction` | `mxt:no_op` | Run after damage this spirit beast dealt has been resolved. |
 | `release_action` | `EntityAction` | `mxt:no_op` | Run when the contract is **released**, while the spirit beast is still alive. |
 | `death_action` | `EntityAction` | `mxt:no_op` | Run when the **spirit beast dies** and the contract ends with it. |
+| `owner_bind_action` | `EntityAction` | `mxt:no_op` | Run once on the **owner** when the contract is signed. |
+| `owner_release_action` | `EntityAction` | `mxt:no_op` | Run once on the owner when the contract is **released**. |
+| `owner_death_action` | `EntityAction` | `mxt:no_op` | Run once on the owner when the **spirit beast dies** and the contract ends with it. |
+| `owner_abilities` | Array of ability ids or `#tags` | `[]` | The abilities the **owner** holds for as long as the contract lasts. |
 | `costs` | `Cost` array | `[]` | The signing price, paid by the **owner**; the spirit beast pays nothing. |
 | `max_owned` | int | `0` | How many contracts of this type one owner may hold at once; `0` = no limit. |
 | `recall_cooldown` | int | `0` | Recall cooldown in ticks; `0` = no limit. |
@@ -29,6 +33,8 @@ A `contract_type` describes one contract from the moment it is signed to the mom
 `follow_action` only runs for a creature that answers an order list, and it runs after that creature's own follow behaviour; switch the order to wander or stay and it stops - all it covers is the follow tick.
 
 Release and death are two fields, and one action answers one moment only: `release_action` covers an owner releasing the contract or an administrator forcing a release, `death_action` covers the spirit beast dying.
+
+**Everything on the owner's side lands on the owner**: `follow_action` / `combat_action` / `release_action` / `death_action` run on the spirit beast, while the three `owner_*_action` fields run on the owner. The three owner-side actions get a **bi-entity context** (`caster_*` reads the owner, `target_*` reads the spirit beast), while the four beast-side actions get a single-entity context. `owner_bind_action` runs with the contract already recorded and `owner_abilities` already in force; the abilities are taken back after `owner_release_action` / `owner_death_action` has run. **While the owner is offline none of the three `owner_*_action` fields runs** (a release or a death still completes); `owner_abilities` is reconciled the next time the owner logs in, so nothing is left behind. A grant is counted per **contract type**: a second spirit beast of the same type grants nothing new, releasing one of them takes nothing away while the other is still held, and an ability granted by two contracts survives losing either one.
 
 `costs` may draw on the owner's resource accounts, inventory and script channel. Payment sits after every condition and after the `Pre` event, so a price that cannot be paid signs nothing and deducts nothing.
 
@@ -49,6 +55,10 @@ Every refusal reason reads from one table of text keys, `contract.mxt.failure.<l
   "combat_action": { "type": "mxt:no_op" },
   "release_action": { "type": "mxt:no_op" },
   "death_action": { "type": "mxt:no_op" },
+  "owner_bind_action": { "type": "mxt:no_op" },
+  "owner_release_action": { "type": "mxt:no_op" },
+  "owner_death_action": { "type": "mxt:no_op" },
+  "owner_abilities": ["example:familiar_bond"],
   "costs": [{ "id": "example:qi", "amount": 50 }],
   "max_owned": 1,
   "recall_cooldown": 600

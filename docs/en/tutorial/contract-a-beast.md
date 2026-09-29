@@ -203,6 +203,6 @@ Some problems have no feedback at all - no message, no log:
 
 - [Contract Type](../datapack/json/contract_type.md) — the full field list and the tag rule.
 - [Commands](../player-guide/commands/contract.md) — every `/contract` subcommand and the bell's behaviour.
-- [Entity Action Types](../datapack/types/action/entity_action_types.md) — what you can hang on each of the four moments.
+- [Entity Action Types](../datapack/types/action/entity_action_types.md) — what you can hang on the beast side and on the owner side.
 - [Entity Condition Types](../datapack/types/condition/entity_condition_types.md) — what `owner_condition` and `creature_condition` accept.
 - [Define an Ability](./add-an-ability.md) — abilities use the same action fields.

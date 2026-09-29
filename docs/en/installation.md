@@ -19,11 +19,12 @@ MiXianTu is a NeoForge mod, so it installs like any other mod: set up a matching
 
 ## Dependencies
 
-Jupiter is a required dependency and is **not** bundled inside the mod jar, so it has to be installed separately next to MiXianTu. Every other required dependency is packaged inside the MiXianTu jar through Jar-in-Jar and needs no manual download.
+Jupiter and ApricityUI are required dependencies and are **not** bundled inside the mod jar, so they have to be installed separately next to MiXianTu (ApricityUI is needed on the client only, so a dedicated server can skip it). Every other required dependency is packaged inside the MiXianTu jar through Jar-in-Jar and needs no manual download.
 
 | Dependency | Status |
 |---|---|
 | Jupiter | Required, install separately |
+| ApricityUI | Required on the client, install separately |
 | Curios API `15.0.0+26.1.2` | Required, bundled with the mod |
 | Other required libraries | Bundled with the mod |
 

@@ -35,7 +35,7 @@ The table below lists the mod's 38 datapack registries. In the field tables, "De
 | `formation` | `mxt/formation` | Formation lifecycle and aura overrides. |
 | `tribulation` | `mxt/tribulation` | A tribulation: its start gate, timeline beats, and what happens on success or failure. |
 | `creature_profile` | `mxt/creature_profile` | Creature attribute profiles: matching, gates, the inner core, and one action run when the profile is written. |
-| `contract_type` | `mxt/contract_type` | Contract lifecycle: conditions on both sides, actions at four moments, the signing cost and two caps. |
+| `contract_type` | `mxt/contract_type` | Contract lifecycle: conditions on both sides, four actions on the beast side plus three and a grant on the owner side, the signing cost and two caps. |
 | `secret_realm` | `mxt/secret_realm` | Secret realm templates: an instance dimension opened on demand for each entry. |
 | `currency` | `mxt/currency` | Item currency denominations and exchange. |
 | `item_binding` | `mxt/item_binding` | Bindings from existing items to action arrays. |

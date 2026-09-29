@@ -34,7 +34,7 @@ title: 动态注册表
 | `formation` | `mxt/formation` | 阵法生命周期和灵气覆写。 |
 | `tribulation` | `mxt/tribulation` | 天劫：启动门槛、时间线节拍与成败行为。 |
 | `creature_profile` | `mxt/creature_profile` | 生物属性档案：匹配、门槛、内丹与写入时的一条行为。 |
-| `contract_type` | `mxt/contract_type` | 契约生命周期：双方条件、四个时刻的行为、签订代价与两个上限。 |
+| `contract_type` | `mxt/contract_type` | 契约生命周期：双方条件、灵宠侧四个时刻的行为、主人侧三个时刻的行为与存续期授予、签订代价与两个上限。 |
 | `secret_realm` | `mxt/secret_realm` | 秘境模板：按需为每次进入开出实例维度。 |
 | `currency` | `mxt/currency` | 物品货币面值和兑换。 |
 | `item_binding` | `mxt/item_binding` | 现有物品到行为数组的绑定。 |

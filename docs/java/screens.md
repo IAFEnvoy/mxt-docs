@@ -85,11 +85,11 @@ MyBar bar = HudManager.register(new MyBar());
 
 四个页面分别由核心、主药仓、辅药仓、产物仓打开，炉壁不打开任何界面。唯一开界面入口是 `AlchemyFurnaceMenus.open(ServerPlayer, BlockPos)`：方块右键时把访问位置交过去，它按那个位置的方块决定页面（核心＝监控、主药仓＝主药、辅药仓＝辅药、产物仓＝产物），别的方块什么都不开。
 
-布局不在 Java 里：四个页面各对应一份随模组发布的 `.ui.nbt` 模板——`assets/mxt/ui/alchemy_monitor.ui.nbt`、`alchemy_main_input.ui.nbt`、`alchemy_auxiliary_input.ui.nbt`、`alchemy_output.ui.nbt`。Java 只按稳定 ID 抓节点，然后绑状态、事件与真实槽位，**不手写布局树，也没有备用树**：四个模板都要有 `title`、`player_inventory` 与 `inventory_0`–`inventory_35`；监控页另有 `fire`、`monitor`、`temperature`、`limit`、`status`、`progress`、`target`、`apply`、`start`、`abort`，主药页有 `main_0` / `main_1`，辅药页有 `aux_0` / `aux_1` / `catalyst`，产物页有 `output_0`–`output_3`。模板缺了哪个必需节点，那一页就一个槽都不绑，并把缺的名字直接画在屏幕上——视觉重排随便改，这些 ID 不能改。
+布局不在 Java 里：四个页面各对应一份随模组发布的 HTML 与共用样式表——`monitor.html`、`main_input.html`、`auxiliary_input.html`、`output.html` 与 `alchemy.css`，由 ApricityUI 渲染，皮肤取自 ApricityUI 自带的 ore 主题，文字用游戏自带的字体绘制（页面不写 `font-family`）。Java 只按稳定 ID 抓节点，然后绑状态、事件与真实槽位，**不手写布局树，也没有备用树**：四个页面都要有 `panel`、`title`、`machine`、`inventory_label`、`player_inventory`；监控页另有 `temperature`、`limit`、`status`、`progress`（进度条本身是 `progress_fill`）、`target`、`apply`、`start`、`abort`。`machine` 声明这一页的机器槽位数（监控 1、主药 2、辅药 3、产物 4），`player_inventory` 是 36 格玩家物品栏。缺了哪个必需节点，那一页就一个槽都不绑，并把缺的名字直接画在屏幕上——视觉重排随便改，这些 ID 与这两个容器不能改。槽位坐标由页面决定：Java 每帧读槽位在页面里的位置，物品、悬停高亮、拖拽和提示框都还是原版的。**页面不要写 `aui-mouse-events` 这个 meta**，写了点击会被页面吃掉，槽位就点不动了。页面要自己撑满视口做居中时用视口单位（`height: 100vh`）：ApricityUI 里 `body` 的百分比高度不生效，写 `height: 100%` 面板会一直贴着顶边。
 
-模板会被种到游戏目录下的 `ldlib2/assets/mxt/ui/`，缺哪个补哪个、已有文件不覆盖，之后每次打开都从那里读当前文件。所以改模板就是改游戏目录里的那一份，改完重新打开丹炉界面即可生效；LDLib2 的 `/ldlib2_ui_editor` 只在单人世界可用，从编辑器资源管理器的 `assets/mxt/ui/` 打开同一份原生模板、保存再重开就行。
+页面会被种到游戏目录下的 `apricity/mxt/alchemy/`，缺哪个补哪个、已有文件不覆盖，之后每次打开都从那里读当前文件。所以改页面就是改游戏目录里的那一份：开着热重载时存盘即生效，否则在游戏里按 END 重扫资源、再重开丹炉界面。
 
-监控页画的是服务端下发的只读读数（`AlchemyStateS2CPayload`，见[网络协议](./network.md)），界面自己不算配方，也不显示丹方名或丹方按钮；温度输入框、开始与终止只是把那三件事发回服务端。四个页面里的 `inventory_*` 是玩家物品栏的真实槽位，机器槽位与它们同在菜单里。
+监控页画的是服务端下发的只读读数（`AlchemyStateS2CPayload`，见[网络协议](./network.md)），界面自己不算配方，也不显示丹方名或丹方按钮；温度输入框、开始与终止只是把那三件事发回服务端。四个页面里的 `player_inventory` 与 `machine` 都是真实槽位，机器槽位与玩家物品栏同在菜单里。
 
 ## 物品选择界面 `ItemPickerScreen`
 

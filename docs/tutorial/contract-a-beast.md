@@ -203,6 +203,6 @@ description: "用一张契约类型定义去收服一只兽：谁有资格、什
 
 - [contract_type（契约类型）](../datapack/json/contract_type.md) —— 完整字段表与标签规则。
 - [命令](../player-guide/commands/contract.md) —— `/contract` 的每条子命令与御兽铃的行为。
-- [实体行为类型](../datapack/types/action/entity_action_types.md) —— 四个时刻能挂什么行为。
+- [实体行为类型](../datapack/types/action/entity_action_types.md) —— 灵宠侧与主人侧的动作字段各能挂什么行为。
 - [实体条件类型](../datapack/types/condition/entity_condition_types.md) —— `owner_condition` 与 `creature_condition` 能写什么。
 - [定义技能](./add-an-ability.md) —— 技能里也用同一套动作字段。
