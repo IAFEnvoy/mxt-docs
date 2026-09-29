@@ -44,11 +44,11 @@ aside: false
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `amount` | Double | `0` | 该灵气的初始库存，必须非负；方块那边是每个方块贡献的基础量。 |
-| `max` | 上限 | `initial_multiplier`、倍率 `1` | 该灵气的上限，四种写法见下。 |
+| `max` | 上限 | `initial_multiplier`、倍率 `1` | 该灵气的上限，见[灵气上限类型](/datapack/types/other/aura-maximum)。 |
 | `regen_per_tick` | Double | `0` | 每 tick 补回多少。 |
 | `color` | `RGBColor` | `#FFFFFF` | 颜色，只用于环境渲染。 |
 
-自然环境以每个灵气的 `amount` 为初始库存，噪声和波动作用于它；`max` 省略时等于初始值。`max` 有四种写法：固定数值、`{ "type": "mxt:fixed", "value": 100 }`、`{ "type": "mxt:initial_multiplier", "multiplier": 2 }` 或 `{ "type": "mxt:unlimited" }`。裸数字是 `mxt:fixed` 的简写；`mxt:initial_multiplier` 把初始库存乘上 `multiplier`，所以不写 `max` 就等于"上限跟着初始库存走"；`mxt:unlimited` 表示没有上限，修炼速度那一侧改用 `concentration / (concentration + 1)` 换算，而不是 `concentration / maximum`。这个分派器来自固有注册表 `mxt:aura_maximum_type`，数据包只能选择既有算法。
+自然环境以每个灵气的 `amount` 为初始库存，噪声和波动作用于它。`max` 是这一项灵气的上限，不写时跟着初始库存走；有哪几种写法、各自的字段与算法见[灵气上限类型](/datapack/types/other/aura-maximum)。
 
 这里填的是**环境基础**上限。方块灵气会额外提高对应灵气的有效容量，不占用这个上限；阵法也能再往上加。`element_fit_bonus` 与 `element_conflict_penalty` 必须是有限数，`client_hud` 两条的 `maximum` 必须有限且大于 `0`，不满足就是加载错误。
 

@@ -28,7 +28,7 @@ The keys of `aura` are `mxt:aura` registry entries, not `mxt:resource` ones: a r
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `amount` | Double | `0` | How much each matching block contributes. |
-| `max` | Maximum | `initial_multiplier=1` | The maximum, written the same way as `max` in aura_zone. |
+| `max` | Maximum | `initial_multiplier=1` | The maximum, written as on the [aura maximum types](/en/datapack/types/other/aura-maximum) page. |
 | `regen_per_tick` | Double | `0` | How much is restored per tick. |
 | `color` | `RGBColor` | `#FFFFFF` | Colour, used for environment rendering only. |
 

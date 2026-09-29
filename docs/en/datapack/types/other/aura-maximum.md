@@ -1,9 +1,9 @@
 ---
-title: Aura Maximum Types
+title: Aura Maximum (aura_maximum_type)
 description: The three algorithms of the mxt:aura_maximum_type aura maximum, their fields, the bare number shorthand, and what an omitted max means.
 ---
 
-# Aura Maximum Types
+# Aura Maximum (aura_maximum_type)
 
 `mxt:aura_maximum_type` resolves the **environmental** storage maximum of an aura chunk. Every entry in the `aura` of [aura_zone](../../json/aura_zone.md) and [block_aura](../../json/block_aura.md) has the same shape, and the maximum is written in that entry's `max`. Block contributions and formation bonuses are applied separately at runtime and do not occupy this maximum.
 

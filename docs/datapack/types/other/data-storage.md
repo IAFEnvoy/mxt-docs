@@ -1,9 +1,9 @@
 ---
-title: 状态存储类型
+title: data_storage_type（数据存储）
 description: mxt:data_storage_type 的各项：六种内容可写状态、容器与默认状态的声明字段与状态字段，以及 family + id 的地址写法。
 ---
 
-# 状态存储类型
+# data_storage_type（数据存储）
 
 技能运行期留下的状态按**种类**存，每份值顶层的 `type` 取自注册表 `mxt:data_storage_type`。种类决定这份值存什么，字段分两半：**声明字段**是这个种类在宿主上被声明时定下的参数，**状态字段**是写值的一方填进去的当前值。
 

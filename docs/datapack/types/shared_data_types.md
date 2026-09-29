@@ -183,14 +183,4 @@ description: 多个注册表共用的复杂值：Cost、AuraGain、AttributeEntr
 
 匹配器只引用已经注册的物品。多个定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`；`artifact`、`item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` 六种 binding、`spirit_herb`、`item_aura`、`currency`，共十张表都接受它）；只有 `priority` 相同的两条定义才回落到注册表顺序，所以「谁赢」由数据包自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。
 
-数组里的每一项也可以写成带 `type` 的对象，类型由固有注册表 `item_matcher_entry_type` 分派：
-
-| `type` | 字段 | 匹配 |
-| --- | --- | --- |
-| `mxt:item` | `item` | 单个物品，简写的展开形式。 |
-| `mxt:tag` | `tag` | 物品标签，简写的展开形式。 |
-| `mxt:wildcard` | `pattern` | 物品 ID 的 `*`/`?` 通配符，例如 `{"type": "mxt:wildcard", "pattern": "mxt:*_spirit_stone"}`。 |
-| `mxt:regex` | `pattern` | 物品 ID 的正则，例如 `{"type": "mxt:regex", "pattern": "mxt:(medium\|high)_spirit_stone"}`。 |
-| `mxt:technique` | 无 | 堆上带 `mxt:technique` 组件的物品，也就是「一叠功法手册」：认的是**这一堆**教的哪一门功法，而不是物品 id，所以同一件玉简可以是任何一门功法。**它只问组件**：被某条 `technique_binding` 的 `items` 认领、却不带组件的物品不算命中。 |
-| `mxt:spirit_storage` | 无 | 所有能被按住右键灌注灵气的物品（见[物品灵气数据包](/datapack/json/item_aura)）。这是唯一一个按「能力」而不是按 ID 匹配的条目，因此之后新增的同类物品会被自动覆盖。 |
-| `mxt:herb_tag` | `element`、`material` | 匹配**是灵草**（能命中某条 `mxt:spirit_herb` 定义的物品）且该定义带有所问标签的物品：`element` 查 `element_tags`、`material` 查 `material_tags`，两者都写就要同时满足，两个都不写会被加载期拒绝。两边都写元素注册表的引用（条目或 `#` 标签），并**双向**展开成元素集合再取交集——草写的是「火灵草」、问的是「#温热元素」能匹配，反过来也能，所以标签写在哪一边都不影响结果。标签是草的属性而不是物品的属性，所以内容可以写「任意火属性灵草」而不必知道之后有哪些物品被绑到那条草上（例如 `{"type": "mxt:herb_tag", "element": "example:fire"}` 或 `{"type": "mxt:herb_tag", "element": "#example:fire_like"}`）。实体条件里可以套在 `mxt:item_matcher` 中使用，例如用 `mxt:has_equipped_item` 判断「手上拿着火属性灵草」。 |
+数组里的每一项也可以写成带 `type` 的对象，类型由固有注册表 `item_matcher_entry_type` 分派；每一种 `type` 的字段、默认值与匹配规则见[物品匹配器类型](/datapack/types/other/item-matcher)。

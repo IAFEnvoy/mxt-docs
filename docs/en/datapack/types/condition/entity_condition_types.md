@@ -1,9 +1,9 @@
 ---
-title: Entity Condition Types
+title: Entity Conditions (entity_condition_type)
 description: Every built-in entity condition type registered by the mod, with the JSON fields that each type accepts.
 ---
 
-# Entity Condition Types
+# Entity Conditions (entity_condition_type)
 
 An **entity condition** checks the state of a single entity and returns `true` or `false`. The entity under test comes from whichever data table declares the condition; the condition itself only describes what to check.
 
@@ -211,6 +211,22 @@ Checks how far a progression the body holds has climbed.
 ```
 
 Without `owner` every progression the body holds is asked and one hit is enough. It takes owner definition IDs only — one or an array — and does not accept a `#` tag. It reads **the level the body reached**, which is the owner's `default_level` while it never advanced; an owner without a `default_level`, or one whose chain the cache could not index, never answers true.
+
+### `mxt:contract`
+
+Reads the contract record a body carries.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `bound?` | Boolean | `true` | Whether it carries a contract record at all. |
+| `type?` | Contract type ID, `#` tag or an array | `[]` | Narrows the question to certain contract types. |
+| `behavior?` | Order ID or an array | `[]` | Whether the order in force is one of them (`mxt:follow` / `mxt:wander` / `mxt:stay` / `mxt:recall`). |
+
+```json
+{"type": "mxt:contract"}
+```
+
+A body with no record answers `false` to `bound: true` and `true` to `bound: false`. Writing `bound: false` together with `type` or `behavior` is rejected at **load time** - "no contract" contradicts "which contract it is, and which order it is under". The typical use is "only spirit beasts may grow": write `{"type": "mxt:contract"}` as that level's `condition`.
 
 ### `mxt:has_element`
 

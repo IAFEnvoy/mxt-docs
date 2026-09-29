@@ -1,9 +1,9 @@
 ---
-title: 伤害条件类型
+title: damage_condition_type（伤害条件）
 description: 模组注册的所有内置伤害条件类型，以及每种类型接受的 JSON 字段。
 ---
 
-# 伤害条件类型
+# damage_condition_type（伤害条件）
 
 **伤害条件**检查一次即将到来的伤害：它的来源，以及它的数值，返回 `true` 或 `false`。来源与数值由声明这条条件的数据表提供，所以条件本身只描述要检查这两样里的什么。
 

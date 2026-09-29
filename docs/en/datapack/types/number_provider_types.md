@@ -1,9 +1,9 @@
 ---
-title: Number Provider Types
+title: Number Providers (number_provider_type)
 description: The shorthand forms, structured expressions, and the type, fields and value ranges of every built-in number provider.
 ---
 
-# Number Provider Types
+# Number Providers (number_provider_type)
 
 Any number that has to change with level, realm or event context is a number provider. It accepts three input forms: a JSON number, an expression string, and an object with a `type`.
 
@@ -222,4 +222,4 @@ Two numbers describe how much aura a position holds. They are not in `mxt:number
 | `mxt:environment_concentration` | The environmental template concentration at the current position. Only environmental sources such as biome, dimension and zone are counted; chunk storage and the aura released by blocks and formations are not. |
 | `mxt:actual_concentration` | The final resolved concentration at the current position, including the environment, chunk storage and every active source such as blocks and formations. |
 
-Both read world state and therefore need a position: with no entity to attach to, they resolve to `0`. The full list of resource value providers is in [Resource Bar and Aura Types](/en/datapack/types/other/resource-bar#resource-value-provider-type).
+Both read world state and therefore need a position: with no entity to attach to, they resolve to `0`. The full list of resource value providers is in [Resource Value Providers](/en/datapack/types/other/resource-value-provider).

@@ -1,17 +1,17 @@
 ---
-title: 天劫节拍类型
+title: timeline_entry_type（天劫节拍）
 description: 天劫时间线节拍 mxt:timeline_entry_type 的全部内置条目、字段、默认值与时长换算规则。
 ---
 
-# 天劫节拍类型
+# timeline_entry_type（天劫节拍）
 
 ## `timeline_entry_type`
 
 [天劫](../../json/tribulation.md) 的 `timeline` 数组存放这些条目。每一项在 `type` 里写一个节拍 ID 来选中它；数据包只能选用已有的节拍，不能新增。
 
-`timeline` 是一根运行游标：天劫启动时整条时间线被复制进渡劫者身上，之后每 tick 消费游标所在那一拍，跑完就前进一拍。游标走到末尾即执行 `success_action`，某一拍失败即执行 `fail_action`。节拍是复制进去的，所以 `/reload` 不会改动一场已经在进行的天劫。
+`timeline` 是一根运行游标：天劫启动时整条时间线被复制进渡劫者身上，之后每 tick 消费游标所在那一拍，跑完就前进一拍。游标位置本身也存下来（`mxt:branch` 能把它移到任意一拍），`difficulty_scale` 与成败行为不跟着复制、仍从定义读取。游标走到末尾即执行 `success_action`，某一拍失败即执行 `fail_action`。节拍是复制进去的，所以 `/reload` 不会改动一场已经在进行的天劫。
 
-每个节拍在整次运行开始前都会被问一次「现在能不能跑」。解不出时长的 `mxt:idle`、解不出 `timeout` 的 `mxt:wait_for`、目标越界的 `mxt:branch` 都会让整次启动被直接拒绝，而不是进行到一半才失败。
+每个节拍在整次运行开始前都会被问一次「现在能不能跑」。解不出时长的 `mxt:idle`、`timeout` 解不出或算不出正数的 `mxt:wait_for`、目标越界的 `mxt:branch` 都会让整次启动被直接拒绝，而不是进行到一半才失败。
 
 ```json
 {
@@ -84,6 +84,6 @@ description: 天劫时间线节拍 mxt:timeline_entry_type 的全部内置条目
 {"type": "mxt:branch", "condition": {"type": "mxt:health", "comparison": "<", "compare_to": 10}, "if_true": 3}
 ```
 
-`if_true` / `if_false` 是**绝对下标**，从运行复制进来的那条时间线的第一拍算起（`0` 起），可以回跳；越界的下标在**启动时**就被拒绝，所以一个跳错位置的分支不会在玩家已经付掉突破代价之后才出问题。不写的分支照常前进一拍。
+`if_true` / `if_false` 是**绝对下标**，从运行复制进来的那条时间线的第一拍算起（`0` 起），可以回跳，做一个「血量低就回去再挨一轮」的循环没有限制（条件要靠自己收得住）；越界的下标在**启动时**就被拒绝，所以一个跳错位置的分支不会在玩家已经付掉突破代价之后才出问题。不写的分支照常前进一拍。
 
 一次 tick 最多消费 1024 拍：一个把自己跳回去、又不含任何等待的循环会打一条 WARN，并把这一拍交回下一 tick，而不是卡死服务端线程。真正的循环总要在某一拍等一次（`mxt:idle` / `mxt:wait_for`），正常写法碰不到这个上限。

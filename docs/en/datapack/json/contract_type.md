@@ -15,7 +15,7 @@ A `contract_type` describes one contract from the moment it is signed to the mom
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `name` | Text Component | `contract_type.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `contract_type.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is only stored and read, nothing draws it. |
+| `description` | Text Component | `contract_type.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; a contract scroll's tooltip shows it, and an untranslated default key is left out. |
 | `owner_condition` | `EntityCondition` | `mxt:always` | The owner condition. |
 | `creature_condition` | `EntityCondition` | `mxt:always` | The spirit beast condition, checked after eligibility. |
 | `follow_action` | `EntityAction` | `mxt:no_op` | The action run every tick **while the order in force is "follow"**. |
@@ -35,6 +35,8 @@ Release and death are two fields, and one action answers one moment only: `relea
 `max_owned` is counted per owner, and a release or a death frees the slot. `recall_cooldown` starts from a stamp on the contract record and gates the "recall" order, whether it comes from the Beast Taming Bell's wheel or from the command.
 
 **Orders are not a data pack field here**: the orders an owner can give a spirit beast (follow / wander / stay / recall) are answered by the creature itself, and a content mod may add one of its own; the order in force is kept on the beast's contract record, and an id that does not resolve reads as follow. See the [command](/en/player-guide/commands/contract) and [Interfaces](../../java/interfaces/index.md).
+
+**Read contract state with the entity condition [`mxt:contract`](../types/condition/entity_condition_types.md)**: `bound` asks whether a contract record is carried at all, `type` narrows the question to certain contract types, and `behavior` asks whether the order in force is one of them.
 
 Every refusal reason reads from one table of text keys, `contract.mxt.failure.<lowercase enum name>`; the Contract Scroll, the Beast Taming Bell, the Spirit Beast Bag and the command all print from that same table.
 

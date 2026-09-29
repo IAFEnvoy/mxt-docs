@@ -76,76 +76,28 @@ The two concentration contexts require this value to have an aura definition: wi
 
 The two self HUD columns are dragged around by the player and their position is stored in the client config; a datapack only decides which of the two columns this bar lands in.
 
-The built-in renderers are `mxt:boss_bar`, `mxt:textured_bar`, `mxt:segmented_bar`, `mxt:radial_bar` and `mxt:text_only`. Resource bars go through NeoForge's GUI Layer and are drawn in the left or right column only; they never take the centre of the screen.
+Resource bars go through NeoForge's GUI Layer and are drawn in the left or right column only; they never take the centre of the screen.
 
 ### Renderers
 
-The four columns below list which fields a renderer has. The first column is grouped by `renderer.type`, and the fields in a cell line up one-to-one with the type, default and description in that row.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `sprite_location``<br>``bar_index``<br>``icon_index``<br>``inverted` | `SpriteIcon``<br>`Integer`<br>`Integer`<br>`Boolean | `mxt:textures/gui/resource_bar.png``<br>``0``<br>``bar_index``<br>``false` | `mxt:boss_bar`: an Origins-style 71x8 bar plus an 8x8 icon; it has to cut background, fill and icon cells out of the sheet, so `sprite_location` takes **textures only**, and writing a sprite is a load-time error. A texture counts as a `256×256` sheet by default, and `region.texture_width` / `texture_height` change that. `bar_index` and `icon_index` both range `0..24`. |
-| `background_sprite``<br>``fill_sprite``<br>``width``<br>``height``<br>``fill_color``<br>``show_value` | `SpriteIcon``<br>``SpriteIcon``<br>`Integer`<br>`Integer`<br>``RGBColor``<br>`Boolean | **required**`<br>`**required**`<br>`**required**`<br>`**required**`<br>``#FFFFFF``<br>``false` | `mxt:textured_bar`: the background and the fill are each drawn once, at the bar's own width and height. `width` / `height` range `1..1024`. The fill is cut by progress, and a size written on `fill_sprite` takes no part in drawing. |
-| `segments``<br>``gap``<br>``full_color``<br>``empty_color` | Integer`<br>`Integer`<br>``RGBColor``<br>``RGBColor` | **required**`<br>``1``<br>``#FFFFFF``<br>``#555555` | `mxt:segmented_bar`: a segmented bar. `segments` ranges `1..256`, `gap` ranges `0..32`. |
-| `radius``<br>``thickness``<br>``start_angle``<br>``end_angle``<br>``fill_color` | Integer`<br>`Integer`<br>`Double`<br>`Double`<br>``RGBColor` | **required**`<br>`**required**`<br>``0``<br>``360``<br>``#FFFFFF` | `mxt:radial_bar`: a radial bar. `radius` ranges `1..512`, `thickness` ranges `1..128`, and both angles are in degrees. |
-| `format``<br>``color``<br>``show_maximum` | String`<br>``RGBColor``<br>`Boolean | `%current%``<br>``#FFFFFF``<br>``false` | `mxt:text_only`: text only; the format may use `%current%`. |
-
-A segmented bar is `segments * 8 + (segments - 1) * gap` pixels wide, and a radial bar occupies `radius * 2 + thickness` pixels in both directions; `mxt:textured_bar` uses the width and height it declares, and each of the other renderers works out its own size.
-
-```json
-{"type": "mxt:segmented_bar", "segments": 10, "gap": 2, "full_color": "#66CCFF"}
-```
-
-**The three bar artwork fields take a [`SpriteIcon`](../types/shared_data_types.md#spriteicon), not the icon reference that `ability.icon` / `resource.icon` use.** That one is a 16x16 texture or an item, drawn in a single cell, with no `region` / `width` / `height` and no `{"sprite": ...}`; and a `SpriteIcon` cannot be written as an item either. Two forms:
-
-| Form | Description |
-| --- | --- |
-| Bare string | Keeps the field's original meaning: `sprite_location` is a **texture path**, `background_sprite` / `fill_sprite` are GUI atlas sprites. |
-| Object | `{"sprite": ...}` is a GUI atlas sprite; `{"texture": ...}` is a texture and may carry a `region` (`u` / `v` / `texture_width` / `texture_height`, origin `0,0` and a full `256×256` image by default). Both may carry `width` / `height`. |
-
-`width` / `height` is the **target** size drawn (not a crop), has to be written as a pair, and when omitted the bar is drawn at its own width and height. Three boundaries:
-
-- `sprite_location` on `mxt:boss_bar` accepts **textures only**. A sprite has no notion of which cell of a sheet to cut.
-- A sprite **cannot declare a `region`** — the atlas already knows where it is, and writing one is a load-time error.
-- **`width` / `height` written on `mxt:textured_bar`'s `fill_sprite` has no effect**: the fill is cut by the bar's own progress, a fixed size means nothing, and those two keys take no part in drawing. A size belongs to `background_sprite` only (and to `mxt:boss_bar`'s sheet texture).
-
-In the object form exactly **one** of `sprite` and `texture` has to be written; writing both or neither is a load-time error. Writing only one of `width` / `height` is a load-time error too.
+Every type, field, default, range and artwork form of the renderer family is in [Resource Bar Renderers (resource_bar_render_data_type)](/en/datapack/types/other/resource-bar-render).
 
 ### Visibility
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `type` | see the table below | **required** | Which visibility condition to use. |
+| `type` | Visibility id | **required** | Which visibility condition to use. |
 | `hold_ticks` | Long | `60` | Read by `mxt:recently_changed` only: how long to keep showing after the last change; must be non-negative. |
 | `min` | Double | **required** | Read by `mxt:resource_range` only: inclusive lower bound, must be finite. |
 | `max` | Double | **required** | Read by `mxt:resource_range` only: inclusive upper bound, must be finite and not below `min`. |
 | `values` | Visibility list | **required** | Read by `mxt:and` / `mxt:or` only: the nested conditions. |
 | `value` | Visibility | **required** | Read by `mxt:not` only: the condition to invert. |
 
-| `type` | Description |
-| --- | --- |
-| `mxt:always` | Shown always. |
-| `mxt:non_full` | Shown while the current value is below the maximum. |
-| `mxt:non_zero` | Shown only while `maximum - minimum > 0`; hidden when the difference is zero or negative. |
-| `mxt:recently_changed` | Shown for `hold_ticks` after the last change. |
-| `mxt:resource_range` | Shown while the current value is inside the closed interval `[min, max]`. |
-| `mxt:and` / `mxt:or` / `mxt:not` | Combine the ones above. |
-
-Visibility decides whether the bar is drawn and nothing else; it never changes how the value is settled.
-
-```json
-{
-  "type": "mxt:and",
-  "values": [
-    {"type": "mxt:non_full"},
-    {"type": "mxt:resource_range", "min": 1, "max": 50}
-  ]
-}
-```
+Visibility decides whether the bar is drawn and nothing else; it never changes how the value is settled. Which fields each visibility reads, and where its boundaries are, is in [Resource Bar Visibility (resource_bar_visibility_type)](/en/datapack/types/other/resource-bar-visibility).
 
 ::: info Two kinds of concentration
 
-The IDs `mxt:environment_concentration` and `mxt:actual_concentration` exist in two places at once: written in `bars[].context` they are resource bar contexts, reading the aura pool synced to the client as described above; written as a resource value provider they are a different type, readable only with an entity — with no entity they are `0`, and the server computes them from world state. The full list is in [Resource Bar and Aura Types](../types/other/resource-bar.md#resource-value-provider-type).
+The IDs `mxt:environment_concentration` and `mxt:actual_concentration` exist in two places at once: written in `bars[].context` they are resource bar contexts, reading the aura pool synced to the client as described above; written as a resource value provider they are a different type, readable only with an entity — with no entity they are `0`, and the server computes them from world state. The full list is in [Resource Value Providers (resource_value_provider_type)](/en/datapack/types/other/resource-value-provider).
 
 :::
 

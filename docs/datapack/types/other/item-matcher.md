@@ -1,13 +1,15 @@
 ---
-title: 物品匹配器类型
+title: item_matcher_entry_type（物品匹配器）
 description: item_matcher_entry_type 的七个条目，各自的字段与匹配规则。
 ---
 
-# 物品匹配器类型
+# item_matcher_entry_type（物品匹配器）
 
 `item_matcher_entry_type` 是 [`ItemMatcher`](../shared_data_types.md#itemmatcher) 里每一项的类型族：一个 `ItemMatcher` 就是一个或多个这样的条目，每一项在 `type` 里写上下面某个 ID 来选择一种匹配方式；没有 `type` 的字符串按裸物品 ID 或 `#物品标签` 处理。
 
 `mxt:item` 和 `mxt:tag` 是简写形式的展开，`mxt:technique` 与 `mxt:spirit_storage` 没有任何字段。数组里的条目可以是纯字符串、带 `type` 的对象，或两者混在一起。
+
+这些条目由模组注册，数据包只能选用，不能新增。
 
 ## `item_matcher_entry_type`
 
@@ -93,7 +95,7 @@ description: item_matcher_entry_type 的七个条目，各自的字段与匹配�
 
 ### `mxt:spirit_storage`
 
-匹配每一个存储灵气的物品。
+匹配每一个能存储灵气的物品，也就是能按住右键灌注灵气的那些（见[物品灵气数据包](../../json/item_aura.md)）。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
@@ -124,7 +126,7 @@ description: item_matcher_entry_type 的七个条目，各自的字段与匹配�
 
 `mxt:herb_tag` 是读取 `mxt:spirit_herb` 数据包注册表、而不只是原版物品注册表的条目：它匹配这样一个物品——它是一条[灵植](../../json/spirit_herb.md)，即某条 `mxt:spirit_herb` 定义自己的匹配器接受该物品堆——然后再问那条定义的归属：`element` 查 `element_tags`、`material` 查 `material_tags`，两者都写就要同时满足，两个都不写会被加载期拒绝。
 
-`element` 与 `element_tags` 两边都写元素注册表的引用（条目或 `#` 标签），并**双向**展开成元素集合再取交集——草写的是「火灵草」、问的是「#温热元素」能匹配，反过来也能，所以标签写在哪一边都不影响结果。`material` 仍是普通标识符。标签是草的属性而不是物品的属性，所以内容可以写「任意火属性灵草」而不必知道之后有哪些物品被绑到那条草上。灵植注册表只在服务器运行时存在，因此在客户端该条目直接报告不匹配。
+`element` 与 `element_tags` 两边都写元素注册表的引用（条目或 `#` 标签），并**双向**展开成元素集合再取交集——草写的是「火灵草」、问的是 `#warm_elements` 也能匹配，反过来亦然，所以标签写在哪一边都不影响结果。`material` 仍是普通标识符。标签是草的属性而不是物品的属性，所以内容可以写「任意火属性灵草」而不必知道之后有哪些物品被绑到那条草上。灵植注册表只在服务器运行时存在，因此在客户端该条目直接报告不匹配。
 
 实体条件里可以套在 `mxt:item_matcher` 中使用（它的 `items` 就是一个 `ItemMatcher`），例如用 `mxt:has_equipped_item` 判断「手上拿着火属性灵草」：
 

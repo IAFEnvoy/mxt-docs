@@ -1,9 +1,9 @@
 ---
-title: Damage Condition Types
+title: Damage Conditions (damage_condition_type)
 description: Every built-in damage condition type registered by the mod, and the JSON fields each type accepts.
 ---
 
-# Damage Condition Types
+# Damage Conditions (damage_condition_type)
 
 A **damage condition** inspects an incoming hit: its source and its amount, and returns `true` or `false`. The source and the amount come from the data table that declares the condition, so the condition itself only describes what to check about those two.
 

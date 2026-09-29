@@ -26,6 +26,7 @@ The identifiers used here and on the sub-pages — `id`, `resource`, `ability`, 
 | `MxtSpiritRoots` | Query, grant, remove and switch spirit roots on and off. | [MxtSpiritRoots](/en/kubejs/api/spirit_roots) |
 | `MxtPhysiques` | Query, grant, remove and switch physiques on and off. | [MxtPhysiques](/en/kubejs/api/physiques) |
 | `MxtTechniques` | Query, learn and forget techniques, and read the progression level one is at. | [MxtTechniques](/en/kubejs/api/techniques) |
+| `MxtProgression` | Read and write the progression level a body holds, per owner, shared by techniques and spirit beasts. | [MxtProgression](/en/kubejs/api/progression) |
 | `MxtQuality` | Read the quality a stack resolves to and its chain, write the override component, or climb one tier. | [MxtQuality](/en/kubejs/api/quality) |
 | `MxtSouls` | Reclaim the transferable soul of an entity. | [MxtSouls](/en/kubejs/api/souls) |
 | `MxtLifespan` | Read the lifespan ledger (ticks left and the ceiling), rewrite or adjust it, and make a body be reborn on the spot. | [MxtLifespan](/en/kubejs/api/lifespan) |

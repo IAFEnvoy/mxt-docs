@@ -38,7 +38,7 @@ description: 写一份符箓定义、把它交给玩家、灌注灵气并发动�
 }
 ```
 
-四个动作字段写在技能自己的顶层（见 [ability（技能）· 四个动作字段](../datapack/json/ability.md#action-fields-by-type)），所以"激发时发生什么"就写在同一条 `example:spark` 上——**一条技能就够**，不需要再拆一条 `mxt:interval` 出来。这里那句 `"effect": "minecraft:fire_resistance"` 是 `mxt:apply_effect` 行为自己的参数（要施加的状态效果），与技能引用的 `effect` 无关。
+四个动作字段写在技能自己的顶层（见 [技能类型 · 四个动作字段](../datapack/types/other/ability.md#action-fields-by-type)），所以"激发时发生什么"就写在同一条 `example:spark` 上——**一条技能就够**，不需要再拆一条 `mxt:interval` 出来。这里那句 `"effect": "minecraft:fire_resistance"` 是 `mxt:apply_effect` 行为自己的参数（要施加的状态效果），与技能引用的 `effect` 无关。
 
 **只有立即生效的能力能被符箓承载。**需要吟唱（`cast_time > 0`）或持续引导（`mxt:channelled`）的能力会被拒绝，因为唱法与引导的收尾靠"持有者已授予的能力"列表推进，而载体从不授予任何东西。被拒绝时载体不消耗、灵气也不清空，可以换一张符或换一个能力。
 

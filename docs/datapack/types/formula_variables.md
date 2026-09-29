@@ -1,9 +1,9 @@
 ---
-title: 公式变量
+title: formula_variable（公式变量）
 description: 公式能读到的每一个名字、由谁提供，以及写错名字时会发生什么。
 ---
 
-# 公式变量
+# formula_variable（公式变量）
 
 公式变量是一个**内置名字**，作用是从求值上下文携带的对象里拆出一个数字。`mxt:formula_variable` 和条件、行为、数值提供器一样是代码里的注册表：数据包既不能加条目也不能配置，背后也没有 JSON 文件。
 

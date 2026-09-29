@@ -22,22 +22,27 @@ Always write `type` with its full ID: the built-in types live in the `mxt:` name
 
 Several families accept **shorthand**: a JSON number is `mxt:constant`, a string is `mxt:expression`, and an item ID such as `"minecraft:apple"` is the matcher entry `mxt:item`. Wherever a shorthand exists, writing the full typed object works just as well.
 
+**One dispatch registry per page, hung under the definition page that writes it**: Ability Types, Ability Target Selector, Data Storage and Mount Renderers are under [`ability`](../json/ability.md); Curse Types under [`curse`](../json/curse.md); Formation Actions under [`formation`](../json/formation.md); Timeline Entries under [`tribulation`](../json/tribulation.md); Secret Realm Generations under [`secret_realm`](../json/secret_realm.md); the four resource bar families (context, renderer, visibility, value source) under [`resource`](../json/resource.md); Aura Maximum under [`aura_zone`](../json/aura_zone.md); Triggers under [`trigger`](../json/trigger.md). Actions, conditions, costs, the item matcher, number providers and formula variables are referenced all over a pack and belong to no single definition, so they stay in this group.
+
 ## Dispatched Fields
 
 | Field | Type family | See |
 | --- | --- | --- |
 | `type` (top level of an ability) | Ability type `mxt:ability_type` | [Ability Types](./other/ability) |
+| `render.type` | Mount renderer `mxt:mount_render_type` | [Mount Renderers](./other/mount-render) |
 | `type` | Target selector `mxt:ability_target_selector_type` | [Ability Target Selector](./other/ability-selector) |
 | `type` | State kind `mxt:data_storage_type` | [Data Storage](./other/data-storage) |
 | `type` | Curse type `mxt:curse_type` | [Curse Types](./other/curse) |
-| `type` | Trigger `mxt:trigger_type`, cost `mxt:cost_type` | [Trigger and Cost](./other/trigger-and-cost) |
+| `type` | Trigger `mxt:trigger_type` | [Triggers](./other/trigger-type) |
+| `type` | Cost `mxt:cost_type` | [Costs](./other/cost-type) |
 | `type` | Formation module `mxt:formation_action_type` | [Formation Actions](./other/formation-action) |
 | `type` | Tribulation beat `mxt:timeline_entry_type` | [Timeline Entries](./other/timeline-entry) |
-| `type` | Resource value source `mxt:resource_value_provider_type` | [Resource Bar and Aura](./other/resource-bar) |
+| `type` | Secret realm generation `mxt:secret_realm_generation_type` | [Secret Realm Generations](./other/secret-realm-generation) |
+| `type` | Resource value source `mxt:resource_value_provider_type` | [Resource Value Providers](./other/resource-value-provider) |
 | `type` | Aura maximum `mxt:aura_maximum_type` | [Aura Maximum](./other/aura-maximum) |
-| `context` (ID string) | Resource bar context `mxt:resource_bar_context` | [Resource Bar and Aura](./other/resource-bar) |
-| `renderer.type` | Resource bar renderer `mxt:resource_bar_render_data_type` | [Resource Bar and Aura](./other/resource-bar) |
-| `visible_when.type` | Resource bar visibility `mxt:resource_bar_visibility_type` | [Resource Bar and Aura](./other/resource-bar) |
+| `context` (ID string) | Resource bar context `mxt:resource_bar_context` | [Resource Bar Contexts](./other/resource-bar-context) |
+| `renderer.type` | Resource bar renderer `mxt:resource_bar_render_data_type` | [Resource Bar Renderers](./other/resource-bar-render) |
+| `visibility.type` | Resource bar visibility `mxt:resource_bar_visibility_type` | [Resource Bar Visibility](./other/resource-bar-visibility) |
 | `type` | Item matcher entry `mxt:item_matcher_entry_type` | [Item Matcher](./other/item-matcher) |
 | `type` | Entity action | [Entity Action Types](./action/entity_action_types) |
 | `type` | Bi-entity action | [Bi-entity Action Types](./action/bientity_action_types) |
@@ -66,7 +71,7 @@ Complex values shared by many fields are documented once in [Shared Data Types](
 
 ## Types Handed to Scripts
 
-With a few exceptions every family pre-registers an `mxt:js` type. A script registers a callback in `kubejs/server_scripts/` and a data pack refers to it by `id`:
+With a few exceptions every family pre-registers an `mxt:js` type, which is also the only type that hands behaviour to a script. A script registers a callback in `kubejs/server_scripts/` and a data pack refers to it by `id`:
 
 | Dispatch | `mxt:js` fields | Register with |
 | --- | --- | --- |
@@ -80,6 +85,8 @@ With a few exceptions every family pre-registers an `mxt:js` type. A script regi
 | Vanilla loot condition / function | `id`, `params` | `MxtLoot.condition` / `MxtLoot.function` |
 
 A `mxt:js` trigger writes one extra field, `signal`: the runtime dispatches by signal layer. Callbacks run on the server. A missing or throwing callback falls back to a safe value each time — an action does nothing, a condition is false, a number resolves to `0`, a cost cannot be paid, a trigger never matches, a selector selects nobody — and logs a warning.
+
+A `Trigger` needs that `signal` because the runtime indexes subscriptions as "signal → owner → subscriber". Apart from `Cost`, every callback also gets the formula context of the dispatch; `Cost` is only ever evaluated for a player, so its context is built from that player alone and carries no event payload. Loot conditions and functions are written inside a vanilla loot table (the `condition` / `function` dispatch keys) and likewise only run on the server while loot is generated.
 
 ## Related
 

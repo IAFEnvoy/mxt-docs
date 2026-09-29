@@ -51,26 +51,7 @@ title: 动态注册表
 
 ## 固有类型分派
 
-下列字段的类型由固有注册表按 `type` 分派，表里的「写在哪」一列就是数据包里出现这些 `type` 的位置。数据包只能传入 `type` 和该类型的参数，不能添加新的 `type`：
-
-| 写在哪 | 分派字段 | 作用 |
-| --- | --- | --- |
-| `mxt:ability` 的顶层 | `type`（顶层字段） | 顶层 `type` 选择技能的生命周期与触发方式，共十四种（`empty`、`active`、`triggered`、`modifier`、`aura`、`interval`、`channelled`、`targeted`、`composite`、`word`、`mount`、`flight_control`、`storage`、`upkeep`）；法器 `abilities` 里的条目写注册表技能 id 或 `#技能标签`，见[技能](./ability.md#ability-types)。 |
-| `mxt:curse` 的 `type` | `type` | 诅咒的持续和过期方式。 |
-| `entity_action` 字段的每一项 | `type` | 实体行为。 |
-| `bi_entity_action` 字段的每一项 | `type` | 双实体行为。 |
-| `block_action` 字段的每一项 | `type` | 方块行为。 |
-| `item_action` 字段的每一项 | `type` | 物品行为。 |
-| `condition` 字段的每一项 | `type` | 实体条件。 |
-| `bi_entity_condition` 字段的每一项 | `type` | 双实体条件。 |
-| `block_condition` 字段的每一项 | `type` | 方块条件。 |
-| `item_condition` 字段的每一项 | `type` | 物品条件。 |
-| `damage_condition` 字段的每一项 | `type` | 伤害条件。 |
-| 资源条字段的数值来源 | `type` | 资源条和扩展读取的资源数值来源，包括环境与实际灵气浓度。 |
-| 资源条绘制器 | `type` | 资源条绘制器。 |
-| 资源条显示条件 | `type` | 资源条显示条件。 |
-| 天劫时间线的一项 | `type` | 天劫时间线的一个节拍：执行行为、空等一段时长，或等一个条件成立。 |
-| 技能状态 | `type` | 技能能存下来的状态种类：冷却、充能、切换、持续等。技能的 `type` 决定自己需要哪几种。 |
+不少字段按 `type` 从固有注册表里选一项：技能顶层、诅咒的持续方式、四类行为、五类条件、资源条的数值来源与绘制器、天劫节拍、技能状态，等等。**完整清单、每一族的入口页与它自己的默认项见[类型参考总览](/datapack/types/index)**——类型表只留在那些页上。
 
 行为和条件数组是简写，表示按顺序全跑一遍：
 
@@ -81,23 +62,4 @@ title: 动态注册表
 ]
 ```
 
-每个类型的具体字段以它自己的条目为准，见[行为与条件的类型页](/datapack/types/index)。这些内置类型由本模组注册，数据包不会向它们添加条目。
-
-### KubeJS 扩展类型 `mxt:js`
-
-下列分派都预注册了一个 `mxt:js` 类型：脚本在 `kubejs/server_scripts/` 里注册回调后，数据包即可按 `id` 引用它。回调缺失或抛异常时，各自退化为安全默认值并记录一条警告，不会使加载失败。
-
-| 分派 | `mxt:js` 字段 | 注册方法 |
-| --- | --- | --- |
-| `EntityAction` / `BiEntityAction` / `BlockAction` / `ItemAction` | `id`、`params` | `MxtActions.entity` / `biEntity` / `block` / `item` |
-| `EntityCondition` / `BiEntityCondition` / `BlockCondition` / `ItemCondition` / `DamageCondition` | `id`、`params` | `MxtConditions.entity` / `biEntity` / `block` / `item` / `damage` |
-| `NumberProvider` | `id`、`params` | `MxtValues.number` |
-| `ResourceValueProvider` | `id`、`params` | `MxtValues.resourceValue` |
-| `Cost` | `id`、`params` | `MxtCosts.register` |
-| `Trigger` | `signal`、`id`、`params` | `MxtTriggers.matcher` |
-| `TargetSelector` | `id`、`params` | `MxtAbilities.selector` |
-| 原版战利品条件 / 战利品函数 | `id`、`params` | `MxtLoot.condition` / `MxtLoot.function` |
-
-`Trigger` 的 `mxt:js` 必须额外声明 `signal`，因为运行时按「信号 → 所有者 → 订阅」分层索引派发。所有 `mxt:js` 回调都在服务端执行；除 `Cost` 之外，回调都能拿到本次派发的公式上下文——`Cost` 只用玩家求值，因此它的上下文仅由该玩家构建，不含事件载荷。战利品条件与函数写在原版战利品表里（`condition` / `function` 分派键），同样只在服务端生成战利品时执行。
-
-数据包无法向固有注册表**新增 `type`**，只能选择已注册的类型；`mxt:js` 是其中唯一能把行为交给脚本的类型。
+数据包不能向固有注册表**新增 `type`**，只能选已注册的；`mxt:js` 是其中唯一能把行为交给脚本的类型，它的 `mxt:js` 字段与注册方法见[类型参考总览](/datapack/types/index)。

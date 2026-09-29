@@ -16,6 +16,7 @@ A data pack gets three levers: write the rules, narrow the list, charge a price.
 | File | Purpose |
 | --- | --- |
 | `data/example/mxt/contract_type/spirit_familiar.json` | One contract type: price, caps, recall cooldown, plus an effect you can see while the beast follows. |
+| `data/example/mxt/creature_profile/spirit_beast.json` | This beast's growth chain: the entry level, the value that measures mastery, and what each level grants. |
 
 ## Step 1 — Write a Contract Type
 
@@ -135,6 +136,31 @@ A recall only happens when all of these hold: it is bound, the beast takes that 
 The Spirit Beast Bag (`mxt:spirit_beast_bag`) holds one beast at a time, and only when **it is yours, it is contracted, and the bag was empty**. What it stores is the beast's whole save, so **the contract travels with the beast** and is still there when you let it out. The name, contract type and owner on the bag are a tooltip snapshot, not the truth.
 
 Dropping the bag **does not count as death**: `death_action` does not run and the contract is not cleared.
+
+## Step 7 — Creature Growth
+
+**The contract gives the rules; the growth hangs on the profile.** Once a [creature profile](../datapack/json/creature_profile.md) writes `default_level`, the beast has a progression chain of its own - each level lives in [progression](../datapack/json/progression.md), `mastery_resource` names the value that measures mastery, and `configuration` says what each level grants and what reaching it takes.
+
+The entry level's own `configuration` is what the beast is **born with**: grants are **cumulative**, since the level it stands on and every level below it count, so what it knows from birth goes into the entry level and what it learns on advancing goes into the next one. A profile has no `granted_abilities` of its own and no `passive_modifiers` - for attributes, use an `mxt:modifier` ability on the entry level.
+
+```json
+// data/example/mxt/creature_profile/spirit_beast.json
+{
+  "entities": ["example:spirit_beast"],
+  "default_level": "example:beast_growth_1",
+  "mastery_resource": "example:beast_mastery",
+  "configuration": {
+    "example:beast_growth_1": { "condition": { "type": "mxt:always" }, "ability": "example:beast_bite" },
+    "example:beast_growth_2": { "condition": { "type": "mxt:always" }, "ability": "example:beast_howl" }
+  }
+}
+```
+
+**Mastery grows however a data pack or a script makes it grow**: the mod only provides `mastery_resource` as the yardstick, and the ways to raise a value already exist - the `mxt:add_resource` action, an aura's `regen`, KubeJS. Every 20 ticks the server asks about this chain once: once the value is high enough and that level's `condition` holds, the beast advances, and what it grants is rebuilt.
+
+Ending the contract clears the chain's record (both releasing it and the beast dying count): the beast falls back to its entry level and the abilities the levels granted are revoked with it. While the contract holds, the level travels with the beast, so it survives a trip into the Spirit Beast Bag and back out.
+
+`/contract info <target>` prints two more lines - the level it stands on, what the next one is and how much mastery is still missing. `/contract level <target> <level>` is the operator's way in, and it ignores that level's own `mastery` and `condition`.
 
 ## Verify
 

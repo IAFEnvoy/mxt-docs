@@ -28,7 +28,7 @@ aside: false
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `amount` | Double | `0` | 每个匹配方块贡献多少。 |
-| `max` | 上限 | `initial_multiplier=1` | 上限，写法与 aura_zone 的 `max` 一致。 |
+| `max` | 上限 | `initial_multiplier=1` | 上限，写法见[环境上限类型](/datapack/types/other/aura-maximum)。 |
 | `regen_per_tick` | Double | `0` | 每 tick 恢复多少。 |
 | `color` | `RGBColor` | `#FFFFFF` | 颜色，只用于环境渲染。 |
 

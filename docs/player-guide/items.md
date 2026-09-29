@@ -50,7 +50,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | --- | --- |
 | 基础材料 | `mxt:spirit_iron_ingot`、`mxt:spirit_iron_nugget`、`mxt:spirit_wood`、`mxt:spirit_wood_core`、`mxt:cinnabar`、`mxt:alchemy_dregs`、`mxt:impurity` |
 | 空白载体 | `mxt:spirit_ring`、`mxt:spirit_stone_bag` |
-| 身份与记录 | `mxt:wooden_token`、`mxt:stone_token`、`mxt:spirit_root`、`mxt:cultivation_jade_slip`、`mxt:blank_talisman_paper` |
+| 身份与记录 | `mxt:wooden_token`、`mxt:stone_token`、`mxt:cultivation_jade_slip`、`mxt:blank_talisman_paper` |
 | 固定道具 | `mxt:contract_scroll`、`mxt:recall_talisman`、`mxt:beast_taming_bell`、`mxt:secret_realm_reward_box` |
 
 ## 统一功能载体
@@ -68,6 +68,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 灵力容器 | `mxt:spirit_vessel` | `mxt:resource_container` | 保存任意 `resource`；右键释放给持有者，潜行右键从持有者存入，每种资源容量为 1000。 |
 | 木/石令牌 | `mxt:wooden_token`、`mxt:stone_token` | `mxt:token` | 统一承载 `kind`、`value`、`owner`，供秘境和交易等权限系统共用。 |
 | 鉴定镜 | `mxt:identification_mirror` | 消费 `mxt:identification` | 统一解析带有鉴定组件的物品；具体待鉴定物品由内容包或其他模组提供。 |
+| 灵根 | `mxt:spirit_root` | `mxt:spirit_root` | 保存一份 `spirit_root` 定义；右键获得这条灵根（"已持有"与元素互斥照旧被拒，见 [spirit_root](/datapack/json/spirit_root#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
 | 符笔、符墨 | `mxt:talisman_brush`、`mxt:talisman_ink` | 无 | 制符和阵法内容的通用基础输入，与空白符纸配套，具体配方由数据包或 KubeJS 提供。 |
 | 符箓 | `mxt:talisman` | `mxt:talisman` + `mxt:spirit_storage` | 保存**已铭刻的符箓**：一个按追加顺序排列的 `talisman` 定义条目列表，加上一个模式字段 `mode`（`"fire"` 缺省／`"store"`），空列表就是刚做出来的空载体。手持按住右键灌注灵气（容量 = 一次发动的灵气用量 × 铭刻定义的 `capacity` 倍率，实际倍率还要跟载体剩余使用次数取小，按灵气分别计量），灌满那一刻铭刻的能力全部发动并消耗一件本体（`store` 模式除外：它只积累，不自动发动）。存量够付清一次发动的灵气条目时，**右键即发动**——写了 `durability` / `consume` 再配大倍率，就能灌满一次连打好几次（见 [灌注与激发](/datapack/json/talisman)）。**潜行 + 右键切换模式**，`store` 且已灌满时潜行使用不切换而是**直接发动**。摆在展示架上被填满时按模式处理，并以展示架的位置作为激发地点——公式与位置类行为都用它（见 [灌注与激发](/datapack/json/talisman)）。铭刻（写符）服务尚未接入，`mxt:talisman` 组件目前可以手写或用物品组件语法直接写入（`/talisman give` 也能发）；灌注进度与灵石共用同一个存储组件 `mxt:spirit_storage`（按灵气记已灌单位，缺省表示一点都没灌）。**徒手右键与灌满自动发动走同一个入口**，但两条规则各按"在哪"分：**冷却只是手上的闸门**（服务端配置「符箓 → 使用冷却」，默认 20 刻、0 关闭），一次**尝试**就进冷却，窗口内长按灌注不会发动、那一 tick 的灵气也不会被灌进去；**消耗则按位置分**——手上一次发动消耗一件本体（**创造模式不消耗**），摆在展示架上的**永远消耗**、且不查也不记冷却。两条规则都由 `SpiritSource.consumedByHand()` 区分。**铭刻的定义可以声明耐久**（`durability` / `consume`）：上限写进原版组件（`max_damage` 加 `max_stack_size: 1` 与 `damage: 0`，物品上就有耐久条），每次发动改成扣耐久、扣满那一次销毁载体；没声明耐久的载体照旧一次一张本体。 |
 
@@ -104,10 +105,13 @@ give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_rea
 give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
 give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
+give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
 give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
 ```
 
 最后一行是**手册**的做法：堆上带 `mxt:technique` 组件时，这一叠才教那门功法；不带组件、也没有任何声明的 `items` 认领的玉简什么都不教、Tooltip 里也不显示功法。功法声明（`technique_binding`）只决定**怎么读**，以及 `/picker mxt:technique` 替它生成的载体用哪个物品（**创造模式物品栏不生成载体**）；把物品写进声明的 `items` 也可以让那一叠不带组件就当手册，见[功法绑定](/datapack/json/technique_binding)。
+
+倒数第二行是**灵根物品**的做法：组件里写灵根 ID，右键即授予这条灵根（"已持有"与元素互斥照旧被拒），成功消耗 1 个、**创造模式不消耗**，见 [spirit_root](/datapack/json/spirit_root#holding)。
 
 注意 `mxt:resource_container` 的值是**裸 map**，键就是资源 ID，**没有** `values` 外壳；写错外壳会被当作一个无法解析的键**静默忽略**（只留一条 WARN 日志），容器仍是空的。
 

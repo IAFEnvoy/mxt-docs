@@ -52,26 +52,7 @@ The table below lists the mod's 38 datapack registries. In the field tables, "De
 
 ## Built-in Type Dispatch
 
-The types of the following fields are dispatched by built-in registries on `type`. The "Where It Is Written" column is the spot in a datapack where these `type` values show up. A datapack can only pass `type` and that type's arguments; it cannot add a new `type`:
-
-| Where It Is Written | Dispatch Field | Purpose |
-| --- | --- | --- |
-| Top level of `mxt:ability` | `type` (top-level field) | The top-level `type` selects an ability's lifecycle and trigger style, fourteen in all (`empty`, `active`, `triggered`, `modifier`, `aura`, `interval`, `channelled`, `targeted`, `composite`, `word`, `mount`, `flight_control`, `storage`, `upkeep`); an entry in an artifact's `abilities` writes an ability registry id or a `#ability tag`, see [Ability](./ability.md#ability-types). |
-| `mxt:curse`'s `type` | `type` | How a curse persists and expires. |
-| Each entry of an `entity_action` field | `type` | Entity actions. |
-| Each entry of a `bi_entity_action` field | `type` | Bi-entity actions. |
-| Each entry of a `block_action` field | `type` | Block actions. |
-| Each entry of an `item_action` field | `type` | Item actions. |
-| Each entry of a `condition` field | `type` | Entity conditions. |
-| Each entry of a `bi_entity_condition` field | `type` | Bi-entity conditions. |
-| Each entry of a `block_condition` field | `type` | Block conditions. |
-| Each entry of an `item_condition` field | `type` | Item conditions. |
-| Each entry of a `damage_condition` field | `type` | Damage conditions. |
-| Value source of a resource bar field | `type` | Resource value sources read by resource bars and extensions, covering the environment and the actual aura concentration. |
-| Resource bar renderer | `type` | Resource bar renderers. |
-| Resource bar visibility condition | `type` | Resource bar visibility conditions. |
-| One entry of a tribulation timeline | `type` | One beat of a tribulation timeline: run an action, idle for a duration, or wait for a condition to hold. |
-| Ability state | `type` | The state kinds an ability can store: cooldown, charges, toggle, duration and so on. An ability's `type` decides which ones it needs. |
+Plenty of fields pick one entry out of a built-in registry on `type`: the top level of an ability, how a curse persists, the four action families, the five condition families, a resource bar's value source and renderer, a tribulation beat, ability state, and so on. **The full list, the entry page of every family and each family's own default are on the [Type Reference](/en/datapack/types/index)** — type tables live on those pages only.
 
 Action and condition arrays are shorthand for running everything in order:
 
@@ -82,23 +63,4 @@ Action and condition arrays are shorthand for running everything in order:
 ]
 ```
 
-Each type's concrete fields follow its own entry, see the [action and condition type pages](/en/datapack/types/index). These built-in types are registered by the mod; a datapack never adds entries to them.
-
-### KubeJS Extension Type `mxt:js`
-
-Every dispatch below pre-registers one `mxt:js` type: once a script registers a callback under `kubejs/server_scripts/`, a datapack can reference it by `id`. When the callback is missing or throws, each one falls back to a safe default and logs a warning rather than failing the load.
-
-| Dispatch | `mxt:js` Fields | Register Method |
-| --- | --- | --- |
-| `EntityAction` / `BiEntityAction` / `BlockAction` / `ItemAction` | `id`, `params` | `MxtActions.entity` / `biEntity` / `block` / `item` |
-| `EntityCondition` / `BiEntityCondition` / `BlockCondition` / `ItemCondition` / `DamageCondition` | `id`, `params` | `MxtConditions.entity` / `biEntity` / `block` / `item` / `damage` |
-| `NumberProvider` | `id`, `params` | `MxtValues.number` |
-| `ResourceValueProvider` | `id`, `params` | `MxtValues.resourceValue` |
-| `Cost` | `id`, `params` | `MxtCosts.register` |
-| `Trigger` | `signal`, `id`, `params` | `MxtTriggers.matcher` |
-| `TargetSelector` | `id`, `params` | `MxtAbilities.selector` |
-| Vanilla loot condition / loot function | `id`, `params` | `MxtLoot.condition` / `MxtLoot.function` |
-
-A `Trigger`'s `mxt:js` must also declare `signal`, because the runtime dispatches through a layered index of signal → owner → subscriber. All `mxt:js` callbacks run on the server. Apart from `Cost`, every callback receives the formula context of the current dispatch; `Cost` is evaluated from a player alone, so its context is built from that player and carries no event payload. Loot conditions and functions are written in vanilla loot tables (the `condition` / `function` dispatch keys) and likewise only run on the server while loot is being generated.
-
-A datapack cannot **add a new `type`** to a built-in registry; it can only pick from the registered ones. `mxt:js` is the only one of them that hands behaviour to a script.
+A datapack cannot **add a new `type`** to a built-in registry; it can only pick from the registered ones. `mxt:js` is the only one of them that hands behaviour to a script; its `mxt:js` fields and register methods are on the [Type Reference](/en/datapack/types/index).

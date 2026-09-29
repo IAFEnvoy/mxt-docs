@@ -1,8 +1,8 @@
 ---
-title: 技能目标选择器类型
+title: ability_target_selector_type（技能目标选择器）
 ---
 
-# 技能目标选择器类型
+# ability_target_selector_type（技能目标选择器）
 
 `ability_target_selector_type` 决定技能的双实体行为作用于哪些实体，写在技能顶层的 `target_selector` 里，默认值是 `mxt:self`。
 

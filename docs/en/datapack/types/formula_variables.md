@@ -1,9 +1,9 @@
 ---
-title: Formula Variables
+title: Formula Variables (formula_variable)
 description: Every variable a MiXianTu formula can read, which context provides it, and how an unknown name is reported.
 ---
 
-# Formula Variables
+# Formula Variables (formula_variable)
 
 A formula variable is a **built-in name** that pulls a number out of the objects the formula is evaluated against. `mxt:formula_variable` is a code registry like the action, condition and number provider families: a data pack cannot add entries or configure existing ones, and there is no JSON file behind it.
 

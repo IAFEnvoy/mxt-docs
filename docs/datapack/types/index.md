@@ -22,22 +22,27 @@ description: MiXianTu 内置类型分派的工作方式，以及每一族类型�
 
 几个类型族接受**简写**：JSON 数字就是 `mxt:constant`，字符串就是 `mxt:expression`，`"minecraft:apple"` 这样的物品 ID 就是匹配器条目 `mxt:item`。能简写的地方，写全类型对象也一样有效。
 
+**一个分派注册表一页，挂在写出它的那个定义页下面**：技能类型、技能目标选择器、数据存储与载具渲染器在 [`ability`](../json/ability.md) 页下；诅咒类型在 [`curse`](../json/curse.md) 页下；阵法功能在 [`formation`](../json/formation.md) 页下；天劫节拍在 [`tribulation`](../json/tribulation.md) 页下；秘境生成方式在 [`secret_realm`](../json/secret_realm.md) 页下；资源条的四族（上下文、绘制器、显示条件、数值来源）在 [`resource`](../json/resource.md) 页下；环境上限在 [`aura_zone`](../json/aura_zone.md) 页下；触发器在 [`trigger`](../json/trigger.md) 页下。行为、条件、消耗、物品匹配器、数值提供器与公式变量被满包引用、没有唯一归属，因此留在这个分组里。
+
 ## 参与分派的字段
 
 | 字段 | 一族类型 | 见 |
 | --- | --- | --- |
 | `type`（技能顶层） | 技能类型 `mxt:ability_type` | [技能类型](./other/ability) |
+| `render.type` | 载具渲染器 `mxt:mount_render_type` | [载具渲染器](./other/mount-render) |
 | `type` | 目标选择器 `mxt:ability_target_selector_type` | [技能目标选择器](./other/ability-selector) |
 | `type` | 状态种类 `mxt:data_storage_type` | [数据存储](./other/data-storage) |
 | `type` | 诅咒类型 `mxt:curse_type` | [诅咒类型](./other/curse) |
-| `type` | 触发器 `mxt:trigger_type`、消耗 `mxt:cost_type` | [触发器与消耗](./other/trigger-and-cost) |
+| `type` | 触发器 `mxt:trigger_type` | [触发器](./other/trigger-type) |
+| `type` | 消耗 `mxt:cost_type` | [消耗](./other/cost-type) |
 | `type` | 阵法功能模块 `mxt:formation_action_type` | [阵法功能](./other/formation-action) |
 | `type` | 天劫节拍 `mxt:timeline_entry_type` | [天劫节拍](./other/timeline-entry) |
-| `type` | 资源数值来源 `mxt:resource_value_provider_type` | [资源条与灵气](./other/resource-bar) |
+| `type` | 秘境生成方式 `mxt:secret_realm_generation_type` | [秘境生成方式](./other/secret-realm-generation) |
+| `type` | 资源数值来源 `mxt:resource_value_provider_type` | [资源数值来源](./other/resource-value-provider) |
 | `type` | 环境上限 `mxt:aura_maximum_type` | [环境上限](./other/aura-maximum) |
-| `context`（ID 字符串） | 资源条上下文 `mxt:resource_bar_context` | [资源条与灵气](./other/resource-bar) |
-| `renderer.type` | 资源条绘制器 `mxt:resource_bar_render_data_type` | [资源条与灵气](./other/resource-bar) |
-| `visible_when.type` | 资源条显示条件 `mxt:resource_bar_visibility_type` | [资源条与灵气](./other/resource-bar) |
+| `context`（ID 字符串） | 资源条上下文 `mxt:resource_bar_context` | [资源条上下文](./other/resource-bar-context) |
+| `renderer.type` | 资源条绘制器 `mxt:resource_bar_render_data_type` | [资源条绘制器](./other/resource-bar-render) |
+| `visibility.type` | 资源条显示条件 `mxt:resource_bar_visibility_type` | [资源条显示条件](./other/resource-bar-visibility) |
 | `type` | 物品匹配器条目 `mxt:item_matcher_entry_type` | [物品匹配器](./other/item-matcher) |
 | `type` | 实体行为 | [实体行为](./action/entity_action_types) |
 | `type` | 双实体行为 | [双实体行为](./action/bientity_action_types) |
@@ -66,7 +71,7 @@ description: MiXianTu 内置类型分派的工作方式，以及每一族类型�
 
 ## 交给脚本的类型
 
-除个别例外，每一族都预注册了一个 `mxt:js` 类型。脚本在 `kubejs/server_scripts/` 里注册回调用它，数据包按 `id` 引用：
+除个别例外，每一族都预注册了一个 `mxt:js` 类型，它也是唯一能把行为交给脚本的类型。脚本在 `kubejs/server_scripts/` 里注册回调用它，数据包按 `id` 引用：
 
 | 分派 | `mxt:js` 的字段 | 注册方法 |
 | --- | --- | --- |
@@ -80,6 +85,8 @@ description: MiXianTu 内置类型分派的工作方式，以及每一族类型�
 | 原版战利品条件 / 函数 | `id`、`params` | `MxtLoot.condition` / `MxtLoot.function` |
 
 `mxt:js` 的触发器要多写一个 `signal`：运行时要按信号分层派发。回调都在服务端跑。回调缺失或抛异常时各自退化成安全值（行为什么也不做、条件为假、数值为 `0`、消耗付不出、触发器不匹配、选择器选不出实体），并记一条警告。
+
+`Trigger` 之所以要 `signal`，是因为运行时按「信号 → 所有者 → 订阅」分层索引派发。除 `Cost` 之外，回调都能拿到本次派发的公式上下文；`Cost` 只用玩家求值，所以它的上下文仅由该玩家构建、不含事件载荷。战利品条件与函数写在原版战利品表里（`condition` / `function` 两个分派键），同样只在服务端生成战利品时执行。
 
 ## 相关
 

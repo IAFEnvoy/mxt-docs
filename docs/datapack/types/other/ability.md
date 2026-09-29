@@ -1,9 +1,9 @@
 ---
-title: 技能类型
+title: ability_type（技能类型）
 description: mxt:ability_type 里的十四个技能类型，各自读哪些字段、什么时候跑。
 ---
 
-# 技能类型
+# ability_type（技能类型）
 
 技能定义**顶层**的 `type` 取自这张表：
 
@@ -25,7 +25,7 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 | [`mxt:aura`](#mxt-aura) | 每隔一段时间对半径内每个实体跑一次 | 否 |
 | [`mxt:interval`](#mxt-interval) | 自己按节拍反复跑 | 否 |
 | [`mxt:modifier`](#mxt-modifier) | 被动属性加成 | 否 |
-| [`mxt:mount`](#mxt-mount) | 载具数据 | 否 |
+| [`mxt:mount`](#mxt-mount) | 声明这件法器是飞行法器 | 否 |
 | [`mxt:flight_control`](#mxt-flight-control) | 按一下起飞 / 落地 | **是** |
 | [`mxt:storage`](#mxt-storage) | 按一下打开自带储物 | **是** |
 | [`mxt:upkeep`](#mxt-upkeep) | 周期性扣费 | 否 |
@@ -34,11 +34,23 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 
 **按键**这一列只影响轮盘：只有按键型会进轮盘池，其余类型不会。命令、脚本与物品承载的技能对任何类型都直接施放。
 
-## 四个动作字段
+## 四个动作字段 {#action-fields-by-type}
 
 `entity_action`、`target_selector`、`target_condition`、`bi_entity_action` 写在技能顶层（与 `type` 平级），默认分别是 `mxt:no_op` / `mxt:self` / `mxt:always` / `mxt:no_op`。只有会跑动作的五个类型读它们：`mxt:active`、`mxt:triggered`、`mxt:channelled`、`mxt:aura`、`mxt:interval`。
 
-一次执行的顺序固定：先跑 `entity_action`，再用 `target_selector` 取目标，每个目标过 `target_condition`，通过的才跑 `bi_entity_action`。某个目标失败不影响其他目标。
+一次执行的顺序固定：先跑 `entity_action`，再用 `target_selector` 取目标，每个目标过 `target_condition`，通过的才跑 `bi_entity_action`。某个目标失败不影响其他目标，动作抛异常也只记一条日志、不打断其余目标。
+
+会跑这套字段的五个类型各自按**自己的时机**跑：
+
+| 类型 | 什么时候跑这四键 |
+| --- | --- |
+| `mxt:active` | 按下的那一次（有 `cast_time` 时是走完的那一 tick）。 |
+| `mxt:triggered` | 触发器命中、概率通过、费用付掉之后。 |
+| `mxt:channelled` | 激活时一次，随后每个 `tick_interval` 在维持资源扣成功后各一次。 |
+| `mxt:aura` | `interval` 到点的脉冲**按半径逐个找实体**，对每个实体只跑 `target_condition` + `bi_entity_action`（脉冲不读 `target_selector` 与 `entity_action`）；被一次性发动（命令 / 脚本 / 符箓）时按普通路径跑一次整套。 |
+| `mxt:interval` | 自己按 `interval` 跑整套；被命令或脚本一次性发动时按普通路径跑一次。 |
+
+其余类型**一个都不读**：`mxt:word` 自带终端载荷（它自己的 `effect` 字段）、`mxt:composite` 委托给子技能、`mxt:targeted` 只挑目标（跑的是载荷的单目标那一半），`mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` 也没有这一层。
 
 `mxt:targeted` 也写一个叫 `target_selector` 的键，但那是它自己"这次够得着谁"，不是上面这套的一半。
 
@@ -54,7 +66,7 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 | `mxt:aura` | `cooldown`、`interval`、`radius`、四个动作字段 |
 | `mxt:interval` | `interval`、四个动作字段 |
 | `mxt:modifier` | `modifiers` |
-| `mxt:mount` | `speed`、`seats`、`sit`、`display`、`width`、`height`、`step_height`、`seat_offsets`、`mount_action`、`trail` |
+| `mxt:mount` | `speed`、`seats`、`sit`、`render`、`entity_type`、`display`、`width`、`height`、`step_height`、`seat_offsets`、`mount_action`、`trail` |
 | `mxt:flight_control` | `hand`、`speed_multiplier`、`cooldown` |
 | `mxt:storage` | `slots`、`cooldown` |
 | `mxt:upkeep` | `interval`、`on_fail`、`owner_only` |
@@ -127,7 +139,7 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 | `target_condition` | `BiEntityCondition` | `mxt:always` | 每个目标都要过 |
 | `bi_entity_action` | `BiEntityAction` | `mxt:no_op` | 通过条件的目标才跑 |
 
-`chance` 的口径：求值抛异常或不是有限数＝不放行，`≤ 0` 不放行，`≥ 1` 必放行，中间值按实体随机数掷一次。注意这与 [trigger 规则](./trigger-and-cost)里同名的 `chance` 不一样，那边算不出数时按 `1` 处理。
+`chance` 的口径：求值抛异常或不是有限数＝不放行，`≤ 0` 不放行，`≥ 1` 必放行，中间值按实体随机数掷一次。注意这与 [trigger 规则](/datapack/json/trigger)里同名的 `chance` 不一样，那边算不出数时按 `1` 处理。
 
 ```json
 {
@@ -243,14 +255,16 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 
 ## `mxt:mount`
 
-一件法器被御器之术取走之后，飞的那个东西长什么样、怎么动。它**从不被发动**，只读自己的字段、顶层的 `costs`（每 tick 的燃料）与 `condition`（每 tick 复查，不满足就落地）。
+**一条 `mxt:mount` 就是声明"这件法器是飞行法器"**：写进法器的 `abilities` 之后，御器之术才能从主手、其次副手把它取出来当载具——飞多快、坐几个人、烧什么燃料、长什么样，全由这一条回答。它**从不被发动**，只读自己的字段、顶层的 `costs`（每 tick 的燃料）与 `condition`（每 tick 复查，不满足就落地）。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `speed` | `NumberProvider` | **必填** | 载具速度 |
 | `seats` | int | `1` | 总座位数，含驾驶者，取值 `1`–`4` |
 | `sit` | bool | `false` | 乘坐姿势，全车共用 |
-| `display` | `{translation, rotation, scale}` | `[0,0,0]` / `[90,0,-45]` / `[2,2,2]` | 载具怎么摆在物品模型上 |
+| `render` | 渲染器 | `mxt:item` | 用哪套渲染器画载具 |
+| `entity_type` | 实体类型 id | `mxt:flying_sword` | 用哪个实体类型当载具，必须实现[载具契约](../../../java/interfaces/mount/vehicle.md)，写错 id 在加载期报错 |
+| `display` | `{translation, rotation, scale}` | 不写＝该渲染器自己的默认姿势 | 载具相对载具原点怎么摆 |
 | `width` | double | `0.35` | 碰撞箱宽 |
 | `height` | double | `0.12` | 碰撞箱高 |
 | `step_height` | double | `0` | 跨台阶高度 |
@@ -258,9 +272,11 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 | `mount_action` | `{on_mount, on_dismount, tick}` | 三个都是 `mxt:no_op` | 载具自己的三个行为 |
 | `trail` | 对象 | 不写＝没有尾迹 | 尾迹粒子 |
 
+**`entity_type` 换的是"用哪个实体飞"**：不写就是框架自带的 `mxt:flying_sword`；写了按 id 从原版实体类型注册表取，id 写错在**加载期**报错。能不能当载具要问那个实体自己——类型必须实现[载具契约](../../../java/interfaces/mount/vehicle.md)，否则起剑被拒（动作栏照旧报"骑不上去"，日志点名类型、每个类型只记一次）。**换个实体类型＝换一套行为**：移动、落剑、座位、上座、尺寸、存档与渲染都在那个实体身上，定义里的 `width` / `height` / `seat_offsets` / `sit` / `step_height` / `render` / `display` 也要那个实体自己去读，所以"船 / 轿 / 飞舟"是附属注册一个实体类型 + 一个渲染器、数据包点名它。
+
 `costs` 是每 tick 的燃料：先扣载具里那件法器存的同门灵气，余额才由驾驶者付，可以写小数。
 
-`display` 的字段与原版物品模型的 `display` 同名同义，`translation` 以 1/16 格书写、读进来按格存，`rotation` 是角度、按 `rotationXYZ` 组合，`scale` 是倍率（负值是镜像，合法）。改完碰撞箱会立刻生效。
+`render` 选**用哪套渲染器**：默认 `mxt:item`（画承载物品的物品模型）、`mxt:geckolib`（GeckoLib 的模型与动画，要求客户端装了它），以及内容模组注册的类型。`display` 可选，不写就用该渲染器自己的默认姿势（`mxt:item` 是 `[0,0,0]` / `[90,0,-45]` / `[2,2,2]`，`mxt:geckolib` 是不转、`1` 倍）；它的字段与原版物品模型的 `display` 同名同义，`translation` 以 1/16 格书写、读进来按格存，`rotation` 是角度、按 `rotationXYZ` 组合，`scale` 是倍率（负值是镜像，合法）。三个 `render.type`、GeckoLib 的资源路径与七个姿态见[载具渲染器](./mount-render.md)。改完碰撞箱会立刻生效。
 
 `seat_offsets` 写出来的最后一个给余下的座位复用。`seats` 是总人数含驾驶者，驾驶者必须是玩家，其余座位对载具按右键就能上。驾驶者用移动键操作：跳跃上升、下降键下沉、疾跑给 1.5 倍水平速度，前后左右默认沿视线方向（服务端配置「飞行 → 朝视线方向飞行」），潜行仍是原版的下坐骑。位移只在服务端算。
 

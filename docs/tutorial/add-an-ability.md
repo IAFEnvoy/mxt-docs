@@ -60,7 +60,7 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 | `entity_action` | 对施法者执行。默认为 `mxt:no_op`；用于自我增益、粒子爆发或灵气变化。 |
 | `target_condition` | 每个目标都要过的双实体条件，默认为 `mxt:always`。 |
 
-四个动作字段的执行顺序永远是：`entity_action`（先跑）→ `target_selector` 取目标 → 每个目标过 `target_condition` → 通过才跑 `bi_entity_action`。完整的按类型时机表见 [ability（技能）· 四个动作字段](../datapack/json/ability.md#action-fields-by-type)。
+四个动作字段的执行顺序永远是：`entity_action`（先跑）→ `target_selector` 取目标 → 每个目标过 `target_condition` → 通过才跑 `bi_entity_action`。完整的按类型时机表见 [技能类型 · 四个动作字段](../datapack/types/other/ability.md#action-fields-by-type)。
 
 还有几个字段值得了解：
 
@@ -181,5 +181,6 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 ## 接下来
 
 - [ability（技能）](../datapack/json/ability.md) —— 完整字段表，包括 `charges` 与引导技能的维持消耗。
+- [定义功法与晋级](./define-a-technique.md) —— 把技能挂到一条会往上爬的进度链上，让熟练度决定什么时候解锁哪一个。
 - [行为类型](../datapack/types/action/entity_action_types.md)与[条件类型](../datapack/types/condition/entity_condition_types.md) —— 技能能做和能检查的一切。
 - [战利品与进度条件](../datapack/loot-and-criteria.md) —— 对突破与技能使用做出反应的奖励和进度。

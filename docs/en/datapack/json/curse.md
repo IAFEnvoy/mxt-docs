@@ -13,7 +13,7 @@ A `curse` describes a lasting state that can be put on an entity: how long it la
 | --- | --- | --- | --- |
 | `name` | Text Component | `curse.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
 | `description` | Text Component | `curse.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; today it is only stored and read, nothing draws it yet. |
-| `type` | `CurseType` | **required** | `mxt:timed`, `mxt:permanent`, `mxt:triggered` or `mxt:empty`. |
+| `type` | Curse type id | **required** | For the values see [Curse Types](/en/datapack/types/other/curse). |
 | `duration_ticks` | `NumberProvider` | `0` | Duration of a timed curse; the unit is ticks. |
 | `tick_interval` | `NumberProvider` | `20` | Interval of the periodic behaviour. |
 | `max_stacks` | Integer | `1` | Maximum number of stacks, range `1..256`. |
@@ -29,37 +29,9 @@ A `curse` describes a lasting state that can be put on an entity: how long it la
 
 While `display_condition` fails, no row is left behind at all. Use `mxt:never` to keep a curse hidden, or query the curse's own state with `mxt:has_curse` to reveal it only once it reaches, say, two stacks.
 
-### `mxt:timed`: Timed
+## `CurseType`
 
-It expires after `duration_ticks`. **The duration has to be positive**: a constant is checked at load time, a formula is judged at the moment it is evaluated, and a duration that cannot be honoured rejects that one application instead of throwing. The periodic behaviour runs on `tick_interval`.
-
-### `mxt:permanent`: Permanent
-
-It never expires and `duration_ticks` takes no part. The periodic behaviour runs on `tick_interval`.
-
-### `mxt:triggered`: Triggered
-
-Given a `duration_ticks` it expires on time, without one it never expires. The periodic behaviour is not driven by `tick_interval` but by **signals**: when a signal matched by any `Trigger` in `triggers` arrives, `on_tick` runs once on the holder.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `triggers` | Array | `[]` | The signals that make this curse act; written exactly like an ability trigger. |
-
-```json
-{
-  "type": "mxt:triggered",
-  "triggers": [{"type": "mxt:hurt"}],
-  "on_tick": {"type": "mxt:damage", "amount": 1}
-}
-```
-
-That is "act once per hit". Loading rejects an `mxt:triggered` curse with an empty `triggers` list.
-
-### `mxt:empty`: Placeholder
-
-It never expires and runs **no behaviour at all**: `on_apply` / `on_tick` / `on_expire` / `on_cleanse` never run. It exists only as a placeholder or a marker.
-
-Loading also rejects an `mxt:timed` curse whose constant duration is not positive.
+Which lifecycle policy `type` picks, when each one expires, what drives its periodic behaviour and which fields each one reads are on [Curse Types](/en/datapack/types/other/curse).
 
 ## Duration Overrides Only Tighten
 

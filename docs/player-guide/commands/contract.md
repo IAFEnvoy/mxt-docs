@@ -7,11 +7,12 @@ title: /contract
 | 命令 | 作用 |
 | --- | --- |
 | `/contract list [<player>]`（= `/mxt contract list`） | 按**主人索引**列出该玩家名下的灵兽：契约类型、灵兽 UUID，以及它此刻是否已加载；不填 `player` 时看自己，不需要权限。索引是名单不是真值，所以每一行都会回查灵兽身上的契约记录，已经对不上的行当场清掉。 |
-| `/contract info <target>`（= `/mxt contract info`） | 读目标身上的契约记录：类型、主人、签订时刻、召回状态与冷却剩余、当前行为。不需要权限。 |
+| `/contract info <target>`（= `/mxt contract info`） | 读目标身上的契约记录：类型、主人、签订时刻、召回状态与冷却剩余、当前行为。目标的生物档案声明了等级链时还会多打两行——它现在在哪一级、下一级是什么（已经是最高一级时显示"已是最高一级"），以及熟练度还差多少（当前值、该级要求的数值，以及用哪个 `resource` 衡量）。不需要权限。 |
 | `/contract bind <player> <target> <contract_type> [force]`（= `/mxt contract bind …`） | 让 `<player>` 与目标生物签订契约（需要 gamemaster 权限），与契约卷轴走完全同一条流程，代价由该玩家支付；`force` 跳过代价与每人上限。 |
 | `/contract break <target> [force]`（= `/mxt contract break …`） | 解除目标身上的契约（需要 gamemaster 权限），灵宠还活着；`force` 跳过"必须是主人"的校验。 |
 | `/contract recall <target> [force]`（= `/mxt contract recall …`） | 让目标响应召回，等同于在御兽铃轮盘上点它的「召回」；`force` 跳过召回冷却。 |
 | `/contract behavior <target> <behavior> [force]`（= `/mxt contract behavior …`） | 给目标下一条行为命令（需要 gamemaster 权限），与御兽铃轮盘走完全同一条流程。`behavior` 是代码里的行为 id，默认有 `mxt:follow` / `mxt:wander` / `mxt:stay` / `mxt:recall`（补全给的就是这一份），目标没提供这条命令时报"它不接受这道命令"；`mxt:recall` 是**一次性**的，等价于上面的 `recall`。`force` 跳过"必须是主人"的校验（召回时也跳过冷却）。 |
+| `/contract level <target> <level> [force]`（= `/mxt contract level …`） | 把目标的**进度记录**写到某一级（需要 gamemaster 权限）。链的所有者是目标自己的生物档案，所以只点名等级就够：该级必须在**它自己那条链上**（不在链上按"这一级不在它的链上"拒绝，`force` 跳过这一条）；写进去之后重算它授予的能力并发一次 `mxt:progression_level` 信号，与自然晋升走的是同一条路。目标没有档案、或档案没声明链时报"它没有拥有任何进度链"。**不看**该级自己的 `mastery` 与 `condition`（那是自然晋升的门槛，这是调试入口）。 |
 
 ## 谁能被契约
 
@@ -51,3 +52,5 @@ title: /contract
 ## 失败原因
 
 卷轴、御兽铃、灵兽袋与这组命令打的是**同一张**文案表，键是 `contract.mxt.failure.<小写枚举名>`：`already_bound`、`not_contractable`、`owner_conditions`、`creature_conditions`、`limit_reached`、`insufficient_cost`、`not_bound`、`not_owner`、`recall_cooldown`、`recall_pending`（召回闩已经置上、还没落地）、`cancelled`、`unsupported_behavior`（这只生物不认这条命令）、`behavior_refused`（它认，但拒绝了这次）。
+
+`/contract level` 的失败文案是另一套，键是 `progression.mxt.failure.<小写枚举名>`：`unknown_owner`（它没有拥有任何进度链）、`foreign_level`（这一级不在它的链上）、`same_level`（它已经在这一级了）、`unknown_level`（没有这一级）、`server_only`（只能在服务端做）。后两个只会从脚本侧出现。

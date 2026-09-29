@@ -82,6 +82,6 @@ function publishPillTaken(player, toxicity) {
 
 ## 相关
 
-- 数据包侧：[触发规则 `trigger`](/datapack/json/trigger)、[触发器与消耗类型](/datapack/types/other/trigger-and-cost)。
+- 数据包侧：[触发规则 `trigger`](/datapack/json/trigger)、[trigger_type（触发器）](/datapack/types/other/trigger-type)与[cost_type（消耗）](/datapack/types/other/cost-type)。
 - 等待信号的一方：[MxtAbilities](/kubejs/api/abilities)（技能上的触发器）。
 - [KubeJS API 参考](/kubejs/api-reference)。

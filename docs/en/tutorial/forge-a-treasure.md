@@ -51,7 +51,7 @@ A method is "what pressing the button does": which way the meter moves, what it 
 | Field | Type | Default | Effect |
 | --- | --- | --- | --- |
 | `value_delta` | Integer | **required** | The meter shift. It must not be `0`. |
-| `costs` | `List<Cost>` | `[]` | What one strike costs, paid by the player who strikes, all or nothing as one array; the five shapes are on [Shared Data Types · `Cost`](../datapack/types/shared_data_types.md#cost) and the types on [Trigger and Cost Types](../datapack/types/other/trigger-and-cost.md#cost-type). |
+| `costs` | `List<Cost>` | `[]` | What one strike costs, paid by the player who strikes, all or nothing as one array; the five shapes are on [Shared Data Types · `Cost`](../datapack/types/shared_data_types.md#cost) and the types on [Costs (cost_type)](../datapack/types/other/cost-type.md). |
 | `condition` | `EntityCondition` | `mxt:always` | When the method may be used. It is tested against the **player** (see [Entity Conditions](../datapack/types/condition/entity_condition_types.md)). |
 | `icon` | icon reference | none | What the list draws, and **what the method is called in that list**. |
 | `cooldown` | Integer | `0` | Cooldown in ticks, range `0..72000`. |

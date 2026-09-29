@@ -16,6 +16,7 @@ description: "用一张契约类型定义去收服一只兽：谁有资格、什
 | 文件 | 用途 |
 | --- | --- |
 | `data/example/mxt/contract_type/spirit_familiar.json` | 一份契约类型：代价、上限、召回冷却，加一个跟随期间看得见的效果。 |
+| `data/example/mxt/creature_profile/spirit_beast.json` | 这只兽的成长链：入口等级、衡量熟练度的数值，以及每一级给什么。 |
 
 ## 第 1 步 —— 写一份契约类型
 
@@ -135,6 +136,31 @@ description: "用一张契约类型定义去收服一只兽：谁有资格、什
 灵兽袋（`mxt:spirit_beast_bag`）一次只收一只，条件是三条：**是你自己的、已经契约的、袋子本来是空的**。它存的是整只兽的存档，**契约跟着兽走**，放出来契约还在。袋子上的名字、契约类型、主人只是提示框用的快照，不是真值。
 
 把袋子直接丢掉**不触发死亡**：`death_action` 不跑，契约也不会被清掉。
+
+## 第 7 步 —— 灵宠成长
+
+**契约给的是规则，成长挂在档案上。** 一份[生物档案](../datapack/json/creature_profile.md)写了 `default_level`，这只生物就有了自己的等级链——链上每一级写在 [progression](../datapack/json/progression.md) 里，`mastery_resource` 点一个数值当熟练度，`configuration` 说每一级给什么能力、要到什么条件。
+
+入口等级那一级的 `configuration` 就是「与生俱来」：等级授予是**累计**的，站着的等级及其以下每一级都算，所以生来就会什么写进入口等级、晋升才学会什么写在下一级。档案没有 `granted_abilities` 这类字段，也没有 `passive_modifiers`——要属性就用入口等级的 `mxt:modifier` 能力。
+
+```json
+// data/example/mxt/creature_profile/spirit_beast.json
+{
+  "entities": ["example:spirit_beast"],
+  "default_level": "example:beast_growth_1",
+  "mastery_resource": "example:beast_mastery",
+  "configuration": {
+    "example:beast_growth_1": { "condition": { "type": "mxt:always" }, "ability": "example:beast_bite" },
+    "example:beast_growth_2": { "condition": { "type": "mxt:always" }, "ability": "example:beast_howl" }
+  }
+}
+```
+
+熟练度**由数据包或脚本自己涨**：本体只提供 `mastery_resource` 这个比较口径，涨它的办法都是现成的——`mxt:add_resource` 动作、灵气的 `regen`、KubeJS。服务器每 20 tick 问一次这条链：熟练度够、该级 `condition` 也成立就晋升，晋升后重算它授予的能力。
+
+契约结束会清掉这条链的记录（主动解除与死亡两条路都算）：它退回入口等级，由等级授予的能力同时被撤销。契约还在时等级跟着生物走，收进灵兽袋再放出来还在。
+
+`/contract info <目标>` 会多报两行——它现在在哪一级、下一级是什么，以及熟练度还差多少。`/contract level <目标> <等级>` 是管理员的写入入口，它不看该级自己的 `mastery` 与 `condition`。
 
 ## 在游戏里验证
 

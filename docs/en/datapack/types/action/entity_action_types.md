@@ -1,9 +1,9 @@
 ---
-title: Entity Action Types
+title: Entity Actions (entity_action_type)
 description: Every built-in entity action type registered by the mod, and the JSON fields each type accepts.
 ---
 
-# Entity Action Types
+# Entity Actions (entity_action_type)
 
 An **entity action** performs one operation on a single entity. Whatever data table declares the action supplies the entity it acts on; the action itself only describes what to do with it. `type` is written on the action object, side by side with its fields, and its value is one of the ids listed on this page, written with the `mxt` namespace.
 
@@ -851,7 +851,7 @@ Spawns on the server only.
 
 ### `mxt:spawn_lightning`
 
-Strikes a coloured lightning bolt at the acting position plus an offset; what the bolt does afterwards is up to the vanilla bolt's own behaviour.
+Strikes a coloured lightning bolt at the acting position plus an offset; what the bolt does afterwards is up to the vanilla bolt's own behaviour — colour aside, it **is the vanilla lightning bolt**: damage, ignition, lightning-rod charging, copper oxidation, thunder, the sky flash, and the villager-to-witch, pig-to-zombified-piglin and charging-creeper conversions all work as usual.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -862,26 +862,52 @@ Strikes a coloured lightning bolt at the acting position plus an offset; what th
 | `alpha` | Float | `0.3` | The glow strength, `0`–`1`. |
 | `thickness` | Float | `1` | The strand thickness, `0.1`–`4`. |
 | `palette` | RGB colour array | `[]` | A gradient of at most `16` entries. |
-| `damage` | Number provider | `5` | The lightning damage. |
-| `visual_only` | Boolean | `false` | When `true`, the bolt is decorative only. |
+| `damage` | Number provider | `5` | The lightning damage, matching vanilla. |
+| `visual_only` | Boolean | `false` | When `true`, the bolt is decorative only: it strikes but settles no damage and sets nothing on fire. |
 | `cause` | Boolean | `true` | Attributes it to the player. |
 
 ```json
 { "type": "mxt:spawn_lightning", "color": "#8A2BE2", "damage": 8 }
 ```
 
+Inside a tribulation timeline those fields go under that beat's `action`:
+
+```json
+{
+  "timeline": [
+    {
+      "type": "mxt:action",
+      "action": {
+        "type": "mxt:spawn_lightning",
+        "palette": ["#7A5CFF", "#66CCFF"],
+        "alpha": 0.45,
+        "thickness": 1.6,
+        "damage": 12
+      }
+    },
+    { "type": "mxt:idle", "duration": 20 }
+  ]
+}
+```
+
 It needs no fields at all: the bolt lands on the acting position itself, since the offsets default to `0`.
 
-`cause` attributes the bolt to the player, who then becomes the source of the damage it deals; for `cause` to take effect the acting entity itself has to be a player.
+`cause` attributes the bolt to the player, who then becomes the source of the damage it deals, and it can trigger the vanilla `channeled_lightning` advancement; for `cause` to take effect the acting entity itself has to be a player.
 
 All four number fields (the three offsets and `damage`) must evaluate to finite values, otherwise no bolt is struck. A `damage` that evaluates negative is treated as `0`.
 
+It is an `EntityAction`, so a tribulation timeline, the success and failure behaviours, per-entity formation behaviours, abilities, contracts and secret realms — any `EntityAction` slot — can use it.
+
+To strike a bolt directly without touching a data pack, use `/mxt lightning` (top-level alias `/lightning`); its arguments match the table above one to one (a gradient is written `palette 7A5CFF,66CCFF` in the command, without `#`). See [Commands](/en/player-guide/commands).
+
 ::: info Colours and Gradients
-`color` accepts the same form as an aura colour (`#RRGGBB`; an integer or an `[r,g,b]` float array is accepted too), `alpha` is `0..1`, and `thickness` is `0.1..4`.
+`color` accepts the same form as an aura colour (`#RRGGBB`; an integer or an `[r,g,b]` float array is accepted too), and its default is the vanilla cold white (rounded to 8 bits per channel); `alpha` is `0..1`, and `thickness` is `0.1..4`.
 
-`palette` **replaces** the single `color` with a gradient: it is a group of RGB colours, the first at the top of the strand and the last at the ground, at most 16 entries. The renderer colours the bolt seam by seam and interpolates between neighbouring entries; because the branches read the same seams, a branch matches the trunk at the height where it leaves it. `alpha` is still one glow value shared by the whole bolt rather than one per colour.
+`alpha` is **brightness**, not opacity: vanilla lightning uses additive blending, and the vertex colour's `RGB × alpha` is its glow strength, so turning it up gives a harsher bolt and turning it down a dimmer one.
 
-An illegal colour or a list longer than 16 fails the load instead of being dropped silently.
+`palette` **replaces** the single `color` with a gradient: it is a group of RGB colours written the same way as `color`, the first at the top of the strand and the last at the ground, at most 16 entries. Rendering takes a colour per segment from the bolt column's nine horizontal seams, interpolating linearly between adjacent entries (one entry = flat colour, two = a gradient between the ends, more = several gradient segments); the four overlay layers and the two forks read the same set of seams, so a fork matches the trunk at the height where it leaves. `alpha` is still one glow value shared by the whole bolt rather than one per colour.
+
+An illegal colour or a list longer than 16 fails at **decode time** instead of being dropped silently: a typo in a gradient should be visible.
 :::
 
 ### `mxt:modify_lifespan`

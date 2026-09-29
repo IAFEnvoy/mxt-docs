@@ -1,9 +1,9 @@
 ---
-title: 数值提供器
+title: number_provider_type（数值提供器）
 description: 简写写法、结构化表达式与全部固有数值提供器的 type、字段与取值范围。
 ---
 
-# 数值提供器
+# number_provider_type（数值提供器）
 
 凡是「随等级、境界或事件变」的数字都是数值提供器。它有三种输入形式：JSON 数字、表达式字符串，以及带 `type` 的对象。
 
@@ -222,4 +222,4 @@ exp4j 表达式，`params` 可覆盖上下文变量。
 | `mxt:environment_concentration` | 当前位置的环境模板浓度，只计算群系/维度/区域等环境来源，不包含区块库存和方块、阵法释放的灵气。 |
 | `mxt:actual_concentration` | 当前位置最终解析浓度，包含环境、区块库存以及方块和阵法等所有已生效来源。 |
 
-这两个要读世界状态，所以需要一个位置：没有实体可依附时解析为 `0`。完整的资源数值来源清单见[资源条与灵气](/datapack/types/other/resource-bar#resource-value-provider-type)。
+这两个要读世界状态，所以需要一个位置：没有实体可依附时解析为 `0`。完整的资源数值来源清单见[资源数值来源](/datapack/types/other/resource-value-provider)。

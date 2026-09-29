@@ -38,7 +38,7 @@ So this tutorial covers the chain that genuinely runs today: **define → hand o
 }
 ```
 
-The four action fields are written at the ability's own top level (see [Ability · The Four Action Fields](../datapack/json/ability.md#action-fields-by-type)), so "what happens when it fires" is written on `example:spark` itself — **one ability is enough**, with no second `mxt:interval` to split out. The `"effect": "minecraft:fire_resistance"` above is a parameter of the `mxt:apply_effect` action (the status effect it applies) and has nothing to do with the withdrawn ability-reference `effect`.
+The four action fields are written at the ability's own top level (see [Ability Types · The Four Action Fields](../datapack/types/other/ability.md#action-fields-by-type)), so "what happens when it fires" is written on `example:spark` itself — **one ability is enough**, with no second `mxt:interval` to split out. The `"effect": "minecraft:fire_resistance"` above is a parameter of the `mxt:apply_effect` action (the status effect it applies) and has nothing to do with the withdrawn ability-reference `effect`.
 
 **Only abilities that take effect at once can be carried.** An ability with a cast time (`cast_time > 0`) or one that is channelled (`mxt:channelled`) is refused, because finishing a cast or a channel walks the list of abilities the actor *holds*, and a carrier never grants anything. A refusal costs neither the carrier nor the stored aura, so you can swap the talisman or the ability and try again.
 

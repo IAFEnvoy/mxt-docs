@@ -44,11 +44,11 @@ Every value of `aura` has the same shape, and [block_aura](./block_aura.md) uses
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `amount` | Double | `0` | Initial inventory of this aura; must be non-negative. On the block side it is the base amount each block contributes. |
-| `max` | Maximum | `initial_multiplier`, multiplier `1` | The aura's maximum; the four forms are below. |
+| `max` | Maximum | `initial_multiplier`, multiplier `1` | The aura's maximum; see [Aura Maximum Types](/en/datapack/types/other/aura-maximum). |
 | `regen_per_tick` | Double | `0` | How much is restored per tick. |
 | `color` | `RGBColor` | `#FFFFFF` | Colour, used for environment rendering only. |
 
-A natural environment takes each aura's `amount` as its initial inventory, and noise and fluctuation act on that; when `max` is omitted it equals the initial value. `max` has four forms: a fixed number, `{ "type": "mxt:fixed", "value": 100 }`, `{ "type": "mxt:initial_multiplier", "multiplier": 2 }` or `{ "type": "mxt:unlimited" }`. A bare number is shorthand for `mxt:fixed`; `mxt:initial_multiplier` multiplies the initial inventory by `multiplier`, so omitting `max` means the maximum follows the initial inventory; `mxt:unlimited` means there is no maximum, and the cultivation speed side switches from `concentration / maximum` to `concentration / (concentration + 1)`. That dispatcher comes from the built-in registry `mxt:aura_maximum_type`, so a data pack can only choose an algorithm that already exists.
+A natural environment takes each aura's `amount` as its initial inventory, and noise and fluctuation act on that. `max` is this aura's maximum; when it is omitted the maximum follows the initial inventory. The forms it takes, their fields and their algorithms are on [Aura Maximum Types](/en/datapack/types/other/aura-maximum).
 
 What you write here is the **environment base** maximum. Block aura raises the effective capacity of the matching aura on top of it without consuming this maximum, and a formation can add more. `element_fit_bonus` and `element_conflict_penalty` must be finite numbers, and both `maximum` values under `client_hud` must be finite and greater than `0`; anything else is a load error.
 

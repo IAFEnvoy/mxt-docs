@@ -1,13 +1,15 @@
 ---
-title: Item Matcher Types
+title: Item Matcher (item_matcher_entry_type)
 description: The seven entries of item_matcher_entry_type, with the fields and matching rules of each.
 ---
 
-# Item Matcher Types
+# Item Matcher (item_matcher_entry_type)
 
 `item_matcher_entry_type` is the type family of each entry in an [`ItemMatcher`](../shared_data_types.md#itemmatcher): an `ItemMatcher` is one or more such entries, and each entry picks a matching mode by writing one of the IDs below in its `type`; a string without a `type` is read as a bare item ID or an item tag.
 
 `mxt:item` and `mxt:tag` are the expanded forms of the shorthands, and `mxt:technique` and `mxt:spirit_storage` have no fields at all. Entries in the array may be plain strings, objects with a `type`, or a mix of both.
+
+These entries are registered by the mod; a data pack can pick one, never add a new one.
 
 ## `item_matcher_entry_type`
 
@@ -93,7 +95,7 @@ It goes by which technique the stack teaches, not by the item ID. It asks the co
 
 ### `mxt:spirit_storage`
 
-Matches every item that stores aura.
+Matches every item that stores aura, that is, every item that can be infused with aura by holding right-click (see [Item Aura Datapack](../../json/item_aura.md)).
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |

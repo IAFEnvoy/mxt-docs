@@ -1,9 +1,9 @@
 ---
-title: 双实体行为类型
+title: bientity_action_type（双实体行为）
 description: 模组注册的全部内置双实体行为类型，以及每种类型接受的 JSON 字段。
 ---
 
-# 双实体行为类型
+# bientity_action_type（双实体行为）
 
 双实体行为作用于一对实体：施动者（actor）与目标（target）。这一对由声明该行为的那张数据表提供，行为本身只描述要对交给它的这两个实体做什么，不负责挑人。
 

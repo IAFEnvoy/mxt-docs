@@ -1,9 +1,9 @@
 ---
-title: Data Storage Types
+title: Data Storage (data_storage_type)
 description: Every entry of mxt:data_storage_type — the declaration and state fields of the six kinds content can write, of the container and of the default kind, plus the family + id addressing.
 ---
 
-# Data Storage Types
+# Data Storage (data_storage_type)
 
 State an ability leaves behind at runtime is stored by **kind**, and the top-level `type` of each value comes from the `mxt:data_storage_type` registry. The kind decides what that value stores, and its fields come in two halves: **declaration fields** are the parameters fixed when the kind is declared on a host, and **state fields** are the current values filled in by whoever writes the value.
 

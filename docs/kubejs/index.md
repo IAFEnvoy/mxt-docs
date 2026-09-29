@@ -26,6 +26,7 @@ KubeJS 适合注册具体物品、方块、配方和内容对象；MiXianTu 负�
 | `MxtSpiritRoots` | 查询、授予、移除与开关灵根。 |
 | `MxtPhysiques` | 查询、授予、移除与开关体质。 |
 | `MxtTechniques` | 查询、学习与遗忘功法，并读它的进度等级。 |
+| `MxtProgression` | 按所有者读写实体持有的进度等级，功法与灵宠共用同一套。 |
 | `MxtQuality` | 读物品堆解析出的品质与所属链条，写覆盖组件或沿链条升一档。 |
 | `MxtSouls` | 回收实体可转移的魂魄。 |
 | `MxtLifespan` | 读寿元账本（剩余刻数与上限），改写或增减它，也能让身体当场转世。 |

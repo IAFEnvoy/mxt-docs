@@ -17,6 +17,7 @@ data/example/
 │   ├── element/common.json                  Element named by the qi aura
 │   ├── element/fire.json                    Element for the fire spirit root
 │   ├── resource/qi.json                     The stored value
+│   ├── resource/azure_mastery.json          Mastery of a technique, a plain value
 │   ├── aura/qi.json                         The aura the value carries, and its realm chain entry
 │   ├── realm_stage/qi_condensation.json     Realm chain
 │   ├── realm_stage/foundation.json
@@ -30,12 +31,18 @@ data/example/
 │   ├── spirit_root/fire_root.json           Granted by a pill
 │   ├── spirit_root/fire_common_root.json    Two elements with shares (spirit root tutorial)
 │   ├── physique/sword_bone.json             Attributes, exclusion tags, damage multipliers
+│   ├── progression/azure_breath_1.json      The technique's mastery chain
+│   ├── progression/azure_breath_2.json
+│   ├── progression/azure_breath_3.json
 │   ├── technique/azure_breath.json
 │   ├── ability/qi_bolt.json                 An active ability
 │   ├── ability/qi_recovery.json             A triggered ability
 │   ├── ability/spark.json                   An ability a talisman inscribes
 │   ├── ability/blade_storage.json           A storage ability: slots and cooldown
 │   ├── artifact/blade_sheath.json           Claims an item and hangs the storage ability on it
+│   ├── ability/azure_sword_mount.json       The vehicle: speed, seats, fuel, looks
+│   ├── ability/azure_sword_flight.json      The flying skill: which hand, and its own price
+│   ├── artifact/azure_sword.json            Claims the sword and declares the vehicle on it
 │   ├── curse/qi_backlash.json               A timed curse: on_apply, per-tick, stacking
 │   ├── talisman/flame_sigil.json            The talisman: abilities + capacity + costs
 │   ├── formation/spirit_gathering_array.json Structure, upkeep, buff module
@@ -56,6 +63,7 @@ data/example/
 │   ├── pill_binding/qi_pill.json            Which items are that pill, and their cap and cooldown
 │   ├── weapon_binding/spirit_sword.json
 │   ├── technique_binding/azure_manual.json
+│   ├── trigger/azure_mastery_from_kill.json  A kill raises mastery
 │   └── contract_type/spirit_familiar.json   Conditions, costs and caps for one beast
 ├── tags/entity_type/contract/spirit_familiar.json  Narrows which entities it accepts
 └── (kubejs/startup_scripts/mxt_items.js)    The items themselves, registered by KubeJS
@@ -73,6 +81,7 @@ data/example/
 | [Bind Actions with KubeJS](./bind-actions.md) | The hooks of the four binding tables: when they run, what they refuse, and how conditions and ordering work. | The items already work and you want to control exactly when they do what. |
 | [Define a Quality Chain](./define-a-quality-chain.md) | A three-tier quality ladder: where the name goes, where the price goes, and how an item gets a tier. | You want one item to have tiers. |
 | [Define an Ability](./add-an-ability.md) | An active ability, a triggered ability, and the ways to grant them. | You want something for the player to spend aura on. |
+| [Define a Technique and Its Levels](./define-a-technique.md) | A three-level progression chain, the value that measures mastery, and the routes that make it grow. | Abilities can already be granted and you want a technique to climb as it is used. |
 | [Define a Formation](./define-a-formation.md) | An array that activates on a structure and pays upkeep every period: buff, aura-zone, attack and protection modules, plus the plate. | You want the player to build something that keeps running. |
 | [Define a Secret Realm](./open-a-realm.md) | A pocket-world template that opens separate instance dimensions: generation, border, landing points, claiming and lifetime. | You want a throwaway or claimable little world. |
 | [Define a Talisman](./inscribe-a-talisman.md) | Carrying abilities on an item, pouring aura into it, firing it, and the two rule sets for the hand and a display stand. | You want magic the player can carry around. |
@@ -81,7 +90,9 @@ data/example/
 | [Forge a Treasure](./forge-a-treasure.md) | A forge-table line that runs end to end: methods, tool bindings, a blueprint item, plus the meter, target range, finish pattern, quality ladder and failure settlement. | You want the player to *hammer* an item out rather than craft it. |
 | [Refine a Pill](./refine-a-pill.md) | Hand-build a 3×3×3 furnace, write a recipe that settles on the actual medicinal properties, and heat it into the target range with an exotic fire. | You want to make pills, herb plots and heat sources of your own. |
 | [Contract a Beast](./contract-a-beast.md) | A contract type: who may sign, what it costs, the two caps, the orders, recall and the bag. | You want to take another mod's beasts as your own. |
-| [Storage and Spirit Vessels](./storage-and-spirit-vessels.md) | A storage ability hung on an item, and the shape and limits of the spirit vessel beside it. | You want an item to hold things. |
+| [Storage and Spirit Vessels](./storage-and-spirit-vessels.md) | The shape and the limits of the spirit vessel, plus the two sub-tutorials hanging under it. | You want an item to hold things, or to fly. |
+| [Storage](./storage.md) | A storage ability hung on an item: how the slot count settles, where the box lives, how to pre-fill it. | You want an item to hold things. |
+| [Flying Mounts](./flying-mount.md) | An item that flies: the mount definition, the flying skill, take-off and landing, and the two aura fuel bills. | You want the player to ride a flying sword. |
 | [Rifts](./rifts.md) | Rifts raised with a block and commands: target dimension, colour, links and landing. | You want a road of your own between dimensions. |
 
 ## Conventions

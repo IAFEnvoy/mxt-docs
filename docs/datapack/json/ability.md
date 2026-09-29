@@ -90,66 +90,23 @@ aside: false
 
 状态住在技能自己的附件里，一个技能一份，跟着存档也同步给客户端。每条记录按两个维度寻址：**技能自己的 id** 加 **状态种类**。不同技能 id 互不影响，同一个技能在两个人身上也互不影响。一对地址只有一条记录，写入是替换。
 
-内容用 `family` 与 `id` 给出这两个维度（`family` 是宿主所在的注册表，今天只有 `mxt:ability`），可写的是这六种：
-
-| 状态种类 | 状态字段 |
-| --- | --- |
-| `mxt:toggle` | `default`、`state` |
-| `mxt:timer` | `ends_at` |
-| `mxt:resource` | `resource`、`amount` |
-| `mxt:target_lock` | `target`（UUID 字符串） |
-| `mxt:charges` | `remaining`、`last_change` |
-| `mxt:cooldown` | `duration`、`started_at` |
+内容用 `family` 与 `id` 给出这两个维度（`family` 是宿主所在的注册表，今天只有 `mxt:ability`）。内容能写的是六种状态种类，各自的声明字段与状态字段见[状态存储类型](/datapack/types/other/data-storage)。
 
 **只有宿主声明过的种类才写得进**，撤销技能最后一个授予来源会清掉它名下的全部状态。声明表、读写用的行为与条件、冷却与充能的口径，见[技能施放](/technical/ability)。哪些类型声明了哪些种类，见[技能类型](/datapack/types/other/ability)。
 
 ## 技能类型 {#ability-types}
 
-顶层的 `type` 取自固有分派表 `mxt:ability_type`，内置十四种：`empty`、`active`、`triggered`、`modifier`、`aura`、`interval`、`channelled`、`targeted`、`composite`、`word`、`mount`、`flight_control`、`storage`、`upkeep`。法器、功法、灵根、体质、技能书、命令与脚本授予的都是同一种技能。
+顶层的 `type` 取自固有分派表 `mxt:ability_type`，内置十四种。法器、功法、灵根、体质、技能书、命令与脚本授予的都是同一种技能。
 
-**类型与各自读的字段见[技能类型](/datapack/types/other/ability)**，那里一个类型一节。这一页只留类型之间的共同部分：谁会在什么时候跑动作字段，以及定向施放怎么读。
-
-`cooldown` 与 `damage_condition` 写在 `type` 同级，但只有一部分类型读：
-
-- **`cooldown`**（`NumberProvider`，默认 `0`）：冷却长度，写进 `mxt:cooldown` 状态。会付款的类型读它：`mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` / `mxt:word` / `mxt:targeted` / `mxt:flight_control` / `mxt:storage`。**不付款的类型写了也没人读**：`mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:empty`，以及 `mxt:composite` 自己（只有子技能会付款）——这些技能被命令、脚本或已保存的轮盘格子强制施放时才写一次。
-- **`damage_condition`**（`DamageCondition`，默认 `mxt:always`）：**只有 `mxt:triggered` 读**。它订阅 `mxt:hurt` 信号时先过这个条件，不成立就跳过这次信号。别的类型写了等于没人读，要挑伤害场景请用 `condition` 或动作里的条件。
-
-### 每个类型读哪些字段 {#fields-per-type}
-
-每种类型从**同一个 JSON 对象**里读自己那几个键，`type` 是平铺分派、不是嵌套对象。**没被列出来的键写了也不读**。两条最容易踩的：
-
-- **`cooldown` 与 `damage_condition` 不属于通用字段**，它们写在 `type` 同级，但只有上一条列出的那些类型读。
-- **四个动作字段不属于通用字段**，只有会跑动作的类型读，见下一节。
+**每个类型自己读哪些字段、什么时候跑，见[技能类型](/datapack/types/other/ability)**：那里一个类型一节，另有一览、按类型的状态种类，以及四个动作字段的时机表。`cooldown` 与 `damage_condition` 也在那一页——它们写在 `type` 同级，但只有一部分类型读。
 
 ### 四个动作字段 {#action-fields-by-type}
 
-`entity_action`、`target_selector`、`target_condition`、`bi_entity_action` 写在**技能顶层**，与 `type` 平级，默认分别是 `mxt:no_op` / `mxt:self` / `mxt:always` / `mxt:no_op`。它们不是通用字段：只有会跑动作的类型读，别的类型写了不报错也不生效。
+`entity_action`、`target_selector`、`target_condition`、`bi_entity_action` 写在**技能顶层**，与 `type` 平级，默认分别是 `mxt:no_op` / `mxt:self` / `mxt:always` / `mxt:no_op`。它们**不是通用字段**：只有会跑动作的类型读，别的类型写了不报错也不生效。
 
 同一条链里的顺序永远是：`entity_action`（先跑）→ `target_selector` 取目标 → 每个目标过 `target_condition` → 通过才跑 `bi_entity_action`。一个目标失败不影响别的目标，动作抛异常也只记一条日志、不打断其余目标。`target_selector` 自己的字段见[技能目标选择器类型](/datapack/types/other/ability-selector#ability-target-selector-type)。
 
-会跑这套字段的是五个类型，各自按**自己的时机**跑：
-
-| 类型 | 什么时候跑这四键 |
-| --- | --- |
-| `mxt:active` | 按下的那一次（有 `cast_time` 时是走完的那一 tick）。 |
-| `mxt:triggered` | 触发器命中、概率通过、费用付掉之后。 |
-| `mxt:channelled` | 激活时一次，随后每个 `tick_interval` 在维持资源扣成功后各一次。 |
-| `mxt:aura` | `interval` 到点的脉冲**按半径逐个找实体**，对每个实体只跑 `target_condition` + `bi_entity_action`（脉冲不读 `target_selector` 与 `entity_action`）；被一次性发动（命令 / 脚本 / 符箓）时按普通路径跑一次整套。 |
-| `mxt:interval` | 自己按 `interval` 跑整套；被命令或脚本一次性发动时按普通路径跑一次。 |
-
-`mxt:word` 自带终端载荷（它自己的 `effect` 字段），不读这四个键；`mxt:composite` 委托给子技能，也不读；`mxt:targeted` 同样不读（它只挑目标、只跑载荷的单目标那一半）；`mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` 也不读。
-
-```json
-{
-  "type": "mxt:active",
-  "costs": [{"id": "example:qi", "amount": 10}],
-  "cooldown": 40,
-  "entity_action": {"type": "mxt:spawn_particles", "particle": {"type": "minecraft:flame"}},
-  "target_selector": {"type": "mxt:ray", "length": 16},
-  "target_condition": {"type": "mxt:not_owner"},
-  "bi_entity_action": {"type": "mxt:set_on_fire", "ticks": 60}
-}
-```
+**会跑这套字段的五个类型各自按什么时机跑、哪些类型根本不读，见[技能类型 · 四个动作字段](/datapack/types/other/ability#action-fields-by-type)。**
 
 ### 定向施放（`mxt:targeted`） {#targeted}
 
@@ -181,6 +138,39 @@ aside: false
 ```
 
 `example:flame_mark` 自己带 `target_condition` 与 `bi_entity_action`（它是这套施放里的载荷），按下那条 `mxt:targeted` 的人付钱、也被记成行为的来源。
+
+### 飞行法器（`mxt:mount`） {#mount-render}
+
+**写一条 `mxt:mount` 就是声明"这件法器是飞行法器"**：把它写进法器的 `abilities`，御器之术（`mxt:flight_control`）才会从主手、其次副手把它取出来当载具——飞多快、坐几个人、烧什么燃料、有什么行为，全由这一条自己回答（字段表见[技能类型 · `mxt:mount`](/datapack/types/other/ability#mxt-mount)）。这一节讲的是它顺带回答的另一半：**这个载具长什么样**。默认画的是**它承载的那件物品的物品模型**（展示框那套上下文：原始大小、没有位移的卡片），`render` 选**用哪套渲染器**画它，`display` 决定模型**相对载具原点怎么摆**。渲染只发生在客户端：专用服务端把 `render` 当一段普通数据解开，既不画也不判断这台机器有没有对应的渲染器。
+
+`render` 是按 `type` 分派的字段，与技能自己的 `type` 是同一套写法：默认 `mxt:item`（画承载物品的物品模型），可以换成 `mxt:geckolib` 或内容模组注册的渲染器。**每一档的字段、`mxt:geckolib` 的三个资源 id 怎么写、以及七个姿态怎么判，见[载具渲染器类型](/datapack/types/other/mount-render)。**
+
+**`display` 是可选字段**，不写就用该渲染器自己的默认姿势；三个向量与原版物品模型的 `display` **同名同义**（从物品模型里抄一段过来基本能直接用）：
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `translation` | 三个 double | `[0, 0, 0]` | 偏移，**单位是 1/16 格**（与原版 `display.translation` 一致，注意它和 `mxt:mount` 里其它以**格**为单位的数字不同），在载具原点之上叠加；载具原点就是碰撞箱底面 |
+| `rotation` | 三个 double | 物品那一档 `[90, 0, -45]`、GeckoLib 那一档 `[0, 0, 0]` | **角度**，按原版那套 `rotationXYZ`（先 X、再 Y、再 Z）复合；物品那一档的默认值＝把展示框里竖着的卡片放平（X 90°）、把贴图里斜着的剑刃转到正前方（面内的 45° 折进 Z 分量）。GeckoLib 的模型是立着做的，所以它的默认不转 |
+| `scale` | 三个 double | 物品那一档 `[2, 2, 2]`、GeckoLib 那一档 `[1, 1, 1]` | 倍数，`1` 就是资源包里画的原始大小；可以有负值（镜像），原版也允许 |
+
+三个向量都必须是**有限数**，NaN／无穷在加载期被拒。**写出来的 `display` 对两档含义相同**，落位顺序也一样：先叠 `translation`，再俯仰（载具的俯仰在最外层，只跟视线走一半），然后才是 `rotation`／`scale`；载具自身的朝向在最外层，所以定义里**不需要管朝向**。唯一的差别是**物品那一档会自动把模型底面贴到碰撞箱底面**（这样换任何物品模型都落在同一个平面上），GeckoLib 那一档**不自动贴地**——模型在建模软件里就以载具原点为原点，要挪就写 `display.translation`。座位（脚底高度）不属于 `display`，那是 `mxt:mount` 自己的 `seat_offsets`。
+
+用哪个实体飞由 `entity_type` 决定，字段与契约见[技能类型 · `mxt:mount`](/datapack/types/other/ability#mxt-mount)与[载具契约](../../java/interfaces/mount/vehicle.md)。
+
+```json
+{
+  "type": "mxt:mount",
+  "speed": 0.12,
+  "render": {
+    "type": "mxt:geckolib",
+    "model": "example:vehicle/azure_sword",
+    "texture": "example:textures/entity/vehicle/azure_sword.png",
+    "animations": "example:vehicle/azure_sword",
+    "states": { "idle": "hover", "moving": "fly", "ascending": "climb", "descending": "dive" },
+    "transition_ticks": 5
+  }
+}
+```
 
 ### 按键、命令与脚本
 

@@ -31,6 +31,9 @@ Each `configuration` entry describes one level:
 | --- | --- | --- | --- |
 | `condition` | `EntityCondition` | **required** | The condition for **reaching** that level. Write `mxt:always` when a level needs nothing; an array means all of them have to hold. |
 | `ability` | Ability ID, `#tag`, or an array of either | `[]` | The abilities that level grants. They are a **minimum**: they stay active on later levels, so abilities accumulate. One ability, a `#` tag, or an array of either. |
+| `action` | `EntityAction` | `mxt:no_op` | The action run once **on entering** that level. |
+
+These three fields are shared by techniques and creature profiles; there is no entry field only a spirit beast has. `action` runs once on entering that level: a natural promotion and an administrative level write both count as entering, and it runs **first** while the `mxt:progression_level` signal is published **after**, so whatever reacts sees a body that has already changed; an array of actions runs in order.
 
 `quality` does two jobs: a technique panel row starts with "technique name + level", the name is tinted with the grade's `color`, and the row tooltip's "Grade" line reads its name and colour; it is also the **default tier of the technique's carrier item**, and a `mxt:quality` component on the stack wins over it. Omit `quality` and no grade is shown and the carrier gets no default tier.
 

@@ -1,8 +1,8 @@
 ---
-title: Ability Target Selector Types
+title: Ability Target Selectors (ability_target_selector_type)
 ---
 
-# Ability Target Selector Types
+# Ability Target Selectors (ability_target_selector_type)
 
 `ability_target_selector_type` decides which entities an ability's bi-entity behaviour applies to. It is written in the ability's top-level `target_selector`, and the default is `mxt:self`.
 

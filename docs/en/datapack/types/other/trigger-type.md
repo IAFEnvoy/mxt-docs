@@ -1,11 +1,9 @@
 ---
-title: Trigger and Cost Types
-description: Every built-in entry, field, default and decision rule of the mxt:trigger_type trigger matchers and the mxt:cost_type costs.
+title: Triggers (trigger_type)
+description: Every built-in entry, field, default and decision rule of the mxt:trigger_type trigger matchers.
 ---
 
-# Trigger and Cost Types
-
-## `trigger_type`
+# Triggers (trigger_type)
 
 Trigger matchers decide which runtime events an ability, a breakthrough condition and an event rule respond to. A built-in signal matcher hard-codes one signal id per entry and, at dispatch, answers whether the signal that arrived is that one; `mxt:js` is the exception, since its signal comes from the definition itself. `type` is written on the trigger object and takes one of the ids listed below, always in the `mxt` namespace. The whole family is dispatched by the built-in `mxt:trigger_type` registry: a data pack picks an entry, it never adds one.
 
@@ -221,13 +219,13 @@ Fields such as `player`, `entity` and `victim` keep vanilla's shape: either a li
 {"type": "mxt:changed_dimension", "to": "minecraft:the_nether"}
 ```
 
-These signals are published by the mod's own hooks, so they are **repeatable and runtime only**, and like the built-in signals they serve event rules, ability triggers and breakthrough conditions alike. A signal is only published for the player it originally served (vanilla's advancement triggers only ever see a player), so a field holding an entity predicate always has the context it needs.
+These signals are published by the mod's own hooks, so they are **repeatable and runtime only** (the criterion vanilla fires at that same moment is a one-shot boolean on one player's one advancement, and it is persisted), and like the built-in signals they serve event rules, ability triggers and breakthrough conditions alike. A signal is only published for the player it originally served (vanilla's advancement triggers only ever see a player), so a field holding an entity predicate always has the context it needs.
 
 Three of them differ in timing:
 
-- `mxt:changed_dimension` is published **before** the transfer (vanilla does its bookkeeping once the transfer is done); `mxt:tame_animal` is published **before** the taming lands (vanilla fires after the tamed flag is written back), so a predicate reading the tame state itself (`nbt`, `flags`) sees the old value.
+- `mxt:changed_dimension` is published **before** the transfer (vanilla does its bookkeeping once the transfer is done, and NeoForge only offers the pre-transfer event); `mxt:tame_animal` is published **before** the taming lands (vanilla fires after the tamed flag is written back), so a predicate reading the tame state itself (`nbt`, `flags`) sees the old value.
 - `mxt:effects_changed` is published at the end of a tick, so `effects` describes the effect set after the change; several changes in one tick are merged into one.
-- `mxt:fishing_rod_hooked` only covers the loot roll (vanilla fires a second time for a hooked entity), and the event carries the hook rather than the rod, so the rod is worked out from the player's hands.
+- `mxt:fishing_rod_hooked` only covers the loot roll (vanilla fires a second time for a hooked entity, and NeoForge has no matching event), and the event carries the hook rather than the rod, so the rod is worked out from the player's hands.
 
 Damage signals publish `damage` for matching and additionally offer `original_damage`, `blocked` (`1`/`0`) and `blocked_damage` to formulas; `mxt:consume_item` offers `use_duration`, and `mxt:levitation` offers `duration` (the ticks it has lasted so far).
 
@@ -238,77 +236,3 @@ Eleven of them are triggers vanilla **polls itself** (comparing every tick or wh
 `mxt:filled_bucket` watches for an empty bucket being replaced by a non-empty item, and `mxt:item_durability_changed` for the damage value of one item going up (a repair does not fire, as in vanilla). The decision still runs vanilla's instance, which is handed the stack **as it was before the change**, so under vanilla's algorithm damage taken comes out as a negative `delta` (write `{"max": -1}`), and `durability` is the **remaining** durability after the change. The price is that these two are **wider** than vanilla: taking a filled bucket out of a chest, or changing the inventory with a command, also counts as a bucket having been filled.
 
 Two more vanilla triggers are **deliberately not ported**: `summoned_entity` needs to know who placed the block, which only exists inside the block code and would credit the wrong player if pieced together; the player that caused a `cured_zombie_villager` is not exposed.
-
----
-
-## `cost_type`
-
-Every field that consumes something is an array, and each entry writes one `Cost`. The four shapes that write a `type` are dispatched by the built-in `mxt:cost_type` registry: `mxt:resource`, `mxt:aura`, `mxt:item` and `mxt:js`; the other is the shorthand that writes no `type` and only `id` and `amount`, read as `mxt:resource`. The all-or-nothing semantics of the whole array, the channel rules and the shared evaluation rules are on [Shared Data Types · `Cost`](../shared_data_types.md#cost).
-
-### `mxt:resource`
-
-Spends a data pack value out of the payer's own value account.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `resource` | Value ID | **required** | The value to spend |
-| `amount` | `NumberProvider` | **required** | Amount to spend; must evaluate to a finite positive number |
-
-```json
-{"type": "mxt:resource", "resource": "example:qi", "amount": "5 + level"}
-```
-
-### `mxt:aura`
-
-Spends by aura identity.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `aura` | Aura ID | **required** | The aura identity to spend |
-| `amount` | `NumberProvider` | **required** | Amount to spend; must evaluate to a finite positive number |
-
-```json
-{"type": "mxt:aura", "aura": "example:fire_qi", "amount": 2}
-```
-
-What gets charged depends on the payment channel: when the payer pays, the **value that aura is measured in** is charged (what a payer carries is a value, not an aura); when a shared aura pool or a block's store pays, that aura itself is charged, rounded up to whole units. The difference between the two channels is on [Shared Data Types · `Cost`](../shared_data_types.md#cost).
-
-### `mxt:item`
-
-Spends matching items out of a player's inventory.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `items` | `ItemMatcher` | **required** | Which items may be spent; see [ItemMatcher](../shared_data_types.md#itemmatcher) |
-| `amount` | `NumberProvider` | **required** | Number of matching items to spend, rounded up; a non-positive or non-finite result means this `Cost` cannot be paid |
-
-```json
-{"type": "mxt:item", "items": "#minecraft:logs", "amount": 8}
-```
-
-### `mxt:js`
-
-Both the check and the payment go to a server script callback.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `id` | String | **required** | Callback id registered with `MxtCosts.register` |
-| `params` | Object | `{}` | Arbitrary JSON passed to the callback |
-
-```json
-{"type": "mxt:js", "id": "example:quest_token", "params": {"count": 3}}
-```
-
-A script `Cost` is checked and then paid on the server, and it needs a player. The callback receives the payer and `params`, not the ability's formula context, because a `Cost` is evaluated with the payer alone.
-
-**The shorthand without `type`.** An entry in the array may also write only `id` and `amount`, and it is read as `mxt:resource`:
-
-```json
-{"id": "example:qi", "amount": 5}
-```
-
-That entry is equivalent to `{"type": "mxt:resource", "resource": "example:qi", "amount": 5}`.
-
-The payer is a **living entity** (a player, a mob and a summoned creature all count), not necessarily a player. `mxt:item` needs a player's inventory, so a payer that is not a player (or a formation with no owner) simply **cannot pay** — that is a refusal, not a broken definition; `mxt:js` needs a player and runs **last, after every other channel has finished paying** — a script cost is not staged, so the script has to stay idempotent about it.
-
-A whole array is **all or nothing**: if any one entry cannot be paid, nothing is deducted. Two entries in the same array that point at the same store (the same value written twice, or the same aura written twice) make the definition **fail to load**; a `mxt:resource` entry together with a `mxt:aura` entry measured in that value has the amounts added together, and that is not an error. An entry that cannot be decoded also fails the load; it is never dropped silently.

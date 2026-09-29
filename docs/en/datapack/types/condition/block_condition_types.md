@@ -1,9 +1,9 @@
 ---
-title: Block Condition Types
+title: Block Conditions (block_condition_type)
 description: Every built-in block condition type registered by the mod, and the JSON fields each type accepts.
 ---
 
-# Block Condition Types
+# Block Conditions (block_condition_type)
 
 A **block condition** checks one block position in the world and returns `true` or `false`. Which level and which position get checked is decided by the data table that declares the condition, so a condition only ever describes what the block at that position has to look like.
 

@@ -26,6 +26,7 @@ The KubeJS bridge is optional. It exposes **one global object per domain** inste
 | `MxtSpiritRoots` | Query, grant, remove and switch spirit roots on and off. |
 | `MxtPhysiques` | Query, grant, remove and switch physiques on and off. |
 | `MxtTechniques` | Query, learn and forget techniques, and read the progression level one is at. |
+| `MxtProgression` | Read and write the progression level a body holds, per owner, shared by techniques and spirit beasts. |
 | `MxtQuality` | Read the quality a stack resolves to and its chain, write the override component, or climb one tier. |
 | `MxtSouls` | Reclaim the transferable soul of an entity. |
 | `MxtLifespan` | Read the lifespan ledger (ticks left and the ceiling), rewrite or adjust it, and make a body be reborn on the spot. |

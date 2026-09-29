@@ -44,74 +44,11 @@ When a `border` is written, those numbers are validated together: `size` must be
 
 ## `generation` (required)
 
-`type` is one of the five below; each snippet is the value of the `generation` field.
-
-### `mxt:stem`
-
-Takes one registered dimension generator as its template and opens an instance under a new dimension key.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `stem` | Dimension generator id | **required** | For example `minecraft:overworld`, `minecraft:the_end`. |
-
-```json
-{ "type": "mxt:stem", "stem": "minecraft:the_end" }
-```
-
-### `mxt:flat`
-
-A superflat world.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `preset` | String | **required** | A vanilla superflat layer string, for example `"1*minecraft:bedrock,2*minecraft:dirt,minecraft:grass_block;minecraft:plains"`. |
-| `dimension_type` | Dimension type id | `minecraft:overworld` | Which dimension type the instance uses. |
-| `structures` | Boolean | `true` | Whether to generate structures. |
-
-```json
-{ "type": "mxt:flat", "preset": "1*minecraft:bedrock,2*minecraft:dirt,minecraft:grass_block;minecraft:plains" }
-```
-
-### `mxt:void`
-
-An empty world: no layers, one biome and no structures by default, which suits a secret realm furnished entirely from `structures`.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `biome` | Biome id | `minecraft:the_void` | The biome the whole instance uses. |
-| `dimension_type` | Dimension type id | none | Which dimension type the instance uses. |
-| `structures` | Boolean | `false` | Whether to generate structures. |
+`type` is one of five and decides how the instance dimension is built: use a registered dimension generator as a template, a superflat world, an empty world, a copy of a template directory, or a dimension that already exists. **Each `type`'s fields, defaults and when they resolve are on [Secret Realm Generation Types](/en/datapack/types/other/secret-realm-generation).**
 
 ```json
 { "type": "mxt:void", "biome": "minecraft:the_void", "dimension_type": "minecraft:the_end" }
 ```
-
-### `mxt:template`
-
-Copies `region`, `entities` and `poi` from `<server directory>/mxt_secret_realm/<template>/` and then loads them; this is the route for a hand-built map.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `template` | String | **required** | The template directory name; only `[A-Za-z0-9_-]+` is accepted, and anything else fails the creation. |
-| `stem` | Dimension generator id | **required** | The dimension generator used to load this template. |
-
-```json
-{ "type": "mxt:template", "template": "trial_arena", "stem": "minecraft:overworld" }
-```
-
-### `mxt:existing`
-
-Creates no dimension at all and uses one that already exists (including a datapack `dimension/` entry). `max_instances` is meaningless for it, and the secret realm never unloads or deletes that dimension when an instance ends.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dimension` | Dimension id | **required** | Uses this existing dimension as the instance directly. |
-
-```json
-{ "type": "mxt:existing", "dimension": "minecraft:the_end" }
-```
-
-The registry entries a `generation` names (`stem`, `dimension_type`, `biome`) are resolved **when an instance is created**: registries load in parallel, so what is read at decode time may not be bound yet. A failed resolution fails the creation (`GENERATION_FAILED`) and logs one line; no half-built instance is left behind.
 
 ## `structures` (optional)
 

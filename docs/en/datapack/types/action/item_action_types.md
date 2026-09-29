@@ -1,9 +1,9 @@
 ---
-title: Item Action Types
+title: Item Actions (item_action_type)
 description: Every built-in item action type registered by the mod, with the JSON fields that each type accepts.
 ---
 
-# Item Action Types
+# Item Actions (item_action_type)
 
 An **item action** operates on a single item stack. The holder entity and the stack are supplied by whatever data table declares the action, so the action itself only describes what to do with the stack it is handed.
 

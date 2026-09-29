@@ -60,7 +60,7 @@ The fields this ability reads (`cooldown` and the four action fields below it ar
 | `entity_action` | Runs on the caster. It defaults to `mxt:no_op`; use it for a self-buff, a particle burst or an aura change. |
 | `target_condition` | The bi-entity condition every target has to pass; `mxt:always` by default. |
 
-The four action fields always run in this order: `entity_action` first, then `target_selector` picks targets, then each target is tested by `target_condition`, and only then does `bi_entity_action` run. The full per-type timing table is on [Ability · The Four Action Fields](../datapack/json/ability.md#action-fields-by-type).
+The four action fields always run in this order: `entity_action` first, then `target_selector` picks targets, then each target is tested by `target_condition`, and only then does `bi_entity_action` run. The full per-type timing table is on [Ability Types · The Four Action Fields](../datapack/types/other/ability.md#action-fields-by-type).
 
 A few more fields are worth knowing about:
 
@@ -181,5 +181,6 @@ Abilities are a data pack registry, so load the world again rather than running 
 ## Next
 
 - [Ability](../datapack/json/ability.md) — the full field list, including `charges` and channelled upkeep.
+- [Define a Technique and Its Levels](./define-a-technique.md) — hang these abilities on a progression chain that climbs, so mastery decides when each one unlocks.
 - [Action Types](../datapack/types/action/entity_action_types.md) and [Condition Types](../datapack/types/condition/entity_condition_types.md) — everything an ability can do and check.
 - [Loot and Advancement Criteria](../datapack/loot-and-criteria.md) — rewards and advancements that react to breakthroughs and ability use.

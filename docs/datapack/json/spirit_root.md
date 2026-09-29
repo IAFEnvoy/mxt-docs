@@ -49,6 +49,8 @@ aside: false
 
 授予与移除都用实体行为：`mxt:grant_spirit_root`、`mxt:remove_spirit_root`（体质那一侧是 `mxt:grant_physique`、`mxt:remove_physique`）。
 
+本体也提供一件**灵根物品** `mxt:spirit_root`：堆上的组件 `mxt:spirit_root` 写明它授予哪一条灵根，右键即授予——走的是和行为、命令同一道判定，所以"已持有"与"元素互斥"照旧被拒。授予成功时消耗 1 个，**创造模式不消耗**；被拒时物品原样留在手上并说明原因，没有组件的空物品只提示它没写明是哪一种灵根。取这件物品用 `/give @s mxt:spirit_root[mxt:spirit_root="example:fire_root"]`，或者用 `/picker mxt:spirit_root`——那里每个灵根定义给一行**已经带好组件**的它。这是物品的使用路径，与下面那个"开 / 关"是两回事。
+
 每条已持有的灵根和体质都可以被单独**关闭**而不失去：关闭后它的元素、修炼倍率、授予的能力、被动属性、伤害倍率与它声明的 `conflicting_elements` 全部不生效，但它仍然"持有"（`mxt:has_spirit_root` / `mxt:has_physique` 照旧为真，也能正常移除），`spirit_identity` 附件里的 `disabled_spirit_roots` / `disabled_physiques` 就是这份状态，随存档与同步一起走。
 
 这个模块**没有玩家入口**（没有按键或界面）：操作用脚本的 `MxtSpiritRoots.setEnabled` / `MxtPhysiques.setEnabled`，或管理员命令 `/mxt spirit_root enable|disable`、`/mxt physique enable|disable`，接入方式照样留给内容方或整合包。它与"从数据包里拿掉这条定义"是两件事：开关只管被关的那一条、而且它仍然被持有；拿掉定义则是这条定义整个不在了（写 `neoforge:conditions`，见[停用一条定义](../overview.md#停用一条定义)）。

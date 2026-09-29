@@ -1,9 +1,9 @@
 ---
-title: Bi-entity Condition Types
+title: Bi-entity Conditions (bientity_condition_type)
 description: Every built-in bi-entity condition type registered by the mod, and the JSON fields each type accepts.
 ---
 
-# Bi-entity Condition Types
+# Bi-entity Conditions (bientity_condition_type)
 
 A **bi-entity condition** checks the relationship between two entities: an **actor** and a **target**. The pair comes from whichever field declares the condition, so the condition itself cannot pick entities — it only describes what to check about the two it is given. Most types tell the two ends apart, and swapping actor and target changes the result.
 

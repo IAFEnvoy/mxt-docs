@@ -51,7 +51,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `value_delta` | Integer | **必填** | 锻打条的偏移，**不能为 `0`**。 |
-| `costs` | `List<Cost>` | `[]` | 每次锻打的消耗，从锻打者身上扣，整份数组全有或全无；写法见[共享数据类型 · `Cost`](../datapack/types/shared_data_types.md#cost)，各类型见[触发器与消耗类型](../datapack/types/other/trigger-and-cost.md#cost-type)。 |
+| `costs` | `List<Cost>` | `[]` | 每次锻打的消耗，从锻打者身上扣，整份数组全有或全无；写法见[共享数据类型 · `Cost`](../datapack/types/shared_data_types.md#cost)，各类型见[cost_type（消耗）](../datapack/types/other/cost-type.md)。 |
 | `condition` | `EntityCondition` | `mxt:always` | 允许使用该手法的条件，判定对象是**玩家**（[实体条件](../datapack/types/condition/entity_condition_types.md)）。 |
 | `icon` | 图标引用 | 无 | 列表里画什么，**同时决定这个手法在列表里叫什么名字**。 |
 | `cooldown` | Integer | `0` | 冷却，单位 tick，范围 `0..72000`。 |

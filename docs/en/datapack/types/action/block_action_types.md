@@ -1,9 +1,9 @@
 ---
-title: Block Action Types
+title: Block Actions (block_action_type)
 description: Every built-in block action type registered by the mod, and the JSON fields each type accepts.
 ---
 
-# Block Action Types
+# Block Actions (block_action_type)
 
 A **block action** operates on one block position in the world. The level and the position are supplied by whatever data table declares the action, and some callers also supply a facing direction; the action itself only describes what to do at that position.
 

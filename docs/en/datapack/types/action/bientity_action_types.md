@@ -1,9 +1,9 @@
 ---
-title: Bi-entity Action Types
+title: Bi-entity Actions (bientity_action_type)
 description: Every built-in bi-entity action type registered by the mod, and the JSON fields each type accepts.
 ---
 
-# Bi-entity Action Types
+# Bi-entity Actions (bientity_action_type)
 
 A bi-entity action works on a pair of entities: an **actor** and a **target**. That pair comes from whichever data table declares the action; the action itself only describes what to do with the two entities it is handed, and never picks them.
 

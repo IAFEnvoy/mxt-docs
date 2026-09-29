@@ -39,7 +39,6 @@ Blank carriers, identity items and fixed props are ordinary items as well. Block
 |---|---|---|
 | Blank carrier | Spirit Ring | `mxt:spirit_ring` |
 | Blank carrier | Spirit Stone Bag | `mxt:spirit_stone_bag` |
-| Identity and record | Spirit Root | `mxt:spirit_root` |
 | Identity and record | Cultivation Jade Slip | `mxt:cultivation_jade_slip` |
 | Identity and record | Blank Talisman | `mxt:blank_talisman` |
 | Fixed prop | Recall Talisman | `mxt:recall_talisman` |
@@ -60,6 +59,7 @@ The items below are backed by a unified server-side implementation shipped with 
 | Spirit Vessel | `mxt:spirit_vessel` | `mxt:resource_container` | Stores any `resource`. Right-click releases it to the holder, sneak-right-click stores from the holder; each resource has a capacity of 1000. |
 | Wooden Token / Stone Token | `mxt:wooden_token`, `mxt:stone_token` | `mxt:token` | Carry `kind`, `value` and `owner` together for the secret realm and trade permission systems. |
 | Identification Mirror | `mxt:identification_mirror` | consumes `mxt:identification` | Resolves items that carry an identification component in a unified way; the items to identify come from content packs or other mods. |
+| Spirit Root | `mxt:spirit_root` | `mxt:spirit_root` | Stores a `spirit_root` definition; right-click to gain that root ("already held" and element conflicts are refused as usual, see [spirit_root](/en/datapack/json/spirit_root#holding)), spending one item on success and **none in creative mode**. |
 | Talisman Brush / Talisman Ink | `mxt:talisman_brush`, `mxt:talisman_ink` | none | Generic base inputs for talisman crafting and formation content, used together with Blank Talisman; the recipes come from datapacks or KubeJS. |
 | Talisman | `mxt:talisman` | `mxt:talisman`, `mxt:spirit_storage` | Holds the `talisman` definitions inscribed on it, in order, plus a `mode` (`fire` by default, or `store`). Holding right-click pours spirit power in (capacity = one invocation's aura entries times the inscriptions' `capacity` multiplier, itself capped by what the carrier has left, counted per aura); a full carrier fires everything inscribed on it, and once the store covers one invocation's aura entries a plain right-click fires it too — declare a `durability` / `consume` and a larger multiplier to fire several times from a single pour. A sneak-use switches the mode. An inscribed definition may declare a durability (`durability` / `consume`): the cap is written into the vanilla components (`max_damage` plus `max_stack_size: 1` and `damage: 0`), so the item shows a durability bar, and firing spends wear instead of whole carriers until the carrier breaks. |
 
@@ -83,10 +83,13 @@ give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_rea
 give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
 give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
+give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
 give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
 ```
 
 The last line is how a **manual** is made: a stack teaches a technique only while it carries the `mxt:technique` component, and a jade slip with neither that component nor any declaration's `items` claiming it teaches nothing and shows no technique in its tooltip. The declaration (`technique_binding`) only decides how the technique is **read** and which item `/picker mxt:technique` generates as its carrier (**the creative tab does not generate carriers**); writing the item into the declaration's `items` also makes a stack a manual with no component at all. See [Technique Binding](../datapack/json/technique_binding.md).
+
+The line before it is how a **spirit root item** is made: the component names the root ID, and right-clicking grants that root ("already held" and element conflicts are refused as usual), spending one item on success and **none in creative mode**. See [spirit_root](../datapack/json/spirit_root.md#holding).
 
 ## Blocks and Workstations
 

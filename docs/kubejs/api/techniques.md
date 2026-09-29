@@ -1,6 +1,6 @@
 ---
 title: MxtTechniques：功法
-description: 查询、学习与遗忘功法；功法是修习的整体单位，带着自己的进度等级。
+description: 查询、学习与遗忘功法；功法是修习的整体单位，并带着自己的进度等级。
 ---
 
 # `MxtTechniques`：功法
@@ -34,9 +34,12 @@ MxtTechniques.forget(player, 'mxt_test:qingxiao_breathing_manual')
 const level = MxtTechniques.level(player, 'mxt_test:azure_water_manual')
 ```
 
+按所有者读写进度等级见 [MxtProgression](/kubejs/api/progression)。
+
 ## 相关
 
-- 数据包侧：[功法 `technique`](/datapack/json/technique)。
+- 数据包侧：[功法 `technique`](/datapack/json/technique)、[进度链 `progression`](/datapack/json/progression)。
+- 按所有者读写进度等级：[MxtProgression](/kubejs/api/progression)。
 - 修为与突破：[MxtCultivation](/kubejs/api/cultivation)。
-- 管理员命令：[/technique](/player-guide/commands/technique)。
+- 管理员命令：[/technique](/player-guide/commands/technique)、[/contract](/player-guide/commands/contract)。
 - [KubeJS API 参考](/kubejs/api-reference)。

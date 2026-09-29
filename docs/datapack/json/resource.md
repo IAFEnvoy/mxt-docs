@@ -76,76 +76,28 @@ aside: false
 
 自我 HUD 的两列由玩家拖动，位置存在客户端配置里，数据包只决定这一条落进哪一列。
 
-内置绘制器有 `mxt:boss_bar`、`mxt:textured_bar`、`mxt:segmented_bar`、`mxt:radial_bar` 和 `mxt:text_only`。资源条走 NeoForge 的 GUI Layer，只画在左列或右列，不占屏幕中央。
+资源条走 NeoForge 的 GUI Layer，只画在左列或右列，不占屏幕中央。
 
 ### 绘制器
 
-下面四列是"绘制器有哪些字段"，第一列按 `renderer.type` 分组，一格里的字段一一对应同一行的类型、默认与说明。
-
-| 字段 | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `sprite_location``<br>``bar_index``<br>``icon_index``<br>``inverted` | `SpriteIcon``<br>`Integer`<br>`Integer`<br>`Boolean | `mxt:textures/gui/resource_bar.png``<br>``0``<br>``bar_index``<br>``false` | `mxt:boss_bar`：Origins 风格 71x8 的条与 8x8 图标，要拿贴图切出背景、填充、图标三种格子，所以 `sprite_location` **只收贴图**，写精灵是加载期错误。贴图默认视为 `256×256` 的图集，可用 `region.texture_width` / `texture_height` 改成别的尺寸。`bar_index` 与 `icon_index` 范围都是 `0..24`。 |
-| `background_sprite``<br>``fill_sprite``<br>``width``<br>``height``<br>``fill_color``<br>``show_value` | `SpriteIcon``<br>``SpriteIcon``<br>`Integer`<br>`Integer`<br>``RGBColor``<br>`Boolean | **必填**`<br>`**必填**`<br>`**必填**`<br>`**必填**`<br>``#FFFFFF``<br>``false` | `mxt:textured_bar`：底图与填充各画一次，按条自己的宽高。`width` / `height` 范围 `1..1024`。填充按进度裁，写在 `fill_sprite` 上的尺寸不参与绘制。 |
-| `segments``<br>``gap``<br>``full_color``<br>``empty_color` | Integer`<br>`Integer`<br>``RGBColor``<br>``RGBColor` | **必填**`<br>``1``<br>``#FFFFFF``<br>``#555555` | `mxt:segmented_bar`：分段条。`segments` 范围 `1..256`，`gap` 范围 `0..32`。 |
-| `radius``<br>``thickness``<br>``start_angle``<br>``end_angle``<br>``fill_color` | Integer`<br>`Integer`<br>`Double`<br>`Double`<br>``RGBColor` | **必填**`<br>`**必填**`<br>``0``<br>``360``<br>``#FFFFFF` | `mxt:radial_bar`：径向条。`radius` 范围 `1..512`，`thickness` 范围 `1..128`，两个角度以度为单位。 |
-| `format``<br>``color``<br>``show_maximum` | String`<br>``RGBColor``<br>`Boolean | `%current%``<br>``#FFFFFF``<br>``false` | `mxt:text_only`：只显示文本；格式里可以用 `%current%`。 |
-
-分段条的宽度是 `segments * 8 + (segments - 1) * gap` 像素，径向条在两个方向上都占 `radius * 2 + thickness` 像素；`mxt:textured_bar` 用自己声明的宽高，其余绘制器各自算尺寸。
-
-```json
-{"type": "mxt:segmented_bar", "segments": 10, "gap": 2, "full_color": "#66CCFF"}
-```
-
-**资源条的三个贴图字段用的是 [`SpriteIcon`](../types/shared_data_types.md#spriteicon)，不是 `ability.icon` / `resource.icon` 那种图标引用。** 后者是一张 16x16 贴图或一个物品，只画一格，没有 `region` / `width` / `height`，也不认 `{"sprite": ...}`；反过来 `SpriteIcon` 也写不成物品。两种写法：
-
-| 写法 | 说明 |
-| --- | --- |
-| 裸字符串 | 沿用字段本来的含义：`sprite_location` 是**贴图路径**，`background_sprite` / `fill_sprite` 是 GUI 图集精灵。 |
-| 对象 | `{"sprite": ...}` 是 GUI 图集精灵；`{"texture": ...}` 是贴图，可带 `region`（`u` / `v` / `texture_width` / `texture_height`，默认起点 `0,0`、整图 `256×256`）。两者都可以带 `width` / `height`。 |
-
-`width` / `height` 是画出来的**目标尺寸**（不是裁剪），必须成对写，省略就按条自己的宽高画。三条边界：
-
-- `mxt:boss_bar` 的 `sprite_location` **只接受贴图**。精灵没有"图集里切哪一格"这个概念。
-- 精灵**不能声明 `region`**，图集已经知道它在哪，写了是加载期错误。
-- `mxt:textured_bar` 的 **`fill_sprite` 上写的 `width` / `height` 不生效**：填充按条自己的进度裁，固定尺寸没有意义，那两个键不参与绘制。尺寸只属于 `background_sprite`（以及 `mxt:boss_bar` 的图集贴图）。
-
-一个对象写法里 `sprite` 与 `texture` 必须**恰好写一个**，两个都写或都不写都是加载期错误。`width` / `height` 只写一个也是加载期错误。
+绘制器族的全部类型、字段、默认值、范围与贴图写法见[resource_bar_render_data_type（资源条绘制器）](/datapack/types/other/resource-bar-render)。
 
 ### 可见性
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `type` | 见下表 | **必填** | 用哪一种显示条件。 |
+| `type` | 显示条件 id | **必填** | 用哪一种显示条件。 |
 | `hold_ticks` | Long | `60` | 只有 `mxt:recently_changed` 读：最近变过之后还显示多久，必须非负。 |
 | `min` | Double | **必填** | 只有 `mxt:resource_range` 读：包含下界，必须有限。 |
 | `max` | Double | **必填** | 只有 `mxt:resource_range` 读：包含上界，必须有限且不低于 `min`。 |
 | `values` | 显示条件数组 | **必填** | 只有 `mxt:and` / `mxt:or` 读：嵌套条件。 |
 | `value` | 显示条件 | **必填** | 只有 `mxt:not` 读：要取反的那一条。 |
 
-| `type` | 说明 |
-| --- | --- |
-| `mxt:always` | 一直显示。 |
-| `mxt:non_full` | 当前值低于最大值时显示。 |
-| `mxt:non_zero` | 仅在 `maximum - minimum > 0` 时显示；差值为零或负数时隐藏。 |
-| `mxt:recently_changed` | 最近变过之后还显示 `hold_ticks` 那么久。 |
-| `mxt:resource_range` | 当前值落在 `[min, max]` 闭区间内时显示。 |
-| `mxt:and` / `mxt:or` / `mxt:not` | 组合上面几种。 |
-
-可见性只决定画不画，绝不改数值的结算。
-
-```json
-{
-  "type": "mxt:and",
-  "values": [
-    {"type": "mxt:non_full"},
-    {"type": "mxt:resource_range", "min": 1, "max": 50}
-  ]
-}
-```
+可见性只决定画不画，绝不改数值的结算。每种显示条件读哪些字段、有哪些边界见[resource_bar_visibility_type（资源条显示条件）](/datapack/types/other/resource-bar-visibility)。
 
 ::: info 两套浓度
 
-`mxt:environment_concentration` 与 `mxt:actual_concentration` 这两个 ID 同时存在于两处：写在 `bars[].context` 里是资源条上下文，按上面那段读客户端同步下来的灵气池；写在资源数值提供器里是另一个类型，要有实体才读得出来，没有实体就是 `0`，服务端从世界状态算。完整清单见[资源条与灵气类型](../types/other/resource-bar.md#resource-value-provider-type)。
+`mxt:environment_concentration` 与 `mxt:actual_concentration` 这两个 ID 同时存在于两处：写在 `bars[].context` 里是资源条上下文，按上面那段读客户端同步下来的灵气池；写在资源数值提供器里是另一个类型，要有实体才读得出来，没有实体就是 `0`，服务端从世界状态算。完整清单见[resource_value_provider_type（资源数值来源）](/datapack/types/other/resource-value-provider)。
 
 :::
 
@@ -153,6 +105,6 @@ aside: false
 
 数据包定义不写 `translation_key`，显示名由标识符自动生成：`<类别>.<注册表命名空间>.<定义命名空间>.<路径>`。`resource` 的类别就是 `resource`、注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`，所以 `example:qi` 查 `resource.mxt.example.qi`。路径里的 `/` **原样**进键（`example:foo/bar` 得到 `resource.mxt.example.foo/bar`），按类别分子文件夹不会多出第二套翻译键规则。
 
-`resource` 是可以自带可选 `name` / `description` 的 23 张表之一，写了就用你的文本，省略才用上面的生成键（`description` 再加 `.description`）；这两个字段目前只被存储与读取，还没有地方绘制它们。
+`resource` 是可以自带可选 `name` / `description` 的 24 张表之一，写了就用你的文本，省略才用上面的生成键（`description` 再加 `.description`）；这两个字段目前只被存储与读取，还没有地方绘制它们。
 
 :::

@@ -15,7 +15,7 @@ aside: false
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `name` | Text Component | `contract_type.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `contract_type.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
+| `description` | Text Component | `contract_type.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；契约卷轴的提示框会把它显示出来，默认键没被翻译时不显示。 |
 | `owner_condition` | `EntityCondition` | `mxt:always` | 主人条件。 |
 | `creature_condition` | `EntityCondition` | `mxt:always` | 灵宠条件，资格判定之后。 |
 | `follow_action` | `EntityAction` | `mxt:no_op` | **当前命令是「跟随」时**每 tick 执行的行为。 |
@@ -35,6 +35,8 @@ aside: false
 `max_owned` 按主人索引计数，解除或死亡即腾出名额。`recall_cooldown` 的起点记在契约记录上，作用于御兽铃轮盘/命令下的那条「召回」命令。
 
 **命令不是这里的数据包字段**：主人能给灵宠下的命令（跟随 / 游荡 / 驻守 / 召回）由**生物自己回答**，内容模组可以自己再加一条；当前那条记在灵宠的契约记录里，读不出来的 id 按「跟随」处理。见 [命令](/player-guide/commands/contract) 与 [接口](../../java/interfaces/index.md)。
+
+**读契约状态用实体条件 [`mxt:contract`](../types/condition/entity_condition_types.md)**：`bound` 问身上有没有一份契约记录，`type` 把问题限定到某几种契约类型，`behavior` 问它当前那条命令是不是其中之一。
 
 失败原因共用一套文案键 `contract.mxt.failure.<小写枚举名>`，卷轴、御兽铃、灵兽袋与命令打的是同一张表。
 

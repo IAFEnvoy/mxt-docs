@@ -83,6 +83,6 @@ Trigger subscriptions are runtime-only and are never saved. They are dropped whe
 
 ## Related
 
-- Data pack side: [`trigger`](/en/datapack/json/trigger) and [Trigger and Cost Types](/en/datapack/types/other/trigger-and-cost).
+- Data pack side: [`trigger`](/en/datapack/json/trigger), [Triggers (trigger_type)](/en/datapack/types/other/trigger-type) and [Costs (cost_type)](/en/datapack/types/other/cost-type).
 - The side that waits on a signal: [MxtAbilities](/en/kubejs/api/abilities) (triggers on an ability).
 - [KubeJS API Reference](/en/kubejs/api-reference).

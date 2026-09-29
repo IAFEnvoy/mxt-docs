@@ -13,7 +13,7 @@ aside: false
 | --- | --- | --- | --- |
 | `name` | Text Component | `curse.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
 | `description` | Text Component | `curse.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
-| `type` | `CurseType` | **必填** | `mxt:timed`、`mxt:permanent`、`mxt:triggered` 或 `mxt:empty`。 |
+| `type` | 诅咒类型 id | **必填** | 取值见[诅咒类型](/datapack/types/other/curse)。 |
 | `duration_ticks` | `NumberProvider` | `0` | 定时诅咒持续时间；单位 tick。 |
 | `tick_interval` | `NumberProvider` | `20` | 周期行为间隔。 |
 | `max_stacks` | Integer | `1` | 最大层数，范围 `1..256`。 |
@@ -29,37 +29,9 @@ aside: false
 
 `display_condition` 不满足时整行都不出现。要藏就用 `mxt:never`，要"两层以上才显形"就用 `mxt:has_curse` 查自己。
 
-### `mxt:timed`：定时
+## `CurseType`
 
-`duration_ticks` 之后到期。**时长必须为正**：常量在加载期就校验，公式在求值那一刻判定，判定不了就拒绝这次施加而不是抛异常。周期行为按 `tick_interval` 驱动。
-
-### `mxt:permanent`：永久
-
-永不到期，`duration_ticks` 不参与。周期行为按 `tick_interval` 驱动。
-
-### `mxt:triggered`：触发
-
-写了 `duration_ticks` 就按时到期，不写就永不到期。周期行为不由 `tick_interval` 驱动，而由**信号**驱动：`triggers` 里任一 `Trigger` 匹配到的信号到达时，对持有者执行一次 `on_tick`。
-
-| 字段 | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `triggers` | 数组 | `[]` | 让这条诅咒发作的信号；写法与技能触发器一致。 |
-
-```json
-{
-  "type": "mxt:triggered",
-  "triggers": [{"type": "mxt:hurt"}],
-  "on_tick": {"type": "mxt:damage", "amount": 1}
-}
-```
-
-这就是"每次受击发作一次"。加载期会拒绝 `triggers` 为空的 `mxt:triggered`。
-
-### `mxt:empty`：占位
-
-永不到期，也**不产生任何行为**：`on_apply` / `on_tick` / `on_expire` / `on_cleanse` 一律不执行。它只作为占位或标记存在。
-
-加载期还会拒绝 `mxt:timed` 写了非正数常量时长。
+`type` 选哪种生命周期策略、每种策略什么时候到期、周期行为由什么驱动、各自读哪些字段，见[诅咒类型](/datapack/types/other/curse)。
 
 ## 时长覆盖只能收紧
 

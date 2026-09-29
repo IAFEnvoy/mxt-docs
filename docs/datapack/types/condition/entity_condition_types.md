@@ -1,9 +1,9 @@
 ---
-title: 实体条件类型
+title: entity_condition_type（实体条件）
 description: 模组注册的全部内置实体条件类型，以及每种类型接受的 JSON 字段。
 ---
 
-# 实体条件类型
+# entity_condition_type（实体条件）
 
 **实体条件**检查单个实体的状态并返回 `true` 或 `false`。被检查的实体由声明该条件的那张数据表提供，条件本身只描述要检查什么。
 
@@ -211,6 +211,22 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 ```
 
 不写 `owner` 就问这个身体持有的每一种进度，任一命中即成立。它只收所有者定义的 id（单个或数组），不收 `#标签`。读的是**身体到达过的那一级**，没有晋升过就是所有者的 `default_level`；没有 `default_level`、或缓存没能索引出这条链的所有者永远答否。
+
+### `mxt:contract`
+
+读实体身上那份契约记录。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `bound?` | Boolean | `true` | 身上有没有一份契约记录。 |
+| `type?` | 契约类型 id、`#标签` 或数组 | `[]` | 把问题限定到某几种契约类型。 |
+| `behavior?` | 行为 id 或数组 | `[]` | 它当前那条命令是不是其中之一（`mxt:follow` / `mxt:wander` / `mxt:stay` / `mxt:recall`）。 |
+
+```json
+{"type": "mxt:contract"}
+```
+
+没有记录的生物对 `bound: true` 答否、对 `bound: false` 答是。`bound: false` 与 `type` 或 `behavior` 同时写会在**加载期**被拒——"没契约"与"它是哪一种契约、听谁的命令"互相矛盾。典型用法是「只有灵宠能长」：把等级那一级的 `condition` 写成 `{"type": "mxt:contract"}`。
 
 ### `mxt:has_element`
 

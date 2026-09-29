@@ -1,9 +1,9 @@
 ---
-title: 物品条件类型
+title: item_condition_type（物品条件）
 description: 模组注册的所有内置物品条件类型，以及每种类型接受的 JSON 字段。
 ---
 
-# 物品条件类型
+# item_condition_type（物品条件）
 
 **物品条件**检查单个物品堆，返回 `true` 或 `false`。持有者实体与物品堆由声明该条件的那张数据表提供，所以条件只描述"交给它的这堆东西"要满足什么。
 

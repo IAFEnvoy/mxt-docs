@@ -250,6 +250,6 @@ public static boolean mayHarm(Entity attacker, Entity victim) {
 ## 相关阅读
 
 - [双实体条件](/datapack/types/condition/bientity_condition_types)：`mxt:friend` / `mxt:team` / `mxt:relation` 的字段。
-- [formation（阵法）](/datapack/json/formation)：`spare_friends` 与 `target: allies` 的写法。
+- [formation（阵法）](/datapack/json/formation)与[阵法功能模块](/datapack/types/other/formation-action)：`spare_friends` 与 `target: allies` 的写法。
 - [Java API](/java/api)：`FriendService` 与 `FriendEvent` 的方法签名。
 - [伤害系统](/technical/damage)：友伤过滤最终要接的那条管线。

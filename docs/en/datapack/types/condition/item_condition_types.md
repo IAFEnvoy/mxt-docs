@@ -1,9 +1,9 @@
 ---
-title: Item Condition Types
+title: Item Conditions (item_condition_type)
 description: Every built-in item condition type registered by the mod, and the JSON fields each type accepts.
 ---
 
-# Item Condition Types
+# Item Conditions (item_condition_type)
 
 An **item condition** checks a single item stack and returns `true` or `false`. The holder entity and the stack come from whichever data table declares the condition, so a condition only describes what the stack it is handed has to satisfy.
 

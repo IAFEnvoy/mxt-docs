@@ -1,9 +1,9 @@
 ---
-title: 灵气上限类型
+title: aura_maximum_type（环境上限）
 description: 灵气上限 mxt:aura_maximum_type 的三种算法、字段、裸数字简写，以及省略 max 时的含义。
 ---
 
-# 灵气上限类型
+# aura_maximum_type（环境上限）
 
 `mxt:aura_maximum_type` 解析一块灵气区块的**环境**储存上限。[aura_zone](../../json/aura_zone.md) 与 [block_aura](../../json/block_aura.md) 的 `aura` 里每一项都是同一个形状，上限写在那一项的 `max` 里。方块贡献和阵法加成在运行时另行应用，不占这个上限。
 

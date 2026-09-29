@@ -250,6 +250,6 @@ The usual false alarm is "my temporary friend did not stick": check first that t
 ## See also
 
 - [Bi-entity Conditions](../datapack/types/condition/bientity_condition_types.md) — the fields of `mxt:friend` / `mxt:team` / `mxt:relation`.
-- [formation](../datapack/json/formation.md) — how `spare_friends` and `target: allies` are written.
+- [formation](../datapack/json/formation.md) and [formation modules](../datapack/types/other/formation-action.md) — how `spare_friends` and `target: allies` are written.
 - [Java API](../java/api.md) — the signatures of `FriendService` and `FriendEvent`.
 - [Damage System](./damage.md) — the pipeline friendly-fire filtering eventually feeds into.

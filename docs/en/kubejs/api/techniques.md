@@ -34,9 +34,12 @@ MxtTechniques.forget(player, 'mxt_test:qingxiao_breathing_manual')
 const level = MxtTechniques.level(player, 'mxt_test:azure_water_manual')
 ```
 
+Reading and writing levels per owner is on [MxtProgression](/en/kubejs/api/progression).
+
 ## Related
 
-- Data pack side: [`technique`](/en/datapack/json/technique).
+- Data pack side: [`technique`](/en/datapack/json/technique), [`progression`](/en/datapack/json/progression).
+- Reading levels per owner: [MxtProgression](/en/kubejs/api/progression).
 - Cultivation progress and breakthrough: [MxtCultivation](/en/kubejs/api/cultivation).
-- The operator command: [/technique](/en/player-guide/commands/technique).
+- The operator commands: [/technique](/en/player-guide/commands/technique), [/contract](/en/player-guide/commands/contract).
 - [KubeJS API Reference](/en/kubejs/api-reference).

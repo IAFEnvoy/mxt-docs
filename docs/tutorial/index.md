@@ -17,6 +17,7 @@ data/example/
 │   ├── element/common.json                  Element named by the qi aura
 │   ├── element/fire.json                    Element for the fire spirit root
 │   ├── resource/qi.json                     The stored value
+│   ├── resource/azure_mastery.json          Mastery of a technique, a plain value
 │   ├── aura/qi.json                         The aura the value carries, and its realm chain entry
 │   ├── realm_stage/qi_condensation.json     Realm chain
 │   ├── realm_stage/foundation.json
@@ -30,12 +31,18 @@ data/example/
 │   ├── spirit_root/fire_root.json           Granted by a pill
 │   ├── spirit_root/fire_common_root.json    Two elements with shares (spirit root tutorial)
 │   ├── physique/sword_bone.json             Attributes, exclusion tags, damage multipliers
+│   ├── progression/azure_breath_1.json      The technique's mastery chain
+│   ├── progression/azure_breath_2.json
+│   ├── progression/azure_breath_3.json
 │   ├── technique/azure_breath.json
 │   ├── ability/qi_bolt.json                 An active ability
 │   ├── ability/qi_recovery.json             A triggered ability
 │   ├── ability/spark.json                   An ability a talisman inscribes
 │   ├── ability/blade_storage.json           A storage ability: slots and cooldown
 │   ├── artifact/blade_sheath.json           Claims an item and hangs the storage ability on it
+│   ├── ability/azure_sword_mount.json       The vehicle: speed, seats, fuel, looks
+│   ├── ability/azure_sword_flight.json      The flying skill: which hand, and its own price
+│   ├── artifact/azure_sword.json            Claims the sword and declares the vehicle on it
 │   ├── curse/qi_backlash.json               A timed curse: on_apply, per-tick, stacking
 │   ├── talisman/flame_sigil.json            The talisman: abilities + capacity + costs
 │   ├── formation/spirit_gathering_array.json Structure, upkeep, buff module
@@ -56,6 +63,7 @@ data/example/
 │   ├── pill_binding/qi_pill.json            Which items are that pill, and their cap and cooldown
 │   ├── weapon_binding/spirit_sword.json
 │   ├── technique_binding/azure_manual.json
+│   ├── trigger/azure_mastery_from_kill.json  A kill raises mastery
 │   └── contract_type/spirit_familiar.json   Conditions, costs and caps for one beast
 ├── tags/entity_type/contract/spirit_familiar.json  Narrows which entities it accepts
 └── (kubejs/startup_scripts/mxt_items.js)    The items themselves, registered by KubeJS
@@ -73,6 +81,7 @@ data/example/
 | [KubeJS 绑定行为](./bind-actions.md) | 四张绑定表各自的钩子：什么时候执行、受什么限制、条件与先后怎么算。 | 物品已经能用了，想精确控制它什么时候做什么时。 |
 | [定义品质链](./define-a-quality-chain.md) | 一条三档品质阶梯：链名写在哪、升级的代价写在哪、怎么给物品定档。 | 想让同一件物品有高低之分时。 |
 | [定义技能](./add-an-ability.md) | 一个主动技能、一个触发技能，以及授予它们的方式。 | 想给玩家一个花灵气的地方时。 |
+| [定义功法与晋级](./define-a-technique.md) | 一条三级进度链、衡量熟练度的数值，以及让熟练度涨起来的几条路。 | 技能已经能授予，想让功法随使用往上爬时。 |
 | [定义阵法](./define-a-formation.md) | 一座按结构激活、每周期收维持费的阵法：增益、灵气域、攻击与守御模块，以及阵盘。 | 想让玩家搭出会运转的东西时。 |
 | [定义秘境](./open-a-realm.md) | 一份能开出独立实例维度的秘境模板：生成、边界、落点、认领与时限。 | 想要一次性或可认领的小世界时。 |
 | [定义符箓](./inscribe-a-talisman.md) | 把技能铭刻到载体上、灌注灵气、右键发动，以及手持与展示架的两套规则。 | 想让法术能被带在身上时。 |
@@ -81,7 +90,9 @@ data/example/
 | [锻造法器](./forge-a-treasure.md) | 一条能跑通的锻造产线：手法、工具绑定、图纸物品，以及锻打条、目标区间、收尾模式、品质阶梯与失败结算。 | 想让玩家把东西"打"出来，而不是合成出来时。 |
 | [炼制丹药](./refine-a-pill.md) | 手搭一座 3×3×3 部件丹炉，写一条按药性判定的丹方，用异火把炉温升到目标区间并收下成品。 | 想自己造丹药、灵田与异火时。 |
 | [契约灵兽](./contract-a-beast.md) | 一份契约类型：谁签得了、代价多少、两个上限、几条命令，以及召回与灵兽袋。 | 想把别的模组的兽收成自己的时。 |
-| [储物与灵器](./storage-and-spirit-vessels.md) | 一条挂在物品上的储物技能，以及灵力容器那件东西的形状与边界。 | 想让物品能装东西时。 |
+| [储物与灵器](./storage-and-spirit-vessels.md) | 灵力容器那件东西的形状与边界，以及挂在它下面的两篇子教程。 | 想让物品能装东西、或者想让它能飞时。 |
+| [储物](./storage.md) | 一条挂在物品上的储物技能：格数怎么算、箱子存在哪、怎么预填。 | 想让物品能装东西时。 |
+| [飞行法器](./flying-mount.md) | 一件会飞的物品：载具定义、御器之术、起剑落地与灵气燃料的两笔账。 | 想让玩家御剑飞行时。 |
 | [裂隙](./rifts.md) | 用方块与命令架起会传送的裂隙：目标维度、颜色、连通与落点。 | 想在维度之间开一条自己的路时。 |
 
 ## 约定

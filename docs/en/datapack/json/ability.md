@@ -91,66 +91,23 @@ Which **state kinds** an ability can store is decided by its `type`; a datapack 
 
 State lives in the ability's own attachment, one per ability. It is saved with the world and synced to clients. Each record is addressed by **two dimensions**: the ability's own id plus the state kind. Two different ability ids never affect each other, and neither do two entities holding the same ability. One address holds exactly one record, and writing replaces it.
 
-Content supplies those two dimensions as `family` and `id` (`family` is the registry the host lives in, which today means `mxt:ability`). Six kinds are writable:
-
-| State kind | State fields |
-| --- | --- |
-| `mxt:toggle` | `default`, `state` |
-| `mxt:timer` | `ends_at` |
-| `mxt:resource` | `resource`, `amount` |
-| `mxt:target_lock` | `target` (the UUID as a string) |
-| `mxt:charges` | `remaining`, `last_change` |
-| `mxt:cooldown` | `duration`, `started_at` |
+Content supplies those two dimensions as `family` and `id` (`family` is the registry the host lives in, which today means `mxt:ability`). Six state kinds are writable, and each one's declaration fields and state fields are on [Data Storage](/en/datapack/types/other/data-storage).
 
 **Only a kind the host declared can be written**, and revoking an ability's last grant source clears every piece of state under it. The declaration table, the action and the conditions that write and read it, and how cooldown and charges behave are on [Ability Casting](/en/technical/ability). Which types declare which kinds is on [Ability Types](/en/datapack/types/other/ability).
 
 ## Ability Types {#ability-types}
 
-The top-level `type` comes from the extensible built-in table `mxt:ability_type`, with fourteen built-ins: `empty`, `active`, `triggered`, `modifier`, `aura`, `interval`, `channelled`, `targeted`, `composite`, `word`, `mount`, `flight_control`, `storage` and `upkeep`. An artifact, a technique, a spirit root, a physique, an ability book, a command and a script all grant the same kind of ability.
+The top-level `type` comes from the built-in dispatch table `mxt:ability_type`, with fourteen built-ins. An artifact, a technique, a spirit root, a physique, an ability book, a command and a script all grant the same kind of ability.
 
-**Types and the fields each one reads are on [Ability Types](/en/datapack/types/other/ability)**, one section per type. This page keeps only what the types share: who runs the action fields and when, and how a targeted cast reads.
-
-`cooldown` and `damage_condition` are written beside `type`, but only some types read them:
-
-- **`cooldown`** (`NumberProvider`, default `0`): the cooldown length, written into the `mxt:cooldown` state. Types that pay read it: `mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` / `mxt:word` / `mxt:targeted` / `mxt:flight_control` / `mxt:storage`. **A type that never pays reads nothing even when it is written**: `mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:empty`, and `mxt:composite` itself (only its children pay) — those write one only when a command, a script or an already saved wheel cell force-casts them.
-- **`damage_condition`** (`DamageCondition`, default `mxt:always`): **only `mxt:triggered` reads it**. When that type subscribes to the `mxt:hurt` signal it tests this condition first and skips the signal while it fails. Written on any other type it is a key nobody reads; to pick a damage situation, use `condition` or a condition inside an action.
-
-### What Each Type Reads {#fields-per-type}
-
-Each type reads its own few keys **out of the same JSON object**; `type` is a flat dispatch, not a nested object. **A key that is not listed is read by nobody even when written.** The two easiest ones to trip over:
-
-- **`cooldown` and `damage_condition` are not common fields**: they are written beside `type`, but only the types listed just above read them.
-- **The four action fields are not common fields either**: only the types that run actions read them, see the next section.
+**Which fields each type reads and when it runs are on [Ability Types](/en/datapack/types/other/ability)**: one section per type, plus the overview, the state kinds per type and the timing table for the four action fields. `cooldown` and `damage_condition` are there too — they are written beside `type`, but only some types read them.
 
 ### The Four Action Fields {#action-fields-by-type}
 
-`entity_action`, `target_selector`, `target_condition` and `bi_entity_action` are written at the **top level of the ability**, beside `type`, with the defaults `mxt:no_op` / `mxt:self` / `mxt:always` / `mxt:no_op`. They are not common fields: only the types that run actions read them, and written on any other type they neither error nor take effect.
+`entity_action`, `target_selector`, `target_condition` and `bi_entity_action` are written at the **top level of the ability**, beside `type`, with the defaults `mxt:no_op` / `mxt:self` / `mxt:always` / `mxt:no_op`. They are **not common fields**: only the types that run actions read them, and written on any other type they neither error nor take effect.
 
 The order within one chain is always: `entity_action` (runs first) → `target_selector` picks targets → every target is tested by `target_condition` → only a target that passes runs `bi_entity_action`. One target failing does not affect the others, and an action that throws only logs a line rather than stopping the remaining targets. The fields `target_selector` itself takes are on [Ability Target Selectors](/en/datapack/types/other/ability-selector).
 
-Five types run this set, each at **its own moment**:
-
-| Type | When it runs the four keys |
-| --- | --- |
-| `mxt:active` | On the press (with a `cast_time`, the tick it finishes). |
-| `mxt:triggered` | Once the trigger fires, the chance passes and the costs are paid. |
-| `mxt:channelled` | Once on activation, then once per `tick_interval` after each upkeep deduction succeeds. |
-| `mxt:aura` | A pulse that comes due on `interval` **finds entities by radius one by one**, and each entity only runs `target_condition` + `bi_entity_action` (a pulse reads neither `target_selector` nor `entity_action`); fired one-off (a command, a script, a talisman) it runs the whole set once through the ordinary path. |
-| `mxt:interval` | Runs the whole set on its own `interval`; fired one-off by a command or a script it runs once through the ordinary path. |
-
-`mxt:word` carries a terminal payload of its own (its own `effect` field) and does not read these four keys; `mxt:composite` delegates to its children and does not read them either; `mxt:targeted` does not read them either (it only picks targets and runs the payload's one-target half); `mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` do not read them either.
-
-```json
-{
-  "type": "mxt:active",
-  "costs": [{"id": "example:qi", "amount": 10}],
-  "cooldown": 40,
-  "entity_action": {"type": "mxt:spawn_particles", "particle": {"type": "minecraft:flame"}},
-  "target_selector": {"type": "mxt:ray", "length": 16},
-  "target_condition": {"type": "mxt:not_owner"},
-  "bi_entity_action": {"type": "mxt:set_on_fire", "ticks": 60}
-}
-```
+**When each of the five types that run this set runs it, and which types read none of it, is on [Ability Types · The Four Action Fields](/en/datapack/types/other/ability#action-fields-by-type).**
 
 ### Targeted Casts (`mxt:targeted`) {#targeted}
 
@@ -182,6 +139,39 @@ An area skill and a raycast skill are one type written two ways: what changes is
 ```
 
 `example:flame_mark` carries the `target_condition` and the `bi_entity_action` itself (it is the payload of this cast), and whoever presses the `mxt:targeted` ability pays and is recorded as the origin of the behaviour.
+
+### Flying Mounts (`mxt:mount`) {#mount-render}
+
+**Writing a `mxt:mount` is how an artifact declares itself a flying mount**: once it is in the artifact's `abilities`, the flying skill (`mxt:flight_control`) can take that artifact from either hand and fly it — how fast, how many seats, what fuel it burns and what it does are all answered by this one entry (field table on [Ability Types · `mxt:mount`](/en/datapack/types/other/ability#mxt-mount)). This section covers the other half it answers: **what the mount looks like**. By default it is drawn as the item model of the item it carries (the item frame context: the authored size, a card with no offset); `render` picks **which renderer** draws it, and `display` says how the model **sits relative to the mount's origin**. Drawing is client-side only: a dedicated server decodes `render` as ordinary data and neither draws anything nor asks whether this machine has the matching renderer.
+
+`render` is a field dispatched on its own `type`, written the same way as the ability's own `type`: `mxt:item` by default (the item model of the carried item), or `mxt:geckolib`, or a renderer a content mod registered. **Every type's fields, how the three `mxt:geckolib` asset ids are written and how the seven poses are decided are on [Mount Renderer Types](/en/datapack/types/other/mount-render).**
+
+**`display` is optional**; leave it out and the renderer uses its own default pose. Its three vectors have the same names and the same meaning as a vanilla item model's `display`, so a block copied from one usually works as is:
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `translation` | three doubles | `[0, 0, 0]` | An offset **in units of 1/16 block** (as in the vanilla `display.translation`, and note that every other number of a `mxt:mount` is in **blocks**), added on top of the mount's origin, which is the bottom face of its collision box |
+| `rotation` | three doubles | `[90, 0, -45]` on the item track, `[0, 0, 0]` on the GeckoLib track | **Degrees**, composed the vanilla `rotationXYZ` way (X first, then Y, then Z); the item track's default lays the upright card flat (X 90°) and turns the diagonal blade in the sprite to face forwards (the in-plane 45° folded into Z). A GeckoLib model is authored standing up, so its default turns nothing |
+| `scale` | three doubles | `[2, 2, 2]` on the item track, `[1, 1, 1]` on the GeckoLib track | A multiplier, where `1` is the size the resource pack draws; negative values mirror, which vanilla allows too |
+
+All three vectors have to be **finite**; NaN and infinity are refused at load. **A written `display` means the same thing on both tracks**, and so does the order it is applied in: `translation` first, then pitch (the mount's pitch is outermost and only follows half the look direction), and only then `rotation` / `scale`; the mount's own facing is outermost, so a definition **never has to care about facing**. The one difference is that **the item track drops the model's bottom face onto the bottom face of the collision box** (so any item model lands on the same plane), while the GeckoLib track **does not** — such a model has the mount's origin as its own origin in the modelling tool, so write `display.translation` to move it. The seat (how high the feet stand) is not part of `display`; it is the mount's own `seat_offsets`.
+
+Which entity flies it is decided by `entity_type`; the field and the contract are on [Ability Types · `mxt:mount`](/en/datapack/types/other/ability#mxt-mount) and [the mount contract](../../java/interfaces/mount/vehicle.md).
+
+```json
+{
+  "type": "mxt:mount",
+  "speed": 0.12,
+  "render": {
+    "type": "mxt:geckolib",
+    "model": "example:vehicle/azure_sword",
+    "texture": "example:textures/entity/vehicle/azure_sword.png",
+    "animations": "example:vehicle/azure_sword",
+    "states": { "idle": "hover", "moving": "fly", "ascending": "climb", "descending": "dive" },
+    "transition_ticks": 5
+  }
+}
+```
 
 ### Keys, Commands and Scripts
 
