@@ -73,7 +73,7 @@ description: 多个注册表共用的复杂值：Cost、AuraGain、AttributeEntr
 
 用这个数组的字段共 12 个：`ability.costs`（**所有技能类型共用**，所以 `mxt:mount` 的每 tick 燃料与 `mxt:upkeep` 的每周期费用也写在这里）、`mxt:channelled` 的 `upkeep_costs`、`realm_stage.costs`、`cultivation.costs` 与 `cultivation.aura_costs`、`formation.activation_costs` 与 `formation.maintenance_costs`、`forging_method.costs`、`contract_type.costs`（签订契约的代价，由主人支付）、`talisman.costs`（`mxt:aura` 条目从载体自己的存量扣，其余向持有者收）、`quality.upgrade_costs`，以及灵气合成配方（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）的 `aura`。其中 `cultivation.aura_costs` 与灵气合成配方的 `aura` **只收 `mxt:aura` 条目**（写其它类型是加载错误），这两个字段也接受 `{"<灵气 id>": 数值提供器}` 的映射写法。
 
-**下面这些故意不是 `Cost`**，别去「修」它们：`talisman.capacity` 是个 **倍率**（double ≥ 1），它说的是「载体装得下几次发动的灵气」而不是「要扣什么」——容量的灵气身份来自同一条符 `costs` 里的灵气条目；`alchemy` 配方的 `minimum_aura` 与 `creature_profile.minimum_aura` 是要求，从不被消耗。货币系统与这套形状无关：`currency` 的 `exchanges[].cost` 是「一次兑换要几个货币物品」的整数价格（`1..99`），`quality.value_multiplier` 是价值修正，两者都不是 `Cost`。
+**下面这些故意不是 `Cost`**，别去「修」它们：`talisman.capacity` 是个 **倍率**（double ≥ 1），它说的是「载体装得下几次发动的灵气」而不是「要扣什么」——容量的灵气身份来自同一条符 `costs` 里的灵气条目；`alchemy` 配方的 `minimum_aura` 与 `creature_profile.minimum_aura` 是要求，从不被消耗。**画符扣的颜料是符笔自己的存量**（组件 `mxt:brush_pigment`，加料照原版储物袋那套点击）：付款者是那支笔而不是玩家，写进 `costs` 就得凭空造一个付款者，所以它按每一笔的长度从那口存量里直接扣。货币系统与这套形状无关：`currency` 的 `exchanges[].cost` 是「一次兑换要几个货币物品」的整数价格（`1..99`），`quality.value_multiplier` 是价值修正，两者都不是 `Cost`。
 
 ## `AuraGain`
 

@@ -102,9 +102,9 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
 
 :::
 
-## 第 4 步 —— 三个入口
+## 第 4 步 —— 四个入口
 
-能授予、移除、启停的只有三条路，这个模块**没有玩家按键与界面**。
+能授予、移除、启停的有四条路，这个模块**没有玩家按键与界面**（物品的"右键用掉一个"不算界面）。
 
 命令都需要管理员权限：
 
@@ -118,6 +118,8 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
 数据包行为：`mxt:grant_spirit_root` / `mxt:remove_spirit_root` 读字段 `spirit_root`，`mxt:grant_physique` / `mxt:remove_physique` 读字段 `physique`。**这几个字段只收具体 id，不收 `#标签`**。授予体质时 `holder_condition` 当场判一次，不满足就拒绝。
 
 脚本侧是 `MxtSpiritRoots` 与 `MxtPhysiques` 两个全局对象，各带 `grant` / `remove` / `setEnabled`；授予与开关会带回 `changed` 与 `failure`，被拒时原因写在 `failure` 里。
+
+物品侧是两件**右键即授予**的物品：`mxt:spirit_root` 与 `mxt:physique` 的堆上各带组件 `mxt:spirit_root` / `mxt:physique` 指名要授予的定义，右键走的是与命令、行为、脚本同一道判定，成功消耗 1 个（**创造模式不消耗**），被拒时物品留在手上并说明原因。取用见 `/picker mxt:spirit_root` 与 `/picker mxt:physique`（每个定义一行，已经带好组件），或 `/give @s mxt:physique[mxt:physique="example:sword_bone"]`。
 
 ## 第 5 步 —— 命名与加载
 
@@ -144,6 +146,7 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
 2. 用 `/mxt physique grant @s example:sword_bone` 授予体质。身上没有 `example:fire_root` 时会被 `holder_condition` 挡下，理由会报出来。
 3. 关掉刚拿到的灵根，`list` 仍然列出它，但标记为不生效；它的元素、修炼倍率与技能一并停下。
 4. 移除它，`list` 里就没有了。
+5. `/picker mxt:physique` 拿一件**已经带好组件**的体质物品，右键服下：身上没有 `example:fire_root` 时同样被 `holder_condition` 挡下，物品留在手上并给出理由；满足条件时物品少 1 个、`/mxt physique list` 里多出它。
 
 测试包里备了探针 `/mxt_test identity`，会断言持有 / 生效 / 关闭 / 移除、稀有度按自由文本处理、未知字段被忽略、负倍率被拒。
 

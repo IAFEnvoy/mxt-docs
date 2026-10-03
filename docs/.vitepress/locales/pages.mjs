@@ -62,6 +62,9 @@ export const sections = [
           { page: 'player-guide/commands/wheel', zh: '/wheel', en: '/wheel' }
         ]
       },
+      // The server configuration is its own page rather than a section of the command page:
+      // configuration entries are not commands, and every tab lives here.
+      { page: 'player-guide/config', zh: '服务端配置', en: 'Server Configuration' },
       { page: 'player-guide/curios-slots', zh: 'Curios 槽位', en: 'Curios Slots' },
       { page: 'player-guide/rift', zh: '裂隙', en: 'Rifts' }
     ]
@@ -165,6 +168,17 @@ export const sections = [
         items: [
           { page: 'datapack/json/index', zh: '注册表总览', en: 'Registry Overview' },
           {
+            // Recipes are not datapack registries: the vanilla RecipeManager loads them, `/reload`
+            // refreshes them, and their files live in `data/<namespace>/recipe/`. They get a group
+            // of their own so the registry overview above lists exactly the registries.
+            text: { zh: '合成表', en: 'Recipes' },
+            items: [
+              { page: 'datapack/json/alchemy_recipe', zh: 'alchemy_recipe（炼丹配方）', en: 'alchemy_recipe' },
+              { page: 'datapack/json/spirit_crafting', zh: 'spirit_crafting（灵气合成）', en: 'spirit_crafting' },
+              { page: 'datapack/json/talisman_drawing', zh: 'talisman_drawing（画符配方）', en: 'Talisman Drawing (talisman_drawing)' }
+            ]
+          },
+          {
             page: 'datapack/json/ability',
             zh: 'ability（技能）',
             en: 'ability',
@@ -177,9 +191,9 @@ export const sections = [
               { page: 'datapack/types/other/mount-render', zh: 'mount_render_type（载具渲染器）', en: 'Mount Renderers (mount_render_type)' }
             ]
           },
-          { page: 'datapack/json/alchemy_recipe', zh: 'alchemy_recipe（炼丹配方）', en: 'alchemy_recipe' },
           { page: 'datapack/json/alchemy_furnace', zh: 'alchemy_furnace（炉型）', en: 'alchemy_furnace' },
           { page: 'datapack/json/alchemy_wall_material', zh: 'alchemy_wall_material（炉壁材料）', en: 'alchemy_wall_material' },
+          { page: 'datapack/json/heat_source', zh: 'heat_source（供热方块）', en: 'heat_source' },
           { page: 'datapack/json/artifact', zh: 'artifact（法器）', en: 'artifact' },
           { page: 'datapack/json/aura', zh: 'aura（灵气）', en: 'aura' },
           {
@@ -244,7 +258,6 @@ export const sections = [
             ]
           },
           { page: 'datapack/json/progression', zh: 'progression（进度链）', en: 'progression' },
-          { page: 'datapack/json/spirit_crafting', zh: 'spirit_crafting（灵气合成）', en: 'spirit_crafting' },
           { page: 'datapack/json/spirit_herb', zh: 'spirit_herb（灵植）', en: 'spirit_herb' },
           { page: 'datapack/json/spirit_root', zh: 'spirit_root（灵根）', en: 'spirit_root' },
           { page: 'datapack/json/talisman', zh: 'talisman（符箓）', en: 'talisman' },
@@ -388,7 +401,8 @@ export const sections = [
       { page: 'technical/damage', zh: '伤害系统', en: 'Damage System' },
       { page: 'technical/identification', zh: '敌我识别系统', en: 'Foe Identification' },
       { page: 'technical/aura', zh: '灵气计算', en: 'Aura Calculation' },
-      { page: 'technical/ability', zh: '技能施放', en: 'Ability Casting' }
+      { page: 'technical/ability', zh: '技能施放', en: 'Ability Casting' },
+      { page: 'technical/talisman-scoring', zh: '画符判分', en: 'Talisman Scoring' }
     ]
   }
 ]

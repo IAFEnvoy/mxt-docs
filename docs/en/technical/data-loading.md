@@ -12,7 +12,7 @@ This page follows **one JSON file from disk to the object a settlement reads**: 
 | Class | Responsibility |
 | --- | --- |
 | `registry.MxtResourceKeys` | The `ResourceKey` of every table, kept apart from the registry instances and the registration events so codecs and runtime services can read registry identity without depending on a registration class. |
-| `registry.MxtDatapackRegistries` | Registration and the single reading entry point for the 38 datapack registries; it holds **no snapshot**, because reloading and client synchronisation belong to the vanilla registry system. |
+| `registry.MxtDatapackRegistries` | Registration and the single reading entry point for the 39 datapack registries; it holds **no snapshot**, because reloading and client synchronisation belong to the vanilla registry system. |
 | `registry.MxtRegistries` | The `DeferredRegister`s of the built-in registries: the `type` dispatch layer (actions, conditions, costs, ability types, …). |
 | `registry.MxtDataComponents` | Registration of the item data components; each one declares a persistent codec and a network codec. |
 | `runtime.ServerCache` | The one rebuild point after a world load or `/reload`: cross-entry indexes plus the validation report. |

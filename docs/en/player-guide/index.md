@@ -13,6 +13,7 @@ The mod itself provides framework items, slots, commands and interaction; the ac
 | Look up the Rift block and the Rift Anchor | [Rifts](./rift.md) |
 | Look up keybinds, the wheel, resource bars and the character panel | [Keys and HUD](./keys-and-hud.md) |
 | Debug or manage gameplay with commands | [Commands](./commands.md) |
+| Look up the server configuration entries | [Server Configuration](./config.md) |
 | Configure the back weapon and belt slots | [Curios Slots](./curios-slots.md) |
 
 ## See Also

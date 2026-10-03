@@ -88,7 +88,7 @@ data/example/
 | [Define a Tribulation](./bring-down-a-tribulation.md) | A tribulation timeline a breakthrough starts: wind-up, beats, coloured lightning, and what success and failure do. | You want a breakthrough to be dangerous. |
 | [Define a Curse](./define-a-curse.md) | A curse that fires on a timer or a signal, stacks, and can be cleansed. | You want a state that keeps coming back on the player. |
 | [Forge a Treasure](./forge-a-treasure.md) | A forge-table line that runs end to end: methods, tool bindings, a blueprint item, plus the meter, target range, finish pattern, quality ladder and failure settlement. | You want the player to *hammer* an item out rather than craft it. |
-| [Refine a Pill](./refine-a-pill.md) | Hand-build a 3×3×3 furnace, write a recipe that settles on the actual medicinal properties, and heat it into the target range with an exotic fire. | You want to make pills, herb plots and heat sources of your own. |
+| [Refine a Pill](./refine-a-pill.md) | Hand-build a 3×3×3 furnace, write a recipe that settles on the actual medicinal properties, and heat it into the target range with a heat block. | You want to make pills, herb plots and heat blocks of your own. |
 | [Contract a Beast](./contract-a-beast.md) | A contract type: who may sign, what it costs, the two caps, the orders, recall and the bag. | You want to take another mod's beasts as your own. |
 | [Storage and Spirit Vessels](./storage-and-spirit-vessels.md) | The shape and the limits of the spirit vessel, plus the two sub-tutorials hanging under it. | You want an item to hold things, or to fly. |
 | [Storage](./storage.md) | A storage ability hung on an item: how the slot count settles, where the box lives, how to pre-fill it. | You want an item to hold things. |

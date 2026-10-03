@@ -1,6 +1,6 @@
 ---
 title: Pill Binding (pill_binding)
-description: "Claims a family of already registered edible items as one pill, and gives that family its own use cap and cooldown. What a dose does belongs to the pill table."
+description: "Claims a family of already registered items as one pill, and gives that family its own use cap and cooldown. What a dose does belongs to the pill table."
 aside: false
 ---
 
@@ -8,13 +8,13 @@ aside: false
 
 File location: `data/<namespace>/mxt/pill_binding/<path>.json`
 
-**Purpose**: claims a family of already registered edible items as one pill and gives that family its own use cap and cooldown. **What a dose runs, how much toxicity it adds and what an overdose leaves behind** are not on this table — they are on [pill](./pill.md).
+**Purpose**: claims a family of already registered items as one pill and gives that family its own use cap and cooldown. **What a dose runs, how much toxicity it adds and what an overdose leaves behind** are not on this table — they are on [pill](./pill.md).
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `name` | Text Component | `pill_binding.mxt.<namespace>.<path>` | Display name. When omitted the key in the left column is used. |
 | `description` | Text Component | the same key plus `.description` | Description. |
-| `items` | `ItemMatcher` | `[]` | Matches existing edible items; see [ItemMatcher](../types/shared_data_types.md#itemmatcher). This is a binding's only entry, so an empty list means the definition does nothing. |
+| `items` | `ItemMatcher` | `[]` | Matches existing items; see [ItemMatcher](../types/shared_data_types.md#itemmatcher). This is a binding's only entry, so an empty list means the definition does nothing. |
 | `pill` | the id of a `pill` definition | **required** | Which pill this item family is, see [pill](./pill.md). |
 | `priority` | Int | `0` | Order between several definitions of the same kind matching one item: the larger number goes first; equal numbers fall back to registry order. |
 | `max_uses` | Integer | none | An optional positive integer. Omitting it means unlimited uses. Uses are counted **per definition**, so moving the pill to another carrier item or splitting it into several stacks cannot get around the cap. |
@@ -43,6 +43,6 @@ Toxicity is read with the entity condition `mxt:pill_toxicity` (`comparison` and
 give @s mxt:pill[mxt:pill={pill:"example:warming_pill"}]
 ```
 
-The built-in `mxt:pill` item only provides vanilla eating, a name and a tooltip, and the effect still runs exactly once; the carrier's display name comes from the pill this binding names, or from the one the component names when it names one.
+The built-in `mxt:pill` item only provides vanilla eating, a name and a tooltip, and the effect still runs exactly once. **Whether the stack can be eaten is answered by the item a binding claims**: vanilla starts a use cycle only from a `minecraft:consumable` on the stack, so an item that **carries** one is eaten with that item's own duration and pose (a food is still refused while the player is full, which now says so on the action bar), and an item that **carries none** has one written for it on the click and taken back when the gesture ends — the pill can be taken and the item is left untouched. Items with a use of their own are not affected: swapping, shields and kinetic weapons answer the click through their own branch of `Item#use`, and an item a hold declaration claims is read rather than eaten. The carrier's title comes from the pill the component names; with no component (the dose named by the binding) the title stays the built-in `item.mxt.pill`, and that pill's name shows on the first tooltip line.
 
 `items` is the shared matcher: an item ID, a `#tag` or a mixed array all work, and any array entry may also be a matcher object carrying a `type` (`mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:technique`, `mxt:spirit_storage` and `mxt:herb_tag`). A matcher only ever references items that are already registered. When several definitions match one item, **each registry keeps only the single definition matching it with the largest `priority`** (the field defaults to `0`; ten tables accept it — `artifact`, the six bindings `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique`, `spirit_herb`, `item_aura` and `currency`); only two definitions with the same `priority` fall back to registry order, so which one wins is written into the pack rather than decided by file names (the same direction as the `priority` of `aura_zone` and `element_reaction`). **The kind of matcher entry that matched is irrelevant**: any definition that matches is ranked by the number it declares, and naming the item by ID does not move it up. See [`ItemMatcher`](../types/shared_data_types.md#itemmatcher).

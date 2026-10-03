@@ -11,6 +11,8 @@ title: TooltipAppender
 | 形状 | 用在哪 |
 | --- | --- |
 | `event.registerAppender(TooltipLocation.HEAD / POST_CUSTOM, ...)` | 按位置插一段：品质在 `HEAD`，灵气存储、法器绑定、货币价值、符箓提示跟在自定义内容之后。 |
-| `event.registerComponentAppenderBeforeAll(组件, TooltipAppender.createComponentAppender(组件))` | 由**物品组件**驱动的一整段：契约铃、灵兽袋、符箓、储物容器这类"东西自己带着说明"的组件各注册一条。 |
+| `event.registerComponentAppenderBeforeAll(组件, TooltipAppender.createComponentAppender(组件))` | 由**物品组件**驱动的一整段：契约铃、灵兽袋、阵盘、储物容器这类"东西自己带着说明"的组件各注册一条。 |
+
+**同一个位置上的 appender 按注册顺序执行**（也就是它们的事件处理器被调用的先后），所以**几行必须按固定顺序读的内容只能由同一个 appender 写出**，拆成两个就排不明白。符箓载体就是这样：铭刻、灵气与手势提示全在 `TalismanTooltipAppender` 一处按序写出，灵气存储那一条对载体让位；品质行照旧由品质模块在 `HEAD` 给出，永远在最上面。
 
 规矩是"一个模块一个 appender"：提示行拼什么、按什么顺序，写在那个模块自己的类里。数值的拼法（两位小数、带符号、一行之间用翻译键连接而不是硬编码标点）统一走 `TooltipText`，见[公开 API](../../api.md)。

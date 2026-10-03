@@ -49,7 +49,7 @@ MiXianTu owns behaviour, conditions, aura, currency and tooltips; the binding ta
 | --- | --- | --- |
 | Item binding | `mxt/item_binding/` | Ordered entity actions and tooltip conditions for any item. |
 | Weapon binding | `mxt/weapon_binding/` | Vanilla attribute modifiers (attack damage and speed go here too), weapon actions. |
-| Pill binding | `mxt/pill_binding/` | Claims this family of edible items as one pill and gives it a use cap and cooldown; what a dose does is in [Pill](../datapack/json/pill.md). |
+| Pill binding | `mxt/pill_binding/` | Claims this family of registered items as one pill and gives it a use cap and cooldown; what a dose does is in [Pill](../datapack/json/pill.md). |
 | Tool binding | `mxt/tool_binding/` | Claims tool items and lists the forging methods they unlock. |
 | Blueprint binding | `mxt/blueprint_binding/` | Claims blueprint items and lists the forging blueprints they offer. |
 | Technique binding | `mxt/technique_binding/` | How one technique is read: hold length, pose, sound, quality chain and conditions, plus the item the mod generates as its carrier. A manual's identity is the stack's `mxt:technique` component; `items` is the optional second route. |

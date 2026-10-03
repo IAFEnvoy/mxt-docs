@@ -1,11 +1,11 @@
 ---
 title: Refine a Pill
-description: Hand-build a 3x3x3 furnace, write a recipe that settles on the actual medicinal properties, heat it into the target range with an exotic fire, and wire the result up to a pill and its toxicity.
+description: Hand-build a 3x3x3 furnace, write a recipe that settles on the actual medicinal properties, heat it into the target range with a heat block, and wire the result up to a pill and its toxicity.
 ---
 
 # Refine a Pill
 
-Alchemy is not "place one block and start brewing". A furnace is a **fixed 3x3x3 you build by hand**: a core, an input store on each side, an output store on top, and 22 casing blocks. A recipe does not match a list of item IDs either — the server settles the result on the **actual medicinal properties** in the slots at the moment the player presses Start on the core.
+Alchemy is not "place one block and start brewing". A furnace is a **fixed 3x3x3 you build by hand**: a core, an input store on each side, an output store on top, and 18 casing blocks. A recipe does not match a list of item IDs either — the server settles the result on the **actual medicinal properties** in the slots at the moment the player presses Start on the core.
 
 This page adds one minimal production line to the example pack: two medicinal properties, three herbs (all bound to existing items), one furnace spec, one wall material, one recipe and one pill with toxicity.
 
@@ -86,7 +86,7 @@ Three things to remember:
 
 To make a herb plantable, give the definition a `growth` object (the required seeds, `mature_age` / `max_age`, `growth_rate`, texture and harvest; `condition` and `costs` are optional). All three herbs here are for the furnace only, so they omit `growth`.
 
-## Step 3 — The Furnace Spec and the Wall Material
+## Step 3 — The Furnace Spec, the Wall Material and the Heat Source
 
 A furnace spec is a **specification**, not a block in the world: the core item carries it as a component, and without a spec — or with one that is not in the registry — the furnace cannot run.
 
@@ -108,13 +108,23 @@ A furnace spec is a **specification**, not a block in the world: the core item c
 }
 ```
 
+```json
+// data/example/mxt/heat_source/magma.json
+{
+  "blocks": ["minecraft:magma_block"],
+  "max_temperature": 200,
+  "heating_per_tick": 4
+}
+```
+
 - `main_slots` takes `1..2` and `auxiliary_slots` takes `0..2`. The catalyst always occupies the third slot of the auxiliary store and needs no declaration, while a slot the spec does not use accepts nothing.
 - `capacity` caps how many material items one batch may hold, and the item's own stack size still applies.
-- `cooling_per_tick` is how much the heat falls back per tick once it is above the set point or the fire is gone. With no fire at all the heat cools to `0`.
-- **The furnace withstands the coldest wall in it.** When all 22 casings are valid the furnace takes the lowest of their values and then the lower of that and the fire's own ceiling; mixing in a heat-resistant casing does not average the weak spot away. The set temperature must land between `0` and that ceiling.
+- `cooling_per_tick` is how much the heat falls back per tick once it is above the set point or the heat stops. With an empty heat cell the heat cools to `0`.
+- **The furnace withstands the coldest wall in it.** When all 18 casings are valid the furnace takes the lowest of their values and then the lower of that and the heat block's `max_temperature`; mixing in a heat-resistant casing does not average the weak spot away. The set temperature must land between `0` and that ceiling.
+- A `heat_source` gives one family of blocks two numbers: the highest temperature it supplies and how many degrees it adds per tick. `blocks` takes block ids or block tags, and when several definitions match the same block `priority` decides (the highest wins). This one makes **magma blocks** a heat block; the fields and the tie-break rule are under [heat_source](../datapack/json/heat_source.md).
 - Quality only decides the display name and the use condition. It never derives slots, capacity, cooling or the temperature ceiling.
 
-## Step 4 — Build the Furnace, Load the Fire, Load the Herbs
+## Step 4 — Build the Furnace, Load the Heat Block, Load the Herbs
 
 The shape is fixed and a data pack cannot change it. Place the core facing north and lay the rest out like this:
 
@@ -123,15 +133,15 @@ Facing the front. Left column x=2, right column x=0. Middle layer y=1, bottom ro
 
             back z=2
 left  x=2   wall 17 | wall 16 | wall 15    right x=0
-            main 14 | air  13 | aux  12
+            main 14 | wall 13 | aux  12
 front z=0   wall 11 | core 10 | wall  9
 ```
 
 1. Put the core on the front face of the middle layer at `(1,1,0)`, where `index = x + 3 * z + 9 * y` equals `10`. It faces north by default; standing north of it and facing south, your left is local `x = 2`.
 2. Put the main input store at `(2,1,1)` (index 14) on the left, the auxiliary input store at `(0,1,1)` (index 12) on the right, and the output store at `(1,2,1)` (index 22) on top. The two input stores are different block IDs, and rotating them never changes their role.
-3. Leave the centre `(1,1,1)` empty; nothing may occupy that cell.
-4. Fill the other 22 cells with `mxt:alchemy_furnace_casing`, each carrying the wall material.
-5. Put the exotic fire in the core, the main herbs in the left store, and the auxiliary herbs and catalyst in the right store.
+3. Build only the four corners of the bottom layer (`y = 0`, indices 0, 2, 6 and 8); the other five cells (1, 3, 4, 5 and 7) are not checked at all, so whatever is there or nothing, loaded or not, makes no difference to forming. The centre cell of that layer (index 4) is the heat cell.
+4. Fill the other 18 cells with `mxt:alchemy_furnace_casing`, each carrying the wall material. The middle centre `(1,1,1)` is a wall as well.
+5. Put the heat block in the bottom centre cell (index 4), the main herbs in the left store, and the auxiliary herbs and catalyst in the right store.
 
 ```mcfunction
 give @s mxt:alchemy_furnace[mxt:alchemy_furnace="example:basic"]
@@ -141,11 +151,11 @@ give @s mxt:alchemy_output
 give @s mxt:alchemy_furnace_casing[mxt:alchemy_wall_material="example:basic_wall"]
 ```
 
-You need 22 casing blocks (taking them straight from the creative inventory is the quickest way). A shell with a missing cell, an invalid wall material or a cell claimed by another furnace does not form, and the screen lists in words what is missing.
+You need 18 casing blocks (the four bottom corners plus the two layers above; taking them straight from the creative inventory is the quickest way). A shell with a missing cell, an invalid wall material or a cell claimed by another furnace does not form, and the screen lists in words what is missing.
 
-::: warning There is no built-in heat source
+::: warning The mod ships no heat block
 
-The item that heats the core has to come from a mod; a data pack cannot create one. Without it the heat never rises and starting a batch is refused over temperature, so first make sure your environment has a usable exotic fire.
+The numbers a heat block gives live in the [`mxt:heat_source`](../datapack/json/heat_source.md) data pack definitions, and a block may implement the interface itself. When the bottom centre cell holds no heat block, or holds a block with no heat, the settable ceiling is `0` and starting a batch is refused over temperature - so first make sure that cell holds a block the table knows.
 
 :::
 
@@ -236,9 +246,9 @@ give @s mxt:pill[mxt:pill={pill:"example:warming_pill"}]
 /mxt registries list
 ```
 
-1. Once the shell is laid out, every cell draws the geometry of the whole cauldron at that cell. When that does not line up, a cell is missing, a wall material is invalid, the centre cell is not empty, or another furnace has claimed a cell.
+1. Once the shell is laid out, every cell draws the geometry of the whole cauldron at that cell. When that does not line up, a cell is missing, a wall material is invalid, or another furnace has claimed a cell.
 2. Right-click the core, the main store, the auxiliary store and the output store to open one page each: the core's page is the heat readout with Set / Start / Abort, and the other three are their own slots. All four read the state of the same furnace rather than keeping a second inventory inside the block.
-3. Put the exotic fire in the core, the main herbs in the left store, and the auxiliary herbs and the catalyst in the right store. Loading materials does not start a batch.
+3. Put the heat block in the bottom centre cell, the main herbs in the left store, and the auxiliary herbs and the catalyst in the right store. Loading materials does not start a batch.
 4. Set the heat to `100` on the core's page, submit it, and press Start: the batch begins, the state walks from idle through warming to running, the heat closes in on the set point, and the progress and remaining ticks follow.
 5. Take the result out of the output store once it appears. That store is take-only; when it cannot fit the result the batch waits at "waiting for output space", and freeing a slot lets it in without brewing again.
 
@@ -252,15 +262,15 @@ How a batch **settles once it has started** has not been checked item by item in
 
 | Symptom | Cause |
 | --- | --- |
-| The structure never forms | The centre `(1,1,1)` is occupied, a cell is missing, a casing carries no valid wall material, or another furnace claimed a cell. |
-| The heat never rises | There is no exotic fire in the core, or the fire and the coldest wall have pushed the ceiling below the set point. |
+| The structure never forms | A cell is missing (only the four bottom corners count down there, and the middle centre must be walled too), a casing carries no valid wall material, or another furnace claimed a cell. |
+| The heat never rises | There is no heat block in the bottom centre cell, or the coldest wall and this block's `max_temperature` have pushed the ceiling below the set point. |
 | The first batch is refused | The set temperature must fall inside the recipe's tolerance, and when the ceiling is too low the temperature cannot even be set. |
 | The materials seem to do nothing | The role comes from the **store**: main herbs read `main_effects`, auxiliary herbs read `auxiliary_effects` and the catalyst reads `catalyst_power`. The wrong store means no power. |
 | Enough power, but a recipe conflict | A non-zero main or auxiliary property the recipe does not ask for, several matching recipes with no unique dominator, or a thermal deviation outside `balance_tolerance`. |
 | Home-grown herbs break the balance | A harvested herb carries the age it was picked at, so its power and thermal weighting move. Use age-zero herbs, or widen `balance_tolerance`. |
 | The output store is full | The batch waits at "waiting for output space" and the core keeps the result that was generated but not stored yet; free a slot and it goes in. |
 | A wall or a store was removed mid-batch | That batch settles as a failure once and does not return the materials already loaded; removing a store only drops that store's own contents. |
-| A hopper will not pull the result | The output store can only be pulled from its bottom face, and once the furnace is formed that face looks onto the centre air cell. |
+| A hopper will not pull the result | The output store can only be pulled from its bottom face, and once the furnace is formed that face looks onto the middle-layer centre casing. |
 
 ## Next
 

@@ -5,15 +5,14 @@ description: Default keybinds, the twelve-sector wheel that triggers abilities a
 
 # Wheel, Resource Bars and Aura HUD
 
-Abilities and spirit power share one **twelve-sector wheel**: hold the wheel key (`R` by default), the **direction** the pointer is in picks the sector, that sector turns gold and grows a little, and **its name is written in the middle of the wheel**. **Choosing and using are two keys**: `R` only chooses, and the use key (`V` by default) casts or fires - while the wheel is up it spends the sector the pointer is on (the wheel stays open, so several sectors can be spent in one hold), and while the wheel is down it spends the one selected last; a left click is the same as `V`. This replaced the two hotbars the ability and spirit power entries used to have.
+Abilities and spirit power share one **twelve-sector wheel**: hold the wheel key (`R` by default), the **direction** the pointer is in picks the sector, that sector **darkens** and grows a little, and **its name is written in the middle of the wheel**. **Choosing and using are two keys**: `R` only chooses, and the use key (`V` by default) casts or fires - while the wheel is up it spends the sector the pointer is on (the wheel stays open, so several sectors can be spent in one hold), and while the wheel is down it spends the one selected last; a left click is the same as `V`. This replaced the two hotbars the ability and spirit power entries used to have.
 
 ## Keybinds
 
 | Keybind ID | Default | Name in the language file | Action |
 |---|---|---|---|
 | `key.mxt.cultivate` | `C` | Toggle Cultivation Mode | Starts or stops cultivating. |
-| `key.mxt.information_panel` | `Z` | Open Character Information | Opens the character information panel when no other screen is open. |
-| `key.mxt.technique_panel` | unbound | Open Technique Panel | Opens the technique panel when no other screen is open. It is also reachable from a button in the character information panel, which is why it ships without a default key. |
+| `key.mxt.information_panel` | `Z` | Open / Close Character Information | Opens the character information panel when no other screen is open; pressing it again while the panel is up closes it (the same as `Esc`). |
 | `key.mxt.swap_back` | unbound | Swap Main Hand with Back Weapon Slot | Swaps the main hand stack with the first `back_weapon` Curios slot. |
 | `key.mxt.hud_layout` | right `Shift` | Edit HUD Layout | Opens the drag editor for movable HUD elements when no other screen is open. |
 | `key.mxt.wheel` | `R` | Wheel Menu | Holds up the twelve-sector wheel; the sector the pointer points at is the one you **select**. Letting go (or pressing it again in toggle mode) only closes the wheel - it triggers nothing. **Opening always returns to the main wheel (the first page).** |
@@ -23,7 +22,7 @@ Abilities and spirit power share one **twelve-sector wheel**: hold the wheel key
 | `key.mxt.wheel_configuration` | unbound | Open Wheel Configuration | Opens the wheel editor when no other screen is open (the same as the `/wheel` client command); it is not a combat action, which is why it ships without a default key. It edits the main wheel only. |
 | `key.mxt.wheel_slot.1` … `.12` | all unbound | Wheel Slots 1-12 (their own "MiXianTu: Wheel Slots" category) | One key per cell; `Slot 1` is the one straight up, counting clockwise (the list stays in numeric order). Pressing one **selects that cell of the current page and spends it right away**, exactly like pointing at it and pressing `V`; the cell also becomes the current selection (the wheel grid on the left turns gold and the number is remembered across sessions), so `V` afterwards spends the same one again. A cell with nothing in it does nothing at all. |
 
-Every keybind lives in the `MiXianTu` category (`key.category.mxt.general`) - except the twelve "Wheel Slots" keys, which have a **category of their own**, "MiXianTu: Wheel Slots" (`key.category.mxt.wheel_slot`); all of them can be changed in the vanilla controls settings. The unbound-by-default keys are "Open Technique Panel", "Swap Main Hand with Back Weapon Slot", "Open Wheel Configuration" and **all twelve wheel-slot keys**. The old "Show Ability Hotbar" (`LAlt`) and "Fire Spirit Power" (`V`) keys were deleted along with those hotbars - `V` is now the new "Use Wheel Selection", which spends whatever the wheel has selected rather than firing spirit power directly. See [Curios Slots](./curios-slots.md) for the slot rules the swap keybind follows.
+Every keybind lives in the `MiXianTu` category (`key.category.mxt.general`) - except the twelve "Wheel Slots" keys, which have a **category of their own**, "MiXianTu: Wheel Slots" (`key.category.mxt.wheel_slot`); all of them can be changed in the vanilla controls settings. The unbound-by-default keys are "Swap Main Hand with Back Weapon Slot", "Open Wheel Configuration" and **all twelve wheel-slot keys**. The old "Show Ability Hotbar" (`LAlt`) and "Fire Spirit Power" (`V`) keys were deleted along with those hotbars - `V` is now the new "Use Wheel Selection", which spends whatever the wheel has selected rather than firing spirit power directly. See [Curios Slots](./curios-slots.md) for the slot rules the swap keybind follows.
 
 ## HUD Layout Editor
 
@@ -52,7 +51,7 @@ The wheel is the **only** way an ability or a spirit power is triggered (artifac
 - Because pages come and go with your gear, **the numbers behind them shift** - the same number can point at another ability once you swap items. That is deliberate: **a number is a place ("which cell"), not an identity**, and it is never rewritten because your gear changed.
 - **Spending an ability casts it once** (each skill that needs a key takes a cell: cast types such as `mxt:active` and the targeted cast `mxt:targeted`, plus the flying skill `mxt:flight_control` and storage `mxt:storage`); **spending a spirit power fires one burst**; **spending such a skill does what its carrier does** (the flying skill flips: on takes a flying artifact out of the main hand and then the off hand and takes off, off lands and hands the artifact back; the storage opens its own box). Costs, cooldowns, cast times, conditions and effects are **all decided by the server** - the client only reports which entry of which source was spent, and the server checks that the source really holds it. Whether a switch is on is the server's answer too: you press once, it reads the state and decides, so the cell and the world can never disagree.
 - **A cell on cooldown carries the vanilla item-cooldown sheet** - a 50% white sheet over the remaining fraction of the icon box, draining downward as the wait runs out - and the middle of the wheel says "On cooldown 4.3s", the seconds left with one decimal. A cell that is unusable for any other reason is washed over instead. Whether a trigger is honoured is still the server's decision; the screen never makes it for the server.
-- **What a cell draws**: the entry's icon; **an entry with no icon draws the start of its name instead** (the whole name is always in the middle of the wheel), so a wheel full of icon-less entries has no blank cells. A name never runs into the cell next to it.
+- **What a cell draws**: the entry's icon; **an entry with no icon draws the start of its name instead** (the whole name is always in the middle of the wheel), so a wheel full of icon-less entries has no blank cells. A name never runs into the cell next to it. **Behind both sits the cell's own number** (1 straight up, counting clockwise) as a large faint dark figure filling the sector - the same number the configuration screen and the twelve slot keys use, so you can see at a glance which key fires which sector.
 - **Two keys, two jobs**: `R` only selects (**letting go triggers nothing**) and `V` does the using. While the wheel is up, `V` spends the pointed cell and leaves the wheel standing, so you can move on and press it again; while the wheel is down, `V` spends **the cell the number you chose stands for right now**. A left click is the same as `V`.
 - **Putting an item away does not lose your choice**: when the number addresses a cell that no longer exists (its page is gone, or that page holds fewer skills than it did), `V` falls back to **the last cell that holds anything** - and **the number itself is not changed**, so picking the sword back up finds the same skill again. **This only covers cells that do not exist**: pointing at an empty cell of the main wheel and pressing `V` still does nothing (that cell is there, it is just empty), and **an empty cell never clears your choice** - the choice stays on the last cell you really selected; the empty part of a page read from your gear has no cells at all, so aiming there changes nothing either. **Only a wheel with nothing anywhere in it** is ever "no target".
 - **A line above the ring names the page** ("Wheel 2/3: Main hand", with the two switch keys named at the end, using whatever keys you bound): the ring looks the same whichever page it shows, so that line is how you know where you are.
@@ -110,7 +109,7 @@ Bars are labelled by their context, for example Stored aura, Sensed concentratio
 
 ## Character Information Panel
 
-`Z` opens the **Character Information** panel (`screen.mxt.information_panel`) when no other screen is open.
+`Z` opens the **Character Information** panel (`screen.mxt.information_panel`) when no other screen is open, and pressing `Z` again while it is up closes it (`Esc` closes it too).
 
 | Group | Entries |
 |---|---|
@@ -119,9 +118,9 @@ Bars are labelled by their context, for example Stored aura, Sensed concentratio
 
 The breakthrough line reports whether the required progress is reached and whether its conditions are met. The client setting **Client Settings → Information Panel → Refresh Interval** (20 by default) controls how often the panel refreshes.
 
-## Technique Panel
+## Learned Techniques Page
 
-The **Techniques** panel (`screen.mxt.technique_panel`) lists every technique you have learned, one row each, and scrolls when the list is longer than the panel. Open it with its own keybind — unbound by default — or with the **Techniques** button in the character information panel.
+The technique page (`screen.mxt.technique_panel`) is the second page of the character information panel: the **Character Info** and **Learned Techniques** tabs at the panel's top left switch between them, and the panel carries no separate title line. It lists every technique you have learned, one row each, and scrolls when the list is longer than the page. Open it with the **Learned Techniques** tab after opening the panel with `Z`.
 
 | Row part | Shows |
 |---|---|

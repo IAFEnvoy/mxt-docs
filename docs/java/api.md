@@ -1,6 +1,6 @@
 ---
 title: Java 公开 API
-description: 别的模组可以直接调用的运行时入口：读数据包注册表、定义显示名、灵气与资源、修炼与突破、技能、伤害、阵法、敌我识别与货币。
+description: 别的模组可以直接调用的运行时入口：读数据包注册表、定义显示名、物品目录与创造栏、灵气与资源、修炼与突破、技能、伤害、阵法、敌我识别与货币。
 ---
 
 # Java 公开 API
@@ -9,7 +9,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 
 三件事先说清楚：
 
-- **这些入口留在各自的模块包里**（`registry`、`util`、`runtime/*`），只有**要实现**的接口在 `com.iafenvoy.mxt.api`，见[接口](/java/interfaces/)。
+- **这些入口留在各自的模块包里**（`registry`、`util`、`runtime/*`、`data`），只有**要实现**的接口在 `com.iafenvoy.mxt.api`，见[接口](/java/interfaces/)。
 - **服务端权威**：扣费、修炼、技能、伤害、阵法结算都只在服务端做，客户端只渲染与发请求。哪些入口在客户端会失效，集中在[服务端与客户端的边界](#boundary)。
 - 想知道某条线**为什么**长这样（而不是"有哪些方法"），看技术页：[灵气计算](/technical/aura)、[伤害系统](/technical/damage)、[敌我识别系统](/technical/identification)。
 
@@ -22,6 +22,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 | 拼一行提示框数值 | [`TooltipText`](#tooltiptext) | `util` |
 | 求一个数据包数值 | [`NumberProvider`](#numberprovider) | `util.formula` |
 | 判断"这件物品算不算这条定义" | [`ItemMatcher`](#itemmatcher) | `util.matcher` |
+| 把注册表里的定义变成创造栏物品 | [`CreativeTabHelper`](#creativetabhelper) | `data` |
 | 问某个坐标有多少灵气 | [`AuraService`](#auraservice) | `runtime.world` |
 | 读写实体身上的一条数值 | [`ResourceService`](#resourceservice) | `runtime.resource` |
 | 加修炼进度、突破、设置境界 | [`CultivationService`](#cultivationservice) | `runtime.cultivation` |
@@ -38,7 +39,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 
 ### `MxtDatapackRegistries` {#mxtdatapackregistries}
 
-包 `com.iafenvoy.mxt.registry`。38 张原生数据包注册表的声明与统一读取入口，`/reload` 重建与客户端同步都交给原版注册表系统，这个类**不持有任何快照**。
+包 `com.iafenvoy.mxt.registry`。39 张原生数据包注册表的声明与统一读取入口，`/reload` 重建与客户端同步都交给原版注册表系统，这个类**不持有任何快照**。
 
 按 id / holder 取值（读服务端注册表）：
 
@@ -150,6 +151,41 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 - `priority` 是**十张定义表自己的字段**（`artifact`、`item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` 六种 binding、`spirit_herb`、`item_aura`、`currency`，默认 `0`，加载期不校验范围），所以"通用定义 + 特地点名定义"共存时由数据包写死谁先；点名的条目**不会**因此更靠前。`ArtifactHold` 直接回读它那件法器的字段；消耗 `mxt:item`、三个物品条件与两个框架内置的长按声明（功法阅读、灌注）没有这个字段，恒为 `DEFAULT_PRIORITY`。
 - **`itemLevel()` 是缓存安全的分界线**：它返回 `true` 表示"命中与否只由物品本身决定"，按物品开缓存的调用方**只能**缓存这类项；会读堆上的组件 / NBT 的项，以及答案来自另一条定义的项（`mxt:herb_tag` 问的是哪条 `spirit_herb` 认领这件物品）必须每个堆都问一次。
 - 简写只覆盖 `item` 与 `tag`；其它实现走简写编码会抛 `IllegalArgumentException`。
+
+## 物品目录与创造栏 {#picker}
+
+### `CreativeTabHelper` {#creativetabhelper}
+
+包 `com.iafenvoy.mxt.data`。**读**那条「注册表 → 可选项」目录的入口：`/picker` 界面与别的模组都走它。每一项是一行 `PickerItem(stack, names)`：`stack` 是要画的堆，`names` 是这一行能被哪些名字搜到。它只读——不往物品上写东西，也不判定谁能拿。
+
+每条查询都要求自己传注册表访问器（`HolderLookup.Provider`，`BuildCreativeModeTabContentsEvent.getParameters().holders()` 就是它），所以客户端用客户端已同步的表、服务端用服务端的表，不存在"读到另一侧"的问题。
+
+| 方法 | 作用 | 备注 |
+| --- | --- | --- |
+| `itemsOf(Provider, key)` | 一张表的全部行 | `key` 是注册表 key；**没登记成分类的表给空列表**，不抛 |
+| `itemsOf(Provider, key, Predicate<Holder<?>>)` | 按定义筛行 | 谓词拿到的是定义的 holder，按 id 筛与按定义本体筛是同一个入口，所以"模组 id"就是取 holder 的命名空间 |
+| `itemsOfMod(Provider, key, String)` | 一张表里属于某个命名空间的行 | `mxt:aura` 的条目属于 `mxt`，`mymod:aura/…` 属于 `mymod`；物品与方块两张表里定义就是物品，于是命名空间是物品的 |
+| `itemsOfMod(Provider, String)` | 跨全部分类，挑出某个命名空间的行 | 给自己做一个"我模组的东西"创造栏用它 |
+| `stacksOf(...)` / `stacksOfMod(...)` | 上面四条的堆视图 | 见下 |
+
+要点：
+
+- **给创造栏的是 `stacksOf` / `stacksOfMod`**：它们按**原版创造栏自己的规则**（`ItemStackLinkedSet`，同物品同组件算同一件）去掉重复，而且**每一份都是拷贝**——改它不会碰到选择器里的那一行。去重不是装饰：`mxt:aura` 的每一行都是同一颗灵石当替身，把行原样塞进创造栏，原版的 `accept` 会当场抛"这个堆已经在栏里了"。行视图（`itemsOf*`）一个定义一行，不去重。
+- **原版创造栏的 `accept` 还要求 `count == 1`**，本体的行都是 1；自己注册的行也请写 1。
+- 查询无副作用、双端可调：它只读你传进来的那份访问器，不碰服务端单例，也不写任何附件。
+- 想把这批行画成一张选择器页（而不是进创造栏），用 `ItemPickerScreen.over(title, stacks)`，见[物品选择界面](/java/screens)。
+
+**目录本身在别的类里**：哪张注册表对应哪些行、每行怎么造，是 `com.iafenvoy.mxt.screen.picker.ItemPickerManager`——`categories()` / `category(Identifier)` 列分类，`registerSingle` / `register` 登记一条分类（`mxt:` 的定义由本体登记好了）。`CreativeTabHelper` 只负责读它，两个类一眼能分开。有一条限制要知道：**一张注册表只认第一次注册的目录**，对已经登记过的 key 再注册一次是**静默无效**的（分类列表也只列一次）。
+
+```java
+// 自己的创造栏：让这个模组贡献过的定义（以及它自己的物品）全进来
+@Override
+public void buildContents(BuildCreativeModeTabContentsEvent event) {
+    if (event.getTabKey() != MY_TAB) return;
+    for (ItemStack stack : CreativeTabHelper.stacksOfMod(event.getParameters().holders(), "mymod"))
+        event.accept(stack);
+}
+```
 
 ## 灵气与资源 {#aura}
 
@@ -369,7 +405,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 阵法的框架（结构、半径、消耗）在 `Formation` 上，"这个阵法干什么"由它的 `actions` 列表决定，而列表里每一项就是一个**功能模块**。
 
 - `FormationActionType`（`com.iafenvoy.mxt.data.formation`）是模块的形状：一个 `codec()`，加一个按 JSON 的 `"type"` 字段分派的 `CODEC`（必须是 `Codec` 而不是 `MapCodec`，因为阵法持有的是模块**列表**）。
-- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `none`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那 38 张数据包注册表里**。
+- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `none`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那 39 张数据包注册表里**。
 - 于是：**数据包能自由新增 `mxt:formation` 条目（模块组合与参数），但新增不了模块类型**。多加一种模块 = 一条记录 + 一次 `DeferredRegister` 注册，运行时按记录类型分派，`data` 包因此不碰世界。
 - 现在合法 `type` 只有 5 个，都登记在 `MxtFormationActionTypes`：`mxt:none`（`NONE`，也是分派表默认项）、`mxt:attack`（`ATTACK`）、`mxt:buff`（`BUFF`）、`mxt:protection`（`PROTECTION`）、`mxt:range_display`（`RANGE_DISPLAY`）。
 - 注册只经 `MxtFormationActionTypes.REGISTRY` 一次，**别在别处再注册一遍，也别另建第二张阵法模块表**。
@@ -483,7 +519,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 
 - **温度与产物不是外部写进去的**：`Parameters` 在开炉那一刻求值一次并冻结，活动批次读的是这份冻结值，`/reload` 之后新批次才读新配方。
 - **`start` 与 `preview` 共用同一条判定**：温度与产物容量只在"接受还是拒绝已经选出的那一条"这一步参与，不会让判定改选一条更弱的配方。
-- **异火只回答两个数**，见 [AlchemyHeatSource](interfaces/alchemy/alchemy-heat-source.md)。
+- **供热方块回答两个数**，见 [AlchemyHeatSource](interfaces/alchemy/alchemy-heat-source.md)。
 
 ## 服务端与客户端的边界 {#boundary}
 

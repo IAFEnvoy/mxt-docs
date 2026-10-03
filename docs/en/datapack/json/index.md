@@ -1,11 +1,15 @@
 ---
 title: Dynamic Registries
-description: All 38 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
+description: All 39 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
 ---
 
 # Dynamic Registries
 
-The table below lists the mod's 38 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it. The `alchemy_recipe` and `spirit_crafting` rows are not datapack registries but recipe types built on the vanilla recipe system (`mxt:alchemy` and `mxt:spirit_shaped` / `mxt:spirit_shapeless`), listed here so they can be looked up in the same place: their JSON goes in `data/<namespace>/recipe/`, never in `mxt/alchemy_recipe/`. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
+The table below lists the mod's 39 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it.
+
+**Recipes are not in this table.** The recipe pages that go through the vanilla `RecipeManager` sit in the **Recipes** group below: alchemy recipes (`mxt:alchemy`), spirit crafting (`mxt:spirit_shaped` / `mxt:spirit_shapeless`) and talisman drawing (`mxt:talisman_drawing`). Their JSON goes in `data/<namespace>/recipe/`, never in `mxt/<recipe name>/`; they are not registries either, so `/reload` reloads them. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
+
+**Refilling a brush is not a recipe.** It is the vanilla bundle's click: with the brush on the cursor, click a stack of pigment, see [`mxt:talisman_drawing`](./talisman_drawing.md#materials-and-pigment).
 
 | Registry | Directory | Purpose |
 | --- | --- | --- |
@@ -30,8 +34,7 @@ The table below lists the mod's 38 datapack registries. In the field tables, "De
 | `medicinal_property` | `mxt/medicinal_property` | Medicinal identities: a name and description for one medicinal effect. |
 | `alchemy_furnace` | `mxt/alchemy_furnace` | Furnace specifications: slots, per-batch capacity and cooling rate. |
 | `alchemy_wall_material` | `mxt/alchemy_wall_material` | Wall materials: the temperature limit of one casing block. |
-| `alchemy_recipe` | `recipe` (recipe type `mxt:alchemy`) | Alchemy recipes. |
-| `spirit_crafting` | `recipe` (recipe type `mxt:spirit_shaped` / `mxt:spirit_shapeless`) | Spirit crafting recipes, which only run in the Spirit Crafting Table (`mxt:spirit_crafting_table`). |
+| `heat_source` | `mxt/heat_source` | Heat blocks: the `max_temperature` and `heating_per_tick` a block gives a furnace, matched by block or block tag. |
 | `formation` | `mxt/formation` | Formation lifecycle and aura overrides. |
 | `tribulation` | `mxt/tribulation` | A tribulation: its start gate, timeline beats, and what happens on success or failure. |
 | `creature_profile` | `mxt/creature_profile` | Creature attribute profiles: matching, gates, the inner core, and one action run when the profile is written. |

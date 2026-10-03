@@ -4,7 +4,11 @@ title: 动态注册表
 
 # 动态注册表
 
-下表列出本模组的 38 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。表中的 `alchemy_recipe` 与 `spirit_crafting` 两行不是数据包注册表，而是使用原版配方系统的配方类型（`mxt:alchemy` 与 `mxt:spirit_shaped` / `mxt:spirit_shapeless`），一并列在此处便于查阅：它们的 JSON 放在 `data/<namespace>/recipe/`，不要放进 `mxt/alchemy_recipe/`。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
+下表列出本模组的 39 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。
+
+**配方不在表里。** 走原版 `RecipeManager` 的配方页收在下面的「合成表」分组里：炼丹配方（`mxt:alchemy`）、灵气合成（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）与画符配方（`mxt:talisman_drawing`）。它们的 JSON 放在 `data/<namespace>/recipe/`，**不要**放进 `mxt/<配方名>/`；它们也不是注册表，所以 `/reload` 会重新读取它们。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
+
+**给符笔加颜料不是配方。** 它是原版储物袋那套点击：光标提着符笔对着颜料物品点一下就蘸，见 [`mxt:talisman_drawing`](./talisman_drawing.md#材料与颜料)。
 
 | 注册表 | 文件目录 | 用途 |
 | --- | --- | --- |
@@ -29,8 +33,7 @@ title: 动态注册表
 | `medicinal_property` | `mxt/medicinal_property` | 药性身份：一种药用效果的名字与描述。 |
 | `alchemy_furnace` | `mxt/alchemy_furnace` | 炉型规格：槽位、一炉容量与炉温回落速度。 |
 | `alchemy_wall_material` | `mxt/alchemy_wall_material` | 炉壁材料：一块炉壁的耐温上限。 |
-| `alchemy_recipe` | `recipe`（配方类型 `mxt:alchemy`） | 炼丹配方。 |
-| `spirit_crafting` | `recipe`（配方类型 `mxt:spirit_shaped` / `mxt:spirit_shapeless`） | 灵气合成配方，只在灵气工作台（`mxt:spirit_crafting_table`）里跑。 |
+| `heat_source` | `mxt/heat_source` | 供热方块的 `max_temperature` 与 `heating_per_tick`，按方块或方块标签匹配。 |
 | `formation` | `mxt/formation` | 阵法生命周期和灵气覆写。 |
 | `tribulation` | `mxt/tribulation` | 天劫：启动门槛、时间线节拍与成败行为。 |
 | `creature_profile` | `mxt/creature_profile` | 生物属性档案：匹配、门槛、内丹与写入时的一条行为。 |

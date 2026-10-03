@@ -8,7 +8,7 @@ aside: false
 
 An `alchemy_wall_material` describes **how hot one casing block may get** and nothing else: a name, a description and a finite temperature limit. Slots, capacity and cooling rate belong to the [furnace specification](./alchemy_furnace.md) and are not written here.
 
-A furnace's temperature limit is the **lowest** `max_temperature` among its 22 casings. When materials are mixed the weak spot decides, and hotter casings never average a weak one away.
+A furnace's temperature limit is the **lowest** `max_temperature` among its 18 casings. When materials are mixed the weak spot decides, and hotter casings never average a weak one away.
 
 ## File Location
 
@@ -39,4 +39,4 @@ The example supplies its own name translation key; omitting `name` and `descript
 
 Casing items carry the material identity through the `mxt:alchemy_wall_material` component: placing, saving, synchronizing, creative pick-block and a normal break all keep it. When the definition is not in the registry the material cannot form, and the mod does not fall back to a hard-coded number.
 
-All 22 casings must be valid before the furnace forms, and the set point a player may enter is the lower of the furnace's temperature limit and the exotic fire's maximum temperature — see [alchemy_furnace](./alchemy_furnace.md). Representative materials live only in the test data pack; production content comes from content packs.
+The core, the three stores and all 18 casings must be in place before the furnace forms, and the set point a player may enter is the lower of the furnace's temperature limit and the heat block's maximum temperature — see [alchemy_furnace](./alchemy_furnace.md). Representative materials live only in the test data pack; production content comes from content packs.

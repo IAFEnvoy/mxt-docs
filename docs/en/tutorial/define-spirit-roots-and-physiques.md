@@ -102,9 +102,9 @@ Physiques do not have that seam: a switched-off physique still takes part in the
 
 :::
 
-## Step 4 — Three Entry Points
+## Step 4 — Four Entry Points
 
-Granting, removing and switching are exactly three routes, and this module has **no player keybind and no screen**.
+Granting, removing and switching have exactly four routes, and this module has **no player keybind and no screen** (an item that is used up on right-click is not a screen).
 
 The commands all need administrator permission:
 
@@ -118,6 +118,8 @@ The top-level aliases `/spirit_root` and `/physique` can be switched off in the 
 Data pack actions: `mxt:grant_spirit_root` / `mxt:remove_spirit_root` read the `spirit_root` field, `mxt:grant_physique` / `mxt:remove_physique` read `physique`. **Those fields take a concrete id only, never a `#tag`**. Granting a physique evaluates `holder_condition` right there, and refuses the grant when it does not hold.
 
 The script side is the two globals `MxtSpiritRoots` and `MxtPhysiques`, each with `grant` / `remove` / `setEnabled`; a grant or a switch answers with `changed` and `failure`, and a refusal puts its reason in `failure`.
+
+The item side is two **right-click to grant** items: a stack of `mxt:spirit_root` or `mxt:physique` carries the `mxt:spirit_root` / `mxt:physique` component naming the definition to grant, and the click goes through the same check as the commands, the actions and the scripts — a grant spends one item (**none in creative mode**) and a refusal leaves the item in hand with its reason. Take them with `/picker mxt:spirit_root` and `/picker mxt:physique` (one row per definition, component already written) or with `/give @s mxt:physique[mxt:physique="example:sword_bone"]`.
 
 ## Step 5 — Names and Loading
 
@@ -144,6 +146,7 @@ Then walk it through in game:
 2. `/mxt physique grant @s example:sword_bone` grants the physique. Without `example:fire_root` on the body it is refused by `holder_condition`, and the reason is reported.
 3. Switch the root you just got off: `list` still shows it but marks it as not in effect, and its elements, cultivation multiplier and ability all stop.
 4. Remove it, and it is gone from `list`.
+5. Take a **component-carrying** physique item with `/picker mxt:physique` and right-click it: without `example:fire_root` on the body it is refused by `holder_condition` just the same, leaving the item in hand with its reason; once the condition holds, one item is spent and the physique shows up in `/mxt physique list`.
 
 The test pack ships a probe, `/mxt_test identity`, which asserts held / in effect / switched off / removed, that rarity is treated as free text, that unknown fields are ignored and that a negative multiplier is refused.
 

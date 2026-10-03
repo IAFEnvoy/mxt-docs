@@ -64,6 +64,8 @@ aside: false
 
 授予与移除都用实体行为：`mxt:grant_physique`、`mxt:remove_physique`（灵根那一侧是 `mxt:grant_spirit_root`、`mxt:remove_spirit_root`）。持有状态用实体条件 `mxt:has_physique` 判定（灵根是 `mxt:has_spirit_root`），脚本侧是 `MxtPhysiques`（灵根是 `MxtSpiritRoots`），管理员侧是 `/mxt physique`（灵根是 `/mxt spirit_root`）。
 
+本体也提供一件**体质物品** `mxt:physique`：堆上的组件 `mxt:physique` 写明它授予哪一项体质，右键即授予——走的是和行为、命令同一道判定，所以"已持有"（只在 `allow_stacking` 为假时）、`holder_condition` 不满足与互斥标签冲突照旧被拒，属性、能力与两个伤害倍率当场重算。授予成功时消耗 1 个，**创造模式不消耗**；被拒时物品原样留在手上并说明原因，没有组件的空物品只提示它没写明是哪一种体质。取这件物品用 `/give @s mxt:physique[mxt:physique="example:sword_bone"]`，或者用 `/picker mxt:physique`——那里每个体质定义给一行**已经带好组件**的它。这是物品的使用路径，与下面那个"开 / 关"是两回事。
+
 已持有的体质可以被**关闭**而不失去：关闭后它的属性修正、授予能力与两个伤害倍率全部不生效，但它仍然"持有"（`mxt:has_physique` 照旧为真，也能正常移除）。这份状态存在 `spirit_identity` 附件里，随存档与同步一起走。
 
-这个模块**没有玩家入口**（没有按键或界面）：操作用脚本的 `MxtPhysiques.setEnabled`，或管理员命令 `/mxt physique enable|disable`。它与"从数据包里拿掉这条定义"是两件事：开关只管被关的那一条、而且它仍然被持有；拿掉定义则是这条定义整个不在了（写 `neoforge:conditions`，见[停用一条定义](../overview.md#停用一条定义)）。
+**开 / 关**这一半**没有玩家入口**（没有按键或界面）：操作用脚本的 `MxtPhysiques.setEnabled`，或管理员命令 `/mxt physique enable|disable`。它与"从数据包里拿掉这条定义"是两件事：开关只管被关的那一条、而且它仍然被持有；拿掉定义则是这条定义整个不在了（写 `neoforge:conditions`，见[停用一条定义](../overview.md#停用一条定义)）。

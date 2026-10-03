@@ -65,7 +65,7 @@ StartupEvents.registry('item', event => {
 ```
 
 - Items registered without a namespace live under `kubejs`, so `event.create('qi_pill')` produces `kubejs:qi_pill`. Every binding has to use that ID.
-- A pill must have `.food(...)`. The binding table itself does not require an item to be edible, but **the generic binding's actions only run at the end of one full use cycle**, and a plain item has no use cycle; a `pill`'s effect also only runs on that closing tick. A pill without `.food(...)` looks perfectly fine and its actions never run.
+- A pill does **not** have to have `.food(...)`. An item a binding claims that carries a `minecraft:consumable` of its own (a food, a drink, anything made with `.food(...)`) is eaten with that item's own cycle and hunger rules; an item that carries none has a use cycle written for it on the click and taken back when the gesture ends, so a pill bound to a plain item can be taken and the item is left untouched. The effect still runs on the closing tick of **one full use cycle** — writing `.food(...)` only makes that cycle come from the item itself.
 - Editing this file needs a **game restart**: startup scripts run before the game registers items, and `/reload` never re-runs them.
 
 Recipes are not a registry, so they do reload with `/reload` — the script below registers them from a server script:
@@ -285,7 +285,7 @@ Then in game:
 | The rule silently never matches | `example:qi_pill` was written inside an `items` array while the script produces `kubejs:qi_pill` (or any other typo), so that element was dropped and the file loaded as usual. Use the ID that is really registered. |
 | Two definitions of the same table on one item, and only one applies | Every table takes exactly one entry, chosen by `priority`. To run both, merge them into one file or write them as one array. |
 | The item has no behaviour at all | The rule was put into a binding table that does not match this item, or the quality of that stack cannot be resolved. |
-| A pill's `actions` never run | The item has no use cycle. Give it `.food(...)`, or write it a `minecraft:consumable` component. |
+| A pill on a plain item does nothing on right-click | That item answers the click through its own branch of `Item#use` (swappable equipment, a shield, a kinetic weapon), or a hold declaration claims it — both take their own path. Use another item, or remove that declaration. |
 | `conditions` is clearly false and the actions still ran | Conditions are checked once, when use starts, and not re-checked after that. |
 | Some hooks are written and do nothing | The hook was written into a table that does not declare it (for instance `use_action` in `item_binding`). An undeclared key is ignored silently. |
 | The check marks in the tooltip are not what you expected | A quality can carry conditions of its own, so that `✖` may come from the quality rather than from the binding. |

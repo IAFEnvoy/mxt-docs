@@ -60,7 +60,8 @@ The items below are backed by a unified server-side implementation shipped with 
 | Wooden Token / Stone Token | `mxt:wooden_token`, `mxt:stone_token` | `mxt:token` | Carry `kind`, `value` and `owner` together for the secret realm and trade permission systems. |
 | Identification Mirror | `mxt:identification_mirror` | consumes `mxt:identification` | Resolves items that carry an identification component in a unified way; the items to identify come from content packs or other mods. |
 | Spirit Root | `mxt:spirit_root` | `mxt:spirit_root` | Stores a `spirit_root` definition; right-click to gain that root ("already held" and element conflicts are refused as usual, see [spirit_root](/en/datapack/json/spirit_root#holding)), spending one item on success and **none in creative mode**. |
-| Talisman Brush / Talisman Ink | `mxt:talisman_brush`, `mxt:talisman_ink` | none | Generic base inputs for talisman crafting and formation content, used together with Blank Talisman; the recipes come from datapacks or KubeJS. |
+| Physique | `mxt:physique` | `mxt:physique` | Stores a `physique` definition; right-click to gain that physique ("already held", an unmet `holder_condition` and exclusive-tag conflicts are refused as usual, see [physique](/en/datapack/json/physique#holding)), spending one item on success and **none in creative mode**. |
+| Talisman Brush | `mxt:talisman_brush` | `mxt:brush_pigment` | A brush holds a pigment store of its own, refilled with the same click the vanilla bundle uses (point at pigment with the brush on the cursor). Pigment is whatever sits in the `#mxt:brush_pigment` item tag, which in the base pack is cinnabar `mxt:cinnabar` alone; what one portion is worth comes from the server config (see [Talisman Brush and Pigment](#brushes-and-pigment)). |
 | Talisman | `mxt:talisman` | `mxt:talisman`, `mxt:spirit_storage` | Holds the `talisman` definitions inscribed on it, in order, plus a `mode` (`fire` by default, or `store`). Holding right-click pours spirit power in (capacity = one invocation's aura entries times the inscriptions' `capacity` multiplier, itself capped by what the carrier has left, counted per aura); a full carrier fires everything inscribed on it, and once the store covers one invocation's aura entries a plain right-click fires it too — declare a `durability` / `consume` and a larger multiplier to fire several times from a single pour. A sneak-use switches the mode. An inscribed definition may declare a durability (`durability` / `consume`): the cap is written into the vanilla components (`max_damage` plus `max_stack_size: 1` and `damage: 0`), so the item shows a durability bar, and firing spends wear instead of whole carriers until the carrier breaks. |
 
 The value of `mxt:resource_container` is a bare map whose keys are resource IDs; there is no `values` wrapper, and a wrongly wrapped value is silently read as one unreadable key — the container stays empty and only a warning is logged.
@@ -83,13 +84,14 @@ give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_rea
 give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
 give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
+give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
 give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
 give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
 ```
 
 The last line is how a **manual** is made: a stack teaches a technique only while it carries the `mxt:technique` component, and a jade slip with neither that component nor any declaration's `items` claiming it teaches nothing and shows no technique in its tooltip. The declaration (`technique_binding`) only decides how the technique is **read** and which item `/picker mxt:technique` generates as its carrier (**the creative tab does not generate carriers**); writing the item into the declaration's `items` also makes a stack a manual with no component at all. See [Technique Binding](../datapack/json/technique_binding.md).
 
-The line before it is how a **spirit root item** is made: the component names the root ID, and right-clicking grants that root ("already held" and element conflicts are refused as usual), spending one item on success and **none in creative mode**. See [spirit_root](../datapack/json/spirit_root.md#holding).
+The second and third lines from the bottom are how a **spirit root item** and a **physique item** are made: the component names the definition ID, and right-clicking grants it (a spirit root is refused over "already held / element conflict", a physique over "already held / unmet condition / exclusive-tag conflict"), spending one item on success and **none in creative mode**. See [spirit_root](../datapack/json/spirit_root.md#holding) and [physique](../datapack/json/physique.md#holding).
 
 ## Blocks and Workstations
 
@@ -107,25 +109,33 @@ The line before it is how a **spirit root item** is made: the component names th
 
 ## Alchemy and Spirit Herbs
 
-A furnace is not one block: it is a fixed 3x3x3 you build by hand. The core carries the furnace spec, the two input stores split main ingredients from auxiliary ingredients and the catalyst, the output store only hands results out, and the other 22 cells are casing.
+A furnace is not one block: it is a fixed 3x3x3 you build by hand. The core carries the furnace spec, the two input stores split main ingredients from auxiliary ingredients and the catalyst, the output store only hands results out, and the other 18 cells are casing (the bottom layer only needs its four corners).
 
 | Block | ID | Function |
 |---|---|---|
-| Alchemy Furnace Core | `mxt:alchemy_furnace` | The cell on the front face at the middle layer. The exotic fire goes here, and the heat readout plus the Set / Start / Abort controls sit on the page this cell opens. |
+| Alchemy Furnace Core | `mxt:alchemy_furnace` | The cell on the front face at the middle layer. The heat readout plus the Set / Start / Abort controls sit on the page this cell opens. |
 | Main Ingredient Input | `mxt:alchemy_main_input` | On your left when you face the front. Two main-ingredient slots. |
 | Auxiliary Ingredient Input | `mxt:alchemy_auxiliary_input` | On your right when you face the front. Two auxiliary slots plus one catalyst slot. |
 | Alchemy Output | `mxt:alchemy_output` | Top centre. Four take-only output slots. |
-| Alchemy Furnace Casing | `mxt:alchemy_furnace_casing` | The other 22 cells, each carrying its own wall material. Casing opens no screen. |
+| Alchemy Furnace Casing | `mxt:alchemy_furnace_casing` | The four bottom corners and the two layers above, 18 cells in all, each carrying its own wall material. Casing opens no screen. |
 | Spirit Herb Plot | `mxt:spirit_herb_plot` | One plant per plot: right-click with seeds to plant, right-click a mature plant to harvest, sneak with an empty hand to take the seeds back. |
 | Pill | `mxt:pill` | The pill carrier: vanilla eating, a name and a tooltip. What a dose does is on [Pill](../datapack/json/pill.md); which items are that pill, how many times it can be taken and how much toxicity it adds come from its [Pill Binding](../datapack/json/pill_binding.md). |
 
-The hand feel is: **exotic fire in the core, main ingredients in the left store, auxiliary ingredients and the catalyst in the right store, and the result taken from the output store.** Loading materials never starts a batch by itself; a player presses Start on the core's page. The centre cell must stay empty, and a shell with a missing cell, an invalid wall material or a cell claimed by another furnace does not form and cannot run.
+The hand feel is: **a heat block in the bottom centre cell, main ingredients in the left store, auxiliary ingredients and the catalyst in the right store, and the result taken from the output store.** Loading materials never starts a batch by itself; a player presses Start on the core's page. A shell with a missing cell, an invalid wall material or a cell claimed by another furnace does not form and cannot run.
 
-**There is no built-in heat source.** The item that heats a furnace has to come from a mod; a data pack cannot create one. The temperature ceiling is the lower of the coldest wall material in the whole furnace and the heat source's own ceiling.
+**The mod ships no heat block.** The numbers a heat block gives come from the `mxt:heat_source` data pack definitions (a block may also implement the interface itself), and the mod supplies no default. The temperature ceiling is the lower of the coldest wall material in the whole furnace and the heat block's `max_temperature`.
 
-Neither the input stores nor the core's fire slot accept hoppers; the output store can only be pulled from its bottom face, and once the furnace is formed that face looks onto the centre air cell, so no hopper fits there. Removing casing or a store while a batch is running settles that batch as a failure once and does not return the materials already loaded; removing a store only drops that store's own contents.
+Neither the input stores nor the core accept hoppers, and a heat block is not a container either; the output store can only be pulled from its bottom face, and once the furnace is formed that face looks onto the middle-layer centre casing, so no hopper fits there. Removing casing or a store while a batch is running settles that batch as a failure once and does not return the materials already loaded; removing a store only drops that store's own contents.
 
 Eating a pill accumulates toxicity: what a dose does, where the threshold sits and what is left after an overdose are on [Pill](../datapack/json/pill.md), and the mod only keeps the ledger. Toxicity does not fade on its own by default; with **Server Config → Alchemy → Natural toxicity decay per second** set to a positive number, an active entity that already has toxicity loses some once every 20 ticks, nothing happens offline, and an entity that has never taken a pill does not gain an empty ledger.
+
+## Brushes and Pigment
+
+The talisman brush `mxt:talisman_brush` **does not stack** — one brush is one store of pigment of its own, kept in the item component `mxt:brush_pigment`: a non-negative integer where **one unit is one pixel of stroke length**, and omitting the component is the same thing as writing `0` (an empty brush either way). The little strip in the inventory cell is how much is left (it only shows while there is pigment), and the tooltip carries a "Pigment: stored / ceiling" line whose ceiling is **Server Config → Talisman → Brush Capacity** (4000 by default, roughly enough to trace 3–5 talismans).
+
+Refilling is the same click the vanilla bundle uses: with the brush on the cursor, **click a stack of pigment** (either mouse button) and the brush takes **one portion — one item — per click**, so four clicks are four portions; a full brush takes nothing. **It is not tied to one screen or one slot**: your inventory, a chest and the drawing workstation all work, and no screen has a pigment slot of its own. What one portion is worth is **Server Config → Talisman → Pigment Per Portion** (1000 by default), and a pack adds a kind of pigment by putting the item in the `#mxt:brush_pigment` tag (cinnabar `mxt:cinnabar` only in the base pack) — no recipe is involved.
+
+The pigment is what drawing spends: at the talisman workstation it is taken by the length of each stroke, see [`mxt:talisman_drawing`](/en/datapack/json/talisman_drawing).
 
 ## Item Bindings
 

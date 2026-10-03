@@ -6,7 +6,7 @@ title: 命令
 
 所有命令都挂在 `/mxt` 根节点下：本模组自己的注册表、资源、修炼、世界状态与管理员工具都在这里。命令是框架的诊断与管理工具，玩法本身由数据包驱动。
 
-面向玩家的部分命令同时注册了顶层别名，所以 `/aura` 和 `/mxt aura` 是同一棵树。每个别名都在服务端配置的**「命令别名」标签页**里单独开关（条目名就是命令本身，默认全开），例如关闭 `aura` 只移除 `/aura` 这个顶层写法；`/mxt` 下的入口始终完整，不会出现配置误关导致命令完全不可用的情况。别名一共 19 个：`ability`、`aura`、`contract`、`curse`、`display`、`flight`、`formation`、`friend`、`lifespan`、`lightning`、`physique`、`picker`、`quality`、`realm`、`spirit_root`、`talisman`、`technique`、`trade`、`tribulation`。
+面向玩家的部分命令同时注册了顶层别名，所以 `/aura` 和 `/mxt aura` 是同一棵树。每个别名都能单独关掉，关掉只移除顶层写法，`/mxt` 下的入口始终完整，见[服务端配置](./config.md#命令别名)。别名一共 19 个：`ability`、`aura`、`contract`、`curse`、`display`、`flight`、`formation`、`friend`、`lifespan`、`lightning`、`physique`、`picker`、`quality`、`realm`、`spirit_root`、`talisman`、`technique`、`trade`、`tribulation`。
 
 **有两条命令不走 `/mxt`：`/hud` 与 `/wheel`**。它们注册在客户端自己的命令表里，只在聊天栏里手打有效、不需要权限，也不发往服务端。
 
@@ -55,3 +55,7 @@ title: 命令
 少数参数**故意**不这样做，因为它们的用途就是点名一个**当前数据包已经不提供**的引用——`/technique drop`、`/spirit_root remove|enable|disable`、`/physique remove|enable|disable`、`/curse remove`、`/ability revoke`。这些参数的补全来自注册表里当前存在的条目，而它们真正要救的是**身体里还存着、当前包却已经不提供**的那份引用：条目被 `neoforge:conditions` 挡掉、或者文件直接被删之后，**同一次会话里**附件里那份 `Holder` 还在（附件只在**世界加载**时解码，`/reload` 不重解；那一刻找不到定义的引用会被容错列表丢掉，所以重新进一次世界就干净了），所以 `remove`、`enable`、`disable` 都按身体持有的那条引用来找、不回查注册表。
 
 维度 ID（`/mxt secret_realm info|destroy`、`/mxt rift target|place|bind`）、触发器信号（`/mxt trigger rules|publish`）与 `/picker` 的注册表 ID（如 `mxt:aura`）同样不是注册表条目，它们的补全各自来自维度列表、信号表与选择器分类。
+
+## 服务端配置
+
+配置项不在命令页里：符箓、炼丹与命令别名三组服务端配置项见[服务端配置](./config.md)。

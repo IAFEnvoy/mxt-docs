@@ -24,6 +24,7 @@ It answers a different question from the other two categories:
 | [Foe Identification](./identification.md) | How "does this entity count as mine" is answered: where the lists live, how the relation event overrides them, who answers for an offline player, how team mods plug in, and which callers ask the question today. |
 | [Aura Calculation](./aura.md) | How the aura value at a position is computed: how the static template is picked, how chunk stock and block emitters are merged, where the 140 µs of one query goes, how large the sub-chunk approximation error is (with two study charts), and why the client only ever sees a snapshot. |
 | [Ability Casting](./ability.md) | What one cast passes through and in what order, the difference between a wheel key and a direct cast, where an ability's state is kept and how content writes and reads it — the six kinds, cooldown and charges, and what clearing a grant does. |
+| [Talisman Scoring](./talisman-scoring.md) | How a traced drawing becomes a completion between 0 and 1: the scoring parameters, each of steps 0 to 7 with its formulas, why shape is an F1, why translation and scale are not judged while rotation is, the numbers the probe legs measured with two known deviations, and what server authority and point-by-point reconciliation do and do not stop. |
 
 ## Source Map
 

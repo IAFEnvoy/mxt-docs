@@ -71,7 +71,7 @@ give @s mxt:pill[mxt:pill={pill:"example:warming_pill",toxicity_gain:2}]
 
 ## 丹毒与过量
 
-通过闸门之后先跑 `on_consume`，再把 `toxicity_gain` 加进这个实体的丹毒并记下新值。`toxicity_threshold` 求值结果有限、且新值**达到**它时算过量：跑 `on_overdose`，然后把丹毒**设成** `toxicity_after_overdose`（不是清零），所以照旧接着吃会继续过量。阈值求值结果不是有限数时，这一份丹药永远不会过量，往上叠多少都不触发。
+通过闸门之后先跑 `on_consume`，再把 `toxicity_gain` 加进这个实体的丹毒并记下新值。`toxicity_threshold` 求值结果有限、且新值**达到**它时算过量：跑 `on_overdose`，然后把丹毒**设成** `toxicity_after_overdose`（不是清零），所以照旧接着吃会继续过量。阈值求值结果不是有限数时，这一份丹药永远不会过量，往上叠多少都不触发。过量那一次本体自己会给服丹者一行 actionbar 提示；`on_overdose` 里仍可再写自己的动作。**`mxt:modify_pill_toxicity` 加丹毒不判阈值**，过量只发生在服丹这一条路上。
 
 丹毒用实体条件 `mxt:pill_toxicity`（`comparison` 与 `compare_to`）和公式变量 `pill_toxicity` 读；从未服丹的实体读 `0`，也不会因此建附件。改丹毒用行为 `mxt:modify_pill_toxicity`：`mode` 为 `add` 或 `set`，默认 `add`，`amount` 必填；`set` 且常量小于 `0` 会加载失败，负的 `add` 用于排毒，结果不低于 `0`。这份账本怎么保存、怎么同步、会不会自己消退，见 [pill_binding](./pill_binding.md)。
 
@@ -81,6 +81,8 @@ give @s mxt:pill[mxt:pill={pill:"example:warming_pill",toxicity_gain:2}]
 
 ## 载体与显示
 
-本体物品 `mxt:pill` 只提供原版食用、名字和 Tooltip，药效仍**只走一次**。载体的显示名取这一堆解析出的那份丹药的 `name`：组件指名了就用组件那一份，没有组件就用绑定指名的。组件本身不参与品质与元素的合并，见[物品绑定](./item_binding.md)。
+本体物品 `mxt:pill` 只提供原版食用、名字和 Tooltip，药效仍**只走一次**。载体的标题取这一堆解析出的那份丹药的 `name`：组件指名了就用组件那一份；**没有组件时**（药效由绑定指名）标题仍是本体物品自己的键 `item.mxt.pill`，那份丹药的名字显示在 Tooltip 第一行。组件本身不参与品质与元素的合并，见[物品绑定](./item_binding.md)。
+
+**吃不吃得上由被绑的物品自己答**：原版开始一次食用只看栈上的 `minecraft:consumable`。被绑定物品自带它就按那个物品自己的时长与姿势吃（食物在饱食度满时原版照样吃不下，这时会给一句提示）；没有它就由框架在右键那一刻补上、动作结束时收回——所以绑到不自带用途的物品上也能吃，物品本身留不下任何东西。自带用途的物品（可换装、盾牌、动能武器）与同时被长按声明认领的物品各走自己那条路，丹药不抢它们的右键。见 [pill_binding](./pill_binding.md)。
 
 **图标颜色同样只染本体这一件物品**：它按这一堆解析出的那份丹药的 `color` 上色，指名的那份不在注册表里（这一口会被拒绝）就不上色。颜色写在定义上、组件没有这个键，所以同一份丹药的每一堆颜色都一样；被绑定认领的物品和任何别的物品，贴图一个字都不动。

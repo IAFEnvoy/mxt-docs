@@ -176,7 +176,7 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 /mxt trigger publish mxt:kill                 → 手动发一次击杀信号（需要 gamemaster）
 ```
 
-1. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]`，右键学会。这时只有 `example:qi_bolt`——恢复技能要到第二级。功法面板（默认没绑按键，从人物信息面板 `Z` 里的按钮进）上能看到这门功法、它的等级与熟练度条。
+1. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]`，右键学会。这时只有 `example:qi_bolt`——恢复技能要到第二级。功法页（人物信息面板 `Z` 左上角的「习得功法」页签）上能看到这门功法、它的等级与熟练度条。
 2. 打坐一分钟：`cultivate_action` 每秒给 `1`，`/mxt resource example:azure_mastery` 跟着涨；打一只怪，或者 `/mxt trigger publish mxt:kill` 手动发一次信号，再涨 `1`。
 3. 数值到 `100` 之后的一两秒内晋升到第二级：`example:qi_recovery` 出现在轮盘配置界面右边的技能池里（`/mxt ability list` 会把它连同来源一起列出来），这条链授予的技能打出的伤害从 `1.0` 倍变成 `1.25` 倍。
 4. 想直接看晋升就别等：`/mxt resource example:azure_mastery set 100`（需要 gamemaster）。这个写法直接改写数值，不经过边界钳制。

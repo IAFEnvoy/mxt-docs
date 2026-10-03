@@ -7,13 +7,13 @@ aside: false
 
 文件位置：`data/<namespace>/mxt/pill_binding/<path>.json`
 
-**用途**：把一族已经注册的可食用物品认成同一份丹药，并给出这族物品自己的服用次数上限与冷却。**吃下去跑什么、加多少丹毒、越过阈值之后怎么办**不在这张表里，写在 [pill](./pill.md) 上。
+**用途**：把一族已经注册的物品认成同一份丹药，并给出这族物品自己的服用次数上限与冷却。**吃下去跑什么、加多少丹毒、越过阈值之后怎么办**不在这张表里，写在 [pill](./pill.md) 上。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `name` | 文本组件 | `pill_binding.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的键。 |
 | `description` | 文本组件 | 同上加 `.description` | 描述。 |
-| `items` | `ItemMatcher` | `[]` | 认领哪些已有可食用物品，见[匹配器](../types/shared_data_types.md#itemmatcher)。绑定只有这一条入口，所以空表等于这条定义不起作用。 |
+| `items` | `ItemMatcher` | `[]` | 认领哪些已有物品，见[匹配器](../types/shared_data_types.md#itemmatcher)。绑定只有这一条入口，所以空表等于这条定义不起作用。 |
 | `pill` | 一份 `pill` 定义的 id | **必填** | 这族物品是哪一份丹药，见 [pill](./pill.md)。 |
 | `priority` | Int | `0` | 多份同类定义匹配同一件物品时的先后：数值大者先；相同则按注册表顺序。 |
 | `max_uses` | Integer | 无 | 可选正整数。省略表示不限次数。按**这条定义本身**计次，换载体物品、把载体分成几堆都绕不过去。 |
@@ -42,6 +42,6 @@ aside: false
 give @s mxt:pill[mxt:pill={pill:"example:warming_pill"}]
 ```
 
-本体物品 `mxt:pill` 只提供原版食用、名字和 Tooltip，药效仍只走一次；载体的显示名取这条绑定指名的丹药的 `name`，组件指名了就用组件那一份。
+本体物品 `mxt:pill` 只提供原版食用、名字和 Tooltip，药效仍只走一次。**能不能吃由被绑的物品自己答**：原版开始一次食用只看栈上的 `minecraft:consumable`，所以被绑定物品**自带**它就按那个物品自己的时长与姿势吃（食物在饱食度满时原版照样吃不下，这时会给服丹者一句提示）；**没有**它就由框架在右键那一刻替这一叠补上、动作结束时收回，绑定之后就能吃，物品上也留不下任何东西。自带用途的物品不吃这条：可换装、盾牌与动能武器由原版自己的分支应答右键，那一路优先；同时被长按声明认领的物品按长按读，不按丹药吃。载体的标题取组件指名的那份丹药的 `name`；没有组件时（药效由绑定指名）标题仍是本体物品自己的键 `item.mxt.pill`，那份丹药的名字显示在 Tooltip 第一行。
 
 `items` 是共用匹配器：可以写物品 id、`#标签` 或混合数组，数组里每一项也可以是带 `type` 的匹配器条目（`mxt:item`、`mxt:tag`、`mxt:wildcard`、`mxt:regex`、`mxt:technique`、`mxt:spirit_storage` 与 `mxt:herb_tag`）。匹配器只引用已经注册的物品。多个定义同时匹配一件物品时，**每个注册表只取命中它的、`priority` 最大的那一条**（字段默认 `0`；`artifact`、`item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` 六种 binding、`spirit_herb`、`item_aura`、`currency`，共十张表都接受它）；只有 `priority` 相同的两条定义才回落到注册表顺序，所以「谁赢」由数据包自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。详见 [`ItemMatcher`](../types/shared_data_types.md#itemmatcher)。

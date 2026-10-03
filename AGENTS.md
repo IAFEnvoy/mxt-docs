@@ -71,7 +71,7 @@ MXT_EN_DOCS=/path/to/old-docs MXT_ZH_DOCS=/path/to/MiXianTu/docs pnpm run migrat
 - **正文避免裸 `<` `>`**：页面经过 Vue 模板编译，写成普通文本的尖括号会被当成标签，轻则渲染错、重则构建失败。代码与 JSON 一律放进代码块。
 - **表格短、解释放表格后**；代码块标语言；JSON 不给注释；长解释不要塞进单元格。单元格里写"是什么"（一句），边界、坑点、求值顺序、失败原因写在表格后面的段落里。
 - **一页只讲一件事**。**一个分派注册表一页**（`mxt:ability_type` 一页、`mxt:cost_type` 一页，别把两族塞进一页；一页里十几个 `type` 时按用途再分页）。类型页的形状是：族是什么 → 每个 `type` 一个 `###`（一句话 → 字段表 → 例子）。参考页照 [Origins 的类型参考](https://github.com/IAFEnvoy/Origins-NeoForge) 的组织方式。**页面标题写成「注册表 id + 名称」**，与 JSON 定义页同形：中文 `curse_type（诅咒类型）`，英文 `Curse Types (curse_type)`，front matter 的 `title`、H1 与 `pages.mjs` 里的标签三处一致。**类型表只留在类型页**：JSON 定义页（`docs/datapack/json/`）里凡是「`type` → 字段/说明」的表、以及按 `type` 分出来的小节，一律搬到 `docs/datapack/types/` 下对应的族页，定义页原处只留一句指路；而且只有 JSON 里真能写的 `type` 才配一页。**族页挂在写出它的那个 JSON 定义页下面**（`pages.mjs` 里给那个条目加 `items`，如 `ability` 下面挂 `ability_type` / `ability_target_selector_type` / `data_storage_type` / `mount_render_type`），被满包引用、没有唯一归属的族（行为、条件、消耗、物品匹配器、数值提供器、公式变量）留在「类型参考」这一章里——它是「数据包」下的一个独立分组，排在「JSON 数据格式」前面。
-- **术语必须统一**（翻译时尤其注意）：符箓（`talisman`，**「符篆」是误用**，配套「符纸」「符笔」「符墨」）、灵气工作台（方块）+ **灵气合成**（它的配方族）、灵根、体质、功法、技能、进度链、`resource`＝数值（不是"资源"当身份用）、`aura`＝灵气身份、行为（action）、条件（condition）。
+- **术语必须统一**（翻译时尤其注意）：符箓（`talisman`，**「符篆」是误用**，配套「符纸」「符笔」，笔上的颜料存量叫「颜料」；「符墨」那件物品已删除，不得再出现）、灵气工作台（方块）+ **灵气合成**（它的配方族）、灵根、体质、功法、技能、进度链、`resource`＝数值（不是"资源"当身份用）、`aura`＝灵气身份、行为（action）、条件（condition）。
 - **状态用语**：完成 / 制作中 / 预留，别用营销词；研究文档里的设想不能写成已完成。
 - **Mermaid**：源码要 `encodeURIComponent` 再进属性、`htmlLabels` 顶层与 `flowchart.*` 必须同时为 `true`、图在客户端绘制；点开可放大。三条约束的原因见 README，改之前先读。
 

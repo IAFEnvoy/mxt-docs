@@ -16,7 +16,7 @@ title: 轮盘条目
 | `Optional<IconReference> icon()` | 扇区里画的图标，贴图或物品都行；可以不画（没有图标的条目就画名字）。 |
 | `int accentColor()` | 配置界面里这一格底边那条颜色（灵气蓝、技能金；需要按键的技能按状态取绿 / 灰 / 紫）。 |
 | `List<Component> tooltip(Player)` | 类型 + 名字 + 具体数值，**最后一行**写这一项从哪来（学习的技能 / X的技能 / 其它来源，见 `wheel.mxt.tooltip.source.*`）；按需重建，因为数值取决于玩家此刻的状态。 |
-| `long cooldownTicks(Player)` / `boolean usable(Player)` | 还剩几 tick，`0` 表示就绪；不可用时扇区变暗、中间写「冷却中 4.3s」。**它不会阻止触发包发出**——能不能用由服务端判。 |
+| `long cooldownTicks(Player)` / `boolean usable(Player)` | 还剩几 tick，`0` 表示就绪；不可用时那一扇的图标上压一层冷却白幕、中间写「冷却中 4.3s」。**它不会阻止触发包发出**——能不能用由服务端判。 |
 | `void onSelected(WheelSelection)` | 触发回调（按 `V` 或左键），调用时轮盘**不关**，所以实现里可以接着开自己的界面、也可以被连续调用；`WheelSelection` 带着这一格的编号与它读自哪个来源。 |
 
 ```java
@@ -81,7 +81,7 @@ public record AbilityWheelEntry(Identifier id, Ability definition) implements Wh
 
 ## 扇区里画什么
 
-每个扇区在环上先画条目的 `icon()`（物品或贴图，16px）；**没有图标时改画名字**——`IconRenderer.renderName` 取 `title()` 里放得下的开头几个字，画在图标本来的位置上，所以一圈填满没有图标的条目也不会出现空扇区。文字宽度按该半径上一扇的弧长减去留白算（`WheelMenuScreen#labelWidth`），因此相邻扇区的文字不会互相压。完整名字始终在轮盘正中间与 tooltip 里。
+每个扇区在环上先画条目的 `icon()`（物品或贴图，16px）；**没有图标时改画名字**——`IconRenderer.fit` 取 `title()` 里放得下的开头几个字，画在图标本来的位置上，所以一圈填满没有图标的条目也不会出现空扇区。文字宽度按该半径上一扇的弧长减去留白算，因此相邻扇区的文字不会互相压。完整名字始终在轮盘正中间与 tooltip 里。环本身由 ApricityUI 页面画（`assets/apricityui/apricity/mxt/wheel/`，随模组打包在 jar 里、直接从资源包读）：物品图标走页面里的 `<item>`、贴图图标走 `<texture>`，两边都拿不到才落到名字上。
 
 配置界面那一排 12 格同理：有图标画图标，没有就画名字的开头（`IconRenderer.renderOrName`）——22px 的格子只放得下两个汉字，全名看 tooltip。
 
@@ -105,7 +105,7 @@ public record AbilityWheelEntry(Identifier id, Ability definition) implements Wh
 - **12 个槽位各有一把键**（`key.mxt.wheel_slot.1` … `.12`，**默认全部未绑定**，单独一个「**觅仙途：轮盘槽位**」分类）：`MxtKeyMappings.WHEEL_SLOTS` 由 static 块里的 `for` 按扇区数填出，下标 `i` = 页内第 `i` 格、键名数字 = `i + 1`（配置界面编号 `1` 在正上方、顺时针）。**分类内的顺序由 `order` 决定**：原版按键列表是 `Arrays.sort` → `KeyMapping#compareTo`，同一分类内先比 `order`、相同才比"翻译后的显示名"，不设 `order` 就会排成 `1、10、11、12、2…`；做法是给每把键传扇区号当 `order`（`KeyMappingHolder` 为此加了一个转发原版五参构造器的重载），于是编号不需要前导零、顺序在任何语言下都固定。按下槽位键 = **在当前页上选中该格并立刻用掉**（等于"把指针指过去再按 `V`"）：`useSlotKey(...)` 先算出编号（`page * 12 + sector`）、取出那一格、`WheelSelectionState.selectSector(sector)` 让 HUD 金框跟过去、编号随之跨会话持久化，然后 `entry.onSelected(...)` 发一次触发；空格子按下什么都不发生。**行为写在 `WheelMenuController` 的裸轮询里，不是 `onStateChange` 回调**：`setAll()` 会伪造一次按下，对施法就是白放一个技能，而裸轮询还顺带让"轮盘开着时按槽位键"也能用。
 - **客户端配置 `release_to_select` 已删除**（松开不再选中），`mode`（按住 / 切换）保留；`WheelSelection.Method` 由 `RELEASE`/`CLICK` 改成 `KEY`/`CLICK`，只表示这次请求来自键盘还是鼠标。
 - 轮盘中间那一行：可用时写「按 `V` 使用」（键名取实际绑定，改键后跟着变），不可用时写「冷却中 4.3s」——剩余时间读的是"冷却结束在哪一 tick"（附件里就有），由 `WheelDuration.seconds` 写成**永远一位小数**的秒数，与 tooltip 里的冷却 / 施法同一种写法。
-- **可拖动 HUD 元素「轮盘格」**（`screen/wheel/WheelSelectionEntry`，布局键 `wheel.selection`）：**永远 4 列，行数随内容的格子数向下长**——它是**整张轮盘的一览**。**只有主盘画空格子**（那 12 个空框是玩家自己摆的布局，空着就要看得见），从盘的页只画它真正贡献的那几格，所以 3 个技能就是 3 格、不再补一串空框；页边界因此不再一定等于行边界。每格画图标或名字开头、底边一条类型色，空格子只有空框；**冷却中的格子按原版物品冷却那一套压一层白幕**——盖住图标的剩余比例、随时间从上往下退（剩余读条目的 `cooldownTicks`，全长读 `cooldownLength`：技能取上一次实际拿到的 `mxt:cooldown` 长度、灵气取固定发射间隔；答不出全长的条目画满整块），其它原因不可用时才压暗；**编号此刻代表的那一格是金色边框**（与配置界面选中的候选格、轮盘上指针所在格子的金色同一套语汇）。尺寸每帧按内容算（`layoutWidth` / `layoutHeight` 动态，`refreshPlacement` 里 `setSize` 回报给框架，长出去会被夹回窗口），默认位置在**窗口左边、竖直居中**。**块的上方不写任何字**：它是拿来看的，翻到哪一页由轮盘自己说。关着轮盘也能用 `V` 这件事靠它才不盲目，顺带能一眼看到每一格里还放了什么。
+- **可拖动 HUD 元素「轮盘格」**（`screen/wheel/WheelSelectionEntry`，布局键 `wheel.selection`）：**永远 4 列，行数随内容的格子数向下长**——它是**整张轮盘的一览**。**只有主盘画空格子**（那 12 个空框是玩家自己摆的布局，空着就要看得见），从盘的页只画它真正贡献的那几格，所以 3 个技能就是 3 格、不再补一串空框；页边界因此不再一定等于行边界。每格画图标或名字开头、底边一条类型色，空格子只有空框；**冷却中的格子按原版物品冷却那一套压一层白幕**——盖住图标的剩余比例、随时间从上往下退（剩余读条目的 `cooldownTicks`，全长读 `cooldownLength`：技能取上一次实际拿到的 `mxt:cooldown` 长度、灵气取固定发射间隔；答不出全长的条目画满整块），其它原因不可用时才压暗；**编号此刻代表的那一格是金色边框**（与配置界面选中的候选格同一套语汇；轮盘环上指向的那一扇是压深的灰阶，不是金框）。尺寸每帧按内容算（`layoutWidth` / `layoutHeight` 动态，`refreshPlacement` 里 `setSize` 回报给框架，长出去会被夹回窗口），默认位置在**窗口左边、竖直居中**。**块的上方不写任何字**：它是拿来看的，翻到哪一页由轮盘自己说。关着轮盘也能用 `V` 这件事靠它才不盲目，顺带能一眼看到每一格里还放了什么。
 
 ## 选中项跨会话
 

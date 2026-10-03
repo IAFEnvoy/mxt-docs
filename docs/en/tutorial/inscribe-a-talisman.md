@@ -7,11 +7,11 @@ description: Write a talisman definition, hand it to a player, pour aura into it
 
 A talisman carries abilities on an item: it inscribes a few abilities, you fill the carrier's own store of aura, and it casts them for you. **The definition only says what is inscribed, how much fits and what one invocation costs**; whether it fires the moment it is full or waits for you to act is a **property of the carrier** (on the item stack), not of the definition.
 
-::: warning Inscribing has no in-game entry point yet
+::: warning Inscribing by hand has no entry point yet
 
-The brush `mxt:talisman_brush`, the ink `mxt:talisman_ink` and blank paper `mxt:blank_talisman` are currently **plain items with no behaviour** — "hold the brush and write the ability onto it" is not wired up. Today only three things can write a talisman into a carrier: `/talisman give …`, item component syntax (the `components` of `/give`), and the single-inscription item the creative picker builds.
+The brush `mxt:talisman_brush` now only carries its own **pigment store** (dipping, see [Generic Items](../player-guide/items.md)); "hold the brush and write the ability onto it" is still not wired up — writing a talisman means tracing a formula in the **drawing workstation** (see [Talisman Drawing (talisman_drawing)](../datapack/json/talisman_drawing.md)), or writing the item directly: `/talisman give …`, item component syntax (the `components` of `/give`), and the single-inscription item the creative picker builds.
 
-So this tutorial covers the chain that genuinely runs today: **define → hand out → pour → fire**. When the inscribing service lands, step 3 will gain the manual path.
+So this tutorial covers the chain that genuinely runs today: **define → hand out → pour → fire** (step 3 is exactly the "hand it to a player" routes); the manual, traced path belongs to the [talisman drawing recipe](../datapack/json/talisman_drawing.md).
 
 :::
 

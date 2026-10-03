@@ -49,7 +49,7 @@ MiXianTu 负责行为、条件、灵气、货币与 Tooltip，绑定表则把一
 | --- | --- | --- |
 | 物品绑定 | `mxt/item_binding/` | 任意物品的有序实体行为与 Tooltip 条件。 |
 | 武器绑定 | `mxt/weapon_binding/` | 原版属性修正（攻击力与攻速也写在这里）、武器行为。 |
-| 丹药绑定 | `mxt/pill_binding/` | 把这一族可食用物品认成同一份丹药，并给出服用次数与冷却；作用写在 [丹药](/datapack/json/pill) 里。 |
+| 丹药绑定 | `mxt/pill_binding/` | 把这一族已注册物品认成同一份丹药，并给出服用次数与冷却；作用写在 [丹药](/datapack/json/pill) 里。 |
 | 工具绑定 | `mxt/tool_binding/` | 认领工具物品，并给出它们解锁的锻打方式。 |
 | 图纸绑定 | `mxt/blueprint_binding/` | 认领图纸物品，并给出它们提供的锻造蓝图。 |
 | 功法绑定 | `mxt/technique_binding/` | 一门功法**怎么读**：长按时长、姿势、音效、品质链与条件，以及本体为它生成的载体物品。手册的身份是堆上的 `mxt:technique` 组件，`items` 是可选的第二条路。 |

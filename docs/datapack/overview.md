@@ -96,7 +96,7 @@ data/mxt/tags/damage_type/no_bonus.json
 | 技能与规则 | `ability`、`curse`、`formation`、`tribulation`、`trigger`、`talisman` |
 | 灵气与世界 | `aura_zone`、`block_aura`、`item_aura`、`secret_realm` |
 | 物品与品质 | `pill`、`pill_binding`、`item_binding`、`weapon_binding`、`technique_binding`、`tool_binding`、`blueprint_binding`、`artifact`、`quality` |
-| 炼丹与灵植 | `medicinal_property`、`spirit_herb`、`alchemy_furnace`、`alchemy_wall_material` |
+| 炼丹与灵植 | `medicinal_property`、`spirit_herb`、`alchemy_furnace`、`alchemy_wall_material`、`heat_source` |
 | 经济与内容 | `currency`、`forging_method`、`forging_blueprint`、`creature_profile`、`contract_type` |
 
 丹方不是注册表：它是原版配方类型 `mxt:alchemy`，文件放在 `data/<命名空间>/recipe/` 下，字段见[炼丹配方](/datapack/json/alchemy_recipe)。
@@ -114,11 +114,11 @@ data/mxt/tags/damage_type/no_bonus.json
 
 ## 加载与覆盖
 
-38 个数据包注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。从磁盘上的文件到玩家看到的结果就是下面这条路径。
+39 个数据包注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。从磁盘上的文件到玩家看到的结果就是下面这条路径。
 
 ```mermaid
 flowchart TD
-    A["数据包定义文件<br/>一份 JSON 一个条目"] --> B["38 个数据包注册表<br/>NeoForge 原版数据包注册表"]
+    A["数据包定义文件<br/>一份 JSON 一个条目"] --> B["39 个数据包注册表<br/>NeoForge 原版数据包注册表"]
     B --> C["世界加载时读取并校验<br/>JSON / 引用 / 字段校验"]
     C --> D["解码失败：世界无法加载<br/>修好该文件后才能再次进入"]
     C --> E["neoforge:conditions<br/>条件不成立的条目根本不进注册表"]

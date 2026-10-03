@@ -12,7 +12,7 @@ description: 源码级说明：数据包注册表怎么分成内容层与绑定�
 | 类 | 职责 |
 | --- | --- |
 | `registry.MxtResourceKeys` | 每张表的 `ResourceKey`，与注册表实例、注册事件分开，好让 codec 与运行时服务不必依赖注册类。 |
-| `registry.MxtDatapackRegistries` | 38 张数据包注册表的登记与统一读取入口；**不持有任何快照**，重载与同步都交给原版注册表系统。 |
+| `registry.MxtDatapackRegistries` | 39 张数据包注册表的登记与统一读取入口；**不持有任何快照**，重载与同步都交给原版注册表系统。 |
 | `registry.MxtRegistries` | 固有注册表的 `DeferredRegister`：`type` 那一层的分派（行为、条件、消耗、技能类型……）。 |
 | `registry.MxtDataComponents` | 物品数据组件的登记：每个组件同时声明持久化 codec 与网络 codec。 |
 | `runtime.ServerCache` | 世界加载与 `/reload` 之后的唯一重建点：跨条目索引 + 校验报告。 |

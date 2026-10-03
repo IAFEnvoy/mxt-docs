@@ -176,7 +176,7 @@ Every second the server checks each learned technique: once the value reaches th
 /mxt trigger publish mxt:kill                 → publish one kill signal by hand (gamemaster)
 ```
 
-1. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]` and right-click it. Only `example:qi_bolt` is there — the recovery ability waits for level two. The technique panel (unbound by default; reach it from the button in the information panel, `Z`) shows the technique, its level and its mastery bar.
+1. `/give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]` and right-click it. Only `example:qi_bolt` is there — the recovery ability waits for level two. The technique page (the **Learned Techniques** tab at the top left of the information panel, `Z`) shows the technique, its level and its mastery bar.
 2. Meditate for a minute: `cultivate_action` adds `1` per second, and `/mxt resource example:azure_mastery` follows. Kill something, or run `/mxt trigger publish mxt:kill`, for one more point.
 3. Within a second or two of the value reaching `100` the holder promotes to level two: `example:qi_recovery` appears in the skill pool on the right of the wheel configuration screen (`/mxt ability list` lists it together with its source), and damage from abilities granted by the chain changes from `1.0` to `1.25` times.
 4. To see a promotion without waiting, run `/mxt resource example:azure_mastery set 100` (gamemaster). That form rewrites the value outright and does not go through the bounds check.

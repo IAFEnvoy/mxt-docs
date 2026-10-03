@@ -48,7 +48,7 @@ The fields this ability reads (`cooldown` and the four action fields below it ar
 | `icon` | Optional. A bare string is a 16x16 GUI texture; an object is an item stack template (`{"id": ...}`, optionally `count` and `components`). Without it the entry is drawn with its name. |
 | `costs` | A list of `Cost` objects, paid before the behaviour runs, all or nothing as one array. `mxt:resource` spends a value, `mxt:aura` charges the value that aura is measured in, `mxt:item` spends items, `mxt:js` delegates to a script (which runs last), and the `{"id": ..., "amount": ...}` shorthand means `mxt:resource`. |
 | `cast_time` | Cast duration in ticks. |
-| `cooldown` | Cooldown in ticks, reported back to the client so the wheel can draw that sector dark and say "On cooldown 4.3s" - the seconds left, always one decimal. |
+| `cooldown` | Cooldown in ticks, reported back to the client so the wheel can lay the cooldown sheet over that sector's icon and say "On cooldown 4.3s" - the seconds left, always one decimal. |
 | `condition` | An entity condition that must pass before the ability can be used. Its only job here is to keep Mortals from throwing bolts. For a passive `mxt:modifier` or `mxt:aura` ability the same field keeps working after the cast: it is re-checked every tick and the passive effect is withdrawn while it fails. |
 
 `mxt:active` also declares these four action fields itself - **they are not fields shared by every ability**; only the types that run actions declare them:

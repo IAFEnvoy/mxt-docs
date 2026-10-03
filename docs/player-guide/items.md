@@ -50,7 +50,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | --- | --- |
 | 基础材料 | `mxt:spirit_iron_ingot`、`mxt:spirit_iron_nugget`、`mxt:spirit_wood`、`mxt:spirit_wood_core`、`mxt:cinnabar`、`mxt:alchemy_dregs`、`mxt:impurity` |
 | 空白载体 | `mxt:spirit_ring`、`mxt:spirit_stone_bag` |
-| 身份与记录 | `mxt:wooden_token`、`mxt:stone_token`、`mxt:cultivation_jade_slip`、`mxt:blank_talisman_paper` |
+| 身份与记录 | `mxt:wooden_token`、`mxt:stone_token`、`mxt:cultivation_jade_slip`、`mxt:blank_talisman` |
 | 固定道具 | `mxt:contract_scroll`、`mxt:recall_talisman`、`mxt:beast_taming_bell`、`mxt:secret_realm_reward_box` |
 
 ## 统一功能载体
@@ -69,30 +69,39 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 木/石令牌 | `mxt:wooden_token`、`mxt:stone_token` | `mxt:token` | 统一承载 `kind`、`value`、`owner`，供秘境和交易等权限系统共用。 |
 | 鉴定镜 | `mxt:identification_mirror` | 消费 `mxt:identification` | 统一解析带有鉴定组件的物品；具体待鉴定物品由内容包或其他模组提供。 |
 | 灵根 | `mxt:spirit_root` | `mxt:spirit_root` | 保存一份 `spirit_root` 定义；右键获得这条灵根（"已持有"与元素互斥照旧被拒，见 [spirit_root](/datapack/json/spirit_root#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
-| 符笔、符墨 | `mxt:talisman_brush`、`mxt:talisman_ink` | 无 | 制符和阵法内容的通用基础输入，与空白符纸配套，具体配方由数据包或 KubeJS 提供。 |
+| 体质 | `mxt:physique` | `mxt:physique` | 保存一份 `physique` 定义；右键获得这项体质（"已持有"、`holder_condition` 不满足与互斥标签冲突照旧被拒，见 [physique](/datapack/json/physique#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
+| 符笔 | `mxt:talisman_brush` | `mxt:brush_pigment` | 符笔装自己的颜料存量，加料是原版储物袋那套点击（提着符笔点一下颜料就蘸）。颜料就是物品标签 `#mxt:brush_pigment` 里的物品，主资源包里只有朱砂 `mxt:cinnabar`；一份颜料给多少由服务端配置说了算（见[符笔与颜料](#符笔与颜料)）。 |
 | 符箓 | `mxt:talisman` | `mxt:talisman` + `mxt:spirit_storage` | 保存**已铭刻的符箓**：一个按追加顺序排列的 `talisman` 定义条目列表，加上一个模式字段 `mode`（`"fire"` 缺省／`"store"`），空列表就是刚做出来的空载体。手持按住右键灌注灵气（容量 = 一次发动的灵气用量 × 铭刻定义的 `capacity` 倍率，实际倍率还要跟载体剩余使用次数取小，按灵气分别计量），灌满那一刻铭刻的能力全部发动并消耗一件本体（`store` 模式除外：它只积累，不自动发动）。存量够付清一次发动的灵气条目时，**右键即发动**——写了 `durability` / `consume` 再配大倍率，就能灌满一次连打好几次（见 [灌注与激发](/datapack/json/talisman)）。**潜行 + 右键切换模式**，`store` 且已灌满时潜行使用不切换而是**直接发动**。摆在展示架上被填满时按模式处理，并以展示架的位置作为激发地点——公式与位置类行为都用它（见 [灌注与激发](/datapack/json/talisman)）。铭刻（写符）服务尚未接入，`mxt:talisman` 组件目前可以手写或用物品组件语法直接写入（`/talisman give` 也能发）；灌注进度与灵石共用同一个存储组件 `mxt:spirit_storage`（按灵气记已灌单位，缺省表示一点都没灌）。**徒手右键与灌满自动发动走同一个入口**，但两条规则各按"在哪"分：**冷却只是手上的闸门**（服务端配置「符箓 → 使用冷却」，默认 20 刻、0 关闭），一次**尝试**就进冷却，窗口内长按灌注不会发动、那一 tick 的灵气也不会被灌进去；**消耗则按位置分**——手上一次发动消耗一件本体（**创造模式不消耗**），摆在展示架上的**永远消耗**、且不查也不记冷却。两条规则都由 `SpiritSource.consumedByHand()` 区分。**铭刻的定义可以声明耐久**（`durability` / `consume`）：上限写进原版组件（`max_damage` 加 `max_stack_size: 1` 与 `damage: 0`，物品上就有耐久条），每次发动改成扣耐久、扣满那一次销毁载体；没声明耐久的载体照旧一次一张本体。 |
 
 ## 炼丹与灵植
 
-丹炉不是一件方块：它是一座手搭的固定 3×3×3。核心带炉型规格，两个投料仓分放主药与辅药药引，产物仓只负责出货，其余 22 格砌成炉壁。
+丹炉不是一件方块：它是一座手搭的固定 3×3×3。核心带炉型规格，两个投料仓分放主药与辅药药引，产物仓只负责出货，其余 18 格砌成炉壁（底层只放四角）。
 
 | 方块 | ID | 用途 |
 | --- | --- | --- |
-| 丹炉核心 | `mxt:alchemy_furnace` | 正面中层那一块。异火装在这里，炉温读数与「设定 / 开炉 / 终止」也在这块打开的页面上。 |
+| 丹炉核心 | `mxt:alchemy_furnace` | 正面中层那一块。炉温读数与「设定 / 开炉 / 终止」在这块打开的页面上。 |
 | 主药投料仓 | `mxt:alchemy_main_input` | 面向正面时在左侧，两个主药格。 |
 | 辅药投料仓 | `mxt:alchemy_auxiliary_input` | 面向正面时在右侧，两个辅药格加一个药引格。 |
 | 丹炉产物仓 | `mxt:alchemy_output` | 顶部中心，四个输出格，只能取出。 |
-| 丹炉炉壁 | `mxt:alchemy_furnace_casing` | 其余 22 格，每块带自己的炉壁材料；炉壁不打开界面。 |
+| 丹炉炉壁 | `mxt:alchemy_furnace_casing` | 底层四角与上面两层，共 18 格，每块带自己的炉壁材料；炉壁不打开界面。 |
 | 灵田 | `mxt:spirit_herb_plot` | 一格一株：持种苗右键种下，成熟后右键采收，潜行空手拔回种苗。 |
 | 丹药 | `mxt:pill` | 丹药载体，提供原版食用、名字与 Tooltip；吃下去做什么写在 [pill](../datapack/json/pill.md) 上，服用次数与冷却由 [pill_binding](../datapack/json/pill_binding.md) 给。 |
 
-手感是：**异火放进核心，主药放左侧仓，辅药与药引放右侧仓，成品从产物仓取。** 放进材料不会自己开炉，要玩家在核心那一页点「开炉」。中心那一格必须留空；壳不齐、炉壁材料无效、格子被另一座炉占了，都不算成型，也就开不了炉。
+手感是：**供热方块放进底层正中央那一格，主药放左侧仓，辅药与药引放右侧仓，成品从产物仓取。** 放进材料不会自己开炉，要玩家在核心那一页点「开炉」。壳不齐、炉壁材料无效、格子被另一座炉占了，都不算成型，也就开不了炉。
 
-**本体没有内置异火**：能给丹炉供热的那件物品必须由模组提供，数据包造不出来。炉温上限取整炉里最低的那块炉壁耐温与异火自己的上限，两者取较低的一个。
+**本体不提供热源方块**：供热方块的数值写在数据包 [`mxt:heat_source`](../datapack/json/heat_source.md) 里（方块也可以自己实现接口），本体没有默认值。炉温上限取整炉里最低的那块炉壁耐温与供热方块 `max_temperature` 里较低的一个。
 
-投料仓和核心里的异火都不接受漏斗；产物仓只能从它的下侧面抽出，而那一面成型后正对着中心的空气格，所以那里放不进漏斗。活动批次里拆炉壁或拆一座仓，这一批按失败结算一次，已经投进去的材料不返还；拆一座仓只掉这座仓自己的物品。
+投料仓与核心都不接受漏斗，供热方块也不是容器；产物仓只能从它的下侧面抽出，而那一面成型后正对着中层中心那块炉壁，所以那里放不进漏斗。活动批次里拆炉壁或拆一座仓，这一批按失败结算一次，已经投进去的材料不返还；拆一座仓只掉这座仓自己的物品。
 
 丹药吃完会累计丹毒：服丹的药效、阈值与过量后剩多少写在 [pill](../datapack/json/pill.md) 里，本体只负责记账。默认丹毒不会自己退；服务端配置「炼丹 → 每秒丹毒自然消退」设成正数后，已经有丹毒的活跃实体每累计 20 刻退一次，离线不退，也不会给没服过丹的实体建一份空账。
+
+## 符笔与颜料
+
+符笔 `mxt:talisman_brush` **不叠放**——一支笔就是一口自己的颜料存量，记在物品组件 `mxt:brush_pigment` 里：一个非负整数，**1 单位就是 1 像素弧长**，没写这个组件与写 `0` 是一回事（都是空笔）。物品格里那一小条就是还剩多少（只在有颜料时出现），提示框另有一行「颜料：已存 / 上限」，上限是**服务端配置「符箓 → 符笔容量」**（默认 4000，约能描满 3–5 张符）。
+
+加料就是**蘸料**，和原版储物袋（`minecraft:bundle`）同一套点击：**光标提着符笔，对着颜料物品点一下**（左键右键都行），点一次笔吸进**一份**（一个物品），点几下就蘸几份；笔满时一次都不吃。**它不挑界面**——背包、箱子、画符工作站里的格子都行，界面里没有专门的颜料槽，也不必跑去某个界面合成。一份颜料给多少由**服务端配置「符箓 → 一份颜料的点数」**说了算（默认 1000）。
+
+颜料是用来画符的：在画符工作站里按每一笔的长度从这口存量里扣，见 [`mxt:talisman_drawing`](/datapack/json/talisman_drawing)。
 
 ## 数据组件示例
 
@@ -105,13 +114,14 @@ give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_rea
 give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
 give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
+give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
 give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
 give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
 ```
 
 最后一行是**手册**的做法：堆上带 `mxt:technique` 组件时，这一叠才教那门功法；不带组件、也没有任何声明的 `items` 认领的玉简什么都不教、Tooltip 里也不显示功法。功法声明（`technique_binding`）只决定**怎么读**，以及 `/picker mxt:technique` 替它生成的载体用哪个物品（**创造模式物品栏不生成载体**）；把物品写进声明的 `items` 也可以让那一叠不带组件就当手册，见[功法绑定](/datapack/json/technique_binding)。
 
-倒数第二行是**灵根物品**的做法：组件里写灵根 ID，右键即授予这条灵根（"已持有"与元素互斥照旧被拒），成功消耗 1 个、**创造模式不消耗**，见 [spirit_root](/datapack/json/spirit_root#holding)。
+倒数第二、第三行是**灵根物品**与**体质物品**的做法：组件里写定义 ID，右键即授予（灵根被拒的理由是"已持有 / 元素互斥"，体质是"已持有 / 条件不满足 / 互斥标签冲突"），成功消耗 1 个、**创造模式不消耗**，见 [spirit_root](/datapack/json/spirit_root#holding) 与 [physique](/datapack/json/physique#holding)。
 
 注意 `mxt:resource_container` 的值是**裸 map**，键就是资源 ID，**没有** `values` 外壳；写错外壳会被当作一个无法解析的键**静默忽略**（只留一条 WARN 日志），容器仍是空的。
 

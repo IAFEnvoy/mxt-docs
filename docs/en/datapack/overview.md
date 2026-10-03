@@ -96,7 +96,7 @@ Behaviours are uniformly called `action` and are split by target into entity, it
 | Abilities and rules | `ability`, `curse`, `formation`, `tribulation`, `trigger`, `talisman` |
 | Aura and world | `aura_zone`, `block_aura`, `item_aura`, `secret_realm` |
 | Items and quality | `pill`, `pill_binding`, `item_binding`, `weapon_binding`, `technique_binding`, `tool_binding`, `blueprint_binding`, `artifact`, `quality` |
-| Alchemy and herbs | `medicinal_property`, `spirit_herb`, `alchemy_furnace`, `alchemy_wall_material` |
+| Alchemy and herbs | `medicinal_property`, `spirit_herb`, `alchemy_furnace`, `alchemy_wall_material`, `heat_source` |
 | Economy and content | `currency`, `forging_method`, `forging_blueprint`, `creature_profile`, `contract_type` |
 
 An alchemy recipe is not a registry: `mxt:alchemy` is a vanilla recipe type whose files live under `data/<namespace>/recipe/`, see [Alchemy Recipe](/en/datapack/json/alchemy_recipe).
@@ -114,11 +114,11 @@ An alchemy recipe is not a registry: `mxt:alchemy` is a vanilla recipe type whos
 
 ## Loading and Overriding
 
-The 38 data pack registries load through the native NeoForge data pack registry system; they are read and validated **while the world loads**, and a read-only snapshot is provided to the client on join through the vanilla synchronisation mechanism. From a file on disk to what the player sees is the path below.
+The 39 data pack registries load through the native NeoForge data pack registry system; they are read and validated **while the world loads**, and a read-only snapshot is provided to the client on join through the vanilla synchronisation mechanism. From a file on disk to what the player sees is the path below.
 
 ```mermaid
 flowchart TD
-    A["Datapack definition files<br/>one JSON file per entry"] --> B["38 data pack registries<br/>native NeoForge data pack registries"]
+    A["Datapack definition files<br/>one JSON file per entry"] --> B["39 data pack registries<br/>native NeoForge data pack registries"]
     B --> C["Read and validated at world load<br/>JSON / references / field validation"]
     C --> D["Decoding fails: the world cannot load<br/>fix that file before entering again"]
     C --> E["neoforge:conditions<br/>an entry whose condition fails never enters the registry"]

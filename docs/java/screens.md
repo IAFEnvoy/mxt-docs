@@ -56,11 +56,11 @@ MyBar bar = HudManager.register(new MyBar());
 
 ## 轮盘选择系统 `screen.wheel`
 
-按住按键（`key.mxt.wheel`，默认 `R`），屏幕上出现一个 **12 扇**的轮盘：指针**朝哪个方向**就选中哪一扇，选中的扇区变金色并向外扩一点，**这一扇的名字与 tooltip 写在轮盘正中间**。它是技能与灵气**唯一的触发入口**——法器能力就是技能，原来"技能栏 + 灵力栏"两条快捷栏与它们各自的配置界面已经删除（过程见 `research/28_技能与灵气归一化设计.md`）。
+按住按键（`key.mxt.wheel`，默认 `R`），屏幕上出现一个 **12 扇**的轮盘：指针**朝哪个方向**就选中哪一扇，选中的扇区**底色变深**并向外扩一点，**这一扇的名字与 tooltip 写在轮盘正中间**。它是技能与灵气**唯一的触发入口**——法器能力就是技能，原来"技能栏 + 灵力栏"两条快捷栏与它们各自的配置界面已经删除（过程见 `research/28_技能与灵气归一化设计.md`）。
 
 **轮盘由"主盘 + 从盘"组成，用一套连续编号串起来**（见 `research/31_多轮盘与轮盘来源设计.md` §10）：主盘是玩家自己摆的 12 格（编号 `0..11`），从盘（主手物品 / 副手物品 / 法器 / 契约灵兽）按随身装备与手里的御兽铃**自动生成、不存储**（内容是这些装备此刻授予的主动技能，加上它们作为法器声明的**技能**；契约灵兽那一页是铃对准的灵宠认的行为），格子从 `12` 起接着排；**一页 12 格**，一个来源占 `ceil(条目数 / 12)` 页（一条都没有就一页都不占），所以"一个从盘不够用就再开一个新的"。翻页是两把键（`key.mxt.wheel_previous` / `key.mxt.wheel_next`，默认键盘左 / 右方向键，**默认两头环绕**，由客户端配置「轮盘选择 → 循环翻页」决定绕回还是停在两端），`R` **打开始终回到主盘（第一页）**。**页只是视图，编号才是选择**：轮盘画当前页、HUD 轮盘格画整张轮盘、12 把槽位键作用于当前页，关着时的 `V` 作用于编号此刻代表的那一格（**编号指向不存在的格子时落到最后一个有东西的格子，编号落在空格子上时落到第一个有内容的格子，编号本身不改写**）。
 
-框架（几何、扇环渲染、开合状态机、选择语义）在 `screen.wheel`，内容（技能与灵气怎样变成条目、每个来源贡献什么）在 `screen.wheel/content`，编辑界面是 `WheelConfigurationScreen`；接法、布局的存储与校验、编号与分页、触发分派见[轮盘条目](../java/wheel.md#轮盘条目)，这里只记要点：
+框架（几何、开合状态机、选择语义）在 `screen.wheel`，环与它的动画由 ApricityUI 页面画（`assets/apricityui/apricity/mxt/wheel/`，页面随模组打包在 jar 里、直接从资源包读），内容（技能与灵气怎样变成条目、每个来源贡献什么）在 `screen.wheel/content`，编辑界面是 `WheelConfigurationScreen`；接法、布局的存储与校验、编号与分页、触发分派见[轮盘条目](../java/wheel.md#轮盘条目)，这里只记要点：
 
 - **框架不决定轮盘上有什么**：`WheelMenuProvider` 回答"这个来源现在贡献哪些条目"，并且**按来源 id 登记**（`WheelMenuContent.register(source, provider)`；内建那五页由 `WheelContent` 在客户端初始化时一起登记，所以内容模组加的是**自己那一页**，不会顶掉内建页），入参是玩家与来源 `api/WheelSource`（`runtime/wheel/WheelSourceTypes` 注册出来的实例，**不再是枚举**；一条来源要回答 `id()` / `displayName()` / `configured()` / `grantSources(entity)` / `equipment(entity)` / `offers(entity, kind, id)`）；返回值可以比一页长，分页由 `WheelMenuContent` 做。条目契约是 `WheelMenuEntry`（`kind` / `id` / `title` / `icon` / `tooltip` / `cooldown` / `usable` / `onSelected`）。这替换掉了框架最初"模块静态登记 12 个槽位"的做法：内容已经是玩家自己的布局，第二条入口只会和它抢格子。
 - **布局内容存在服务端**：玩家附件 `wheel_layout` 存一份 12 格 `WheelLayout`（每格 `WheelSlot = 种类 + id`，**种类也按 id 存、也按 id 读**，空格是 `EMPTY` 哨兵，**只有主盘进附件**），以及一个 `armed` 字段存"当前选中的格子编号"（`Optional<Integer>`，一个数字）；配置界面关闭时发 `WheelLayoutC2SPayload`，服务端 `WheelService.sanitize` 强制 12 格、逐格问该种类的 `exists` 后再写回。编号走 `WheelSelectionC2SPayload`，由 `screen.wheel/content/WheelSelectionSync` 在登录时恢复、编号变化时上送——细节见[轮盘条目](../java/wheel.md#选中项跨会话)。
@@ -72,7 +72,7 @@ MyBar bar = HudManager.register(new MyBar());
 - **触发不关屏**：用掉一格不会关闭轮盘，所以一次按住可以连用几格；轮盘的开关只由轮盘键决定。
 - **按键不能用 `KeyMapping#isDown()` 读**：`Minecraft#setScreen` 一开界面就 `KeyMapping.releaseAll()`，用 `isDown()` 的话轮盘会在出现的那一帧就被判成已松手。第二个理由与使用键有关：按着 `V` 松开 `R` 时 `MouseHandler#grabMouse()` 里的 `KeyMapping.setAll()` 会按物理状态把 `V` 重新置成按下、补出一次假按下，等于多触发一次。控制器因此对轮盘键、使用键和两把切盘键都用 `InputConstants` / GLFW 直接读原始状态，并且一个键只在一处判边沿；`KeyMapping` 只负责让它们出现在按键设置里。代价是判定精度为客户端刻。
 - **它是个 `Screen`，不是 GUI 层**：开界面时原版会自动放开鼠标（指针才能指方向，而且角度与 GUI 缩放无关），关掉时又会把准心收回来。它不暂停游戏，也不画背景——默认背景会把这之前提取的整层 HUD 糊掉。
-- **颜色、半径、动画时长都还是常量**（`WheelMenuScreen` / `WheelGeometry`）：高亮沿用 HUD 编辑器那支金色，窗口太小时扇环整体缩小。
+- **半径与适配缩放是常量**（`WheelGeometry`，窗口太小时扇环整体缩小），**颜色与动画时长写在页面 CSS 里**：整套是灰阶，指向那一扇压深一档；HUD 的「轮盘格」选中框仍是金色贴图。
 - **按住轮盘时角色会停下**：原版对任何 `Screen` 都会 `KeyMapping.releaseAll()`，移动键随之松开（松开轮盘键时 `setScreen(null)` 又会 `grabMouse()` 把物理按键状态同步回来，不用重新按）。要"边跑边开"就得改成 GUI 层并自己接管指针。
 
 ## 法器储物窗口 `MxtMenus.ARTIFACT_STORAGE`
@@ -85,11 +85,19 @@ MyBar bar = HudManager.register(new MyBar());
 
 四个页面分别由核心、主药仓、辅药仓、产物仓打开，炉壁不打开任何界面。唯一开界面入口是 `AlchemyFurnaceMenus.open(ServerPlayer, BlockPos)`：方块右键时把访问位置交过去，它按那个位置的方块决定页面（核心＝监控、主药仓＝主药、辅药仓＝辅药、产物仓＝产物），别的方块什么都不开。
 
-布局不在 Java 里：四个页面各对应一份随模组发布的 HTML 与共用样式表——`monitor.html`、`main_input.html`、`auxiliary_input.html`、`output.html` 与 `alchemy.css`，由 ApricityUI 渲染，皮肤取自 ApricityUI 自带的 ore 主题，文字用游戏自带的字体绘制（页面不写 `font-family`）。Java 只按稳定 ID 抓节点，然后绑状态、事件与真实槽位，**不手写布局树，也没有备用树**：四个页面都要有 `panel`、`title`、`machine`、`inventory_label`、`player_inventory`；监控页另有 `temperature`、`limit`、`status`、`progress`（进度条本身是 `progress_fill`）、`target`、`apply`、`start`、`abort`。`machine` 声明这一页的机器槽位数（监控 1、主药 2、辅药 3、产物 4），`player_inventory` 是 36 格玩家物品栏。缺了哪个必需节点，那一页就一个槽都不绑，并把缺的名字直接画在屏幕上——视觉重排随便改，这些 ID 与这两个容器不能改。槽位坐标由页面决定：Java 每帧读槽位在页面里的位置，物品、悬停高亮、拖拽和提示框都还是原版的。**页面不要写 `aui-mouse-events` 这个 meta**，写了点击会被页面吃掉，槽位就点不动了。页面要自己撑满视口做居中时用视口单位（`height: 100vh`）：ApricityUI 里 `body` 的百分比高度不生效，写 `height: 100%` 面板会一直贴着顶边。
+布局不在 Java 里：四个页面各对应一份随模组发布的 HTML 与共用样式表——`monitor.html`、`main_input.html`、`auxiliary_input.html`、`output.html` 与 `alchemy.css`，由 ApricityUI 渲染，皮肤是随模组发布的扁平半透明深色样式表，文字用游戏自带的字体绘制（页面不写 `font-family`）。Java 只按稳定 ID 抓节点，然后绑状态与事件（**槽位不归它**，见下句），**不手写布局树，也没有备用树**：四个页面都要有 `panel`、`title`、`inventory_label`、`player_inventory`，三个仓页另有 `machine`，监控页**没有 `machine`**（供热是世界里的一格方块）；监控页另有 `temperature`、`limit`、`status`、`progress`（进度条本身是 `progress_fill`）、`target`、`apply`、`start`、`abort`。`machine` 声明这一页的机器槽位数（主药 2、辅药 3、产物 4），`player_inventory` 是 36 格玩家物品栏。缺了哪个必需节点，那一页的页面绑定就整份丢掉、屏幕上一个字都不画，只在日志里留一条 WARN：`Page <name> does not match its contract: <missing piece>`（槽位是 ApricityUI 按菜单布局绑的，不受这条契约影响，所以格子照旧能点）——视觉重排随便改，这些 ID 与这两个容器不能改。槽位归 ApricityUI：页面里的 `<slot>` 按祖先 `<container id>` 与组内 `slot-index` 绑到菜单槽位，`Slot.x/y` 每帧由它写回，物品、悬停高亮、拖拽与槽位提示框也都是它的；Java 这边只剩读面板的实时矩形，喂给屏幕自己的命中判定与 `hasClickedOutside`。**页面不要写 `aui-mouse-events` 这个 meta**，写了点击会被页面吃掉，槽位就点不动了。页面要自己撑满视口做居中时用视口单位（`height: 100vh`）：ApricityUI 里 `body` 的百分比高度不生效，写 `height: 100%` 面板会一直贴着顶边。宿主屏幕在 `extractBackground` 里先画原版那层半透明灰底（`AuiStyles.extract`，就是原版容器界面那块渐变）再交页面；**别调 `super.extractBackground`**——普通 `Screen` 宿主的 `isInGameUi()` 是 false，super 会走「模糊 + 菜单底图」那一支，把已经画好的 HUD 一起糊掉。**唯一的例外是轮盘菜单**：它是边玩边读的，`extractBackground` 保持空的，世界与 HUD 都按原亮度显示。
 
-页面会被种到游戏目录下的 `apricity/mxt/alchemy/`，缺哪个补哪个、已有文件不覆盖，之后每次打开都从那里读当前文件。所以改页面就是改游戏目录里的那一份：开着热重载时存盘即生效，否则在游戏里按 END 重扫资源、再重开丹炉界面。
+页面随模组打包在 `assets/apricityui/apricity/mxt/alchemy/` 下，每次打开都直接从资源包读。所以改页面就是改 jar（或资源包）里的那一份：开着热重载时存盘即生效，否则在游戏里按 END 重扫资源、再重开丹炉界面。游戏目录下的 `<gameDir>/apricity/` 只是玩家的覆盖层，同名文件优先于 jar。
 
-监控页画的是服务端下发的只读读数（`AlchemyStateS2CPayload`，见[网络协议](./network.md)），界面自己不算配方，也不显示丹方名或丹方按钮；温度输入框、开始与终止只是把那三件事发回服务端。四个页面里的 `player_inventory` 与 `machine` 都是真实槽位，机器槽位与玩家物品栏同在菜单里。
+## 其余容器界面
+
+锻造台、灵气工作台、经济组（交易站顾客与店主两页、兑换站、支票台、玩家交易）与人物信息是同一套：面板、文字、选择格与数值尺都由页面画（`assets/apricityui/apricity/mxt/forging/`、`assets/apricityui/apricity/mxt/spirit_crafting/`、`assets/apricityui/apricity/mxt/economy/`、`assets/apricityui/apricity/mxt/information/`，共用 `assets/apricityui/apricity/mxt/common/theme.css`），槽位由 ApricityUI 绑到菜单槽位上，页面里的 `<slot>` 放在"凹面格"的位置上（物品画在格里的 +1 处，偏移来自 ApricityUI `global.css` 里的 `slot > item`）。这些页面和丹炉一样随模组打包、直接从资源包读，游戏目录里不写任何东西。玩家交易的界面可以在**开发环境**里一个人验收：`/trade` 的目标写自己就直接开一场自己对自己的交易（一个人占两侧、按一次确认即算双方确认），正式环境仍然拒绝。
+
+这几页要自己改时记住三条：**面板不要写 `border`**（页面的定位基准是面板的内容盒，加了边框，页面里每个坐标都会整体偏一点，边框用 `box-shadow: inset` 画）；**别用 `overflow: hidden` 裁内容**（游戏里会画出一块暗色方块）；页面里容器要带 `primary="true"`，否则重复生成的槽位不会展开、槽位序号也不会归一化。人物信息的面板会随窗口缩放，所以它的位置与尺寸不是写死的，而是每次开界面按窗口算出来的；它左上角的两个页签（**人物信息**与**习得功法**）在两页之间切换，两页共用同一块面板，面板上没有单独那行标题。
+
+还有一类界面**整幅窗口都是页面**：阵法 `/formation show` 的结构预览（`assets/apricityui/apricity/mxt/multiblock/`）。上下两条压边、标题、层号、提示、播放控制与时间轴都由页面画，只有三维场景仍由 Java 以画中画（picture-in-picture）提交到页面留出的那块矩形里，所以那块矩形**必须保持透明**。这一页里一个坐标都不写——场景、按键与时间轴的盒子由 Java 按窗口尺寸写进去（窗口一变就重写一遍），按键的悬停与按下交给 CSS，只有"点时间轴跳层"与"在场景里拖动转视角"这两件要看指针位置的事仍由 Java 处理。
+
+监控页画的是服务端下发的只读读数（`AlchemyStateS2CPayload`，见[网络协议](./network.md)），界面自己不算配方，也不显示丹方名或丹方按钮；温度输入框、开始与终止只是把那三件事发回服务端。页面里的 `player_inventory` 与 `machine` 都是真实槽位，机器槽位与玩家物品栏同在菜单里；监控页没有机器槽。
 
 ## 物品选择界面 `ItemPickerScreen`
 
@@ -159,6 +167,8 @@ if (screen != null) Minecraft.getInstance().setScreen(screen);
 翻译键的拼法统一由 `com.iafenvoy.mxt.util.DefinitionText` 决定：类别就是注册表自己的 path、注册表命名空间恒为 `mxt`，没有例外表。手里已经有 `Holder` / `ResourceKey` 时直接 `DefinitionText.name(holder)`，只有拿到的是一根光秃秃的 `Identifier` 时才需要把类别当参数传进去（`DefinitionText.name(id, "resource")`）。
 
 分类就是注册表本身，`/picker <分类 id>` 可以只列出某一个（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`），不写则给出全部已注册分类。
+
+目录也是**别的模组的入口**：读它的是 `com.iafenvoy.mxt.data.CreativeTabHelper`（`/picker` 这边也走它），每条查询都要求自己传注册表访问器，`itemsOfMod(access, "mymod")` 这类方法挑出某个命名空间（模组 id）的行，`stacksOf` / `stacksOfMod` 再给出**按原版创造栏规则去重、且每份都是拷贝**的堆列表，可以直接喂给自己的创造栏。哪张注册表对应哪些行、怎么登记仍然只有 `ItemPickerManager` 一处（一条注册表只认第一次注册的目录）；方法表与限制见 [Java 公开 API](/java/api#creativetabhelper)。只想把一批现成的堆画成同款界面（不走目录）时用 `ItemPickerScreen.over(title, stacks)`。
 
 ## 界面细节
 

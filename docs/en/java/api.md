@@ -1,6 +1,6 @@
 ---
 title: Public API
-description: "The runtime entry points another mod can call directly: reading datapack registries, definition display names, aura and resources, cultivation and breakthrough, abilities, damage, formations, foe identification and currency."
+description: "The runtime entry points another mod can call directly: reading datapack registries, definition display names, the item catalogue and creative tabs, aura and resources, cultivation and breakthrough, abilities, damage, formations, foe identification and currency."
 ---
 
 # Public API
@@ -9,7 +9,7 @@ This page lists the **entry points another mod can call directly**. What a datap
 
 Three things up front:
 
-- **These entry points stay in their own module packages** (`registry`, `util`, `runtime/*`); only the interfaces you are meant to **implement** live in `com.iafenvoy.mxt.api`, see [Interfaces](interfaces/index.md).
+- **These entry points stay in their own module packages** (`registry`, `util`, `runtime/*`, `data`); only the interfaces you are meant to **implement** live in `com.iafenvoy.mxt.api`, see [Interfaces](interfaces/index.md).
 - **The server is authoritative**: costs, cultivation, abilities, damage and formation settlement all happen on the server only; the client only renders and sends requests. Which entry points go dead on the client are collected in [The Server and Client Boundary](#boundary).
 - To learn **why** a given line looks the way it does (rather than "which methods exist"), see the technical pages: [Aura Calculation](../technical/aura.md), [Damage System](../technical/damage.md), [Foe Identification](../technical/identification.md).
 
@@ -22,6 +22,7 @@ Three things up front:
 | Assemble one tooltip line of numbers | [`TooltipText`](#tooltiptext) | `util` |
 | Evaluate a datapack number | [`NumberProvider`](#numberprovider) | `util.formula` |
 | Ask "does this item count as this definition" | [`ItemMatcher`](#itemmatcher) | `util.matcher` |
+| Turn a registry's definitions into creative tab items | [`CreativeTabHelper`](#creativetabhelper) | `data` |
 | Ask how much aura a position has | [`AuraService`](#auraservice) | `runtime.world` |
 | Read or write one value on an entity | [`ResourceService`](#resourceservice) | `runtime.resource` |
 | Add cultivation progress, break through, set a realm | [`CultivationService`](#cultivationservice) | `runtime.cultivation` |
@@ -38,7 +39,7 @@ Three things up front:
 
 ### `MxtDatapackRegistries` {#mxtdatapackregistries}
 
-Package `com.iafenvoy.mxt.registry`. The declarations of the 38 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
+Package `com.iafenvoy.mxt.registry`. The declarations of the 39 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
 
 Reading a value by id / holder (it reads the **server** registry):
 
@@ -150,6 +151,41 @@ Key points:
 - `priority` is **a field of ten definition tables themselves** (`artifact`, the `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` bindings, `spirit_herb`, `item_aura` and `currency`; default `0`, with no range validation at load time), so when a general definition and one that names items both exist the pack writes down which wins; naming an item **does not** move it up. `ArtifactHold` reads the field of the artifact it wraps; the `mxt:item` cost, the three item conditions and the two framework-owned hold declarations (technique reading and pouring) have no such field and always answer `DEFAULT_PRIORITY`.
 - **`itemLevel()` is the cache-safety dividing line**: returning `true` means "whether it matches depends only on the item itself", and a caller caching per item **may only** cache such entries; an entry that reads components / NBT on the stack — or whose answer comes from another definition, like `mxt:herb_tag`, which asks which `spirit_herb` claims the item — has to be asked once per stack.
 - The shorthand covers only `item` and `tag`; another implementation encoded through the shorthand throws `IllegalArgumentException`.
+
+## The item catalogue and creative tabs {#picker}
+
+### `CreativeTabHelper` {#creativetabhelper}
+
+Package `com.iafenvoy.mxt.data`. The **read** side of the "registry → selectable rows" catalogue: `/picker` and other mods both go through it. Each entry is one `PickerItem(stack, names)` row: `stack` is what is drawn, `names` are the names that row can be searched by. It is read-only — it writes nothing onto items and decides nothing about who may take them.
+
+Every query takes the registry access from you (`HolderLookup.Provider`; `BuildCreativeModeTabContentsEvent.getParameters().holders()` is one), so the client reads the tables it has synced and the server reads its own — there is no "reading the other side" case.
+
+| Method | What it does | Notes |
+| --- | --- | --- |
+| `itemsOf(Provider, key)` | Every row of one table | `key` is the registry key; **a table that was never registered as a category gives an empty list**, never a throw |
+| `itemsOf(Provider, key, Predicate<Holder<?>>)` | Filter rows by definition | The predicate receives the definition's holder, so filtering by id and by the definition itself are the same door — which is why "a mod id" means reading the holder's namespace |
+| `itemsOfMod(Provider, key, String)` | The rows of one table that live in one namespace | `mxt:aura` entries belong to `mxt`, `mymod:aura/…` to `mymod`; in the item and block tables the definition *is* the item, so the namespace is the item's |
+| `itemsOfMod(Provider, String)` | Across every category, the rows of one namespace | What a "everything from my mod" creative tab uses |
+| `stacksOf(...)` / `stacksOfMod(...)` | The stack view of the four above | See below |
+
+Key points:
+
+- **What a creative tab takes is `stacksOf` / `stacksOfMod`**: they drop duplicates by **vanilla's own creative tab rule** (`ItemStackLinkedSet`, where the same item with the same components is one entry) and **every stack is a copy** — editing one cannot reach the row inside the picker. The de-duplication is not decoration: every `mxt:aura` row is the same spirit stone standing in for a definition, and handing those rows to a tab as they are makes vanilla's `accept` throw "this stack already exists in the tab". The row view (`itemsOf*`) keeps one row per definition and does not de-duplicate.
+- **Vanilla's `accept` also requires `count == 1`**, which every row the mod itself registers is; write 1 in your own rows too.
+- The queries have no side effects and work on both sides: they read only the access you pass in, touch no server singleton and write no attachment.
+- To draw the same rows as a picker page instead of feeding a tab, use `ItemPickerScreen.over(title, stacks)`, see [The Item Picker](screens.md#the-item-picker-itempickerscreen).
+
+**The catalogue itself lives elsewhere**: which registry maps to which rows, and how each row is built, is `com.iafenvoy.mxt.screen.picker.ItemPickerManager` — `categories()` / `category(Identifier)` list the categories and `registerSingle` / `register` add one (the `mxt:` definitions are registered by the mod). `CreativeTabHelper` only reads it, so the two classes stay apart. One limit to know: **one registry honours only the first category registered for it** — registering a second one for a key already taken is **silently inert** (the category list also lists it once).
+
+```java
+// Your own creative tab: everything this mod contributed (plus its own items)
+@Override
+public void buildContents(BuildCreativeModeTabContentsEvent event) {
+    if (event.getTabKey() != MY_TAB) return;
+    for (ItemStack stack : CreativeTabHelper.stacksOfMod(event.getParameters().holders(), "mymod"))
+        event.accept(stack);
+}
+```
 
 ## Aura and resources {#aura}
 
@@ -369,7 +405,7 @@ Key points:
 A formation's framework (structure, radius, costs) is on `Formation`; "what this formation does" is decided by its `actions` list, and every item in that list is a **functional module**.
 
 - `FormationActionType` (`com.iafenvoy.mxt.data.formation`) is the shape of a module: a `codec()`, plus a `CODEC` dispatching on the JSON `"type"` field (it must be a `Codec` rather than a `MapCodec`, because a formation holds a **list** of modules).
-- The dispatch registry `mxt:formation_action_type` is a **built-in registry** (default entry `none`), registered statically in code through `NewRegistryEvent`, and **not one of the 38 datapack registries in `MxtDatapackRegistries`**.
+- The dispatch registry `mxt:formation_action_type` is a **built-in registry** (default entry `none`), registered statically in code through `NewRegistryEvent`, and **not one of the 39 datapack registries in `MxtDatapackRegistries`**.
 - So: **a datapack can freely add `mxt:formation` entries (module combinations and parameters), but it cannot add a module type**. One more module kind = one record + one `DeferredRegister` registration, and the runtime dispatches on the record type, which is why the `data` package never touches the world.
 - There are currently only 5 legal `type`s, all registered in `MxtFormationActionTypes`: `mxt:none` (`NONE`, also the dispatch registry's default), `mxt:attack` (`ATTACK`), `mxt:buff` (`BUFF`), `mxt:protection` (`PROTECTION`), `mxt:range_display` (`RANGE_DISPLAY`).
 - Registration happens only once through `MxtFormationActionTypes.REGISTRY`; **do not register it again elsewhere, and do not build a second formation module registry**.
@@ -483,7 +519,7 @@ Key points:
 
 - **The temperature and the outputs are not written in from outside**: `Parameters` is evaluated once at the moment of lighting and frozen, the active batch reads that frozen copy, and only a batch started after a `/reload` reads a new recipe.
 - **`start` and `preview` share one judgement**: temperature and output capacity only take part in accepting or rejecting the entry that has already been chosen, and never make the judgement pick a weaker recipe.
-- **A fire answers only two numbers**, see [AlchemyHeatSource](interfaces/alchemy/alchemy-heat-source.md).
+- **A heat block answers only two numbers**, see [AlchemyHeatSource](interfaces/alchemy/alchemy-heat-source.md).
 
 ## The server and client boundary {#boundary}
 
