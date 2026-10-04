@@ -1,12 +1,12 @@
 ---
 title: spirit_herb（灵植）
-description: 把已有物品声明成灵植：药性药力、寒热、品质与药龄，以及可选的单格培育。
+description: 把已有物品声明成灵植：药性药力、寒热与药龄，以及可选的单格培育。
 aside: false
 ---
 
 # spirit_herb（灵植） {#spirit_herb}
 
-`spirit_herb` 把一件**已有物品**标记成灵植，给它药性药力、寒热偏向和一个默认品质，还可以给它一套培育方式。它不注册任何新物品：草本身由内容包或别的模组提供。
+`spirit_herb` 把一件**已有物品**标记成灵植，给它药性药力、寒热偏向，还可以给它一套培育方式。它不注册任何新物品：草本身由内容包或别的模组提供。**定义里没有 `quality` 字段**：灵植按**物品**认领（`items` 就是那套 `ItemMatcher`），堆上不装定义身份组件，没有可以问的对象，所以这株草的档写在数据表 [default_quality](./default_quality.md) 里，按物品 id 或 `#标签` 给。
 
 ## 文件位置
 
@@ -22,7 +22,6 @@ aside: false
 | `description` | 文本组件 | 同上加 `.description` | 描述。 |
 | `items` | `ItemMatcher` | **必填** | 绑定现有物品，不创建新的灵植物品。多条绑定时按 `priority` 取一条，不把药力相加。 |
 | `priority` | Int | `0` | 多份灵草定义匹配同一件物品时的先后：数值大者先（见 [匹配器](../types/shared_data_types.md#itemmatcher)）；相同则按注册表顺序。 |
-| `quality` | 品质 id | **必填** | 该物品的默认品质。药龄不会自动升级品质，堆上的 `mxt:quality` 仍优先（顺序见[品质是哪一档](./quality.md#resolution)）。 |
 | `default_age` | Integer | `0` | 非负。堆上没有 `mxt:herb_age` 组件时用它。 |
 | `element_tags` | 元素 id 或 `#标签` 的数组 | `[]` | 元素归属，**不是药性**。写的是元素注册表；可被 `mxt:herb_tag` 的 `element` 匹配。 |
 | `material_tags` | Identifier[] | `[]` | 材料分类，由 `mxt:herb_tag` 的 `material` 匹配。 |
@@ -74,7 +73,6 @@ aside: false
 ```json
 {
   "items": ["minecraft:red_mushroom", "#mxt_test:spirit_herbs"],
-  "quality": "example:spirit_iron",
   "default_age": 100,
   "element_tags": ["example:fire"],
   "material_tags": ["example:herb"],
@@ -96,4 +94,4 @@ aside: false
 
 - 炼丹：灵植是[丹方](./alchemy_recipe.md)的材料，`main_effects` / `auxiliary_effects` / `catalyst_power` 就是主药、辅药与药引读到的药力；药性本身由[药性](./medicinal_property.md)定义。
 - 匹配：`mxt:herb_tag` 是物品匹配器的一个条目类型，按 `element` 或 `material` 认出「这一株是不是那种草」，所以能写进任何接受 `ItemMatcher` 的地方。两个字段至少要写一个，写了的每个字段都必须在这株草上成立。
-- 品质：灵植声明的 `quality` 是品质解析的最后一格，详见 [quality](./quality.md#resolution)。
+- 品质：灵植定义**不声明档位**——灵植按物品认领，堆上没有装定义身份的组件可问，所以这株草的档由 [default_quality](./default_quality.md) 按物品 id 或 `#标签` 给，见[品质是哪一档](./quality.md#resolution)。

@@ -14,6 +14,7 @@ File location: `data/<namespace>/mxt/pill/<path>.json`
 | --- | --- | --- | --- |
 | `name` | Text Component | `pill.mxt.<namespace>.<path>` | Display name. When omitted the key in the left column is used. |
 | `description` | Text Component | the same key plus `.description` | Description. |
+| `quality` | Quality id | none | Optional. The tier a dose of this pill starts on. |
 | `color` | Colour | `#FFFFFF` | The icon colour of the **built-in carrier** `mxt:pill`, written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too, always opaque); white means no tint. It tints that one item only — an item a binding claims keeps its own texture. |
 | `on_consume` | `EntityAction` | `mxt:no_op` | The action run once consumption finishes. |
 | `toxicity_gain` | `NumberProvider` | `0` | The toxicity this dose adds. |
@@ -21,6 +22,8 @@ File location: `data/<namespace>/mxt/pill/<path>.json`
 | `on_overdose` | `EntityAction` | `mxt:no_op` | The action run when the threshold is crossed. |
 | `toxicity_after_overdose` | `NumberProvider` | `0` | The value toxicity is **set to** after an overdose, not cleared to zero. |
 | `conditions` | `EntityCondition[]` | `[]` | The check run before consumption; accepts inline conditions or described condition objects. |
+
+`quality` is optional: every pill shares the one built-in carrier item `mxt:pill`, so the item itself cannot say which tier it is — only the definition the stack carries can: a dose of this pill starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map. The `mxt:pill` component on a stack overrides only the effect fields (`on_consume`, `toxicity_gain` and the rest) and **never the tier**: the tier read is always the `quality` the definition itself declares.
 
 One definition describes only what a dose does, `data/example/mxt/pill/warming_pill.json`:
 
@@ -58,7 +61,7 @@ A stack of pills may carry an `mxt:pill` component of its own, overriding this d
 
 1. **The component's `pill` wins**: when it names a definition, that one is used; without a `pill` key the pill named by the matched binding is used.
 2. **Five effect keys are laid over it**: `on_consume`, `toxicity_gain`, `toxicity_threshold`, `on_overdose`, `toxicity_after_overdose`; a key left out still reads the definition.
-3. **A named pill whose reference has no value** (the key is still there, the registry no longer holds anything for it) refuses the dose, with no fallback to another definition and no fallback to the defaults. Note that naming a pill the pack does not provide **from a definition** is not that refusal — it fails the whole data pack load (see [Datapack Development Overview](../overview.md#disabling-a-definition)).
+3. **A named pill whose reference has no value** (the key is still there, the registry holds nothing for it) refuses the dose, with no fallback to another definition and no fallback to the defaults. Note that naming a pill the pack does not provide **from a definition** is not that refusal — it fails the whole data pack load (see [Datapack Development Overview](../overview.md#disabling-a-definition)).
 
 ```mcfunction
 give @s mxt:pill[mxt:pill={pill:"example:warming_pill",toxicity_gain:2}]

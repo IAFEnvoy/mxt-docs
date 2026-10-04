@@ -30,7 +30,7 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
   ],
   "cultivation_multiplier": 1.25,
   "element_ability_modifier": 1.1,
-  "rarity": "uncommon",
+  "quality": "example:refined",
   "granted_abilities": ["example:spark"]
 }
 ```
@@ -45,7 +45,7 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
 | --- | --- | --- |
 | `cultivation_multiplier` | `1` | 修炼倍率，数字或公式串，有限非负。 |
 | `element_ability_modifier` | `1` | 缩放「元素与这条灵根相符」的技能，数字或公式串，有限非负。 |
-| `rarity` | `common` | 自由文本，不是引用。显示时先找 `mxt.rarity.<值>` 这个翻译键，找不到就原样显示。 |
+| `quality` | 无 | 一档品质的条目 id，可选。写了它，这条灵根的档就是它。 |
 | `granted_abilities` | `[]` | 技能 id 或 `#技能标签` 的数组。 |
 | `conflicting_elements` | `[]` | 元素 id 或 `#元素标签` 的数组；与**生效中**的其他灵根逐元素双向判定，冲突就拒绝授予。 |
 
@@ -64,7 +64,7 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
   "granted_abilities": ["example:qi_recovery"],
   "exclusive_tags": ["example:body"],
   "allow_stacking": false,
-  "rarity": "uncommon",
+  "quality": "example:refined",
   "damage_dealt_multiplier": 1.2,
   "damage_taken_multiplier": 1.0
 }
@@ -77,7 +77,7 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
 | `holder_condition` | `mxt:always` | 实体条件。**授予前判一次，之后不再复查**：条件后来不成立，已经拿到的体质照样留着。 |
 | `exclusive_tags` | `[]` | 自由标识符数组，不是注册表引用。授予时与**已经持有的体质（包括被关闭的）**的同类标签求交集，非空就拒绝。 |
 | `allow_stacking` | `false` | 为假时同一个体质不能重复授予。 |
-| `rarity` | `common` | 自由文本，同灵根。 |
+| `quality` | 无 | 一档品质的条目 id，可选，同灵根。 |
 | `damage_dealt_multiplier` | `1` | **攻击方**一侧的伤害倍率，数字或公式串。 |
 | `damage_taken_multiplier` | `1` | **受击方**一侧的伤害倍率，数字或公式串。 |
 
@@ -132,13 +132,13 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
 ```text
 (重新加载世界)
 /mxt registries list          → 这两张表各自的条目数
-/mxt spirit_root list         → 名字、稀有度、元素与是否生效
-/mxt physique list            → 名字、稀有度与是否生效
+/mxt spirit_root list         → 名字、品质、元素与是否生效
+/mxt physique list            → 名字、品质与是否生效
 /mxt attachment status        → 持有条数
 ```
 
 - `/mxt registries validate` **不校验**这两张表。它管的是境界链、触发器规则、进度链、品质阶梯与法器归属，别拿它当灵根体质的校验器；条目数看 `/mxt registries list`。
-- `/mxt spirit_root list` 与 `/mxt physique list` 读的是身体上的记录，所以关掉的条目照样列出，只是在「是否生效」那一栏上看得出来。
+- `/mxt spirit_root list` 与 `/mxt physique list` 读的是身体上的记录，所以关掉的条目照样列出，只是在「是否生效」那一栏上看得出来。列表里的「品质」读定义声明的 `quality`，没声明时那一栏写 `-`；信息面板里那一行画的是「定义名 · 品质名」，没声明品质时后半段整个不画。
 
 在游戏里逐条试一遍：
 
@@ -148,7 +148,7 @@ description: "用 JSON 定义灵根与体质：元素与占比、修炼与亲和
 4. 移除它，`list` 里就没有了。
 5. `/picker mxt:physique` 拿一件**已经带好组件**的体质物品，右键服下：身上没有 `example:fire_root` 时同样被 `holder_condition` 挡下，物品留在手上并给出理由；满足条件时物品少 1 个、`/mxt physique list` 里多出它。
 
-测试包里备了探针 `/mxt_test identity`，会断言持有 / 生效 / 关闭 / 移除、稀有度按自由文本处理、未知字段被忽略、负倍率被拒。
+测试包里备了探针 `/mxt_test identity`，会断言持有 / 生效 / 关闭 / 移除、`quality` 读回它引用的那一档、未知字段被忽略、负倍率被拒。
 
 ## 常见错误
 

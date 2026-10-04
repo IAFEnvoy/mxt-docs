@@ -17,7 +17,7 @@ aside: false
 | `elements` | 元素与权重数组 | **必填且非空** | 灵根绑定的元素，可以写多个。 |
 | `cultivation_multiplier` | `NumberProvider` | `1` | 修炼倍率。 |
 | `element_ability_modifier` | `NumberProvider` | `1` | 元素亲和技能倍率。 |
-| `rarity` | String | `common` | 稀有度标识。 |
+| `quality` | 品质 id | 无 | 可选。这条灵根自己的品阶：携带这份定义的灵根石读到的就是它，信息面板与 `/mxt spirit_root list` 写在灵根名旁边的也是它。 |
 | `granted_abilities` | 能力 id 或 `#标签` 的数组 | `[]` | 授予的能力。 |
 | `conflicting_elements` | 元素 id 或 `#标签` 的数组 | `[]` | 与哪些元素**不能同体共存**。 |
 
@@ -27,7 +27,7 @@ aside: false
 
 `element_ability_modifier` 的量法：施放 `element_affinity` 含这条灵根**任一**元素的技能时，它是[伤害结算](/technical/damage)第一层的因子（**一条灵根只贡献一次**，命中几个元素都算一次；多条匹配灵根按 `element_affinity_mode` 取平均或取最好），同时也能在公式里读到 `element_modifier`。它与元素关系是两条独立的路：元素关系（`overcomes` / `adapted_to`）说的是"谁克谁"，双方灵根都参与；这个倍率说的是"这个身体施放它亲和的那个元素时值多少"，只由施法方与**这一次施放**决定。因此同一门火法，火灵根 1.1 与 1.3 打出的数不一样，但对手身上那半边只由对手的元素决定。
 
-`rarity` 由信息面板与 `/mxt spirit_root list` 显示原文，存在 `mxt.rarity.<rarity>` 时用它的翻译。
+`quality` 引用 `mxt:quality` 里的一档，可以省略。信息面板里灵根那一行的 tooltip 读「定义名 · 品质名」，没有 `quality` 时这一段整个不写（不会显示 `-`）；`/mxt spirit_root list` 则在没有档位时显示 `-`。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
 
 灵根分组、兼容与筛选使用原版标签（`data/<namespace>/tags/mxt/spirit_root/<name>.json`）。实体条件与战利品条件的 `spirit_root` 字段都接受条目、标签或它们的数组，所以"任意火属灵根"写一条标签即可。
 

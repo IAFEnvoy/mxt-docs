@@ -5,7 +5,7 @@ description: The framework materials, functional carriers, workstations and bind
 
 # Items and Blocks
 
-MiXianTu does not preset numbers for any gameplay system, but it does provide a small set of generic carrier items and components. Data-driven item gameplay usually matches existing items through the binding tables instead.
+MiXianTu does not preset numbers for any gameplay system, but it does provide a small set of generic carrier items and components. Data-driven item gameplay usually attaches to existing items through the binding tables or the item data maps instead.
 
 ## Generic Materials
 
@@ -17,11 +17,11 @@ MiXianTu does not preset numbers for any gameplay system, but it does provide a 
 | Supreme Spirit Stone | `mxt:supreme_spirit_stone` | 1000 | A rare, high-value medium. |
 | Cheque | `mxt:cheque` | Set by its item component | A signable value carrier for the existing trade system. Its tooltip shows its value and, when it is not blank, the name of its issuer (`item.mxt.cheque.issuer`). |
 
-The four spirit stones share the `SpiritStoneItem` base class and implement spirit power charge and drain. Capacity is not defined in code: it is taken from the `aura` of the matching `item_aura` entry, and after the data tables are loaded again the first real access truncates old values above the new maximum. A spirit stone without the `mxt:spirit_storage` component is treated as fully charged, while an empty `amounts` map — or one that does not list that aura — means empty. The Display Stand tries to charge the spirit stone it displays when it receives spirit power, and when cultivation fuel runs out the same stone is drained and returned.
+The four spirit stones share the `SpiritStoneItem` base class and implement spirit power charge and drain. Capacity is not defined in code: it is taken from the `aura` the `item_aura` data map gives that item, and after the data tables are loaded again the first real access truncates old values above the new maximum. A spirit stone without the `mxt:spirit_storage` component is treated as fully charged, while an empty `amounts` map — or one that does not list that aura — means empty. The Display Stand tries to charge the spirit stone it displays when it receives spirit power, and when cultivation fuel runs out the same stone is drained and returned.
 
-The bundled `currency` datapack only defines a 10:1 two-way exchange and the values above. Content packs can overwrite these entries directly, or reference any of the four spirit stones from an `item_binding`, formation, artifact, cultivation or trade definition. The mod also registers Copper Coin, Iron Coin, Gold Coin, Diamond Coin, Emerald Coin and Netherite Coin (`mxt:copper_coin`, `mxt:iron_coin`, `mxt:gold_coin`, `mxt:diamond_coin`, `mxt:emerald_coin`, `mxt:netherite_coin`), which have no item behaviour of their own: their values and exchanges come from the same `currency` registry and its bundled entries.
+The bundled `currency` datapack only defines a 10:1 two-way exchange and the values above. Content packs can overwrite these values directly, or reference any of the four spirit stones from an `item_binding`, formation, artifact, cultivation or trade definition. The mod also registers Copper Coin, Iron Coin, Gold Coin, Diamond Coin, Emerald Coin and Netherite Coin (`mxt:copper_coin`, `mxt:iron_coin`, `mxt:gold_coin`, `mxt:diamond_coin`, `mxt:emerald_coin`, `mxt:netherite_coin`), which have no item behaviour of their own: their values and exchanges come from the same `currency` data map and its bundled entries.
 
-The remaining materials carry no behaviour of their own; their use is decided by binding tables, components, datapacks and KubeJS.
+The remaining materials carry no behaviour of their own; their use is decided by binding tables, item data maps, components, datapacks and KubeJS.
 
 | Material | ID |
 |---|---|
@@ -105,7 +105,7 @@ The second and third lines from the bottom are how a **spirit root item** and a 
 | Cheque Table | `mxt:cheque_table` | Converts configured currency items to and from cheques. |
 | Oak / Birch / Spruce / Jungle / Acacia / Dark Oak Display Stand | `mxt:oak_display_stand`, `mxt:birch_display_stand`, `mxt:spruce_display_stand`, `mxt:jungle_display_stand`, `mxt:acacia_display_stand`, `mxt:dark_oak_display_stand` | Holds a single item and drops it above the centre of the block when it is taken out. If the item implements the aura access interface, Jade shows the item and its spirit power percentage. |
 | Spirit Stone Ore | `mxt:spirit_stone_ore` | The mod's spirit stone ore block; it drops experience when mined. Aura contributions are defined by datapacks. |
-| Spirit Stone Block | `mxt:spirit_stone_block` | The storage block; the bundled `block_aura` entry makes it an aura source. |
+| Spirit Stone Block | `mxt:spirit_stone_block` | The storage block; the bundled `block_aura` value makes it an aura source. |
 
 ## Alchemy and Spirit Herbs
 
@@ -123,7 +123,7 @@ A furnace is not one block: it is a fixed 3x3x3 you build by hand. The core carr
 
 The hand feel is: **a heat block in the bottom centre cell, main ingredients in the left store, auxiliary ingredients and the catalyst in the right store, and the result taken from the output store.** Loading materials never starts a batch by itself; a player presses Start on the core's page. A shell with a missing cell, an invalid wall material or a cell claimed by another furnace does not form and cannot run.
 
-**The mod ships no heat block.** The numbers a heat block gives come from the `mxt:heat_source` data pack definitions (a block may also implement the interface itself), and the mod supplies no default. The temperature ceiling is the lower of the coldest wall material in the whole furnace and the heat block's `max_temperature`.
+**The mod ships no heat block.** The numbers a heat block gives come from the `mxt:heat_source` data map (a block may also implement the interface itself), and the mod supplies no default. The temperature ceiling is the lower of the coldest wall material in the whole furnace and the heat block's `max_temperature`.
 
 Neither the input stores nor the core accept hoppers, and a heat block is not a container either; the output store can only be pulled from its bottom face, and once the furnace is formed that face looks onto the middle-layer centre casing, so no hopper fits there. Removing casing or a store while a batch is running settles that batch as a failure once and does not return the materials already loaded; removing a store only drops that store's own contents.
 
@@ -141,7 +141,7 @@ The pigment is what drawing spends: at the talisman workstation it is taken by t
 
 MiXianTu does not create logical datapack items. Physical items must be registered by Minecraft, a content mod or KubeJS; datapacks only attach MiXianTu gameplay rules to those existing item IDs.
 
-| Registry | Purpose |
+| Table | Purpose |
 |---|---|
 | `item_binding` | Attaches behaviour, conditions, spirit roots or generic display to an existing item. |
 | `weapon_binding` | Adds vanilla attribute modifiers (a weapon's own attack damage and speed go here too) plus attack, use and tick behaviour. |
@@ -151,14 +151,16 @@ MiXianTu does not create logical datapack items. Physical items must be register
 | `blueprint_binding` | Claims blueprint items and lists the forging blueprints they offer. |
 | `technique_binding` | Describes how one technique is **read** — the hold length, pose, sound, quality group and conditions, plus the item the mod generates as its carrier. Whether a stack is a manual, and which technique it teaches, follows the stack's own `mxt:technique` data component first and a declaration's `items` second. |
 
-Item matching accepts a single item, a vanilla item tag, wildcards, regular expressions and mixed arrays. `carrier_item` is the exception: it takes one item ID only. A `technique_binding` declaration is matched by technique id, and its `items` is the optional route.
+`item_binding`, `weapon_binding`, `tool_binding` and `blueprint_binding` are **item data maps**: a value hangs on an item ID or an item tag, the key is the item itself, and their files live under `data/mxt/data_maps/item/`. `pill`, `pill_binding` and `technique_binding` are still registries.
 
-**Per-stack additions are data components**: `mxt:quality` (single value — a whole quality object, changing both the tier and the ladder this stack reads), `mxt:element` (a list — unioned with the definition), `mxt:pill` (an optional `pill` naming a pill definition, plus `on_consume` / `toxicity_gain` / `toxicity_threshold` / `on_overdose` / `toxicity_after_overdose` overlaid field by field), `mxt:technique_reading` (field-by-field override of the reading parameters), `mxt:forging_methods` and `mxt:forging_blueprints` (lists — unioned with the definition). They are written for one stack only. `conditions` and a weapon's numbers and actions have **no** component: a per-stack change means writing a definition that names that stack through `items`, and per-stack weapon numbers go through vanilla `minecraft:attribute_modifiers`. See [Item Binding](../datapack/json/item_binding.md) for the shared matching, condition and quality rules, and [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) for the fields of each binding type.
+`items` on the registry tables accepts a single item, a vanilla item tag, wildcards, regular expressions and mixed arrays; `carrier_item` is the exception, taking one item ID only. An item data map has one kind of key — an item ID or an item tag, expanded at load time. A `technique_binding` declaration is matched by technique id, and its `items` is the optional route.
+
+**Per-stack additions are data components**: `mxt:quality` (single value — a whole quality object, changing both the tier and the ladder this stack reads), `mxt:element` (a list — unioned with the definition), `mxt:pill` (an optional `pill` naming a pill definition, plus `on_consume` / `toxicity_gain` / `toxicity_threshold` / `on_overdose` / `toxicity_after_overdose` overlaid field by field), `mxt:technique_reading` (field-by-field override of the reading parameters), `mxt:forging_methods` and `mxt:forging_blueprints` (lists — unioned with the definition). They are written for one stack only. `conditions` and a weapon's numbers and actions have **no** component: a per-stack change means writing a value for that item in the matching item data map, and per-stack weapon numbers go through vanilla `minecraft:attribute_modifiers`. See [Item Binding](../datapack/json/item_binding.md) for the shared matching, condition and quality rules, and [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) for the fields of each binding type.
 
 ## Item Aura
 
-An `item_aura` definition gives an existing item a releasable aura capacity, a consumption speed, a completion behaviour and an optional `result_stack`.
+An `item_aura` data map value gives an existing item a releasable aura capacity, a consumption speed, a completion behaviour and an optional `result_stack`.
 
-During cultivation the whole matching stack is taken out of the inventory, and capacity, consumption speed and release speed all scale with the stack count, so the total consumption time does not change. The remaining aura is kept in the item's `mxt:item_aura` component, while the capacity is always computed dynamically from the datapack definition.
+During cultivation the whole matching stack is taken out of the inventory, and capacity, consumption speed and release speed all scale with the stack count, so the total consumption time does not change. The remaining aura is kept in the item's `mxt:item_aura` component, while the capacity is always computed dynamically from the datapack.
 
 See [Item Aura](../datapack/json/item_aura.md) for the full runtime behaviour and the field list.

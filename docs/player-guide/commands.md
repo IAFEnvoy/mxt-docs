@@ -54,7 +54,7 @@ title: 命令
 
 少数参数**故意**不这样做，因为它们的用途就是点名一个**当前数据包已经不提供**的引用——`/technique drop`、`/spirit_root remove|enable|disable`、`/physique remove|enable|disable`、`/curse remove`、`/ability revoke`。这些参数的补全来自注册表里当前存在的条目，而它们真正要救的是**身体里还存着、当前包却已经不提供**的那份引用：条目被 `neoforge:conditions` 挡掉、或者文件直接被删之后，**同一次会话里**附件里那份 `Holder` 还在（附件只在**世界加载**时解码，`/reload` 不重解；那一刻找不到定义的引用会被容错列表丢掉，所以重新进一次世界就干净了），所以 `remove`、`enable`、`disable` 都按身体持有的那条引用来找、不回查注册表。
 
-维度 ID（`/mxt secret_realm info|destroy`、`/mxt rift target|place|bind`）、触发器信号（`/mxt trigger rules|publish`）与 `/picker` 的注册表 ID（如 `mxt:aura`）同样不是注册表条目，它们的补全各自来自维度列表、信号表与选择器分类。
+维度 ID（`/mxt secret_realm info|destroy`、`/mxt rift target|place|bind`）、触发器信号（`/mxt trigger rules|publish`）与 `/picker` 的分类 ID（如 `mxt:aura`）同样不是注册表条目，它们的补全各自来自维度列表、信号表与选择器分类。一个分类可以是一张注册表，也可以是一张数据表。
 
 ## 服务端配置
 

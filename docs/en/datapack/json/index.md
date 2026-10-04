@@ -1,11 +1,11 @@
 ---
 title: Dynamic Registries
-description: All 39 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
+description: All 31 datapack registries with their file directory and purpose, plus the nine data maps, the built-in type dispatch table and the KubeJS extension types.
 ---
 
 # Dynamic Registries
 
-The table below lists the mod's 39 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it.
+The table below lists the mod's 31 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it. There are also **9 data maps** (NeoForge Registry Data Maps, not registries), listed after it.
 
 **Recipes are not in this table.** The recipe pages that go through the vanilla `RecipeManager` sit in the **Recipes** group below: alchemy recipes (`mxt:alchemy`), spirit crafting (`mxt:spirit_shaped` / `mxt:spirit_shapeless`) and talisman drawing (`mxt:talisman_drawing`). Their JSON goes in `data/<namespace>/recipe/`, never in `mxt/<recipe name>/`; they are not registries either, so `/reload` reloads them. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
 
@@ -25,8 +25,6 @@ The table below lists the mod's 39 datapack registries. In the field tables, "De
 | `curse` | `mxt/curse` | Curse definitions and duration types that several modules can reference. |
 | `forging_method` | `mxt/forging_method` | A single forging strike method. |
 | `forging_blueprint` | `mxt/forging_blueprint` | Forging targets and quality settlement. |
-| `tool_binding` | `mxt/tool_binding` | Claims tool items and lists the forging methods they unlock. |
-| `blueprint_binding` | `mxt/blueprint_binding` | Claims blueprint items and lists the forging blueprints they offer. |
 | `technique` | `mxt/technique` | Cultivation technique definitions: learnable, granting abilities and cultivation modifiers by progression level. |
 | `progression` | `mxt/progression` | One level of a progression chain. |
 | `cultivation` | `mxt/cultivation` | One cultivation routine: which ambient aura it absorbs, what it does every tick and on a tick that settles, and what it costs and yields. |
@@ -34,24 +32,34 @@ The table below lists the mod's 39 datapack registries. In the field tables, "De
 | `medicinal_property` | `mxt/medicinal_property` | Medicinal identities: a name and description for one medicinal effect. |
 | `alchemy_furnace` | `mxt/alchemy_furnace` | Furnace specifications: slots, per-batch capacity and cooling rate. |
 | `alchemy_wall_material` | `mxt/alchemy_wall_material` | Wall materials: the temperature limit of one casing block. |
-| `heat_source` | `mxt/heat_source` | Heat blocks: the `max_temperature` and `heating_per_tick` a block gives a furnace, matched by block or block tag. |
 | `formation` | `mxt/formation` | Formation lifecycle and aura overrides. |
 | `tribulation` | `mxt/tribulation` | A tribulation: its start gate, timeline beats, and what happens on success or failure. |
 | `creature_profile` | `mxt/creature_profile` | Creature attribute profiles: matching, gates, the inner core, and one action run when the profile is written. |
 | `contract_type` | `mxt/contract_type` | Contract lifecycle: conditions on both sides, four actions on the beast side plus three and a grant on the owner side, the signing cost and two caps. |
 | `secret_realm` | `mxt/secret_realm` | Secret realm templates: an instance dimension opened on demand for each entry. |
-| `currency` | `mxt/currency` | Item currency denominations and exchange. |
-| `item_binding` | `mxt/item_binding` | Bindings from existing items to action arrays. |
-| `weapon_binding` | `mxt/weapon_binding` | Weapon attributes and actions for existing items. |
 | `pill` | `mxt/pill` | What one pill does: the dose action, its toxicity gain, the overdose threshold and what an overdose leaves behind. |
 | `pill_binding` | `mxt/pill_binding` | Claims a family of existing items as one pill, with its use cap and cooldown. |
 | `technique_binding` | `mxt/technique_binding` | Bindings from existing items to cultivation technique learning. |
 | `aura_zone` | `mxt/aura_zone` | Environment aura templates. |
-| `block_aura` | `mxt/block_aura` | Aura provided by blocks. |
-| `item_aura` | `mxt/item_aura` | Cultivation fuel provided by held items. |
 | `quality` | `mxt/quality` | Shared quality: name, colour, three modifiers, a use condition, and where the tier sits on its ladder with what one step up costs. |
 | `trigger` | `mxt/trigger` | Event rules: a signal, a condition and an action. |
 | `talisman` | `mxt/talisman` | Talisman definitions: the ability one inscribed talisman carries. |
+
+## Data Maps
+
+These 9 tables are NeoForge **Registry Data Maps**, **not registries**: the key is an entry id or a `#`-prefixed tag, the value is inline data with no id and no name that no other definition can reference. Files always live at `data/mxt/data_maps/<registry path>/<table path>.json` (item-keyed under `item/`, block-keyed under `block/`); how they are written is on [Data Maps](../overview.md#data-maps). In the sidebar they form a **Data Maps** group of their own (like **Recipes** above), which is why the registry list above does not include them.
+
+| Data map | File | Value |
+| --- | --- | --- |
+| `item_aura` | `data/mxt/data_maps/item/item_aura.json` | Cultivation fuel provided by held items. |
+| `currency` | `data/mxt/data_maps/item/currency.json` | Item currency denominations and exchange. |
+| `default_quality` | `data/mxt/data_maps/item/default_quality.json` | An item's default quality, the third and last layer of quality resolution. |
+| `item_binding` | `data/mxt/data_maps/item/item_binding.json` | An existing item's actions, conditions and element. |
+| `weapon_binding` | `data/mxt/data_maps/item/weapon_binding.json` | Weapon attributes and actions for existing items. |
+| `tool_binding` | `data/mxt/data_maps/item/tool_binding.json` | The forging methods a tool item unlocks. |
+| `blueprint_binding` | `data/mxt/data_maps/item/blueprint_binding.json` | The forging blueprints a blueprint item offers. |
+| `block_aura` | `data/mxt/data_maps/block/block_aura.json` | Aura provided by blocks. |
+| `heat_source` | `data/mxt/data_maps/block/heat_source.json` | How hot and how fast a block heats a furnace. |
 
 ## Built-in Type Dispatch
 

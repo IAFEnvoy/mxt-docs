@@ -59,7 +59,7 @@ Not one field here can change the product — this block only moves the completi
 | --- | --- | --- | --- |
 | `grades` | Object array | **required**, non-empty | `1`–`64` grades. `min_completion` has to be **unique and ascending**; a duplicate or an out-of-order entry is refused at load. The lowest grade is the recipe's pass mark, so one grade at `min_completion: 0` always succeeds. |
 | `grades[].min_completion` | double | **required** | That grade's threshold, inside `[0,1]`. |
-| `grades[].quality` | Quality id | none | The tier written to the output when this grade is hit; left out, the top-level `talisman` definition's own `quality` applies. |
+| `grades[].quality` | Quality id | none | The tier written to the output when this grade is hit (into the `mxt:quality` component); left out, no component is written and the output's tier drops to the last layer of resolution, the [default_quality](./default_quality.md) data map. |
 | `grades[].max_damage` | [Number provider](../types/number_provider_types.md) | none | Overrides the carrier's wear ceiling, in the same shape the talisman definition uses. |
 | `grades[].charge_ratio` | [Number provider](../types/number_provider_types.md) | `0` | How much of the capacity is poured into the output, `0` by default meaning none; a value of `0` or less pours nothing. |
 | `grades[].outputs` | `ItemStackTemplate[]` | `[]` | Extra outputs of this grade. |

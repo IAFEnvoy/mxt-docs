@@ -1,6 +1,6 @@
 ---
 title: Technique (technique)
-description: "Defines a learnable cultivation technique: its grade, learning condition, cultivation multiplier, the levels of the progression chain it enters, and the passive attributes and abilities it grants."
+description: "Defines a learnable cultivation technique: learning conditions, cultivation multiplier, the levels of the progression chain it enters, and the passive attributes and abilities it grants."
 aside: false
 ---
 
@@ -14,7 +14,7 @@ A technique is something that can be learned. Once learned it stays in effect: `
 | --- | --- | --- | --- |
 | `name` | Text Component | `technique.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
 | `description` | Text Component | `technique.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is only stored and read, nothing draws it yet. |
-| `quality` | Quality ID | none | This technique's own grade, one [quality](./quality.md) entry. |
+| `quality` | Quality id | none | Optional. This technique's own grade: the manual carrying this definition reads at it. |
 | `icon` | Icon reference | none | The icon the technique shows in interfaces such as the technique panel. |
 | `learn_condition` | `EntityCondition` | `mxt:always` | Learning condition. |
 | `exclusive_tags` | Identifier array | `[]` | Mutual exclusion tags for this technique. |
@@ -35,7 +35,7 @@ Each `configuration` entry describes one level:
 
 These three fields are shared by techniques and creature profiles; there is no entry field only a spirit beast has. `action` runs once on entering that level: a natural promotion and an administrative level write both count as entering, and it runs **first** while the `mxt:progression_level` signal is published **after**, so whatever reacts sees a body that has already changed; an array of actions runs in order.
 
-`quality` does two jobs: a technique panel row starts with "technique name + level", the name is tinted with the grade's `color`, and the row tooltip's "Grade" line reads its name and colour; it is also the **default tier of the technique's carrier item**, and a `mxt:quality` component on the stack wins over it. Omit `quality` and no grade is shown and the carrier gets no default tier.
+`quality` names a tier in `mxt:quality` and may be left out. Every technique shares one carrier item, `mxt:cultivation_jade_slip`, so the item itself cannot say which tier it is — only the definition the stack carries can: a manual carrying this definition reads at that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
 
 `passive_modifiers` uses vanilla AttributeModifiers; `value` is an optional dynamic formula.
 
@@ -67,7 +67,7 @@ Advancing recalculates ability grants from the new level: `granted_abilities` pl
 
 A technique with `configuration` but no `mastery_resource` never advances on its own; the other way round, `mastery_resource` without `default_level` is rejected while parsing, because there would be no chain to climb.
 
-**Reading technique state.** The entity condition `mxt:technique` asks which techniques a body has **learned**: `techniques` takes an entry, a `#` tag or an array, an empty list meaning "learned any technique at all", and `match` is `any` (the default, where one hit is enough) or `all` (every written entry has to hold, and an empty list is rejected at load time rather than quietly turning into "always true"); `mxt:progression` then asks how far they have climbed. What it reads is **learned**, not "currently active" — techniques have no on/off switch, spirit roots and physiques do; to say "no technique", wrap one in `mxt:not`. A loot table uses the same `mxt:technique` name with an extra `entity` target field and the same shape otherwise (see [Loot and Advancement Criteria](../loot-and-criteria.md)). It asks the grant ledger a body carries, so a technique the current pack no longer provides still answers. See [Entity Condition Types](../types/condition/entity_condition_types.md) for the field details.
+**Reading technique state.** The entity condition `mxt:technique` asks which techniques a body has **learned**: `techniques` takes an entry, a `#` tag or an array, an empty list meaning "learned any technique at all", and `match` is `any` (the default, where one hit is enough) or `all` (every written entry has to hold, and an empty list is rejected at load time rather than quietly turning into "always true"); `mxt:progression` then asks how far they have climbed. What it reads is **learned**, not "currently active" — techniques have no on/off switch, spirit roots and physiques do; to say "no technique", wrap one in `mxt:not`. A loot table uses the same `mxt:technique` name with an extra `entity` target field and the same shape otherwise (see [Loot and Advancement Criteria](../loot-and-criteria.md)). It asks the grant ledger a body carries, so a technique the current pack does not provide still answers. See [Entity Condition Types](../types/condition/entity_condition_types.md) for the field details.
 
 ```json
 // data/example/mxt/technique/azure_breath.json

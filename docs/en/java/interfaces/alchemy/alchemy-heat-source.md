@@ -4,7 +4,7 @@ title: AlchemyHeatSource
 
 # AlchemyHeatSource
 
-A block implements this to heat a furnace (`com.iafenvoy.mxt.api`). **It is optional**: the furnace reads the block in its **bottom centre cell**, and by default it only looks at the [`mxt:heat_source`](/en/datapack/json/heat_source) datapack registry, which gives `max_temperature` and `heating_per_tick` per block or block tag; a block that implements this interface **answers for itself and its entry in that table is ignored**. Most blocks only ever need the table - the interface is for a block whose answer depends on its own state or on what stands around it (a lit fire, a filled brazier).
+A block implements this to heat a furnace (`com.iafenvoy.mxt.api`). **It is optional**: the furnace reads the block in its **bottom centre cell**, and by default it only looks at the [`mxt:heat_source`](/en/datapack/json/heat_source) data map, which gives `max_temperature` and `heating_per_tick` per block or block tag; a block that implements this interface **answers for itself and the value written for it in that table is ignored**. Most blocks only ever need the table - the interface is for a block whose answer depends on its own state or on what stands around it (a lit fire, a filled brazier).
 
 | Member | Description |
 | --- | --- |

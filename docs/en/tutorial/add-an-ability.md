@@ -16,7 +16,7 @@ This tutorial adds two abilities to the example pack: an active bolt cast from t
 | `data/example/mxt/ability/qi_bolt.json` | The active bolt: costs, cooldown and condition, running its own four action fields on the press. |
 | `data/example/mxt/ability/qi_recovery.json` | The triggered recovery: it reacts to being hurt and runs its own action fields once the trigger fires. |
 | `data/example/mxt/realm_stage/foundation.json` | *(edited)* grants the bolt on breakthrough. |
-| `data/example/mxt/item_binding/root_pellet.json` | *(edited)* also grants the recovery ability. |
+| `data/mxt/data_maps/item/item_binding.json` | *(edited)* also grants the recovery ability. |
 | `data/example/mxt/technique/azure_breath.json` | *(edited)* grants both once learned. |
 
 ## Step 1 — An Active Ability
@@ -116,14 +116,20 @@ Defining an ability does nothing on its own: an entity has to hold it. The `mxt:
 
 `success_action` runs on the stage the player just entered, so reaching Foundation Establishment teaches the bolt. `ability_requirements` on a stage is the mirror image: it lists abilities that must already be held before the breakthrough is allowed.
 
-**From an item.** Add the action to any binding table:
+**From an item.** Write the action into the `mxt:item_binding` data map:
 
 ```json
-// data/example/mxt/item_binding/root_pellet.json
-"actions": [
-  {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"},
-  {"type": "mxt:grant_ability", "ability": "example:qi_recovery", "source": "example:root_pellet"}
-]
+// data/mxt/data_maps/item/item_binding.json
+{
+  "values": {
+    "example:root_pellet": {
+      "actions": [
+        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"},
+        {"type": "mxt:grant_ability", "ability": "example:qi_recovery", "source": "example:root_pellet"}
+      ]
+    }
+  }
+}
 ```
 
 **From a spirit root, physique or technique.** Those definitions have a `granted_abilities` list that is applied while they are held:

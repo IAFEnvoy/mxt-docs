@@ -6,31 +6,31 @@ aside: false
 
 # Blueprint Binding (blueprint_binding) {#blueprint_binding}
 
-File location: `data/<namespace>/mxt/blueprint_binding/<path>.json`
+`blueprint_binding` is an **item data map** (a NeoForge Registry Data Map), not a registry, and its file always lives at `data/mxt/data_maps/item/blueprint_binding.json`. **The first namespace has to be the table's own namespace, `mxt`, not the content pack's**: a content pack adds values by dropping another file into `data/mxt/data_maps/item/`. The keys of `values` are **item ids or `#`-prefixed item tags** (a tag expands at load time into every item it held then), and the value is the object the field table below describes — this table has **no `items` field**. See [Data Maps](../overview.md#data-maps) for the file shape.
 
-A blueprint binding treats **items that already exist** as blueprints: the definition writes `items`, and a blueprint sitting in the left-hand slots of the Forge Table offers the blueprints listed in `blueprints`. It creates no items — the blueprints themselves are defined in [forging_blueprint](./forging_blueprint.md).
+A blueprint binding treats **items that already exist** as blueprints: the data map has a value written for that item, and a blueprint sitting in the left-hand slots of the Forge Table offers the blueprints listed in `blueprints`. It creates no items — the blueprints themselves are defined in [forging_blueprint](./forging_blueprint.md).
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | item ID, `#tag` or a mixed array | **required** | The blueprint items this definition claims; see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher). |
-| `priority` | Int | `0` | When several definitions match the same item, the larger number wins; equal numbers fall back to registry order. |
+| `priority` | Int | `0` | Order between several values hitting one item: the larger number goes first, and **a tie goes to whichever was processed later** (writing order within one file, data pack load order across files). |
 | `blueprints` | array of `forging_blueprint` IDs | **required** | The blueprints this item offers; must not be empty or repeat an entry. |
-
-`items` **must not be empty**, for the same reason as [tool_binding](./tool_binding.md): this table can only be reached by matching an item, so a definition that claims no item could never be read and is refused at load.
 
 Only once blueprint items sit in the three left-hand slots of the Forge Table do the blueprints they offer appear in the blueprint list; **with the three slots empty the blueprint list is empty**, and there is no branch that falls back to the whole registry. A session cannot start until a blueprint slot holds an item.
 
-**Two routes for one blueprint item**: it is claimed by the `items` of some definition, or the **stack** itself carries the `mxt:forging_blueprints` item component (an array of `forging_blueprint` IDs). A single sheet of paper that prints exactly one blueprint therefore needs no definition file at all. The two are **unioned**.
+**Two routes for one blueprint item**: the data map has a value written for that item, or the **stack** itself carries the `mxt:forging_blueprints` item component (an array of `forging_blueprint` IDs). A single sheet of paper that prints exactly one blueprint therefore needs no data map file at all. The two are **unioned**.
 
 ```json
-// data/example/mxt/blueprint_binding/sword_manual.json
+// data/mxt/data_maps/item/blueprint_binding.json
 {
-  "items": "example:sword_manual",
-  "blueprints": ["example:spirit_sword"]
+  "values": {
+    "example:sword_manual": {
+      "blueprints": ["example:spirit_sword"]
+    }
+  }
 }
 ```
 
-A one-off blueprint with no definition file writes the list straight onto the stack:
+A one-off blueprint with no data map file writes the list straight onto the stack:
 
 ```mcfunction
 /give @s minecraft:paper[mxt:forging_blueprints=["example:spirit_sword"]]

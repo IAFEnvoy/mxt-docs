@@ -59,7 +59,7 @@ aside: false
 | --- | --- | --- | --- |
 | `grades` | 对象数组 | **必填**，非空 | `1`–`64` 档。`min_completion` 必须**唯一且升序**，重复或乱序在加载期被拒。最低档就是整份符方的及格线，写一档 `min_completion: 0` 就是必然成功。 |
 | `grades[].min_completion` | double | **必填** | 这一档的及格线，落在 `[0,1]`。 |
-| `grades[].quality` | 品质 id | 无 | 命中这一档时写给产物的品阶；不写就落到顶层 `talisman` 定义自己的 `quality`。 |
+| `grades[].quality` | 品质 id | 无 | 命中这一档时写给产物的档位（写进 `mxt:quality` 组件）；不写就不写组件，产物的档落到解析顺序的最后一层，也就是数据表 [default_quality](./default_quality.md)。 |
 | `grades[].max_damage` | [数值提供器](../types/number_provider_types.md) | 无 | 覆盖载体耐久上限，形状与符箓定义那一套相同。 |
 | `grades[].charge_ratio` | [数值提供器](../types/number_provider_types.md) | `0` | 产出时按比例灌注灵气，默认 `0` 就是不灌；求值不大于 `0` 就一项都不灌。 |
 | `grades[].outputs` | `ItemStackTemplate[]` | `[]` | 这一档的额外产物。 |

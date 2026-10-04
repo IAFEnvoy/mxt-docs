@@ -84,6 +84,40 @@ aside: false
 }
 ```
 
+## 按组件筛材料
+
+`key` 与 `ingredients` 收的是原版材料（`Ingredient`）：直接写物品 id 或 `#物品标签` 时只比物品本身，**不看堆上的任何数据**。要按组件筛，用 NeoForge 在材料上加的那一层自定义材料——`neoforge:ingredient_type` 选类型，`neoforge:components` 按「物品 + 组件」匹配：
+
+```json
+{
+  "type": "mxt:spirit_shaped",
+  "pattern": ["PP"],
+  "key": {
+    "P": {
+      "neoforge:ingredient_type": "neoforge:components",
+      "items": "mxt:blank_talisman",
+      "components": { "mxt:quality": "example:paper_tier_3" }
+    }
+  },
+  "result": { "id": "example:refined_talisman" },
+  "aura": [{ "type": "mxt:aura", "aura": "mxt:common", "amount": 20 }]
+}
+```
+
+`items` 收物品 id、`#物品标签` 或它们的数组（必填）；`components` 是一份原版组件补丁，**每一条都必须与堆上那一份完全相等**才算匹配；`strict` 可选（默认 `false`），为真时堆上不许再有 `components` 没列出的组件。判据是**相等**而不是「大于等于」，所以「三档及以上」要把 3/4/5 三档各写一条，再用 `neoforge:compound` 做或：
+
+```json
+{
+  "neoforge:ingredient_type": "neoforge:compound",
+  "children": [
+    { "neoforge:ingredient_type": "neoforge:components", "items": "mxt:blank_talisman", "components": { "mxt:quality": "example:paper_tier_3" } },
+    { "neoforge:ingredient_type": "neoforge:components", "items": "mxt:blank_talisman", "components": { "mxt:quality": "example:paper_tier_4" } }
+  ]
+}
+```
+
+`neoforge:compound` 的字段是 `children`（别名 `ingredients` 也认），另有 `neoforge:difference`（`base` / `subtracted`）与 `neoforge:intersection`（`children`）。按[品质](./quality.md)档位放行也可以直接用物品条件 `mxt:item_quality`——两条路各自的代价，以及今天读不到品质的几处，见[品质 · 品质是哪一档](./quality.md#resolution)。
+
 ## `aura` 字段
 
 `aura` 是一份 `Cost` 数组，**只收 `mxt:aura` 条目**，写其它类型是加载错误，空数组也是。条目里的 `aura` 是一门**灵气身份**，不是某个数值：扣的是这门灵气本身，由它的定义标识；定义自己的 `resource` 字段指出它按哪个数值计数，见 [`mxt:aura`](./aura.md)。这里从工作台存量支付，所以扣的就是这门灵气，而不是它度量的那个数值。

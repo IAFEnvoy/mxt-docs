@@ -4,7 +4,7 @@ title: 动态注册表
 
 # 动态注册表
 
-下表列出本模组的 39 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。
+下表列出本模组的 31 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。另有 **9 张数据表**（NeoForge Registry Data Map，不是注册表），列在表后。
 
 **配方不在表里。** 走原版 `RecipeManager` 的配方页收在下面的「合成表」分组里：炼丹配方（`mxt:alchemy`）、灵气合成（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）与画符配方（`mxt:talisman_drawing`）。它们的 JSON 放在 `data/<namespace>/recipe/`，**不要**放进 `mxt/<配方名>/`；它们也不是注册表，所以 `/reload` 会重新读取它们。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
 
@@ -24,8 +24,6 @@ title: 动态注册表
 | `curse` | `mxt/curse` | 可被多个模块引用的诅咒定义与持续类型。 |
 | `forging_method` | `mxt/forging_method` | 单次锻打方式。 |
 | `forging_blueprint` | `mxt/forging_blueprint` | 锻造目标和品质结算。 |
-| `tool_binding` | `mxt/tool_binding` | 认领工具物品，并给出它们解锁的锻打方式。 |
-| `blueprint_binding` | `mxt/blueprint_binding` | 认领图纸物品，并给出它们提供的锻造蓝图。 |
 | `technique` | `mxt/technique` | 功法定义：可学习、按进度等级授予能力与修炼修正。 |
 | `progression` | `mxt/progression` | 进度链的单级定义。 |
 | `cultivation` | `mxt/cultivation` | 一次运功法门：吸收哪些环境灵气、每 tick 做什么、结算成功那一拍做什么、代价与收获。 |
@@ -33,24 +31,34 @@ title: 动态注册表
 | `medicinal_property` | `mxt/medicinal_property` | 药性身份：一种药用效果的名字与描述。 |
 | `alchemy_furnace` | `mxt/alchemy_furnace` | 炉型规格：槽位、一炉容量与炉温回落速度。 |
 | `alchemy_wall_material` | `mxt/alchemy_wall_material` | 炉壁材料：一块炉壁的耐温上限。 |
-| `heat_source` | `mxt/heat_source` | 供热方块的 `max_temperature` 与 `heating_per_tick`，按方块或方块标签匹配。 |
 | `formation` | `mxt/formation` | 阵法生命周期和灵气覆写。 |
 | `tribulation` | `mxt/tribulation` | 天劫：启动门槛、时间线节拍与成败行为。 |
 | `creature_profile` | `mxt/creature_profile` | 生物属性档案：匹配、门槛、内丹与写入时的一条行为。 |
 | `contract_type` | `mxt/contract_type` | 契约生命周期：双方条件、灵宠侧四个时刻的行为、主人侧三个时刻的行为与存续期授予、签订代价与两个上限。 |
 | `secret_realm` | `mxt/secret_realm` | 秘境模板：按需为每次进入开出实例维度。 |
-| `currency` | `mxt/currency` | 物品货币面值和兑换。 |
-| `item_binding` | `mxt/item_binding` | 现有物品到行为数组的绑定。 |
-| `weapon_binding` | `mxt/weapon_binding` | 现有物品的武器属性和行为。 |
 | `pill` | `mxt/pill` | 一份丹药的作用：食用行为、丹毒增量、过量阈值与过量后的残留。 |
 | `pill_binding` | `mxt/pill_binding` | 认领一族已有物品当同一份丹药，并给出服用次数与冷却。 |
 | `technique_binding` | `mxt/technique_binding` | 现有物品到功法学习的绑定。 |
 | `aura_zone` | `mxt/aura_zone` | 环境灵气模板。 |
-| `block_aura` | `mxt/block_aura` | 方块提供的灵气。 |
-| `item_aura` | `mxt/item_aura` | 手持物品提供的修炼燃料。 |
 | `quality` | `mxt/quality` | 共享品质：名字、颜色、三个修正、使用条件，以及它在品质链上的位置与升级代价。 |
 | `trigger` | `mxt/trigger` | 事件规则：信号、条件与行为。 |
 | `talisman` | `mxt/talisman` | 符箓定义：一张符箓铭刻的能力。 |
+
+## 数据表
+
+这 9 张表是 NeoForge 的 **Registry Data Map**，**不是注册表**：键就是条目 id 或 `#标签`，值是内联数据，没有 id、没有名字，也不能被别的定义引用。文件固定放在 `data/mxt/data_maps/<注册表路径>/<表路径>.json`（物品键在 `item/`、方块键在 `block/`），写法见[数据表](../overview.md#数据表data-map)。侧边栏里它们另成「数据表」分组（同上面的「合成表」），所以上面那张注册表清单里没有它们。
+
+| 数据表 | 文件 | 值 |
+| --- | --- | --- |
+| `item_aura` | `data/mxt/data_maps/item/item_aura.json` | 手持物品提供的修炼燃料。 |
+| `currency` | `data/mxt/data_maps/item/currency.json` | 物品货币面值和兑换。 |
+| `default_quality` | `data/mxt/data_maps/item/default_quality.json` | 物品的默认品质，品质解析的第三层、也是最后一层。 |
+| `item_binding` | `data/mxt/data_maps/item/item_binding.json` | 现有物品的行为、条件与元素。 |
+| `weapon_binding` | `data/mxt/data_maps/item/weapon_binding.json` | 现有物品的武器属性和动作。 |
+| `tool_binding` | `data/mxt/data_maps/item/tool_binding.json` | 工具物品解锁的锻打方式。 |
+| `blueprint_binding` | `data/mxt/data_maps/item/blueprint_binding.json` | 图纸物品提供的锻造蓝图。 |
+| `block_aura` | `data/mxt/data_maps/block/block_aura.json` | 方块提供的灵气。 |
+| `heat_source` | `data/mxt/data_maps/block/heat_source.json` | 供热方块的温度与升温速度。 |
 
 ## 固有类型分派
 

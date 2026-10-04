@@ -123,26 +123,32 @@ StartupEvents.registry('item', event => {
 对应的数据包绑定：
 
 ```json
-// kubejs/data/example/mxt/item_binding/fire_root_pellet.json
+// kubejs/data/mxt/data_maps/item/item_binding.json
 {
-  "items": "kubejs:fire_root_pellet",
-  "actions": [
-    {
-      "type": "mxt:grant_spirit_root",
-      "spirit_root": "example:fire_root"
+  "values": {
+    "kubejs:fire_root_pellet": {
+      "actions": [
+        {
+          "type": "mxt:grant_spirit_root",
+          "spirit_root": "example:fire_root"
+        }
+      ]
     }
-  ]
+  }
 }
 ```
 
 ```json
-// kubejs/data/example/mxt/weapon_binding/firebound_sword.json
+// kubejs/data/mxt/data_maps/item/weapon_binding.json
 {
-  "items": ["kubejs:firebound_sword", "#example:fire_weapons"],
-  "attributes": [
-    {"attribute": "minecraft:attack_damage", "id": "example:firebound_sword/damage", "amount": 8, "operation": "add_value"},
-    {"attribute": "minecraft:attack_speed", "id": "example:firebound_sword/speed", "amount": -2.4, "operation": "add_value"}
-  ]
+  "values": {
+    "kubejs:firebound_sword": {
+      "attributes": [
+        {"attribute": "minecraft:attack_damage", "id": "example:firebound_sword/damage", "amount": 8, "operation": "add_value"},
+        {"attribute": "minecraft:attack_speed", "id": "example:firebound_sword/speed", "amount": -2.4, "operation": "add_value"}
+      ]
+    }
+  }
 }
 ```
 
@@ -173,6 +179,6 @@ StartupEvents.registry('item', event => {
 }
 ```
 
-前三张绑定表只引用已经由 KubeJS、原版或其他模组注册的物品，**绑定里不声明品质链**（链名写在 `quality` 条目自己身上），见 [quality](../datapack/json/quality)。丹药分成两份写：作用在 [pill](../datapack/json/pill.md)，认领物品与次数冷却在 [pill_binding](../datapack/json/pill_binding.md)。「手册」那一份不一样：它是前两张表的**定义**，`kubejs:fire_manual` 只通过 `carrier_item` 声明成本体生成的载体，真正教功法的还是**堆上的 `mxt:technique` 组件**——写组件的方式见[功法绑定](../datapack/json/technique_binding.md)。当前各绑定的运行时接入状态和缺口**以代码为准**（模组仓库两份 README 的「模块完成情况」表是汇总）。
+物品绑定与武器绑定是**数据表**：键就是物品 id 或物品标签，只引用已经由 KubeJS、原版或其他模组注册的物品，**表里不声明品质链**（链名写在 `quality` 条目自己身上），见 [quality](../datapack/json/quality)。丹药分成两份写：作用在 [pill](../datapack/json/pill.md)，认领物品与次数冷却在 [pill_binding](../datapack/json/pill_binding.md)。「手册」那一份不一样：它是 `technique_binding` 的**定义**，`kubejs:fire_manual` 只通过 `carrier_item` 声明成本体生成的载体，真正教功法的还是**堆上的 `mxt:technique` 组件**——写组件的方式见[功法绑定](../datapack/json/technique_binding.md)。当前各表的运行时接入状态和缺口**以代码为准**（模组仓库两份 README 的「模块完成情况」表是汇总）。
 
-KubeJS 注册物品表后需要重启游戏；MXT 的绑定数据表属于原版数据包注册表，读取发生在世界加载时，因此修改后需要重新加载世界（单机退回标题界面再进入，服务器重启），`/reload` 不会重新读取它们。绑定的物品 ID 不存在时，数据包加载会失败，避免产生无法解析的物品规则。
+KubeJS 注册物品表后需要重启游戏；MXT 的注册表与数据表都在世界加载时读取，因此修改后需要重新加载世界（单机退回标题界面再进入，服务器重启），`/reload` 不会重新读取它们。注册表的 `items` 里写了不存在的物品 ID 会让数据包加载失败，避免产生无法解析的物品规则。

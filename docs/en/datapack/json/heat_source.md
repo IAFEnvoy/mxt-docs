@@ -10,39 +10,36 @@ A `heat_source` gives one family of blocks two numbers: how hot it lets a furnac
 
 ## File Location
 
-Heat source files go in `data/<namespace>/mxt/heat_source/` within your data pack.
+`heat_source` is a **block data map** (a NeoForge Registry Data Map), not a registry, and its file always lives at `data/mxt/data_maps/block/heat_source.json`. **The first namespace has to be the table's own namespace, `mxt`, not the content pack's**: a content pack adds values by dropping another file into `data/mxt/data_maps/block/`. The keys of `values` are **block ids or `#`-prefixed block tags** (a tag expands at load time into every block it held then) — this table has **no `blocks` field**. See [Data Maps](../overview.md#data-maps) for the file shape.
 
 **Purpose**: The heating numbers of one family of blocks.
-
-The filename corresponds to its ID. For example, `data/example/mxt/heat_source/magma.json` has the ID `example:magma`.
 
 ## Fields
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `blocks` | a block id, `#tags`, or a mixed array | **required** | Which blocks this definition matches; must not be empty. |
+| `priority` | Integer | `0` | Which value wins when several hit the same block — the highest wins, and **a tie goes to whichever was processed later** (writing order within one file, data pack load order across files). |
 | `max_temperature` | Double | **required** | The highest temperature this block can give the furnace; finite and greater than `0`. |
 | `heating_per_tick` | Double | **required** | How many degrees it adds every tick; finite and greater than `0`. |
-| `priority` | Integer | `0` | Which definition wins when several match the same block - the highest wins, and a tie falls back to registry order, the earlier entry first. |
 
 ```json
+// data/mxt/data_maps/block/heat_source.json
 {
-  "blocks": ["minecraft:magma_block"],
-  "max_temperature": 200,
-  "heating_per_tick": 4
+  "values": {
+    "minecraft:magma_block": {
+      "max_temperature": 200,
+      "heating_per_tick": 4
+    },
+    "#minecraft:campfires": {
+      "max_temperature": 150,
+      "heating_per_tick": 2,
+      "priority": 5
+    }
+  }
 }
 ```
 
-```json
-{
-  "blocks": ["#minecraft:campfires"],
-  "max_temperature": 150,
-  "heating_per_tick": 2,
-  "priority": 5
-}
-```
-
-When several definitions match one block only one of them is used: `priority` decides first and the highest wins; on a tie the entry that comes earlier in registry order is taken. The numbers are never added together.
+When several values hit one block only one of them is used: `priority` decides first and the highest wins; on a tie the value processed later is taken. The numbers are never added together.
 
 ## Where the Heat Cell Is
 
@@ -58,6 +55,6 @@ What a player may actually set is `min(the lowest rating of the 18 casings, the 
 
 ## When the Block Answers for Itself
 
-A block may implement `com.iafenvoy.mxt.api.AlchemyHeatSource` and answer the two numbers itself (a different value while it is lit than while it is out, or something that depends on what stands around it). Such a block **answers for itself and its entry in this table is ignored** - the interface is the finer control on top of the table, never required, and most blocks only need the table. Its answers must be finite and greater than zero, or the furnace treats that cell as having no heat block.
+A block may implement `com.iafenvoy.mxt.api.AlchemyHeatSource` and answer the two numbers itself (a different value while it is lit than while it is out, or something that depends on what stands around it). Such a block **answers for itself and the value written for it in this table is ignored** - the interface is the finer control on top of the table, never required, and most blocks only need the table. Its answers must be finite and greater than zero, or the furnace treats that cell as having no heat block.
 
 **The mod ships no heat block**, and no bundled values for lava or fire: what a block is worth is up to your data pack or content pack. The three blocks in the test pack exist for testing only and are not what a content pack should register.

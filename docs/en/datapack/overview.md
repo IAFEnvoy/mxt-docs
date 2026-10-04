@@ -36,9 +36,60 @@ Data packs load through the native NeoForge writable registry, and the server sy
 
 - A single entry is referenced by the entry's own id; a field that accepts either an entry or a tag also takes `#tag`.
 - An optional reference may be omitted entirely, in which case the default in the field table applies. Most list and map references are tolerant: a bad entry is dropped with an `Ignoring invalid list element` warning and the rest still apply. **Cost arrays do not follow that rule**: one entry of an array such as `costs` that cannot be decoded fails the whole definition at load.
-- Item matching uses `ItemMatcher`, which supports ids, tags, wildcards, regular expressions and mixed arrays; the three forms and seven entry types are on [`ItemMatcher`](/en/datapack/types/shared_data_types#itemmatcher).
-- When several definitions match the same item, selection goes by the `priority` each one declares, **highest first** (the field defaults to `0`; ten tables accept it: `artifact`, the `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` bindings, `spirit_herb`, `item_aura` and `currency`). Only two definitions with the **same** `priority` fall back to registry order, so which one wins is written into the pack itself and has nothing to do with file names (the same direction as `priority` on `aura_zone` and `element_reaction`). **Which kind of matcher entry matched is irrelevant**: a definition that matches is ranked by the number it declares, and naming an item does not move it up.
+- The claiming tables that are still registries (`artifact`, `pill_binding`, `spirit_herb`, `technique_binding`) use `ItemMatcher` to claim items: ids, tags, wildcards, regular expressions and mixed arrays are all accepted, and the three forms and seven entry types are on [`ItemMatcher`](/en/datapack/types/shared_data_types#itemmatcher). **The eight data maps have no `items` field** — the key is the entry itself, see [Data Maps](#data-maps).
+- When several definitions match the same item, selection goes by the `priority` each one declares, **highest first** (the field defaults to `0`). Among the four claiming tables that are still registries, two with the **same** `priority` fall back to registry order; for the item data maps a tie goes to **whichever value was processed later** (writing order within one file, data pack load order across files). Either way which one wins is written into the pack itself and has nothing to do with file names (the same direction as `priority` on `aura_zone` and `element_reaction`). **Which kind of matcher entry matched is irrelevant**: a definition that matches is ranked by the number it declares, and naming an item does not move it up.
 - The vanilla tags are the only tag system; do not define a `tags` field inside JSON.
+
+## Data Maps {#data-maps}
+
+The nine tables saying "what an entry is" are not registries but NeoForge **Registry Data Maps**: data-driven "registry entry → value" tables keyed by the entry. The keys can live in different registries, so a few are item-keyed and a few are block-keyed. Their values have no id and no name, and no other definition can reference one.
+
+| Data map | File | Value |
+| --- | --- | --- |
+| `mxt:item_aura` | `data/mxt/data_maps/item/item_aura.json` | The cultivation fuel an item provides. |
+| `mxt:currency` | `data/mxt/data_maps/item/currency.json` | An item's currency denomination and exchanges. |
+| `mxt:default_quality` | `data/mxt/data_maps/item/default_quality.json` | An item's default quality when nothing else supplies a tier (the third and last layer of quality resolution). |
+| `mxt:item_binding` | `data/mxt/data_maps/item/item_binding.json` | An existing item's actions, conditions and element. |
+| `mxt:weapon_binding` | `data/mxt/data_maps/item/weapon_binding.json` | An existing item's weapon attributes and three actions. |
+| `mxt:tool_binding` | `data/mxt/data_maps/item/tool_binding.json` | The forging methods a tool item unlocks. |
+| `mxt:blueprint_binding` | `data/mxt/data_maps/item/blueprint_binding.json` | The blueprints a blueprint item offers. |
+| `mxt:block_aura` | `data/mxt/data_maps/block/block_aura.json` | Aura provided by a block. |
+| `mxt:heat_source` | `data/mxt/data_maps/block/heat_source.json` | How hot and how fast a block heats a furnace. |
+
+**The first namespace has to be the table's own namespace, `mxt`, not the content pack's.** The item-keyed tables hang off `minecraft:item` and live in `data/mxt/data_maps/item/`; the block-keyed ones hang off `minecraft:block` and live in `data/mxt/data_maps/block/`. A content pack adds values by dropping another file into `data/mxt/data_maps/<registry>/`, never by writing into `data/<your namespace>/...`; a wrong namespace only leaves one log line, `Found data map file for non-existent data map type`.
+
+Every file looks like this:
+
+```json
+{
+  "replace": false,
+  "values": {
+    // currency's bare value: this object is a CurrencyValue, whose own field happens to be named value too
+    "minecraft:iron_nugget": { "value": 1, "exchanges": [] },
+    "#example:coins": { "value": 5, "exchanges": [] },
+    // tool_binding's bare value: just write that table's fields
+    "example:legendary_hammer": { "methods": ["example:slam"] }
+  },
+  "remove": ["example:legacy_coin"]
+}
+```
+
+| Key | Type | Description |
+| --- | --- | --- |
+| `values` | entry id or a `#`-prefixed tag → value object | **required**. The key is "which entry" and the value is that table's own shape — most tables use an object made of their fields, while `default_quality` takes a quality id string. Tags expand at load time into every entry they held then. |
+| `replace` | Bool | `true` clears every value added before it. This key is for modpack authors overriding; a mod should not ship it. |
+| `remove` | array of entry ids / `#`-prefixed tags | Runs **after** the additions, so "give the tag, then exclude a few entries" works. Our tables only have the default remover (drop the whole entry), so an array of ids or tags is all you need. |
+| `neoforge:conditions` | condition array | **Only ever written on a value** (see below); one written at file level is silently ignored — the reason is the platform pitfall below. |
+
+**Three ways to write one value** (each value decodes as either the wrapper shape or the table's bare value, so the first two are both legal):
+
+1. **A bare value** (recommended; every table NeoForge itself ships writes them this way): write that table's field object directly, as in `{ "methods": [...] }` above.
+2. **`{"value": <bare value>, "replace": true}`**: **the only shape in which the value's `replace` takes effect** — it bypasses the merger and replaces everything that entry already had. Conversely, **a `replace` written inside a bare value is silently dropped**: decoding tries the wrapper shape first and only falls back to the bare value, whose path never reads that key.
+3. **A value-level condition**: add `neoforge:conditions` to either shape above, for example `{"methods": [...], "neoforge:conditions": [...]}` or `{"value": { …the fields… }, "replace": true, "neoforge:conditions": [...]}`. When the condition does not hold the value **counts as unwritten**: no error, no log line.
+
+> **A platform pitfall**: NeoForge's own documentation lists `neoforge:conditions` as a **file-level** field and its datagen encodes "file-level condition plus data map file" that way, but **the loader cannot see the file-level one** — the whole file is decoded with a codec that takes no conditions, so a top-level `neoforge:conditions` is silently dropped and the file applies in full. To load a value conditionally, **always write the condition on the value**. The symptom of writing it at file level is "I added the condition and the value still applied", with not a single line in the log.
+
+**Conflicts go by `priority`**: when several values hit the same entry the larger number wins, and **a tie goes to whichever was processed later** (writing order within one file, data pack load order across files), with no fallback to registry order. **Two tables ignore `priority`**: `block_aura` is **additive** (block aura is a quantity that accumulates), so two values **add up**; `default_quality` has **no such field** and simply goes by "the later one wins".
 
 ## Disabling a Definition
 
@@ -94,10 +145,12 @@ Behaviours are uniformly called `action` and are split by target into entity, it
 | --- | --- |
 | Resources and cultivation | `resource`, `aura`, `element`, `element_reaction`, `realm_stage`, `spirit_root`, `physique`, `technique`, `progression`, `cultivation` |
 | Abilities and rules | `ability`, `curse`, `formation`, `tribulation`, `trigger`, `talisman` |
-| Aura and world | `aura_zone`, `block_aura`, `item_aura`, `secret_realm` |
-| Items and quality | `pill`, `pill_binding`, `item_binding`, `weapon_binding`, `technique_binding`, `tool_binding`, `blueprint_binding`, `artifact`, `quality` |
-| Alchemy and herbs | `medicinal_property`, `spirit_herb`, `alchemy_furnace`, `alchemy_wall_material`, `heat_source` |
-| Economy and content | `currency`, `forging_method`, `forging_blueprint`, `creature_profile`, `contract_type` |
+| Aura and world | `aura_zone`, `secret_realm` |
+| Items and quality | `pill`, `pill_binding`, `technique_binding`, `artifact`, `quality` |
+| Alchemy and herbs | `medicinal_property`, `spirit_herb`, `alchemy_furnace`, `alchemy_wall_material` |
+| Economy and content | `forging_method`, `forging_blueprint`, `creature_profile`, `contract_type` |
+
+There are also **9 data maps** (`item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`, `block_aura`, `heat_source`) which are not registries, see [Data Maps](#data-maps).
 
 An alchemy recipe is not a registry: `mxt:alchemy` is a vanilla recipe type whose files live under `data/<namespace>/recipe/`, see [Alchemy Recipe](/en/datapack/json/alchemy_recipe).
 
@@ -114,11 +167,11 @@ An alchemy recipe is not a registry: `mxt:alchemy` is a vanilla recipe type whos
 
 ## Loading and Overriding
 
-The 39 data pack registries load through the native NeoForge data pack registry system; they are read and validated **while the world loads**, and a read-only snapshot is provided to the client on join through the vanilla synchronisation mechanism. From a file on disk to what the player sees is the path below.
+The 31 data pack registries load through the native NeoForge data pack registry system; they are read and validated **while the world loads**, and a read-only snapshot is provided to the client on join through the vanilla synchronisation mechanism. From a file on disk to what the player sees is the path below.
 
 ```mermaid
 flowchart TD
-    A["Datapack definition files<br/>one JSON file per entry"] --> B["39 data pack registries<br/>native NeoForge data pack registries"]
+    A["Datapack definition files<br/>one JSON file per entry"] --> B["31 data pack registries<br/>native NeoForge data pack registries"]
     B --> C["Read and validated at world load<br/>JSON / references / field validation"]
     C --> D["Decoding fails: the world cannot load<br/>fix that file before entering again"]
     C --> E["neoforge:conditions<br/>an entry whose condition fails never enters the registry"]
@@ -144,12 +197,12 @@ One operational way to put the rule: **an old and a new definition of the same i
 
 ## Loading, Syncing and Debugging
 
-- These registries are vanilla data pack registries and are **read while the world loads**: JSON parsing, entry resolution and field validation all happen during world load, and `neoforge:conditions` is decided at that point too, so an entry whose condition fails is not even decoded. `/reload` does not re-read them — it only refreshes vanilla reload listeners such as recipes, loot tables, advancements and functions, plus the KubeJS server scripts. After changing data tables you have to load the world again (in single player, leave to the title screen and enter again, or restart the server).
+- These registries are vanilla data pack registries and are **read while the world loads**: JSON parsing, entry resolution and field validation all happen during world load, and `neoforge:conditions` is decided at that point too, so an entry whose condition fails is not even decoded. `/reload` does not re-read them — it only refreshes vanilla reload listeners such as recipes, loot tables, advancements and functions, plus the KubeJS server scripts. Item data maps are read at **world load** as well, so changing one also needs the world loaded again (in single player, leave to the title screen and enter again, or restart the server).
 - The dynamic registries are sent by the vanilla synchronisation mechanism when the client joins; the client HUD, fog and textures only display, and never decide the result of deduction, breakthrough, forging or exchange.
 - `/mxt aura query` queries the final aura at the current position; `/mxt aura vein` queries spirit stone vein information.
-- `/mxt registries list` lists these dynamic registries and their entry counts; `/mxt registries validate` reports every problem the last build found, naming the file each one comes from (the reference chains of cultivation, abilities and techniques, and any trigger rule that forgot its action) — with no problems it reports the number of registries, the total entry count and that validation passed. Run it once after the world has loaded to confirm that the registry state the data pack produced is usable.
+- `/mxt registries list` lists these dynamic registries and their entry counts; `/mxt registries validate` reports every problem the last build found, naming the file each one comes from (the reference chains of cultivation, abilities and techniques, and any trigger rule that forgot its action) — with no problems it reports the number of registries, the total entry count and that validation passed. Run it once after the world has loaded to confirm that the registry state the data pack produced is usable. The nine data maps are not registries and do not show up here.
 - `/mxt technique repair` cleans up **stale technique references** in player data (for when a referenced definition was deleted by the data pack or blocked by `neoforge:conditions`); `dry-run` only reports and changes nothing; `/mxt technique drop <id>` removes one technique precisely. See the next section.
-- `/picker [<category id>]` opens the item picker to look straight at the items behind these definitions: a category is a registry ID (`/picker mxt:aura`, `/picker mxt:artifact`, `/picker mxt:currency`), and with none written it lists every registered category. It needs gamemaster permission and only works in creative mode; the top-level `/picker` alias is switched on by the server config "command alias → /picker", while `/mxt picker` is always available.
+- `/picker [<category id>]` opens the item picker to look straight at the items behind these definitions: a category is an id that may point at a registry or at a data map (`/picker mxt:aura`, `/picker mxt:artifact`, `/picker mxt:currency`, `/picker mxt:item_binding`, `/picker mxt:block_aura`), and with none written it lists every registered category. A registry category lists the items its definitions stand for; a data map category lists the items or blocks that carry a value. It needs gamemaster permission and only works in creative mode; the top-level `/picker` alias is switched on by the server config "command alias → /picker", while `/mxt picker` is always available.
 - The test mod data lives in `src/test-mod/resources/data/mxt_test/mxt`; start the test server to verify the whole data pack loop.
 
 ### Repairing Stale Technique References

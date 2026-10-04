@@ -8,10 +8,12 @@ The management entry point for spirit roots. The definitions themselves are a da
 
 | Command | Effect |
 |---|---|
-| `/spirit_root list [<target>]` (= `/mxt spirit_root list`) | Lists the roots held: name, rarity, bound element and whether each is in effect. Without a target it looks at you, and the query needs no permission. |
+| `/spirit_root list [<target>]` (= `/mxt spirit_root list`) | Lists the roots held: name, quality, bound element and whether each is in effect. Without a target it looks at you, and the query needs no permission. |
 | `/spirit_root grant <targets> <root>` | Grants a root (gamemaster). When `conflicting_elements` blocks it, when it is already held or when the definition does not exist, the reason is reported per target. |
 | `/spirit_root remove <targets> <root>` | Removes that root, together with its element and everything it granted. |
 | `/spirit_root enable` / `disable <targets> <root>` | "Switch off without losing": a switched-off root is still held and simply provides nothing any more. |
+
+The quality column reads the `quality` the definition itself declares; it prints `-` when the definition declares none, or when the current pack does not provide that definition at all. The info panel draws a spirit-root row as "definition name · quality name" and leaves that second half out entirely when no quality is declared.
 
 Granting and removing go through the **same services** as the data pack actions `mxt:grant_spirit_root` / `mxt:remove_spirit_root` and the rest, so the conflict rules, the holder conditions and the source cleanup are exactly the same, and the command bypasses none of those checks. Failures are reported per target, because the failures worth knowing about are per target — one target already holds it, another target's element is opposed to it — and the reason printed after the failure is exactly what makes the command worth running again.
 

@@ -13,6 +13,7 @@ aside: false
 | --- | --- | --- | --- |
 | `name` | 文本组件 | `pill.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的键。 |
 | `description` | 文本组件 | 同上加 `.description` | 描述。 |
+| `quality` | 品质 id | 无 | 可选。这一份丹药的一剂起始的档位。 |
 | `color` | 颜色 | `#FFFFFF` | **内置载体** `mxt:pill` 的图标颜色，写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受，一律按不透明处理）；白色就是不染色。只染本体这一件物品——被绑定认领的物品照旧用它们自己的贴图。 |
 | `on_consume` | `EntityAction` | `mxt:no_op` | 食用完成后运行的行为。 |
 | `toxicity_gain` | `NumberProvider` | `0` | 这一口增加的丹毒。 |
@@ -20,6 +21,8 @@ aside: false
 | `on_overdose` | `EntityAction` | `mxt:no_op` | 越过阈值时运行的行为。 |
 | `toxicity_after_overdose` | `NumberProvider` | `0` | 过量之后丹毒被**设成**的值，不是清零。 |
 | `conditions` | `EntityCondition[]` | `[]` | 食用前检查；支持内联条件或带描述的条件对象。 |
+
+`quality` 是可选的：所有丹药共用本体这一件载体物品 `mxt:pill`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出——一剂这份丹药起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。堆上的 `mxt:pill` 组件只覆盖效果那几个字段（`on_consume`、`toxicity_gain` 之类），**改不动档位**：档读的始终是定义自己写的那一份 `quality`。
 
 一份定义只写"吃下去发生什么"，`data/example/mxt/pill/warming_pill.json`：
 

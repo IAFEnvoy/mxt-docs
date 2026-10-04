@@ -12,7 +12,7 @@ File location: `data/<namespace>/mxt/talisman/<path>.json`
 
 A talisman definition says what happens once it is inscribed onto a carrier: which abilities invoking it grants, how much aura the carrier can hold, and what every invocation pays. **A carrier can also be drawn at the talisman workstation**: a drawing recipe's top-level `talisman` field names one of these definitions by id, and that is what comes out, see [`mxt:talisman_drawing`](./talisman_drawing.md).
 
-**`abilities` is the only effect field.** Every skill-like effect in this mod lands on an ability, so a talisman needs no effect vocabulary of its own. The other six optional fields each answer one thing: `capacity` is the carrier's pour capacity multiplier (see [Pouring and Firing](#pouring-and-firing)), `durability` / `consume` are its wear (see [Wear](#wear)), `costs` is what every invocation pays (see [Cost](#cost)), `condition` is whether this holder may use the talisman right now (see [Condition](#condition)), and `quality` is its tier (see [Tier](#tier)).
+**`abilities` is the only effect field.** Every skill-like effect in this mod lands on an ability, so a talisman needs no effect vocabulary of its own. The other five optional fields each answer one thing: `capacity` is the carrier's pour capacity multiplier (see [Pouring and Firing](#pouring-and-firing)), `durability` / `consume` are its wear (see [Wear](#wear)), `costs` is what every invocation pays (see [Cost](#cost)), and `condition` is whether this holder may use the talisman right now (see [Condition](#condition)). **The definition has no `quality` field** (the component on a carrier holds a list of inscriptions, so there is no single definition on the stack to ask); the tier is described under [Tier](#tier).
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -22,7 +22,6 @@ A talisman definition says what happens once it is inscribed onto a carrier: whi
 | `capacity` | double | `1` | The carrier's **pour capacity multiplier**: the capacity is one invocation's aura amount × this multiplier, counted per aura and rounded up to whole units. It has to be at least 1; anything below is refused at load. |
 | `durability` | int | `0` | How much wear this talisman gives a carrier once it is written on, with entries on one carrier **adding up**. `0` or omitted means this talisman keeps no wear account, and the carrier is still spent as one whole item per invocation. It cannot be negative. |
 | `consume` | int | `1` | How much wear one invocation takes off, at least 1. It only means anything while `durability > 0`. |
-| `quality` | Quality id | none | The tier of this talisman, used to grade talisman paper and talisman treasures. |
 | `condition` | [Entity condition](../types/condition/entity_condition_types.md) | `mxt:always` | Whether this holder **may use the talisman**, unrelated to its price. It is tested against the **holder** and comes **before `costs`**: when it fails, the invocation is refused with nothing moved at all — the carrier is not spent, no wear is taken, the store is not drawn on and the holder's account is untouched. **Every inscription on one carrier has to pass**, so one of them saying "not now" refuses the whole carrier. It can also be written as an array of conditions (an implicit AND). |
 | `costs` | Array, entries as in [`Cost`](../types/shared_data_types.md#cost) | `[]` | What **one invocation** pays, with the entries on one carrier adding up. Anything that cannot be paid refuses that invocation; "when it may not be used at all" goes in `condition`. |
 
@@ -32,7 +31,7 @@ It is a **multiplier, not an aura table**: the capacity comes out of `costs` its
 
 `consume` only means anything while `durability > 0`: with `durability` at 0 that number is never read, so writing it is **silently ignored**, the same rule as an unknown key.
 
-The tier on a carrier is decided by the **first entry in inscription order that declares one**, through the ordinary quality module, and nothing has to be written onto the stack as a component.
+**The definition has no `quality` field**: the `mxt:talisman` component on a carrier holds a list of inscriptions, so there is no single definition on the stack to ask. A talisman's tier comes either from the `grades[].quality` a drawing recipe hits by completion, which is written into the carrier's `mxt:quality` component when it is inscribed, or from the fallback tier the [default_quality](./default_quality.md) data map gives the carrier item under its id or a `#`-prefixed tag. Once that component is written the ordinary quality rules apply (the tooltip's tier line, a quality's own `condition`, upgrading along the ladder, `value_multiplier`).
 
 An `mxt:aura` entry in `costs` comes out of the **store poured into the carrier itself**, and short of it means "not charged", which refuses the invocation; `mxt:resource` / `mxt:item` / `mxt:js` entries are charged to the **holder** when it fires. Anything that cannot be paid **refuses the invocation**. A threshold that has nothing to do with the price — a realm, the weather, an item in hand, a chance — belongs in `condition`, which is asked before `costs`; see [Condition](#condition).
 
@@ -125,7 +124,7 @@ The latter is planned **before** the invocation: anything that cannot be paid **
 
 ### Tier
 
-`quality` gives this talisman a tier, which is where the grading of talisman paper / talisman treasures is written. The tier resolved on a carrier goes through the whole ordinary quality module: the tooltip's tier line, `mxt:quality` and a quality's own `condition`, upgrading along the quality ladder and a quality's `value_multiplier` all see it as usual. The framework **writes no tier component onto the stack**, so a component still overrides the definition and the ladder can still be climbed. On a carrier with several inscriptions, it takes the **first entry in writing order that declares a tier**.
+**The definition has no `quality`**: the component on a carrier holds a list of inscriptions, so there is no single definition on the stack to ask. A carrier's tier has two sources: the `grades[].quality` a drawing recipe hits by completion, which is written into the carrier's `mxt:quality` component when it is inscribed; and the tier the [default_quality](./default_quality.md) data map gives the carrier item under its id or a `#`-prefixed tag, which is the **fallback** — the last layer of resolution, and one the framework itself never writes onto the stack. Once the component is written, the whole ordinary quality module applies: the tooltip's tier line, a quality's own `condition`, upgrading along the quality ladder, and a quality's `value_multiplier`.
 
 ### How an Invocation Resolves
 
@@ -152,8 +151,7 @@ Example:
     {"id": "example:true_essence", "amount": 2}
   ],
   "durability": 10,
-  "consume": 1,
-  "quality": "example:fine_talisman_paper"
+  "consume": 1
 }
 ```
 

@@ -1,12 +1,12 @@
 ---
 title: Alchemy Furnace (alchemy_furnace)
-description: A furnace specification covering main and auxiliary slot counts, per-batch capacity, cooling rate and default quality.
+description: A furnace specification covering main and auxiliary slot counts, per-batch capacity and cooling rate.
 aside: false
 ---
 
 # Alchemy Furnace (alchemy_furnace) {#alchemy_furnace}
 
-An `alchemy_furnace` is a **furnace specification**, not the block in the world. It says how many main and auxiliary slots the furnace has, how many ingredients one batch may hold, how much heat it loses per tick once it is above the set point or the heat stops, and which quality tier the specification itself uses.
+An `alchemy_furnace` is a **furnace specification**, not the block in the world. It says how many main and auxiliary slots the furnace has, how many ingredients one batch may hold, and how much heat it loses per tick once it is above the set point or the heat stops. **`quality` is optional**: every specification shares the same block item `mxt:alchemy_furnace`, so the item itself cannot say which tier it is — only the specification the stack carries can: a furnace built to this specification starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
 
 The furnace core carries a specification through the `mxt:alchemy_furnace` component. Without that component, or when the definition it points at is not in the registry, the furnace cannot be started, and it is never quietly replaced by a built-in specification; placing, saving and breaking the core all keep the component.
 
@@ -24,9 +24,9 @@ The filename corresponds to its ID. For example, `data/example/mxt/alchemy_furna
 | --- | --- | --- | --- |
 | `name` | Text Component | `alchemy_furnace.mxt.<namespace>.<path>` | The furnace's display name. |
 | `description` | Text Component | the same key plus `.description` | The furnace's description. |
+| `quality` | Quality id | none | Optional. The tier a furnace built to this specification starts on. |
 | `main_slots` | Integer | **required** | Main ingredient slots, `1..2`. |
 | `auxiliary_slots` | Integer | `0` | Auxiliary ingredient slots, `0..2`. |
-| `quality` | quality id | **required** | The furnace's default quality. Display and use conditions only; it derives no slots, capacity, cooling or temperature limit. |
 | `capacity` | Integer | **required** | Ingredient count per batch, `1..320`; the item's own stack limit still applies. |
 | `cooling_per_tick` | Double | **required** | How much heat is lost per tick while the furnace sits above the set point or has no heat block, a finite positive number that never crosses the set point: with a heat block in the cell the temperature is pushed towards the set point, and when that cell is empty or holds a block with no heat it falls all the way to `0`. |
 
@@ -42,7 +42,7 @@ The catalyst is fixed to the third slot of the auxiliary store and is not a fiel
 }
 ```
 
-A furnace's `quality` only reaches display and use conditions: the furnace's own alchemy modifier does not shorten the duration, and changing only the quality component on the item changes none of the specification's parameters.
+The `quality` a specification writes is the furnace's tier, and it only reaches display and use conditions: the furnace's own alchemy modifier does not shorten the duration, and changing only the quality component on the item changes none of the specification's parameters.
 
 ## Furnace Structure
 

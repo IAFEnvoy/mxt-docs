@@ -14,6 +14,7 @@ A `formation` defines one array: its structure, radius, resource costs, lifecycl
 | --- | --- | --- | --- |
 | `name` | Text Component | `formation.mxt.<namespace>.<path>` | Optional display name. When omitted, the default key in the previous column is used. |
 | `description` | Text Component | `formation.mxt.<namespace>.<path>.description` | Optional description. When omitted, the default key in the previous column is used; it is stored and read today, but nothing draws it yet. |
+| `quality` | Quality id | none | Optional. The tier a plate carrying this array starts on. |
 | `structure_template` | Structure template ID | see below | A vanilla structure template; the controller is the template's origin. One of the two structure fields — with `structure_check: "structure"` **exactly one** of them has to be written. |
 | `structure_check` | `structure` / `always` | `structure` | Whether the structure is checked when the array is raised. `always` means **this array can be raised anywhere**, and then neither `structure_template` nor `structure` is read — writing one is silently ignored (the same rule as an unknown key). |
 | `structure` | Array of `{ "offset": [...], "state": ... }` | `[]` | An inline structure; the controller is the origin of the offsets. One of the two structure fields. |
@@ -29,6 +30,8 @@ A `formation` defines one array: its structure, radius, resource costs, lifecycl
 | `entity_tick_action` | Entity Action | `mxt:no_op` | Run for **every** entity inside the radius each period. |
 | `entity_enter_action` | Entity Action | `mxt:no_op` | Run when an entity enters the radius. |
 | `entity_exit_action` | Entity Action | `mxt:no_op` | Run when an entity leaves the radius, or when the array is dismantled. |
+
+`quality` is optional: plates are the one item every array shares, so the item itself cannot say which tier it is — only the array the stack carries can: a plate carrying this array starts on that tier. The tier is read off **the array stored on the plate**, not off anything filtered through the plate's allow list: an array outside the plate's allow list, one whose activation would be refused, still names its tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
 
 > **Structure size is not bound by the structure block's 48×48×48 limit.** The two vanilla axis constants are only a clamp applied when the structure block reads its own NBT: that is an **editor limit**, not a format or array limit. The underlying structure template format reads `size` with no ceiling, a structure block in LOAD mode adopts the template's size as it is, and `/place template` checks no size either. So a hand selection made with the structure block cannot exceed 48³, while an `.nbt` produced by an external tool can be referenced by an array without trouble. What an array reaches is decided by `radius`, independently of the size of the structure's bounding box.
 
@@ -119,7 +122,7 @@ The payer is the **first** name on the list (with a single owner, the only owner
 
 The top-level `spare_friends` is a **switch** and answers one thing only: whether this array's per-entity work goes to **everyone inside the covered range**, or through a **friend-or-foe decision** first (friends, and anything it cannot identify, are then unaffected). It **does not mean this array is an attacking one** — whether an array attacks or supports is what its `actions` say: one with `mxt:attack` hits people, one with `mxt:buff` gives buffs. The switch and the nature each mind their own end and neither infers the other.
 
-- **Left out (the default) means it applies to everyone**, owners and friends included. To make an attacking array spare your own side you have to write `"spare_friends": true` explicitly; forgetting it means a punch in the owner's face, and that is deliberate — the runtime no longer guesses the pack's intent.
+- **Left out (the default) means it applies to everyone**, owners and friends included. To make an attacking array spare your own side you have to write `"spare_friends": true` explicitly; forgetting it means a punch in the owner's face, and that is deliberate — the runtime does not guess the pack's intent.
 - **Once written**: friends and owners are unaffected by any per-entity work, strangers are affected as usual, and **anything that cannot be identified is let through too**.
 
 - **Who counts as an ally** is answered by the friend system: it fires a friend-relation event first (other mods may answer, and the event carries the owner's **UUID**, so a source whose data lives on the server — team members and allies with FTB Teams installed, say — **can answer even while the owner is offline**), and only when nobody answers does it read the owner's own friend list. With several owners on the list, it **asks each one in turn**: **any one** of them recognising you makes you an ally (one saying no while the rest say nothing still means no). **The owner himself counts too** — in the friend decision "you are your own friend", so an array that declares the switch will not hurt the person who raised it, and no `mxt:formation_owner` condition is needed.
@@ -293,7 +296,7 @@ A tag file goes in `data/<namespace>/tags/mxt/formation/<path>.json` and is writ
 { "values": ["mypack:green_shade_array", "mypack:spirit_gathering_array"] }
 ```
 
-An empty `allowed` is an **ambiguous case**, which is why it is a setting: by default "not restricted", and with the server setting "Formations → Blank Allow List Passes" off, an empty `allowed` means **nothing is allowed** and the entries have to be listed explicitly. Tab completion of `/mxt formation bind` lists every array in the registry; the allow list no longer narrows the completion but checks before the write.
+An empty `allowed` is an **ambiguous case**, which is why it is a setting: by default "not restricted", and with the server setting "Formations → Blank Allow List Passes" off, an empty `allowed` means **nothing is allowed** and the entries have to be listed explicitly. Tab completion of `/mxt formation bind` lists every array in the registry; the allow list does not narrow the completion, it checks before the write.
 
 **The allow list only takes effect before the write and before activation**, both ahead of any resource spending: `bind` refuses an array outside the list and **does not touch the item**; and when a plate's `formation` is not inside its own `allowed` (a hand-edited save, or a changed setting), right-clicking says "the plate does not allow activating the formation it has bound" instead of activating as usual — this is an explicit configuration, not a broken item.
 

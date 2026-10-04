@@ -15,7 +15,7 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 | --- | --- |
 | `data/example/mxt/medicinal_property/nourish.json` | 主药药性。 |
 | `data/example/mxt/medicinal_property/calm.json` | 辅药药性。 |
-| `data/example/mxt/quality/common.json` | 药材与炉型用的那一档品质；示例包里已经有就沿用。 |
+| `data/example/mxt/quality/common.json` | 炉型规格用的那一档品质；示例包里已经有就沿用。 |
 | `data/example/mxt/spirit_herb/herb_a.json` | 主药：每件 `nourish` 药力 3，性热。 |
 | `data/example/mxt/spirit_herb/herb_c.json` | 辅药：每件 `calm` 药力 3，性寒。 |
 | `data/example/mxt/spirit_herb/herb_d.json` | 药引：每件调和药力 1，性平。 |
@@ -40,7 +40,7 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 
 ## 第 2 步 —— 将已有物品声明为药材
 
-灵植不注册新物品，它给**已有物品**挂一份元数据：品质、药龄、寒热，以及它在三个角色里各提供多少药力。
+灵植不注册新物品，它给**已有物品**挂一份元数据：药龄、寒热，以及它在三个角色里各提供多少药力。**灵植定义自己没有档位字段**——它按物品认领，物品堆上没有"我是哪份定义"的组件，所以解析时没有可问的定义；要给这株草一个档，就把它写进数据表 [default_quality](../datapack/json/default_quality.md)。
 
 ```json
 // data/example/mxt/quality/common.json
@@ -53,7 +53,6 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 // data/example/mxt/spirit_herb/herb_a.json
 {
   "items": ["minecraft:red_mushroom"],
-  "quality": "example:common",
   "main_effects": { "example:nourish": "3 + herb_age / 50" },
   "thermal_bias": 1.0
 }
@@ -63,7 +62,6 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 // data/example/mxt/spirit_herb/herb_c.json
 {
   "items": ["minecraft:brown_mushroom"],
-  "quality": "example:common",
   "auxiliary_effects": { "example:calm": 3 },
   "thermal_bias": -1.0
 }
@@ -73,7 +71,6 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 // data/example/mxt/spirit_herb/herb_d.json
 {
   "items": ["minecraft:sugar"],
-  "quality": "example:common",
   "catalyst_power": "1 + herb_age / 100"
 }
 ```
@@ -109,11 +106,14 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 ```
 
 ```json
-// data/example/mxt/heat_source/magma.json
+// data/mxt/data_maps/block/heat_source.json
 {
-  "blocks": ["minecraft:magma_block"],
-  "max_temperature": 200,
-  "heating_per_tick": 4
+  "values": {
+    "minecraft:magma_block": {
+      "max_temperature": 200,
+      "heating_per_tick": 4
+    }
+  }
 }
 ```
 
@@ -121,7 +121,7 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 - `capacity` 是一炉材料的件数上限，还要服从物品自己的堆叠上限。
 - `cooling_per_tick` 是高于设定值、或停止供热之后每 tick 回落的量。供热格空着时炉温冷却到 `0`。
 - **耐温取整炉最低的那一块。** 18 块炉壁都有效时整炉耐温取它们的最低值，再和供热方块的 `max_temperature` 取较低者；混用高耐温炉壁不能把薄弱处平均掉。设定温度必须落在 `0` 到那个上限之间。
-- `heat_source` 给一类方块定下两个数：能提供的最高温度与每 tick 升温量。`blocks` 收方块 id 或方块标签，同一个方块被几条定义同时匹配时比 `priority`（高的赢）。这一份让**岩浆块**当热源；字段与仲裁规则见 [heat_source](../datapack/json/heat_source.md)。
+- `heat_source` 给一类方块定下两个数：能提供的最高温度与每 tick 升温量。这张表以方块 id 或 `#` 前缀的方块标签为键，同一个方块被多份值命中时比 `priority`（高的赢，同分后处理者赢）。这一份让**岩浆块**当热源；字段与仲裁规则见 [heat_source](../datapack/json/heat_source.md)。
 - 品质只决定显示与使用条件，不推导槽位、容量、冷却或耐温。
 
 ## 第 4 步 —— 搭建丹炉、放入供热方块、投入药材

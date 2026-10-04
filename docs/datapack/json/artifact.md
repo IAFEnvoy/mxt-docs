@@ -7,7 +7,7 @@ aside: false
 
 文件位置：`data/<namespace>/mxt/artifact/<path>.json`
 
-法器不是一种新物品，而是**已有物品的一套规则**：`items` 声明这份定义认领哪些物品（与六种绑定表、`spirit_herb` 完全同一套 `ItemMatcher`），匹配到的物品堆就是这件法器。它做什么由 `abilities` 逐条声明：**每条写一个 `mxt:ability` 注册表条目的 id，或一个技能标签**——技能本身永远只在 `data/<命名空间>/mxt/ability/` 里定义一处（见[技能 · 技能类型](./ability.md#ability-types)）。法器能力与技能是同一个概念，所以这里没有任何法器专属的技能类型。定义**没有**「器型」这类自由标签字段：**它自己的注册表 id 就是这件法器的名字**，要「把一族法器归到一起」就用物品标签（`items` 里的 `#标签`）或 id 的命名空间与路径来表达。
+法器不是一种新物品，而是**已有物品的一套规则**：`items` 声明这份定义认领哪些物品（与六种绑定表、`spirit_herb` 完全同一套 `ItemMatcher`），匹配到的物品堆就是这件法器。它做什么由 `abilities` 逐条声明：**每条写一个 `mxt:ability` 注册表条目的 id，或一个技能标签**——技能本身永远只在 `data/<命名空间>/mxt/ability/` 里定义一处（见[技能 · 技能类型](./ability.md#ability-types)）。法器能力与技能是同一个概念，所以这里没有任何法器专属的技能类型。定义**没有**「器型」这类自由标签字段：**它自己的注册表 id 就是这件法器的名字**，要「把一族法器归到一起」就用物品标签（`items` 里的 `#标签`）或 id 的命名空间与路径来表达。**定义里没有 `quality` 字段**：法器按**物品**认领（`items` 就是那套 `ItemMatcher`），堆上不装定义身份组件，没有可以问的对象，所以这族物品的档写在数据表 [default_quality](./default_quality.md) 里，按物品 id 或 `#标签` 给。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
@@ -15,7 +15,6 @@ aside: false
 | `description` | Text Component | `artifact.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `items` | 物品 id、`#标签` 或混合数组 | **必填** | 这份定义认领的物品：物品 id、`#标签` 或二者的混合数组，至少要匹配一件，见[匹配器](/datapack/types/shared_data_types#itemmatcher)。 |
 | `priority` | Int | `0` | 多份同类定义匹配同一件物品时的先后：数值大者先（见 [匹配器](/datapack/types/shared_data_types#itemmatcher)）；相同则按注册表顺序。它同时决定这件法器的长按手势在长按池里的先后（功法阅读与灌注都是 `0`）；同 `priority` 的两份定义还会被加载期报一条 problem。 |
-| `quality` | `quality` id | 无 | 被这份定义认领的物品**默认**是哪一档品质（见 [quality](./quality.md#resolution) 的解析顺序）。物品堆上写了 `mxt:quality` 组件时以组件为准；省略则这族物品没有默认档（要靠绑定表声明链条，或干脆没有品质）。 |
 | `spirit_capacity` | 灵气 id 到数值的映射 | `{}` | 每种灵气的存储上限。键必须是**具体灵气**（不接受标签）；空表表示这件法器不存灵气。求值时非有限按 0、向下取整；温养加成 `× (1 + 0.5 × nourishment)` **由管线乘上，公式里不要再乘一遍**。 |
 | `abilities` | 技能 id 列表，条目可以是 `#标签` | `[]` | 这件法器给持有者什么。**每条是一个 `mxt:ability` 注册表条目的 id，或一个技能标签 `#命名空间:路径`**（标签在授予时展开成它列出的每条技能，顺序即注册表顺序）；单写一条或写成数组都行。一份定义可被多件法器共用，同一条技能也可以出现在技能书、命令、战利品里——**被动还是主动由技能自己的 `type` 决定**，法器不声明这件事。同名技能写两遍（直接写 + 经标签）会去重。见[技能 · 技能类型](./ability.md#ability-types)。 |
 | `curios_equipable` | bool | `false` | 这类法器是否允许放进 Curios 槽位。腰带槽在「武器与灵宝」模式下接收匹配 `weapon_binding` 的物品，或声明了 `true` 的法器；四个 `charm` 槽位**只**收声明 `true` 的法器（`curios:charm` 物品标签仍可放别的东西）。 |

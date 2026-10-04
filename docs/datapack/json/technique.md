@@ -1,6 +1,6 @@
 ---
 title: technique（功法）
-description: 定义一门可以学会的功法：品阶、学习条件、被动属性、授予的能力与进度链。
+description: 定义一门可以学会的功法：学习条件、被动属性、授予的能力与进度链。
 aside: false
 ---
 
@@ -14,7 +14,7 @@ aside: false
 | --- | --- | --- | --- |
 | `name` | Text Component | `technique.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
 | `description` | Text Component | `technique.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
-| `quality` | 品质 id | 无 | 这门功法自己的品阶，一个 [quality](./quality.md) 条目。 |
+| `quality` | 品质 id | 无 | 可选。这门功法自己的品阶：携带这份定义的功法书读到的就是它。 |
 | `icon` | 图标引用 | 无 | 功法在界面（如功法面板）中显示的图标。 |
 | `learn_condition` | `EntityCondition` | `mxt:always` | 学习条件。 |
 | `exclusive_tags` | Identifier 数组 | `[]` | 功法互斥标签。 |
@@ -35,7 +35,7 @@ aside: false
 
 这三个字段功法与生物档案共用，没有灵宠专用的条目字段。`action` 在进入那一级时跑一次：自然晋升与管理员的等级写入都算进入，它**先**跑、`mxt:progression_level` 信号**后**发，所以反应方看到的是已经变过的身体；写数组就是按顺序执行。
 
-`quality` 管两件事：功法面板行首是「功法名 + 等级」，名称按品阶的 `color` 上色，悬浮提示的「品阶」读它的名字与颜色；同时它是这门功法**载体物品的默认档**，物品上写了 `mxt:quality` 组件时以组件为准。省略 `quality` 就不显示品阶，也不给载体默认档。
+`quality` 引用 `mxt:quality` 里的一档，可以省略。所有功法共用一件载体物品 `mxt:cultivation_jade_slip`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出：携带这份定义的功法书按它读档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
 
 `passive_modifiers` 用原版 AttributeModifier，`value` 为可选的动态公式。
 

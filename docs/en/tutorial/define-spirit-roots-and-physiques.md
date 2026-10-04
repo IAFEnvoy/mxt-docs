@@ -30,7 +30,7 @@ A spirit root can also be referred to by tags, with the tag file at `data/<names
   ],
   "cultivation_multiplier": 1.25,
   "element_ability_modifier": 1.1,
-  "rarity": "uncommon",
+  "quality": "example:refined",
   "granted_abilities": ["example:spark"]
 }
 ```
@@ -45,7 +45,7 @@ The remaining fields are optional:
 | --- | --- | --- |
 | `cultivation_multiplier` | `1` | Cultivation multiplier, a number or a formula string, finite and non-negative. |
 | `element_ability_modifier` | `1` | Scales abilities whose element matches this root, a number or a formula string, finite and non-negative. |
-| `rarity` | `common` | Free text, not a reference. The display looks for the `mxt.rarity.<value>` translation first and falls back to the raw text. |
+| `quality` | none | The id of one quality entry, optional. Writing it makes that tier this root's tier. |
 | `granted_abilities` | `[]` | Array of ability ids or `#ability tags`. |
 | `conflicting_elements` | `[]` | Array of element ids or `#element tags`; tested element by element, both ways, against the other roots **in effect**, and a conflict refuses the grant. |
 
@@ -64,7 +64,7 @@ The remaining fields are optional:
   "granted_abilities": ["example:qi_recovery"],
   "exclusive_tags": ["example:body"],
   "allow_stacking": false,
-  "rarity": "uncommon",
+  "quality": "example:refined",
   "damage_dealt_multiplier": 1.2,
   "damage_taken_multiplier": 1.0
 }
@@ -77,7 +77,7 @@ The remaining fields are optional:
 | `holder_condition` | `mxt:always` | An entity condition. **Checked once before granting and never again**: if it stops holding later, the physique that was already handed out stays. |
 | `exclusive_tags` | `[]` | A free identifier array, not registry references. On a grant it is intersected with the same tags of the physiques **already held, switched-off ones included**; a non-empty result refuses the grant. |
 | `allow_stacking` | `false` | While false, the same physique cannot be granted twice. |
-| `rarity` | `common` | Free text, exactly as on a spirit root. |
+| `quality` | none | The id of one quality entry, optional, exactly as on a spirit root. |
 | `damage_dealt_multiplier` | `1` | The damage multiplier on the **attacker's** side, a number or a formula string. |
 | `damage_taken_multiplier` | `1` | The damage multiplier on the **target's** side, a number or a formula string. |
 
@@ -132,13 +132,13 @@ Like every other data pack registry, these two are read and validated while the 
 ```text
 (load the world again)
 /mxt registries list          → the entry count of each of the two tables
-/mxt spirit_root list         → name, rarity, elements and whether each is in effect
-/mxt physique list            → name, rarity and whether each is in effect
+/mxt spirit_root list         → name, quality, elements and whether each is in effect
+/mxt physique list            → name, quality and whether each is in effect
 /mxt attachment status        → how many are held
 ```
 
 - `/mxt registries validate` **does not check** these two tables. It covers realm chains, trigger rules, progression chains, quality ladders and artifact ownership, so do not use it as a validator for spirit roots or physiques; use `/mxt registries list` for the counts.
-- `/mxt spirit_root list` and `/mxt physique list` read the records on the body, so a switched-off entry is still listed — the "in effect" column is what tells them apart.
+- `/mxt spirit_root list` and `/mxt physique list` read the records on the body, so a switched-off entry is still listed — the "in effect" column is what tells them apart. The quality column reads the `quality` a definition declares and prints `-` when it declares none; the info panel draws that row as "definition name · quality name" and leaves the second half out entirely when no quality is declared.
 
 Then walk it through in game:
 
@@ -148,7 +148,7 @@ Then walk it through in game:
 4. Remove it, and it is gone from `list`.
 5. Take a **component-carrying** physique item with `/picker mxt:physique` and right-click it: without `example:fire_root` on the body it is refused by `holder_condition` just the same, leaving the item in hand with its reason; once the condition holds, one item is spent and the physique shows up in `/mxt physique list`.
 
-The test pack ships a probe, `/mxt_test identity`, which asserts held / in effect / switched off / removed, that rarity is treated as free text, that unknown fields are ignored and that a negative multiplier is refused.
+The test pack ships a probe, `/mxt_test identity`, which asserts held / in effect / switched off / removed, that `quality` reads back as the entry it names, that unknown fields are ignored and that a negative multiplier is refused.
 
 ## Common Mistakes
 

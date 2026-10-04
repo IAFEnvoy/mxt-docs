@@ -179,6 +179,27 @@ export const sections = [
             ]
           },
           {
+            // Data maps are not datapack registries either: NeoForge loads them from
+            // `data/mxt/data_maps/<registry>/<map>.json`, their keys are entry ids or tags, and a
+            // value carries no id, no name and cannot be referenced. Like the recipes above they
+            // get a group of their own, so the registry overview lists exactly the registries.
+            // `alpha` reads the group A→Z by table name, so a new table only has to be added
+            // anywhere in this list (the list below is already in that order for the reader).
+            text: { zh: '数据表', en: 'Data Maps' },
+            alpha: true,
+            items: [
+              { page: 'datapack/json/block_aura', zh: 'block_aura（方块灵气）', en: 'block_aura' },
+              { page: 'datapack/json/blueprint_binding', zh: 'blueprint_binding（图纸绑定）', en: 'blueprint_binding' },
+              { page: 'datapack/json/currency', zh: 'currency（货币）', en: 'currency' },
+              { page: 'datapack/json/default_quality', zh: 'default_quality（默认品质）', en: 'default_quality' },
+              { page: 'datapack/json/heat_source', zh: 'heat_source（供热方块）', en: 'heat_source' },
+              { page: 'datapack/json/item_aura', zh: 'item_aura（物品灵气）', en: 'item_aura' },
+              { page: 'datapack/json/item_binding', zh: 'item_binding（物品绑定）', en: 'item_binding' },
+              { page: 'datapack/json/tool_binding', zh: 'tool_binding（工具绑定）', en: 'tool_binding' },
+              { page: 'datapack/json/weapon_binding', zh: 'weapon_binding（武器绑定）', en: 'weapon_binding' }
+            ]
+          },
+          {
             page: 'datapack/json/ability',
             zh: 'ability（技能）',
             en: 'ability',
@@ -193,7 +214,6 @@ export const sections = [
           },
           { page: 'datapack/json/alchemy_furnace', zh: 'alchemy_furnace（炉型）', en: 'alchemy_furnace' },
           { page: 'datapack/json/alchemy_wall_material', zh: 'alchemy_wall_material（炉壁材料）', en: 'alchemy_wall_material' },
-          { page: 'datapack/json/heat_source', zh: 'heat_source（供热方块）', en: 'heat_source' },
           { page: 'datapack/json/artifact', zh: 'artifact（法器）', en: 'artifact' },
           { page: 'datapack/json/aura', zh: 'aura（灵气）', en: 'aura' },
           {
@@ -204,12 +224,9 @@ export const sections = [
               { page: 'datapack/types/other/aura-maximum', zh: 'aura_maximum_type（环境上限）', en: 'Aura Maximum (aura_maximum_type)' }
             ]
           },
-          { page: 'datapack/json/block_aura', zh: 'block_aura（方块灵气）', en: 'block_aura' },
-          { page: 'datapack/json/blueprint_binding', zh: 'blueprint_binding（图纸绑定）', en: 'blueprint_binding' },
           { page: 'datapack/json/contract_type', zh: 'contract_type（契约类型）', en: 'contract_type' },
           { page: 'datapack/json/creature_profile', zh: 'creature_profile（生物档案）', en: 'creature_profile' },
           { page: 'datapack/json/cultivation', zh: 'cultivation（修炼方式）', en: 'cultivation' },
-          { page: 'datapack/json/currency', zh: 'currency（货币）', en: 'currency' },
           {
             page: 'datapack/json/curse',
             zh: 'curse（诅咒）',
@@ -230,8 +247,6 @@ export const sections = [
               { page: 'datapack/types/other/formation-action', zh: 'formation_action_type（阵法功能）', en: 'Formation Actions (formation_action_type)' }
             ]
           },
-          { page: 'datapack/json/item_aura', zh: 'item_aura（物品灵气）', en: 'item_aura' },
-          { page: 'datapack/json/item_binding', zh: 'item_binding（物品绑定）', en: 'item_binding' },
           { page: 'datapack/json/medicinal_property', zh: 'medicinal_property（药性）', en: 'medicinal_property' },
           { page: 'datapack/json/physique', zh: 'physique（体质）', en: 'physique' },
           { page: 'datapack/json/pill', zh: 'pill（丹药）', en: 'pill' },
@@ -263,7 +278,6 @@ export const sections = [
           { page: 'datapack/json/talisman', zh: 'talisman（符箓）', en: 'talisman' },
           { page: 'datapack/json/technique', zh: 'technique（功法）', en: 'technique' },
           { page: 'datapack/json/technique_binding', zh: 'technique_binding（功法绑定）', en: 'technique_binding' },
-          { page: 'datapack/json/tool_binding', zh: 'tool_binding（工具绑定）', en: 'tool_binding' },
           {
             page: 'datapack/json/tribulation',
             zh: 'tribulation（天劫）',
@@ -280,7 +294,6 @@ export const sections = [
               { page: 'datapack/types/other/trigger-type', zh: 'trigger_type（触发器）', en: 'Triggers (trigger_type)' }
             ]
           },
-          { page: 'datapack/json/weapon_binding', zh: 'weapon_binding（武器绑定）', en: 'weapon_binding' }
         ]
       }
     ]

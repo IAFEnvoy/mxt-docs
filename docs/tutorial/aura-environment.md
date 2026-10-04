@@ -27,8 +27,8 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 | 文件 | 用途 |
 | --- | --- |
 | `data/example/mxt/aura_zone/misty_valley.json` | 森林级别的稠密区域：浓度、噪声、波动，以及客户端看到的样子。 |
-| `data/example/mxt/block_aura/spirit_stone_ore.json` | 让方块给它所在的区块补容量。 |
-| `data/example/mxt/item_aura/spirit_stone.json` | 让物品在修炼时被消耗、换成灵气。 |
+| `data/mxt/data_maps/block/block_aura.json` | 让方块给它所在的区块补容量。 |
+| `data/mxt/data_maps/item/item_aura.json` | 让物品在修炼时被消耗、换成灵气。 |
 | `kubejs/server_scripts/mxt_areas.js` | 运行时创建与移除人工区域，并读某一处解析后的灵气。 |
 
 ## 第 1 步 —— 更稠密的群系区域
@@ -113,16 +113,22 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 灵石矿脉理应比它所在的地面更有价值。
 
 ```json
-// data/example/mxt/block_aura/spirit_stone_ore.json
+// data/mxt/data_maps/block/block_aura.json
 {
-  "blocks": ["mxt:spirit_stone_ore", "mxt:spirit_stone_block"],
-  "aura": {
-    "example:qi": {"amount": 5.0, "max": 5.0, "regen_per_tick": 0.01}
+  "values": {
+    "mxt:spirit_stone_ore": {
+      "example:qi": {"amount": 5.0, "max": 5.0, "regen_per_tick": 0.01}
+    },
+    "mxt:spirit_stone_block": {
+      "example:qi": {"amount": 2.0, "max": 2.0, "regen_per_tick": 0.01}
+    }
   }
 }
 ```
 
-- `blocks` 必填，接受方块 ID 和方块标签；区块内每个匹配的方块贡献一次。`aura` 是逐灵气的贡献量，把灵气 ID 映射到 `amount`，因此不需要额外的种类标记。
+- 数据表**以方块为键**：`values` 的键就是方块 id 或 `#方块标签`（标签在加载期展开），区块内每个匹配的方块贡献一次；值本身就是那张逐灵气的表，把灵气 ID 映射到 `amount`，因此不需要额外的种类标记——这里**没有** `blocks` 字段，键就是方块。
+- 文件固定放在 `data/mxt/data_maps/block/block_aura.json`：第一段命名空间是**表自己的** `mxt`，不是内容包的命名空间——内容包要加值，是往同一个目录里再放一个文件。
+- 它也是数据表合并规则里**唯一**的例外：同一个方块被多份值命中时（另一个包也写了它，或一份给标签、另一份给具体方块），两份值**相加**，**不看 `priority`**。别的数据表才是"数值大者胜、同分则后处理的那个赢"。
 - 这份贡献**不占用**环境上限：它把区块的有效容量提高相同的数量。环境上限为 `30`、矿石贡献 `30` 点时，该区块的有效上限就是 `60`。
 - 查询会看 7x7x7 的子区块范围：内部 3x3x3 使用方块的真实位置，外围一环用子区块中心近似，全部按 `1 / max(1, 距离平方)` 衰减。
 - 缓存在区块加载、方块变化和数据表加载时重建，周期由服务端配置「灵气 → 方块灵气周期」控制（默认 `10` tick，范围 `1..1200`）。
@@ -140,21 +146,32 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 
 ## 第 3 步 —— 来自物品的灵气
 
-`item_aura` 把物品变成修炼燃料：玩家修炼时，整组物品逐 tick 被抽取，其灵气释放到当前境界的资源条里。
+`item_aura` 是一张**数据表**（Data Map），它把物品变成修炼燃料：玩家修炼时，整组物品逐 tick 被抽取，其灵气释放到当前境界的资源条里。
 
 ```json
-// data/example/mxt/item_aura/spirit_stone.json
+// data/mxt/data_maps/item/item_aura.json
 {
-  "items": ["mxt:spirit_stone", "#example:spirit_fuel"],
-  "type": "example:qi",
-  "aura": 100,
-  "consume_speed": "0.5 + caster_level * 0.05",
-  "release_speed": 2,
-  "exhausted_action": {"type": "mxt:no_op"}
+  "values": {
+    "mxt:spirit_stone": {
+      "type": "example:qi",
+      "aura": 100,
+      "consume_speed": "0.5 + caster_level * 0.05",
+      "release_speed": 2,
+      "exhausted_action": {"type": "mxt:no_op"}
+    },
+    "#example:spirit_fuel": {
+      "type": "example:qi",
+      "aura": 50,
+      "consume_speed": "0.5",
+      "release_speed": 1
+    }
+  }
 }
 ```
 
-- `items` 是常规的物品匹配器，所以一个文件就能覆盖整个燃料物品标签。它必填，`type`、`aura`、`consume_speed` 和 `release_speed` 也必填；`result_stack` 与 `exhausted_action` 可选。
+- 数据表**以物品为键**：`values` 的键就是物品 id 或 `#物品标签`（标签在加载期展开），所以一份文件就能覆盖整个燃料物品标签；值里写这张表的字段。每个值里 `type`、`aura`、`consume_speed` 和 `release_speed` 必填，`result_stack` 与 `exhausted_action` 可选。
+- 文件固定放在 `data/mxt/data_maps/item/item_aura.json`：第一段命名空间是**表自己的** `mxt`，不是内容包的命名空间——内容包要加值，是往同一个目录里再放一个文件。
+- 同一件物品被多份值命中时（另一个包也写了它，或一份给标签、另一份给具体物品），值里的 `priority` 数值大者胜，**同分则后处理的那个赢**（同一文件按书写顺序、不同文件按数据包加载顺序）。
 - `type` 是该物品携带的**灵气**——`mxt:aura` 条目，而不是元素。释放的灵气用什么数值计量，由那条灵气自己的 `resource` 决定，它的元素则是那条灵气的 `aura_type`。
 - `aura` 是每件物品的总量，处理开始时写入物品堆上服务端的 `mxt:item_aura` 组件（`remain` 字段）；整组物品在处理期间进入 `mxt:float_holding_item` 附件。对实现 `ItemAuraAccess` 的物品，它则是每件物品的充能上限。
 - 每个 tick 都用当时匹配到的定义从剩余灵气里扣除 `consume_speed × 堆叠数量`，并向境界资源条充入 `release_speed × 堆叠数量`。拿得越多抽得越快，但持续的总 tick 数不变。
@@ -240,7 +257,7 @@ MxtEvents.auraZone(event => {
 
 ## 在游戏里验证
 
-重新加载世界——这些是数据包注册表，`/reload` 不会读取它们——然后运行：
+重新加载世界——这些是数据包注册表与数据表，`/reload` 不会读取它们——然后运行：
 
 ```text
 （重新打开世界）

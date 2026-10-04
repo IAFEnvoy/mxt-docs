@@ -7,49 +7,56 @@ aside: false
 
 ## 文件位置
 
-`data/<namespace>/mxt/item_binding/<path>.json`
+`item_binding` 是一张**物品数据表**（NeoForge Registry Data Map），不是注册表，文件固定放在：
+
+```text
+data/mxt/data_maps/item/item_binding.json
+```
+
+**第一段命名空间必须是表自己的 `mxt`，不是内容包自己的**：内容包要加值，是往 `data/mxt/data_maps/item/` 里再放一个文件。放错命名空间只会在日志里留一条 `Found data map file for non-existent data map type`。
 
 **用途**：现有物品到行为数组的绑定。这张表不创建物品，只认领物品。
 
-文件名就是 id：`data/example/mxt/item_binding/root_pellet.json` 的 id 是 `example:root_pellet`。
+`values` 的键就是**物品 id 或 `#物品标签`**（标签在加载期展开成它当时的每个物品），值是下面字段表描述的那个对象。文件级的 `replace` / `remove`，以及值级的 `{"value": …, "replace": true}` 与**值级** `neoforge:conditions`，见[数据表](../overview.md#数据表data-map)。
 
 ## 字段
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `items` | 物品 id、`#标签` 或混合数组 | **必填** | 这份定义认领哪些物品，见[匹配器](/datapack/types/shared_data_types#itemmatcher)。 |
-| `priority` | Int | `0` | 多条定义匹配同一件物品时数值大者先；相同则按注册表顺序。 |
+| `priority` | Int | `0` | 同一件物品被多份值命中时数值大者先；**同分后处理者赢**（同一文件里按书写顺序，不同文件按数据包加载顺序）。 |
 | `actions` | `EntityAction[]` | `[]` | 物品使用周期走完时按顺序执行的行为。 |
 | `conditions` | `EntityCondition[]` | `[]` | 使用门槛；每一项都必须满足。 |
 | `element` | 元素 id、`#标签` 或混合数组 | `[]` | 这件物品**是什么元素**，读取口径见下方。 |
 
 ## 用法
 
-**绑定表只匹配已经注册的物品，不负责创建物品。** 功法手册不由这张表承接：那一叠算不算手册看堆上的 `mxt:technique` 组件，或者看 [technique_binding](./technique_binding.md) 那条可选的 `items`。`weapon_binding` 与 `pill_binding` 的字段和它互不混用。武器的属性、攻击 / 使用 / tick 行为写在 `weapon_binding` 里。
+**数据表只匹配已经注册的物品，不负责创建物品。** 功法手册不由这张表承接：那一叠算不算手册看堆上的 `mxt:technique` 组件，或者看 [technique_binding](./technique_binding.md) 那条可选的 `items`。`weapon_binding` 与 `pill_binding` 的字段和它互不混用。武器的属性、攻击 / 使用 / tick 行为写在 `weapon_binding` 里。
 
 ::: warning
 `actions` **不绑右键**。它只在物品的**使用周期走完**那一拍执行，也就是吃完一份食物那种时刻。一件右键不会举起来使用的物品永远走不到这里，行为一个也不跑。
 :::
 
-`items` 是共用匹配器：写物品 id、`#标签` 或混合数组都行，只写一个条目也可以，不必包成数组。数组里每一项还能写成带 `type` 的匹配条目（`mxt:item`、`mxt:tag`、`mxt:wildcard`、`mxt:regex`、`mxt:technique`、`mxt:spirit_storage` 与 `mxt:herb_tag`）。匹配器只引用已经注册的物品。
+`values` 的键只有两种写法：物品 id，或 `#物品标签`——标签在加载期展开成它当时的每个物品，所以一条值可以覆盖一整族物品。这张表**没有 `items` 字段**，也**不收** `mxt:wildcard` / `mxt:regex` / `mxt:technique` / `mxt:spirit_storage` / `mxt:herb_tag` 这类带 `type` 的匹配器条目；那些仍属于有 `items` 字段的注册表（`artifact`、`pill_binding`、`spirit_herb`、`technique_binding`）。
 
-**加载期的两种结局不一样。** 数组是容错列表：解不开的条目丢它自己，日志里留一条 `Ignoring invalid list element`，同一数组里其余条目照常生效——物品 id 打错只会让那一条不命中。**只写一个条目时不走这条路**，那个条目解不开会让整份定义加载失败。空数组能通过加载，只是这份定义谁都匹配不上。
+`priority` 是唯一的“谁赢”规则。同一件物品被多份值命中时，按值里的 `priority` **从高到低**选一份，字段默认 `0`；**同分则后处理的那个赢**——同一文件里按书写顺序，不同文件按数据包加载顺序，不回落注册表顺序，所以“谁赢”由数据包自己写死、与文件名无关。**这与键写成物品还是标签无关**：一条值只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。仍是注册表的四张认领表（`artifact`、`pill_binding`、`spirit_herb`、`technique_binding`）也接受这个字段，它们同分时回落到注册表顺序。
 
-`priority` 是唯一的“谁赢”规则。多份定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选一条，字段默认 `0`；只有数值相同的两条才回落到注册表顺序，所以“谁赢”由数据包自己写死、与文件名无关。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。接受这个字段的共十张表：`artifact`、`item` / `weapon` / `pill` / `tool` / `blueprint` / `technique` 六种 binding、`spirit_herb`、`item_aura`、`currency`（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。详见 [`ItemMatcher`](/datapack/types/shared_data_types#itemmatcher)。
-
-**逐件附加看组件，其余只由定义给。** 这张表认领的物品自己可以带两个组件：`mxt:quality`（单值，**整份品质对象**：组件写在那一堆上就以它为准，档位与这一档所属的链一起换）与 `mxt:element`（列表，与定义声明的 `element` **取并集**）。`actions` 与 `conditions` **没有组件**，只由定义给。逐件想改就为那一堆写一条定义、用 `items` 点名，或者在物品注册时用 KubeJS / 原版组件处理。
+**逐件附加看组件，其余只由数据表给。** 这张表认领的物品自己可以带两个组件：`mxt:quality`（单值，**整份品质对象**：组件写在那一堆上就以它为准，档位与这一档所属的链一起换）与 `mxt:element`（列表，与数据表里写的 `element` **取并集**）。`actions` 与 `conditions` **没有组件**，只由数据表给。逐件想改就用那件物品自己的 id 写一条值，或者在物品注册时用 KubeJS / 原版组件处理。
 
 ```json
+// data/mxt/data_maps/item/item_binding.json
 {
-  "items": ["minecraft:iron_sword", "#minecraft:swords"],
-  "actions": [{"type": "mxt:grant_spirit_root", "spirit_root": "mxt:fire_root"}],
-  "conditions": [
-    {"type": "mxt:always"},
-    {
-      "condition": {"type": "mxt:realm", "realm": "example:foundation"},
-      "description": "condition.example.foundation_required"
+  "values": {
+    "#minecraft:swords": {
+      "actions": [{"type": "mxt:grant_spirit_root", "spirit_root": "mxt:fire_root"}],
+      "conditions": [
+        {"type": "mxt:always"},
+        {
+          "condition": {"type": "mxt:realm", "realm": "example:foundation"},
+          "description": "condition.example.foundation_required"
+        }
+      ]
     }
-  ]
+  }
 }
 ```
 
@@ -61,17 +68,20 @@ aside: false
 
 ```json
 {
-  "items": "kubejs:root_switching_pill",
-  "conditions": [
-    {
-      "condition": {"type": "mxt:has_spirit_root", "spirit_root": "mxt:fire_root"},
-      "description": "condition.example.requires_fire_root"
+  "values": {
+    "kubejs:root_switching_pill": {
+      "conditions": [
+        {
+          "condition": {"type": "mxt:has_spirit_root", "spirit_root": "mxt:fire_root"},
+          "description": "condition.example.requires_fire_root"
+        }
+      ],
+      "actions": [
+        {"type": "mxt:remove_spirit_root", "spirit_root": "mxt:fire_root"},
+        {"type": "mxt:grant_spirit_root", "spirit_root": "mxt:water_root"}
+      ]
     }
-  ],
-  "actions": [
-    {"type": "mxt:remove_spirit_root", "spirit_root": "mxt:fire_root"},
-    {"type": "mxt:grant_spirit_root", "spirit_root": "mxt:water_root"}
-  ]
+  }
 }
 ```
 
@@ -79,7 +89,7 @@ aside: false
 
 **物品的元素**只有一条读取口径，按顺序问两件事：
 
-1. **声明**：堆上的 `mxt:element` 组件，加上 `weapon_binding`、这张表与 [artifact](./artifact.md) 里哪个认领了这堆物品、它写没写 `element`。每个注册表各取 `priority` 最大的那条匹配定义，全部结果**取并集**；每条声明都经元素注册表展开，所以 `#标签` 代表标签下的每个元素。
+1. **声明**：堆上的 `mxt:element` 组件，加上 `weapon_binding`、这张表与 [artifact](./artifact.md) 里谁给这堆物品写了值或认领了它、它写没写 `element`。每个表各取 `priority` 最大的那条，全部结果**取并集**；每条声明都经元素注册表展开，所以 `#标签` 代表标签下的每个元素。
 2. **物品携带的灵气**：一个都没声明时才走这条——`mxt:spirit_storage` 里那**唯一**一种灵气，或者（存量为空、或存了多种时）它的 `mxt:item_aura` 定义声明的灵气，取该灵气的 `aura_type`。法器的 `spirit_capacity` **不算**：那说的是“能装什么”，不是“是什么”。
 
 完整口径见 [weapon_binding](./weapon_binding.md)。物品条件 `mxt:item_element` 读的就是这条口径。

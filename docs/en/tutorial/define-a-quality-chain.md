@@ -99,12 +99,13 @@ A stack takes the **first tier it can get**, in this order:
 
 | Way | How to write it |
 | --- | --- |
-| The `mxt:quality` component on the stack | `/give @s kubejs:qi_pill[mxt:quality="example:common"]` |
-| A forging result | The tier the forging itself settled on. |
-| A definition's own default | Asked in order: an artifact, the inscriptions on a talisman carrier, a technique, a furnace. |
-| A matching spirit herb definition | The `quality` a `spirit_herb` declares; this pill never reaches that slot, but it is the last one. |
+| The `mxt:quality` component on the stack | `/give @s kubejs:qi_pill[mxt:quality="example:common"]`; `/quality set`, a successful upgrade, a Forge Table settlement and a talisman inscription write this one too. |
+| The `quality` the definition the stack carries declares | Whichever component on that item names a definition identity, read for the tier that definition writes itself. |
+| The [default_quality](../datapack/json/default_quality.md) data map | Whichever tier the item is given there; a bare creative or `/give` item and the by-item `artifact` / `spirit_herb` definitions take this route. |
 
-The component holds a **whole quality object**, so it decides both the tier and the ladder it belongs to: `example:common` puts that pill on `example:pill`. Binding tables declare no quality, so do not write a ladder into a binding. When none of the four answers, the pill simply **has no quality** and no ladder's entry tier is supplied for it.
+Layer 2 answers for "several definitions of a type share one built-in item, so the item cannot say which tier applies": every technique manual defaults to `mxt:cultivation_jade_slip` (a `technique_binding` may name another `carrier_item`), every pill is `mxt:pill`, every furnace specification is the block item `mxt:alchemy_furnace`, the spirit-root stone is `mxt:spirit_root` and the physique stone is `mxt:physique`. The nine definitions declaring `quality` are `technique`, `alchemy_furnace`, `alchemy_wall_material`, `spirit_root`, `physique`, `pill`, `formation`, `secret_realm` and `contract_type`.
+
+The component holds a **whole quality object**, so it decides both the tier and the ladder it belongs to: `example:common` puts that pill on `example:pill`. Binding tables declare no quality, so do not write a ladder into a binding. The forging record `mxt:forging_result` keeps only the blueprint id and the step counts and **never a tier**. This pill is an ordinary KubeJS-registered item with no component on it that names a definition, so only layers 1 and 3 can answer for it. When none of the three layers answers, the pill simply **has no quality** and no ladder's entry tier is supplied for it.
 
 | Command | What it does |
 | --- | --- |
@@ -136,7 +137,7 @@ Quality is a data pack registry, read once when the world loads, and `/reload` d
 2. `/give @s kubejs:qi_pill[mxt:quality="example:common"]`, then `/quality get`: it shows `common`.
 3. `/quality chain example:common`: the name is `example:pill` and all three tiers sit on that one line in order.
 4. Holding the pill, run `/quality upgrade @s`: with 20 `example:qi` on you it goes up to `refined`, `/quality get` follows, and the tooltip gains the `value_multiplier` description line; with fewer than 20 it reports that the cost cannot be paid and the tier does not move.
-5. `/quality set @s example:flawless` overrides the tier to the top one, and `/quality clear @s` removes the component again. The pill declares no default tier, so after the clear `/quality get` reports that it currently has no quality.
+5. `/quality set @s example:flawless` overrides the tier to the top one, and `/quality clear @s` removes the component again. The pill has no entry in `default_quality` and carries no component naming a definition, so after the clear `/quality get` reports that it currently has no quality.
 6. Delete `refined`'s `upgrade_costs`, open the world again and upgrade once more: that step costs nothing.
 
 ## Common Mistakes

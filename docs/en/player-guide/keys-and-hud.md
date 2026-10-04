@@ -125,12 +125,12 @@ The technique page (`screen.mxt.technique_panel`) is the second page of the char
 | Row part | Shows |
 |---|---|
 | Icon | The technique's icon, inside a slot frame. A technique that defines no `icon` leaves the frame empty. |
-| Name | The technique's own name, drawn in the colour of the grade it declares (`quality`); a technique that declares none uses the normal text colour. A name too long for the line is cut with an ellipsis, while the level beside it is never cut for the name's sake. |
+| Name | The technique's own name, in the ordinary text colour (**a technique no longer has a grade of its own**, so there is no tier colour to draw it in). A name too long for the line is cut with an ellipsis, while the level beside it is never cut for the name's sake. |
 | Level | The name of the level you stand on, plus your rank in that chain, as `Level <name> (<rank>/<total>)`. A level whose data pack defines no display name falls back to the rank number. |
 | Mastery | Your mastery against what the next level asks for, as `<current> / <required>`, or `Mastered` at the top of a chain. |
 | Progress bar | How far along that requirement you are, tinted with the mastery resource's particle colour. |
 
-Hovering a row shows the technique's full name, the level's ID and the technique's grade as `Grade: <name>`, or `Grade: -` when the technique declares no `quality` at all. A grade is no longer free-form text: it is the [quality](../datapack/json/quality.md) entry the technique names, so its name **and** its colour come from that one definition and the panel simply reads them. A technique that defines no progression chain is listed with `Level -` and no progress; a technique with a chain but no `mastery_resource` shows `No mastery`.
+Hovering a row shows the technique's full name and the level's ID; **there is no "Grade" line any more**, because a technique no longer declares a tier of its own. A technique that defines no progression chain is listed with `Level -` and no progress; a technique with a chain but no `mastery_resource` shows `No mastery`.
 
 Two things decide what the bar measures, and the client setting **Client Settings → Techniques → Progress Display** switches between them:
 

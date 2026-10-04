@@ -27,8 +27,8 @@ Cultivation progress and the aura a player gains are multiplied by the concentra
 | File | Purpose |
 | --- | --- |
 | `data/example/mxt/aura_zone/misty_valley.json` | A forest-level dense zone: concentration, noise, fluctuation and how it looks on the client. |
-| `data/example/mxt/block_aura/spirit_stone_ore.json` | Lets a block add capacity to the chunk it sits in. |
-| `data/example/mxt/item_aura/spirit_stone.json` | Lets an item be spent while cultivating and turn into aura. |
+| `data/mxt/data_maps/block/block_aura.json` | Lets a block add capacity to the chunk it sits in. |
+| `data/mxt/data_maps/item/item_aura.json` | Lets an item be spent while cultivating and turn into aura. |
 | `kubejs/server_scripts/mxt_areas.js` | Creates and removes artificial areas at runtime, and reads the resolved aura at a position. |
 
 ## Step 1 — A Denser Biome Zone
@@ -113,16 +113,22 @@ The `rules` object adds environment policy:
 A spirit stone vein should be worth more than the ground it sits in.
 
 ```json
-// data/example/mxt/block_aura/spirit_stone_ore.json
+// data/mxt/data_maps/block/block_aura.json
 {
-  "blocks": ["mxt:spirit_stone_ore", "mxt:spirit_stone_block"],
-  "aura": {
-    "example:qi": {"amount": 5.0, "max": 5.0, "regen_per_tick": 0.01}
+  "values": {
+    "mxt:spirit_stone_ore": {
+      "example:qi": {"amount": 5.0, "max": 5.0, "regen_per_tick": 0.01}
+    },
+    "mxt:spirit_stone_block": {
+      "example:qi": {"amount": 2.0, "max": 2.0, "regen_per_tick": 0.01}
+    }
   }
 }
 ```
 
-- `blocks` is required and takes block IDs and block tags; every matching block in a chunk contributes once. `aura` is the per-aura contribution and maps an aura ID to an `amount`, so it needs no separate kind marker.
+- The data map is **keyed by the block**: the keys of `values` are block ids or block tags (tags expand at load time), and every matching block in a chunk contributes once; the value is itself the per-aura table, mapping an aura ID to an `amount`, so it needs no separate kind marker — there is **no** `blocks` field here, the key is the block.
+- The file always lives at `data/mxt/data_maps/block/block_aura.json`: the first namespace is **the table's own** `mxt`, not the content pack's — a content pack adds values by dropping another file into that same directory.
+- It is also the **only** exception to the data map merge rule: when several values hit one block (another pack wrote it too, or one file gives a tag and another the concrete block), the two values are **added together** and `priority` is not consulted. Every other data map is "highest wins, and a tie goes to whichever was processed later".
 - The contribution does **not** consume the environment maximum: it raises the chunk's effective capacity by the same amount. An environment maximum of `30` with `30` points of ore becomes `60`.
 - Queries look at a 7x7x7 range of sub-chunks: the inner 3x3x3 uses real block positions, the outer ring approximates with sub-chunk centres, and all of it decays by `1 / max(1, distance²)`.
 - The cache is rebuilt when a chunk loads, when a block changes and when the data tables are loaded, and the interval is **Server Config → Aura → Block Aura Period** (default `10` ticks, `1..1200`).
@@ -140,21 +146,32 @@ With `amount: 0`, most chunks sit at `0` after the `/ 10 - 5` transform, and onl
 
 ## Step 3 — Aura From Items
 
-`item_aura` turns an item into cultivation fuel: while the player cultivates, the stack is drained tick by tick and its aura is released into the resource bar of the current realm.
+`item_aura` is a **data map**, and it turns an item into cultivation fuel: while the player cultivates, the stack is drained tick by tick and its aura is released into the resource bar of the current realm.
 
 ```json
-// data/example/mxt/item_aura/spirit_stone.json
+// data/mxt/data_maps/item/item_aura.json
 {
-  "items": ["mxt:spirit_stone", "#example:spirit_fuel"],
-  "type": "example:qi",
-  "aura": 100,
-  "consume_speed": "0.5 + caster_level * 0.05",
-  "release_speed": 2,
-  "exhausted_action": {"type": "mxt:no_op"}
+  "values": {
+    "mxt:spirit_stone": {
+      "type": "example:qi",
+      "aura": 100,
+      "consume_speed": "0.5 + caster_level * 0.05",
+      "release_speed": 2,
+      "exhausted_action": {"type": "mxt:no_op"}
+    },
+    "#example:spirit_fuel": {
+      "type": "example:qi",
+      "aura": 50,
+      "consume_speed": "0.5",
+      "release_speed": 1
+    }
+  }
 }
 ```
 
-- `items` is the usual item matcher, so one file can cover a whole tag of fuel items. It is required, as are `type`, `aura`, `consume_speed` and `release_speed`; `result_stack` and `exhausted_action` are optional.
+- The data map is **keyed by the item**: the keys of `values` are item ids or item tags (tags expand at load time), so one file can cover a whole tag of fuel items, and the value holds this table's fields. Inside a value, `type`, `aura`, `consume_speed` and `release_speed` are required, while `result_stack` and `exhausted_action` are optional.
+- The file always lives at `data/mxt/data_maps/item/item_aura.json`: the first namespace is **the table's own** `mxt`, not the content pack's — a content pack adds values by dropping another file into that same directory.
+- When several values hit one item (another pack wrote it too, or one file gives a tag and another the concrete item), the `priority` inside the value decides, highest wins, and **a tie goes to whichever was processed later** (writing order inside one file, data pack load order across files).
 - `type` is the **aura** this item carries — the `mxt:aura` entry, not an element. The value the released aura is counted in is that aura's own `resource`, and its element is that aura's `aura_type`.
 - `aura` is the total per item, written into a server-side `mxt:item_aura` component (`remain`) on the stack when processing starts; the whole stack moves into the `mxt:float_holding_item` attachment for the duration. For an item that implements `ItemAuraAccess` it is instead the per-item charge ceiling.
 - Each tick the definition matched at that moment subtracts `consume_speed × stack size` from the remaining aura and charges `release_speed × stack size` into the realm's resource bar. Holding more items drains faster but lasts the same number of ticks.
@@ -240,7 +257,7 @@ An active formation covers the area around its controller, so its `aura_zone` ov
 
 ## Verify
 
-Load the world again — these are data pack registries, so `/reload` does not pick them up — then run:
+Load the world again — these are data pack registries and data maps, so `/reload` does not pick them up — then run:
 
 ```text
 (load the world again)

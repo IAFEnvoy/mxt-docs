@@ -99,12 +99,13 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
 
 | 途径 | 怎么写 |
 | --- | --- |
-| 物品上的 `mxt:quality` 组件 | `/give @s kubejs:qi_pill[mxt:quality="example:common"]` |
-| 锻造结果 | 锻造自己结算出来的那一档。 |
-| 定义声明的默认档 | 按顺序查：法器、符箓载体上铭刻的符、功法、炉型。 |
-| 匹配到的灵植定义 | `spirit_herb` 声明的 `quality`；本篇这枚丹药走不到这一格，但它是最后一道。 |
+| 物品上的 `mxt:quality` 组件 | `/give @s kubejs:qi_pill[mxt:quality="example:common"]`；`/quality set`、一次成功的升级、锻造台结算与画符铭刻写的都是它。 |
+| 这一堆携带的定义声明的 `quality` | 物品上装着定义身份的那份组件，读的是那份定义自己写的档。 |
+| 数据表 [default_quality](../datapack/json/default_quality.md) | 物品在表里写了哪一档；裸的创造 / `/give` 物品与按物品认领的 `artifact` / `spirit_herb` 走的就是这一条。 |
 
-组件装的是**整份品质对象**，所以它同时决定档位与所属的链：写 `example:common` 就把这枚丹药放进了 `example:pill` 这条链。绑定表不声明品质，别在绑定里写品质链。四格都没有答案时这枚丹药就是**没有品质**，不会去补链的入口档。
+第 2 层答的是"一类定义共用一件内置物品、物品说不清是哪一档"的那批：功法书默认是 `mxt:cultivation_jade_slip`（`technique_binding` 的 `carrier_item` 可以换成别的）、所有丹药都是 `mxt:pill`、所有炉型规格都是方块物品 `mxt:alchemy_furnace`、灵根石是 `mxt:spirit_root`、体质石是 `mxt:physique`。声明 `quality` 的九个定义是 `technique`、`alchemy_furnace`、`alchemy_wall_material`、`spirit_root`、`physique`、`pill`、`formation`、`secret_realm`、`contract_type`。
+
+组件装的是**整份品质对象**，所以它同时决定档位与所属的链：写 `example:common` 就把这枚丹药放进了 `example:pill` 这条链。绑定表不声明品质，别在绑定里写品质链。锻造记录 `mxt:forging_result` 只有蓝图 id 与步数、**不含档位**。这枚丹药是 KubeJS 注册的普通物品，堆上没有任何装定义身份的组件，所以它只有第 1 层与第 3 层能答。三层都没有答案时这枚丹药就是**没有品质**，不会去补链的入口档。
 
 | 命令 | 作用 |
 | --- | --- |
@@ -136,7 +137,7 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
 2. `/give @s kubejs:qi_pill[mxt:quality="example:common"]`，再 `/quality get`：显示 `common`。
 3. `/quality chain example:common`：链名是 `example:pill`，三档按顺序排在同一行里。
 4. 手上拿着这枚丹药执行 `/quality upgrade @s`：身上有 20 点 `example:qi` 时升到 `refined`，`/quality get` 跟着变，提示框里多出 `value_multiplier` 的那行描述；不够 20 点时报代价付不出，档位一点不动。
-5. `/quality set @s example:flawless` 把档位覆盖成最高档，`/quality clear @s` 摘掉覆盖组件。这枚丹药没有定义默认档，所以摘掉之后 `/quality get` 报它当前没有品质。
+5. `/quality set @s example:flawless` 把档位覆盖成最高档，`/quality clear @s` 摘掉覆盖组件。这枚丹药没有在 `default_quality` 里写档，堆上也没有装定义身份的组件，所以摘掉之后 `/quality get` 报它当前没有品质。
 6. 把 `refined` 的 `upgrade_costs` 删掉，重开世界再升一次：那一步不花任何东西。
 
 ## 常见错误

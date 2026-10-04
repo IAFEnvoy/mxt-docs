@@ -88,16 +88,52 @@ Where a tier sits is not written anywhere else: each tier points at the tier abo
 
 ## Which tier an item is {#resolution}
 
-A stack's quality is taken as the **first one it can get**, in a fixed order:
+A stack's tier is the **first answer it can get**, in a fixed order. There are **three layers**, first hit wins.
 
-1. the `mxt:quality` **component** on the stack (a whole quality object) - what [`/quality set`](/en/player-guide/commands/quality) and [MxtQuality](/en/kubejs/api/quality) write, and what a successful `upgrade` writes too;
-2. the tier recorded by the forge result `mxt:forging_result` on the stack;
-3. the **definition default**, asked in order: `quality` on an [artifact](./artifact.md), the tier the inscriptions on a talisman carrier declare, `quality` on a [technique](./technique.md), and `quality` on an [alchemy furnace](./alchemy_furnace.md);
-4. the `quality` a matching [spirit herb](./spirit_herb.md) declares.
+**Layer one, the `mxt:quality` component on the stack** (a whole quality object). Every writer stamps it: [`/quality set`](/en/player-guide/commands/quality) and [MxtQuality](/en/kubejs/api/quality), a successful `upgrade`, and both a **Forge Table settlement** and a **talisman inscription**. It is read back through the registry, so an id the current pack no longer provides answers nothing and the stack falls through instead of keeping a dead tier.
 
-The ladder follows the tier the stack resolves to: a ladder is named on the tier itself, so neither a binding table nor a component has to declare one. When none of the four answers, the stack simply **has no quality**; no ladder's entry tier is supplied for it.
+**Layer two, the definition the stack itself carries**, declaring its own tier in an optional `quality` field. Several definitions of one type share a single built-in item — every technique manual is `mxt:cultivation_jade_slip`, every pill is `mxt:pill`, every furnace specification is the block item `mxt:alchemy_furnace`, the spirit-root stone is `mxt:spirit_root`, the physique stone is `mxt:physique` — so the item cannot say which tier applies; only the definition on the stack can. To read that field off a stack the definition type needs a registered carrier component (the mod registers its own when the class loads; an addon registering one of its own belongs to another page). Nine definitions declare `quality`, each read through a registered carrier:
 
-To gate on a tier, use the item condition `mxt:item_quality` (**that is the condition; the component is `mxt:quality`**): its `quality` accepts entries, `#tags` or an array (at least one; an empty list is refused at load), and it reads the result of the four steps above. An item that resolves to no tier at all answers no rather than falling back to the lowest one.
+| Definition | Carrier component |
+| --- | --- |
+| `technique` | `mxt:technique`, the value being the definition itself |
+| `alchemy_furnace` | `mxt:alchemy_furnace`, the value being the definition itself |
+| `alchemy_wall_material` | `mxt:alchemy_wall_material` |
+| `spirit_root` | `mxt:spirit_root` |
+| `physique` | `mxt:physique` |
+| `pill` | `mxt:pill`, the component is a record and the definition sits inside it under `pill` |
+| `formation` | `mxt:formation_plate`, the definition under `formation` |
+| `secret_realm` | `mxt:secret_realm_token`, the definition under `realm` |
+| `contract_type` | `mxt:contract_scroll`, the definition under `contract_type` |
+
+When the current pack no longer provides that tier (the definition was deleted, or the reference is unbound) this layer answers nothing and resolution falls through.
+
+`spirit_root` and `physique` have no free-text tier field: their tier is this optional `quality` reference, and there is no `mxt.rarity.<value>` key to look a tier up by text. A tier is listed under its own name.
+
+**Layer three, the [default_quality](./default_quality.md) data map** (key: an item id or a `#`-prefixed item tag, value: a bare quality id). It is the **third and last layer**, and it is the answer exactly when the stack **has no definition to ask**: a bare creative or `/give` item, and the definitions claimed **by item** — `artifact` and `spirit_herb` are in force as soon as an item matches, and the stack carries no identity component to ask.
+
+Three definitions deliberately have no `quality` field:
+
+- `artifact` and `spirit_herb` are claimed **by item** (one item matches one definition) and the stack carries no identity component, so there is nothing on it to ask. Their tier is written in `default_quality`, which is exact while one item means one definition.
+- A `talisman`'s carrier component `mxt:talisman` holds a **list** of inscriptions, so one stack may carry several talismans and there is no single definition to ask. Its tier is settled by the drawing recipe's `grades[].quality` and stamped into the `mxt:quality` component at inscription; only when that writes nothing does it fall back to `default_quality`.
+
+**List-valued carriers are not registered at all**: `mxt:forging_methods`, `mxt:forging_blueprints`, `mxt:element` and `mxt:talisman` — a list cannot answer which tier a stack is.
+
+The ladder follows the tier the stack resolves to: a ladder is named on the tier itself, so neither a binding table nor a component has to declare one. When all three layers answer nothing, the stack simply **has no quality**; no ladder's entry tier is supplied for it.
+
+After `/quality clear` removes the component the stack falls back to the tier of **the definition it carries**, and only then to the data map. The effect fields on the `mxt:pill` component (`on_consume`, `toxicity_gain` and the rest) only rewrite what that stack does when it is taken and never change which tier it is: the tier comes from the `quality` of the definition inside it under `pill`.
+
+**Three things that look like a default tier but are not:**
+
+- `forging_blueprint.quality_by_extra_steps[].quality` — the **target tier** on the forging curve, looked up by extra steps;
+- `grades[].quality` in a drawing recipe — the **target tier** hit by completion, written into the component at inscription;
+- the `quality` field of a `quality` entry itself — that one is the **ladder's name**, written on the entry tier.
+
+None of the three takes part in which tier a stack is.
+
+To gate on a tier, use the item condition `mxt:item_quality` (**that is the condition; the component is `mxt:quality`**): its `quality` accepts entries, `#tags` or an array (at least one; an empty list is refused at load), and it reads the result of the **three layers** above. An item that resolves to no tier at all answers no rather than falling back to the lowest one.
+
+**There are only two ways to filter items by tier.** One is the condition above: it is a **membership test** over entries and tags, with no "at least this tier" field, so "tier 3 or above" means declaring a quality tag (`data/<namespace>/tags/mxt/quality/<path>.json`) that lists those tiers and referencing it as `#<namespace>:<path>` — and remembering to update that tag whenever a tier is added. The other is the `key` / `ingredients` of a spirit crafting recipe, where `neoforge:components` matches the `mxt:quality` component exactly (OR several tiers with `neoforge:compound` for "or above"), see [Spirit Crafting Recipes](./spirit_crafting.md). Conversely, item matcher entries (the `items` of `mxt:item_matcher`, and `mxt:item` inside any `Cost`) and the `input` of a [forging blueprint](./forging_blueprint.md) **cannot read quality at all**: the first two only know item / tag / wildcard / regex plus three data-reading entry types, and the last one only knows a hard item id and a count. The `mxt:component` condition cannot read it either — it wants `nbt` to be a compound tag compared partially, while quality serializes to a string.
 
 Vanilla tags take no part in quality resolution: the `group/<name>` tag is not read and neither is `tooltip_order`, and nothing in the interface sorts by quality order, so it is not an ordering input. `color` only affects the places that draw a tier's name.
 

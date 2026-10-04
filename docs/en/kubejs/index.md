@@ -60,19 +60,22 @@ StartupEvents.registry('item', event => {
 })
 ```
 
-**Two.** Attach rules to its real ID with a binding table:
+**Two.** Attach rules to its real ID with a data map or a binding table:
 
 ```json
-// kubejs/data/example/mxt/item_binding/fire_root_pellet.json
+// kubejs/data/mxt/data_maps/item/item_binding.json
 {
-  "items": "kubejs:fire_root_pellet",
-  "actions": [
-    { "type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root" }
-  ]
+  "values": {
+    "kubejs:fire_root_pellet": {
+      "actions": [
+        { "type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root" }
+      ]
+    }
+  }
 }
 ```
 
-The four binding tables (item, weapon, pill and technique) are documented with examples in [Items and Bindings](./items.md).
+The six tables (item, weapon, pill, tool, blueprint and technique) are documented with examples in [Items and Bindings](./items.md); `item_binding` / `weapon_binding` / `tool_binding` / `blueprint_binding` are data maps whose files always sit under the `mxt` namespace, while `pill_binding` / `technique_binding` are still registries.
 
 **Three.** (Optional) provide a callback from a server script, then name it from a data pack field:
 
@@ -93,12 +96,12 @@ MxtActions.entity('example:heal', (entity, params, context) => {
 | What changed | How it takes effect |
 | --- | --- |
 | Startup scripts (items, blocks, recipes) | **Restart the game**; `/reload` never re-runs startup scripts. |
-| Binding tables and other data pack definitions | **Reload the world**; they are registries, read while the world loads. |
+| Binding tables, data maps and other data pack definitions | **Reload the world**; they are read while the world loads. |
 | Server scripts (callbacks, event subscriptions) | `/reload` clears every callback and re-runs the scripts, so callbacks register again; runtime subscriptions a script armed are its own to re-arm. |
 
 ## Next
 
-- [Items and Bindings](./items.md) — the fields and examples of the four binding tables.
+- [Items and Bindings](./items.md) — the fields and examples of these six tables.
 - [KubeJS API Reference](./api-reference.md) — 18 global objects, one page each.
 - [Examples](./examples.md) — complete scripts that combine several objects.
 - [Create Items and Bind Actions with KubeJS](../tutorial/create-items-with-kubejs.md) — the step-by-step walkthrough.

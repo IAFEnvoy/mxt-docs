@@ -78,7 +78,7 @@ function filter(items: any[], locale: Locale): DefaultTheme.SidebarItem[] {
       continue
     }
     if (item.items) {
-      const children = filter(item.items, locale)
+      const children = sortAlpha(filter(item.items, locale), item)
       // Nested groups start folded and open by themselves while the reader is inside.
       if (children.length > 0) out.push({ text: label(item), items: children, collapsed: true })
     }

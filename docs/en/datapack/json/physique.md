@@ -18,7 +18,7 @@ A physique hands out bonuses that stand apart from elements: vanilla attributes,
 | `granted_abilities` | Array of ability ids or `#tags` | `[]` | Granted abilities. |
 | `holder_condition` | `EntityCondition` | `mxt:always` | The holder condition checked before granting. |
 | `exclusive_tags` | Identifier array | `[]` | Mutual exclusion tags. |
-| `rarity` | String | `common` | Rarity marker. |
+| `quality` | Quality id | none | Optional. This physique's own grade: the physique stone carrying this definition reads at it, and it is also the tier named beside the physique in the info panel and `/mxt physique list`. |
 | `allow_stacking` | Boolean | `false` | Whether the same physique may stack. |
 | `damage_dealt_multiplier` | `NumberProvider` | `1` | Damage the holder **deals** is multiplied by this in layer one of [damage settlement](/en/technical/damage). |
 | `damage_taken_multiplier` | `NumberProvider` | `1` | Damage the holder **takes** is multiplied by this in layer two of the pipeline. |
@@ -27,7 +27,7 @@ An `attribute_modifiers` entry writes `attribute` plus the vanilla modifier's `i
 
 `holder_condition` can combine `mxt:has_spirit_root` and `mxt:has_physique` to express a prerequisite spirit root or prerequisite physique.
 
-The info panel and `/mxt physique list` show `rarity` as raw text, and use the `mxt.rarity.<rarity>` translation when one exists.
+`quality` names a tier in `mxt:quality` and may be left out. The info panel's physique row reads "definition name · quality name" in its tooltip, and with no `quality` that part is left out entirely (it never shows `-`); `/mxt physique list` shows `-` when there is no tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
 
 ```json
 // data/example/mxt/physique/innate_sword_bone.json
@@ -37,7 +37,7 @@ The info panel and `/mxt physique list` show `rarity` as raw text, and use the `
   ],
   "granted_abilities": ["example:sword_intent"],
   "exclusive_tags": ["example:physique/skeletal"],
-  "rarity": "epic",
+  "quality": "example:epic",
   "damage_dealt_multiplier": "1 + 0.05 * realm_rank",
   "damage_taken_multiplier": 0.9
 }

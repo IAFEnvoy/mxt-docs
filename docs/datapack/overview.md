@@ -36,9 +36,60 @@ data/example/mxt/artifact/charm/ward_jade_talisman.json
 
 - 单个条目引用写条目自己的 id；条目或标签都收的字段可以直接写 `#标签`。
 - 可选引用可以整个省略，省略时用字段表里那个默认值；列表和映射的引用大多容错，坏条目会被丢掉并打一条 `Ignoring invalid list element` 警告，其余条目照常生效。**消耗数组不套这套口径**：`costs` 一类数组里有一个解不出来的条目，整份定义就加载失败。
-- 物品匹配使用 `ItemMatcher`，支持 ID、标签、通配符、正则和混合数组，三种写法与七种条目类型见 [`ItemMatcher`](/datapack/types/shared_data_types#itemmatcher)。
-- 多个定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`；`artifact`、`item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` 六种 binding、`spirit_herb`、`item_aura`、`currency`，共十张表都接受它）；只有 `priority` 相同的两条定义才回落到注册表顺序，所以「谁赢」由数据包自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。
+- 仍在注册表里的认领表（`artifact`、`pill_binding`、`spirit_herb`、`technique_binding`）用 `ItemMatcher` 认领物品：ID、标签、通配符、正则和混合数组都收，三种写法与七种条目类型见 [`ItemMatcher`](/datapack/types/shared_data_types#itemmatcher)。**九张数据表没有 `items` 字段**，键就是条目，见[数据表](#数据表data-map)。
+- 多个定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`）；仍是注册表的四张认领表同分时回落到注册表顺序，而物品数据表的同分口径是**后处理者赢**（同一文件里按书写顺序，不同文件按数据包加载顺序），物品数据表里 `block_aura`（相加）与 `default_quality`（没有这个字段）两张不看它。两种情形「谁赢」都由数据包自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。
 - 原版标签是唯一的标签系统；不要在 JSON 里重复定义 `tags` 字段。
+
+## 数据表（Data Map） {#数据表data-map}
+
+九张「一个条目怎么说自己」的表不是注册表，而是 NeoForge 的 **Registry Data Map**：数据驱动的「注册表条目 → 值」表，键就是条目。键可以落在不同的注册表上，所以物品键与方块键各有几张。它们的值没有 id、没有名字，也不能被别的定义引用。
+
+| 数据表 | 文件 | 值 |
+| --- | --- | --- |
+| `mxt:item_aura` | `data/mxt/data_maps/item/item_aura.json` | 物品提供的修炼燃料。 |
+| `mxt:currency` | `data/mxt/data_maps/item/currency.json` | 物品的货币面值与兑换。 |
+| `mxt:default_quality` | `data/mxt/data_maps/item/default_quality.json` | 物品在没有任何别的档位来源时的默认品质（品质解析的第三层、也是最后一层）。 |
+| `mxt:item_binding` | `data/mxt/data_maps/item/item_binding.json` | 现有物品的行为、条件与元素。 |
+| `mxt:weapon_binding` | `data/mxt/data_maps/item/weapon_binding.json` | 现有物品的武器属性与三个动作。 |
+| `mxt:tool_binding` | `data/mxt/data_maps/item/tool_binding.json` | 工具物品解锁的锻打方式。 |
+| `mxt:blueprint_binding` | `data/mxt/data_maps/item/blueprint_binding.json` | 图纸物品提供的蓝图。 |
+| `mxt:block_aura` | `data/mxt/data_maps/block/block_aura.json` | 方块提供的灵气。 |
+| `mxt:heat_source` | `data/mxt/data_maps/block/heat_source.json` | 供热方块的温度与升温速度。 |
+
+**第一段命名空间必须是表自己的 `mxt`，不是内容包自己的。** 物品键的表挂在 `minecraft:item` 上，文件在 `data/mxt/data_maps/item/`；方块键的表挂在 `minecraft:block` 上，文件在 `data/mxt/data_maps/block/`。内容包要加值，是往 `data/mxt/data_maps/<注册表>/` 里再放一个文件，而不是写进 `data/<你的命名空间>/...`；放错命名空间只会在日志里留一条 `Found data map file for non-existent data map type`。
+
+每个文件长这样：
+
+```json
+{
+  "replace": false,
+  "values": {
+    // currency 的裸值：这个对象就是 CurrencyValue，它自己的字段名恰好也叫 value
+    "minecraft:iron_nugget": { "value": 1, "exchanges": [] },
+    "#example:coins": { "value": 5, "exchanges": [] },
+    // tool_binding 的裸值：直接写那张表的字段
+    "example:legendary_hammer": { "methods": ["example:slam"] }
+  },
+  "remove": ["example:legacy_coin"]
+}
+```
+
+| 键 | 类型 | 说明 |
+| --- | --- | --- |
+| `values` | 条目 id 或 `#标签` → 值对象 | **必填**。键就是「哪个条目」，值就是该张表自己的形状——多数表是一组字段组成的对象，`default_quality` 则直接是一个品质 id 字符串。标签在加载期展开成它当时的每个条目。 |
+| `replace` | Bool | `true` 时先清空此前所有值。这个键是给整合包作者覆盖用的，模组不要发。 |
+| `remove` | 条目 id / `#标签` 数组 | 在追加**之后**执行，所以「先给标签、再排除个别条目」成立。我们的表只有默认 remover（整条删除），写 id / 标签数组就够。 |
+| `neoforge:conditions` | 条件数组 | **只能写在「值」上**（见下），写在文件级会被静默忽略——理由见下面那条平台坑。 |
+
+**值的三种写法**（每个值的解码是「包裹形状或表的裸值形状」二选一，所以前两种都合法）：
+
+1. **裸值**（推荐，NeoForge 自带的表全这么写）：直接写那张表的字段对象，如上面的 `{ "methods": [...] }`。
+2. **`{"value": <裸值>, "replace": true}`**：**只有这一种写法能让值里的 `replace` 生效**——它绕开合并器、整份替换该条目已经有的值。反过来，**裸值里多写一个 `replace` 会被静默丢掉**：解码先试包裹形状、失败才回落到裸值，而裸值那一路根本不读这个键。
+3. **值级条件**：在上面任一形状里加 `neoforge:conditions`，例如 `{"methods": [...], "neoforge:conditions": [...]}` 或 `{"value": { …字段… }, "replace": true, "neoforge:conditions": [...]}`。条件不成立时这个值**当作没写过**，不报错也不留日志。
+
+> **平台坑**：NeoForge 的官方文档把 `neoforge:conditions` 列为**文件级**字段，它自己的 datagen 也按「文件级条件 + 数据表文件」编码，但**加载器读不到文件级的那一份**——整份文件用不带条件的 codec 解码，顶层多写的 `neoforge:conditions` 被静默丢掉、整份文件照常生效。所以要做条件加载，**一律把条件写在值上**。写在文件级的症状是「明明加了条件，值还是加上了」，而且日志里一个字都没有。
+
+**冲突按 `priority`**：同一个条目被多份值命中时，数值大者胜；**同分则后处理的那个赢**（同一文件里按书写顺序，不同文件按数据包加载顺序），不回落注册表顺序。**有两张表不看 `priority`**：`block_aura` 是**累加**的（方块灵气本来就是累加量），两份值**相加**；`default_quality` **没有这个字段**，直接按「后处理者赢」。
 
 ## 停用一条定义
 
@@ -94,10 +145,12 @@ data/mxt/tags/damage_type/no_bonus.json
 | --- | --- |
 | 资源与修炼 | `resource`、`aura`、`element`、`element_reaction`、`realm_stage`、`spirit_root`、`physique`、`technique`、`progression`、`cultivation` |
 | 技能与规则 | `ability`、`curse`、`formation`、`tribulation`、`trigger`、`talisman` |
-| 灵气与世界 | `aura_zone`、`block_aura`、`item_aura`、`secret_realm` |
-| 物品与品质 | `pill`、`pill_binding`、`item_binding`、`weapon_binding`、`technique_binding`、`tool_binding`、`blueprint_binding`、`artifact`、`quality` |
+| 灵气与世界 | `aura_zone`、`secret_realm` |
+| 物品与品质 | `pill`、`pill_binding`、`technique_binding`、`artifact`、`quality` |
 | 炼丹与灵植 | `medicinal_property`、`spirit_herb`、`alchemy_furnace`、`alchemy_wall_material`、`heat_source` |
-| 经济与内容 | `currency`、`forging_method`、`forging_blueprint`、`creature_profile`、`contract_type` |
+| 经济与内容 | `forging_method`、`forging_blueprint`、`creature_profile`、`contract_type` |
+
+另有 **9 张数据表**（`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`、`block_aura`、`heat_source`）不是注册表，见[数据表](#数据表data-map)。
 
 丹方不是注册表：它是原版配方类型 `mxt:alchemy`，文件放在 `data/<命名空间>/recipe/` 下，字段见[炼丹配方](/datapack/json/alchemy_recipe)。
 
@@ -114,11 +167,11 @@ data/mxt/tags/damage_type/no_bonus.json
 
 ## 加载与覆盖
 
-39 个数据包注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。从磁盘上的文件到玩家看到的结果就是下面这条路径。
+31 个数据包注册表使用 NeoForge 原版数据包注册表加载；**世界加载时**读取并校验，并在客户端加入时通过原版同步机制提供只读快照。从磁盘上的文件到玩家看到的结果就是下面这条路径。
 
 ```mermaid
 flowchart TD
-    A["数据包定义文件<br/>一份 JSON 一个条目"] --> B["39 个数据包注册表<br/>NeoForge 原版数据包注册表"]
+    A["数据包定义文件<br/>一份 JSON 一个条目"] --> B["31 个数据包注册表<br/>NeoForge 原版数据包注册表"]
     B --> C["世界加载时读取并校验<br/>JSON / 引用 / 字段校验"]
     C --> D["解码失败：世界无法加载<br/>修好该文件后才能再次进入"]
     C --> E["neoforge:conditions<br/>条件不成立的条目根本不进注册表"]
@@ -144,12 +197,12 @@ flowchart TD
 
 ## 加载、同步与调试
 
-- 这些注册表属于原版数据包注册表，**在世界加载时读取**：JSON 解析、条目解析和字段校验都在世界加载过程中完成，`neoforge:conditions` 也在这一步判掉，条件不成立的条目连解码都不会进。`/reload` 不会重新读取它们——`/reload` 只刷新配方、战利品表、进度、函数这些原版监听器，以及 KubeJS 的服务端脚本。修改数据表后需要重新加载世界（单机退回标题界面再进入，或重启服务器）。
+- 这些注册表属于原版数据包注册表，**在世界加载时读取**：JSON 解析、条目解析和字段校验都在世界加载过程中完成，`neoforge:conditions` 也在这一步判掉，条件不成立的条目连解码都不会进。`/reload` 不会重新读取它们——`/reload` 只刷新配方、战利品表、进度、函数这些原版监听器，以及 KubeJS 的服务端脚本。物品数据表同样在**加载世界时**读取，改完也要重新加载世界（单机退回标题界面再进入，或重启服务器）。
 - 动态注册表由原版同步机制在客户端加入时发送；客户端 HUD、雾效和贴图只负责展示，不决定扣除、突破、锻造或兑换结果。
 - `/mxt aura query` 查询当前位置最终灵气；`/mxt aura vein` 查询灵石矿脉信息。
-- `/mxt registries list` 列出这些动态注册表与各自的条目数量；`/mxt registries validate` 报出上一次构建发现的所有问题，并逐条指出问题来自哪个文件（修炼、技能与功法的引用链条，以及忘了写行为的触发器规则）——没有问题时报出注册表数量、条目总数与「校验通过」。世界加载完之后跑一次这条命令，可以确认数据包产出的注册表状态是能用的。
+- `/mxt registries list` 列出这些动态注册表与各自的条目数量；`/mxt registries validate` 报出上一次构建发现的所有问题，并逐条指出问题来自哪个文件（修炼、技能与功法的引用链条，以及忘了写行为的触发器规则）——没有问题时报出注册表数量、条目总数与「校验通过」。世界加载完之后跑一次这条命令，可以确认数据包产出的注册表状态是能用的。九张数据表不是注册表，不在这里出现。
 - `/mxt technique repair` 清理玩家数据里**已失效的功法引用**（引用的定义已被数据包删除、或被 `neoforge:conditions` 挡掉时使用）；`dry-run` 只报告不改动；`/mxt technique drop <id>` 精确移除某一门功法。见下节。
-- `/picker [<分类 id>]` 打开物品选择器，直接查看这些定义对应的物品：分类就是注册表 ID（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`），不写则列出全部已注册分类。需要 gamemaster 权限，且只在创造模式下可用；顶层 `/picker` 别名由服务端配置「命令别名 → /picker」开关，`/mxt picker` 始终可用。
+- `/picker [<分类 id>]` 打开物品选择器，直接查看这些定义对应的物品：分类是一个 id，可以指向一张注册表，也可以指向一张数据表（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`、`/picker mxt:block_aura`），不写则列出全部已注册分类。注册表分类列出它的定义对应的物品，数据表分类列出的就是带着值的那件物品或方块本身。需要 gamemaster 权限，且只在创造模式下可用；顶层 `/picker` 别名由服务端配置「命令别名 → /picker」开关，`/mxt picker` 始终可用。
 - 测试模组数据位于 `src/test-mod/resources/data/mxt_test/mxt`，启动测试服务端可验证数据包闭环。
 
 ### 修复失效的功法引用

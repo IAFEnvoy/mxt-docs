@@ -361,7 +361,9 @@ Checks the [quality](../../json/quality.md) tier the stack resolves to.
 { "type": "mxt:item_quality", "quality": ["example:fine", "#example:high_tier"] }
 ```
 
-It follows the same resolution order as the quality gate and the tooltip (component → forge result → definition default → spirit herb), so a definition's default tier counts too. **This is the condition, not the component**: the component is `mxt:quality` (which writes a whole quality object), so the two names differ. An empty list is refused at load, and an item that resolves to no tier at all answers false rather than falling back to the lowest tier.
+It follows the same resolution order as the quality gate and the tooltip (**three layers**, first hit wins: the `mxt:quality` component on the stack → the `quality` declared by the definition the stack carries → the `default_quality` data map), so the tier the data map gives counts too. **This is the condition, not the component**: the component is `mxt:quality` (which writes a whole quality object), so the two names differ. An empty list is refused at load, and an item that resolves to no tier at all answers false rather than falling back to the lowest tier.
+
+To gate on "at least this tier", declare a quality tag listing that tier and every tier above it, and reference it here — `quality` is a membership test over entries and tags only, and has no field that compares tier ranks.
 
 ### `mxt:item_abilities`
 

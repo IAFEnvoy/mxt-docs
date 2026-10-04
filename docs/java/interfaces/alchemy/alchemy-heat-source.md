@@ -4,7 +4,7 @@ title: AlchemyHeatSource
 
 # AlchemyHeatSource
 
-方块实现它来给丹炉供热（`com.iafenvoy.mxt.api`）。**它是可选的**：丹炉读的是**底层正中央那一格**里的方块，默认只查数据包注册表 [`mxt:heat_source`](/datapack/json/heat_source)——按方块或方块标签给 `max_temperature` 与 `heating_per_tick`；方块自己实现了这个接口时**以方块的回答为准**，忽略表里给它写的条目。绝大多数方块只写那张表就够，接口是给"答案取决于方块状态或周围环境"的方块用的（点着的火、装满的火盆）。
+方块实现它来给丹炉供热（`com.iafenvoy.mxt.api`）。**它是可选的**：丹炉读的是**底层正中央那一格**里的方块，默认只查数据表 [`mxt:heat_source`](/datapack/json/heat_source)——按方块或方块标签给 `max_temperature` 与 `heating_per_tick`；方块自己实现了这个接口时**以方块的回答为准**，忽略表里给它写的值。绝大多数方块只写那张表就够，接口是给"答案取决于方块状态或周围环境"的方块用的（点着的火、装满的火盆）。
 
 | 成员 | 说明 |
 | --- | --- |

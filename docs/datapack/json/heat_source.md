@@ -10,39 +10,36 @@ aside: false
 
 ## 文件位置
 
-供热方块文件放在数据包的 `data/<namespace>/mxt/heat_source/`。
+`heat_source` 是一张**方块数据表**（NeoForge Registry Data Map），不是注册表，文件固定放在 `data/mxt/data_maps/block/heat_source.json`。**第一段命名空间必须是表自己的 `mxt`，不是内容包自己的**：内容包要加值，是往 `data/mxt/data_maps/block/` 里再放一个文件。`values` 的键就是**方块 id 或 `#方块标签`**（标签在加载期展开成它当时的每个方块）——这张表**没有 `blocks` 字段**。写法详见[数据表](../overview.md#数据表data-map)。
 
 **用途**：一类方块的供热数值。
-
-文件名对应它的 ID。例如 `data/example/mxt/heat_source/magma.json` 的 ID 是 `example:magma`。
 
 ## 字段
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `blocks` | 方块 id、`#标签` 或混合数组 | **必填** | 匹配哪些方块，不能为空。 |
+| `priority` | Integer | `0` | 同一个方块被多份值命中时，高的赢；**同分后处理者赢**（同一文件里按书写顺序，不同文件按数据包加载顺序）。 |
 | `max_temperature` | Double | **必填** | 这个方块能给炉子的最高温度，有限且大于 `0`。 |
 | `heating_per_tick` | Double | **必填** | 每一 tick 的升温量，有限且大于 `0`。 |
-| `priority` | Integer | `0` | 多条定义匹配同一个方块时的优先级，高的赢；同分按注册表顺序取先出现的。 |
 
 ```json
+// data/mxt/data_maps/block/heat_source.json
 {
-  "blocks": ["minecraft:magma_block"],
-  "max_temperature": 200,
-  "heating_per_tick": 4
+  "values": {
+    "minecraft:magma_block": {
+      "max_temperature": 200,
+      "heating_per_tick": 4
+    },
+    "#minecraft:campfires": {
+      "max_temperature": 150,
+      "heating_per_tick": 2,
+      "priority": 5
+    }
+  }
 }
 ```
 
-```json
-{
-  "blocks": ["#minecraft:campfires"],
-  "max_temperature": 150,
-  "heating_per_tick": 2,
-  "priority": 5
-}
-```
-
-同一个方块被几条定义同时匹配时只取一条：先比 `priority`，高的赢；`priority` 相同时取注册表顺序里先出现的那一条，不把几个数值相加。
+同一个方块被多份值同时命中时只取一份：先比 `priority`，高的赢；同分取后处理的那一份，不把几个数值相加。
 
 ## 供热格在哪
 
@@ -58,6 +55,6 @@ aside: false
 
 ## 方块自己回答
 
-方块可以实现 `com.iafenvoy.mxt.api.AlchemyHeatSource`，自己回答这两个数（点着时和熄灭时给不一样的值，或者看周围有什么）。实现了接口的方块**以自己的回答为准**，忽略这张表给它写的条目——接口是这张表之上的更高级控制，不是必须的，绝大多数方块只写这张表就够。接口的返回值必须有限且大于 0，否则炉子把那一格当成没有热源。
+方块可以实现 `com.iafenvoy.mxt.api.AlchemyHeatSource`，自己回答这两个数（点着时和熄灭时给不一样的值，或者看周围有什么）。实现了接口的方块**以自己的回答为准**，忽略这张表给它写的值——接口是这张表之上的更高级控制，不是必须的，绝大多数方块只写这张表就够。接口的返回值必须有限且大于 0，否则炉子把那一格当成没有热源。
 
 **本体不提供热源方块**，也不内置岩浆、火这类数值：给多少由数据包或内容包自己定。测试包里的三个方块只供测试，不是内容包要注册的东西。

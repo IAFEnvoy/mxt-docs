@@ -6,7 +6,7 @@ aside: false
 
 # alchemy_wall_material（炉壁材料） {#alchemy_wall_material}
 
-一份 `alchemy_wall_material` 只描述**一块炉壁能承受多热**：一个名字、一段描述和一个有限的耐温上限。槽位、容量与回落速度属于[炉型规格](./alchemy_furnace.md)，不写在这里。
+一份 `alchemy_wall_material` 只描述**一块炉壁**：一个名字、一段描述、一个有限的耐温上限，以及可选的档位。槽位、容量与回落速度属于[炉型规格](./alchemy_furnace.md)，不写在这里。
 
 整炉耐温是 18 块炉壁里**最低**的那个 `max_temperature`。混用材料时薄弱处说了算，高耐温的炉壁不能把低耐温的拉平。
 
@@ -14,7 +14,7 @@ aside: false
 
 炉壁材料文件放在数据包的 `data/<namespace>/mxt/alchemy_wall_material/`。
 
-**用途**：一块炉壁的耐温上限。
+**用途**：一块炉壁的耐温上限与起始档位。
 
 文件名对应它的 ID。例如 `data/example/mxt/alchemy_wall_material/bronze.json` 的 ID 是 `example:bronze`。
 
@@ -24,6 +24,7 @@ aside: false
 | --- | --- | --- | --- |
 | `name` | Text Component | `alchemy_wall_material.mxt.<命名空间>.<路径>` | 材料显示名。 |
 | `description` | Text Component | 同上加 `.description` | 材料描述。 |
+| `quality` | 品质 id | 无 | 可选。由这种材料砌起来的炉壁方块起始的档位。 |
 | `max_temperature` | Double | **必填** | 这一材料的耐温上限，有限且大于 `0`。 |
 
 ```json
@@ -34,6 +35,8 @@ aside: false
 ```
 
 例子里给了自己的名字翻译键；省略 `name` 与 `description` 时用的仍是按条目 id 生成的那两个键。`max_temperature` 的数值由内容包自己定，本体不内置铜、铁或灵材的温度表。
+
+`quality` 是可选的：炉壁方块是所有炉壁材料共用的一种方块，方块本身说不清是哪一档，只有堆上携带的这份材料报得出——由这种材料砌起来的炉壁方块起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份材料没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
 
 ## 承载与成型
 

@@ -1,12 +1,12 @@
 ---
 title: Spirit Herb (spirit_herb)
-description: Marks an existing item as a spirit herb with medicinal power, thermal bias, a default quality and age, and optionally a way to grow it.
+description: Marks an existing item as a spirit herb with medicinal power, thermal bias and age, and optionally a way to grow it.
 aside: false
 ---
 
 # Spirit Herb (spirit_herb) {#spirit_herb}
 
-`spirit_herb` marks an **existing item** as a spirit herb and gives it medicinal power, a thermal bias and a default quality — plus, optionally, a way to grow it. It registers no new item: the herb itself comes from a content pack or another mod.
+`spirit_herb` marks an **existing item** as a spirit herb and gives it medicinal power and a thermal bias — plus, optionally, a way to grow it. It registers no new item: the herb itself comes from a content pack or another mod. **The definition has no `quality` field**: a herb is claimed **by item** (`items` is that same `ItemMatcher`), so the stack carries no component holding a definition identity and there is nothing on it to ask; this herb's tier is written in the [default_quality](./default_quality.md) data map under the item id or a `#`-prefixed tag.
 
 ## File Location
 
@@ -22,7 +22,6 @@ The filename is its ID. For example, `data/example/mxt/spirit_herb/fire_ginseng.
 | `description` | Text Component | the same key plus `.description` | Description. |
 | `items` | `ItemMatcher` | **required** | Binds existing items; it creates no new spirit herb item. When several definitions match, the one with the largest `priority` is used and their power is never added together. |
 | `priority` | Int | `0` | Order between several herb definitions matching one item: the larger number goes first (see [ItemMatcher](../types/shared_data_types.md#itemmatcher)); ties fall back to registry order. |
-| `quality` | quality ID | **required** | The item's default quality. Age never upgrades it, and a `mxt:quality` component on the stack still wins (the order is on [Which Tier an Item Reads](./quality.md#resolution)). |
 | `default_age` | Integer | `0` | Non-negative. Used when the stack carries no `mxt:herb_age` component. |
 | `element_tags` | Array of element IDs or `#tags` | `[]` | Elemental affinity, **not** a medicinal property. Written against the element registry; `mxt:herb_tag`'s `element` matches it. |
 | `material_tags` | Identifier[] | `[]` | Material classification, matched by `mxt:herb_tag`'s `material`. |
@@ -67,14 +66,13 @@ Every `20` loaded ticks one settlement runs: the definition must still be in the
 
 The amount added is **`growth_rate` evaluated, then multiplied by `max(0, 1 + spirit_plant_bonus)`**. The pipeline applies that factor exactly once, so do not multiply it again inside the expression. Age is capped at `max_age`.
 
-Right-clicking an immature plot with an empty hand shows the age, the maturity requirement and the reason it is paused. Right-clicking a mature plot with an empty hand harvests it: the plant is cleared and you get the `harvest` stack (with its age component set to the current progress rounded down) plus `1` of the original seed; anything that does not fit in the inventory is dropped once. Sneaking with an empty hand pulls the plant and returns only the original seed. Breaking the block drops the same way: a mature plant gives the harvest and the original seed, an immature one gives back only the seed. When the definition no longer resolves, growth stops but the saved seed can still be taken back.
+Right-clicking an immature plot with an empty hand shows the age, the maturity requirement and the reason it is paused. Right-clicking a mature plot with an empty hand harvests it: the plant is cleared and you get the `harvest` stack (with its age component set to the current progress rounded down) plus `1` of the original seed; anything that does not fit in the inventory is dropped once. Sneaking with an empty hand pulls the plant and returns only the original seed. Breaking the block drops the same way: a mature plant gives the harvest and the original seed, an immature one gives back only the seed. When the definition does not resolve, growth stops but the saved seed can still be taken back.
 
 ## Example
 
 ```json
 {
   "items": ["minecraft:red_mushroom", "#mxt_test:spirit_herbs"],
-  "quality": "example:spirit_iron",
   "default_age": 100,
   "element_tags": ["example:fire"],
   "material_tags": ["example:herb"],
@@ -96,4 +94,4 @@ Right-clicking an immature plot with an empty hand shows the age, the maturity r
 
 - Alchemy: a spirit herb is a material for a [pill recipe](./alchemy_recipe.md), and `main_effects` / `auxiliary_effects` / `catalyst_power` are exactly the power the main, auxiliary and catalyst roles read. The properties themselves come from [Medicinal Property](./medicinal_property.md).
 - Matching: `mxt:herb_tag` is one entry type of the item matcher. It recognises "is this that kind of herb" by `element` or `material`, so it can be written anywhere an `ItemMatcher` is accepted. At least one of the two fields is required, and every field you write has to hold for the herb.
-- Quality: the `quality` a herb declares is the last slot of quality resolution; see [Quality](./quality.md#resolution).
+- Quality: a herb definition **declares no tier** — a herb is claimed by item, so there is no definition-identity component on the stack to ask; this herb's tier comes from [default_quality](./default_quality.md) under the item id or a `#`-prefixed tag, see [Which Tier an Item Reads](./quality.md#resolution).

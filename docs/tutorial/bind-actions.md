@@ -15,9 +15,9 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 
 | 文件 | 这页加上什么 |
 | --- | --- |
-| `data/example/mxt/item_binding/qi_pill.json` | 两个有先后关系的实体行为。 |
-| `data/example/mxt/item_binding/root_pellet.json` | 一条带描述、会在提示框里显示勾叉的条件。 |
-| `data/example/mxt/weapon_binding/spirit_sword.json` | 右键、命中、每 tick 三个钩子各一个行为。 |
+| `data/mxt/data_maps/item/item_binding.json` | 两个有先后关系的实体行为。 |
+| `data/mxt/data_maps/item/item_binding.json` | 一条带描述、会在提示框里显示勾叉的条件。 |
+| `data/mxt/data_maps/item/weapon_binding.json` | 右键、命中、每 tick 三个钩子各一个行为。 |
 | `data/example/mxt/pill/qi_pill.json` | 过量那一行的行为。 |
 
 ## 第 1 步 —— 各表各有哪些钩子
@@ -41,19 +41,22 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 ## 第 2 步 —— 通用绑定的行为
 
 ```json
-// data/example/mxt/item_binding/qi_pill.json
+// data/mxt/data_maps/item/item_binding.json
 {
-  "items": "kubejs:qi_pill",
-  "conditions": [
-    {
-      "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
-      "description": "condition.example.needs_qi_chain"
+  "values": {
+    "kubejs:qi_pill": {
+      "conditions": [
+        {
+          "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
+          "description": "condition.example.needs_qi_chain"
+        }
+      ],
+      "actions": [
+        {"type": "mxt:add_resource", "resource": "example:qi", "amount": 25},
+        {"type": "mxt:apply_effect", "effect": "minecraft:regeneration", "duration_ticks": 60}
+      ]
     }
-  ],
-  "actions": [
-    {"type": "mxt:add_resource", "resource": "example:qi", "amount": 25},
-    {"type": "mxt:apply_effect", "effect": "minecraft:regeneration", "duration_ticks": 60}
-  ]
+  }
 }
 ```
 
@@ -67,22 +70,25 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 ## 第 3 步 —— 武器的三个钩子
 
 ```json
-// data/example/mxt/weapon_binding/spirit_sword.json
+// data/mxt/data_maps/item/weapon_binding.json
 {
-  "items": "kubejs:spirit_sword",
-  "attributes": [
-    {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"}
-  ],
-  "use_action": {
-    "type": "mxt:apply_effect",
-    "effect": "minecraft:speed",
-    "duration_ticks": 100
-  },
-  "attack_action": {
-    "type": "mxt:target_action",
-    "action": {"type": "mxt:damage", "amount": 3}
-  },
-  "tick_action": {"type": "mxt:no_op"}
+  "values": {
+    "kubejs:spirit_sword": {
+      "attributes": [
+        {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"}
+      ],
+      "use_action": {
+        "type": "mxt:apply_effect",
+        "effect": "minecraft:speed",
+        "duration_ticks": 100
+      },
+      "attack_action": {
+        "type": "mxt:target_action",
+        "action": {"type": "mxt:damage", "amount": 3}
+      },
+      "tick_action": {"type": "mxt:no_op"}
+    }
+  }
 }
 ```
 
@@ -101,19 +107,22 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 ## 第 5 步 —— 条件的两副面孔
 
 ```json
-// data/example/mxt/item_binding/root_pellet.json
+// data/mxt/data_maps/item/item_binding.json
 {
-  "items": "kubejs:root_pellet",
-  "conditions": [
-    {"type": "mxt:has_spirit_root", "spirit_root": "example:fire_root"},
-    {
-      "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
-      "description": "condition.example.needs_qi_chain"
+  "values": {
+    "kubejs:root_pellet": {
+      "conditions": [
+        {"type": "mxt:has_spirit_root", "spirit_root": "example:fire_root"},
+        {
+          "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
+          "description": "condition.example.needs_qi_chain"
+        }
+      ],
+      "actions": [
+        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
+      ]
     }
-  ],
-  "actions": [
-    {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
-  ]
+  }
 }
 ```
 
@@ -157,7 +166,7 @@ description: "四张绑定表各自的钩子：什么时候执行、受什么限
 | 条件写进 `weapon_binding.conditions` 后永远不成立 | 那里读不到攻击事件里的目标信息，只能读实体自己的状态。 |
 | `actions` 只写了一个对象 | `item_binding.actions` 只收数组。 |
 | 两个行为同时想用一个钩子 | 一个钩子只能写一个行为；要连着做几件事就写成数组（或在数组里放一个序列）。 |
-| 改了绑定没反应 | `/reload` 不重读数据包注册表；重新加载世界。 |
+| 改了绑定没反应 | `/reload` 不重读数据包注册表，也不重读数据表；重新加载世界。 |
 
 ## 接下来
 

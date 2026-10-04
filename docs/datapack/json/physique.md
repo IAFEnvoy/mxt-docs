@@ -18,7 +18,7 @@ aside: false
 | `granted_abilities` | 能力 id 或 `#标签` 的数组 | `[]` | 授予的能力。 |
 | `holder_condition` | `EntityCondition` | `mxt:always` | 授予前的持有条件。 |
 | `exclusive_tags` | Identifier 数组 | `[]` | 互斥标签。 |
-| `rarity` | String | `common` | 稀有度标识。 |
+| `quality` | 品质 id | 无 | 可选。这份体质自己的品阶：携带这份定义的体质石读到的就是它，信息面板与 `/mxt physique list` 写在体质名旁边的也是它。 |
 | `allow_stacking` | Boolean | `false` | 是否允许同一体质叠加。 |
 | `damage_dealt_multiplier` | `NumberProvider` | `1` | 持有者**打出**的伤害在[伤害结算](/technical/damage)第一层乘上它。 |
 | `damage_taken_multiplier` | `NumberProvider` | `1` | 持有者**受到**的伤害在管线第二层乘上它。 |
@@ -27,7 +27,7 @@ aside: false
 
 `holder_condition` 可以组合 `mxt:has_spirit_root`、`mxt:has_physique` 表达先决灵根或先决体质。
 
-`rarity` 由信息面板与 `/mxt physique list` 显示原文，存在 `mxt.rarity.<rarity>` 时用它的翻译。
+`quality` 引用 `mxt:quality` 里的一档，可以省略。信息面板里体质那一行的 tooltip 读「定义名 · 品质名」，没有 `quality` 时这一段整个不写（不会显示 `-`）；`/mxt physique list` 则在没有档位时显示 `-`。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
 
 ```json
 // data/example/mxt/physique/innate_sword_bone.json
@@ -37,7 +37,7 @@ aside: false
   ],
   "granted_abilities": ["example:sword_intent"],
   "exclusive_tags": ["example:physique/skeletal"],
-  "rarity": "epic",
+  "quality": "example:epic",
   "damage_dealt_multiplier": "1 + 0.05 * realm_rank",
   "damage_taken_multiplier": 0.9
 }

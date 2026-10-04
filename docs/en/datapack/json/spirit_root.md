@@ -17,7 +17,7 @@ A spirit root ties a body to one or more elements. It hands out a cultivation mu
 | `elements` | Element and weight array | **required and non-empty** | The elements this root is bound to; several may be written. |
 | `cultivation_multiplier` | `NumberProvider` | `1` | Cultivation multiplier. |
 | `element_ability_modifier` | `NumberProvider` | `1` | Element affinity ability multiplier. |
-| `rarity` | String | `common` | Rarity marker. |
+| `quality` | Quality id | none | Optional. This root's own grade: the spirit-root stone carrying this definition reads at it, and it is also the tier named beside the root in the info panel and `/mxt spirit_root list`. |
 | `granted_abilities` | Array of ability ids or `#tags` | `[]` | Granted abilities. |
 | `conflicting_elements` | Array of element ids or `#tags` | `[]` | The elements it **cannot share a body with**. |
 
@@ -27,7 +27,7 @@ An entry of `elements` may be a bare element id (which takes the whole share of 
 
 How `element_ability_modifier` is measured: when an ability whose `element_affinity` names **any** element of this root is cast, it is a factor of layer one of [damage settlement](/en/technical/damage) (**one root contributes once**, however many of its elements matched; several matching roots are averaged or best-picked by `element_affinity_mode`), and formulas can read it as `element_modifier` too. It and the element relations are two independent paths: the relations (`overcomes` / `adapted_to`) say who overcomes whom, and both sides' spirit roots take part in that; this multiplier says what this body is worth when it casts the element it is attuned to, and it is decided only by the casting side and by **this one cast**. So the same fire technique lands different numbers off a fire root at 1.1 and one at 1.3, while the half that sits on the opponent is decided by the opponent's element alone.
 
-`rarity` is shown as raw text by the info panel and `/mxt spirit_root list`, and the `mxt.rarity.<rarity>` translation is used when one exists.
+`quality` names a tier in `mxt:quality` and may be left out. The info panel's spirit root row reads "definition name · quality name" in its tooltip, and with no `quality` that part is left out entirely (it never shows `-`); `/mxt spirit_root list` shows `-` when there is no tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
 
 Spirit root grouping, compatibility and filtering use vanilla tags (`data/<namespace>/tags/mxt/spirit_root/<name>.json`). The `spirit_root` field of both the entity condition and the loot condition takes an entry, a tag or an array of them, so "any fire spirit root" is one tag.
 

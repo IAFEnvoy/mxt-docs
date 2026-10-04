@@ -9,7 +9,7 @@ The reference pages on this site describe one file, one field or one API at a ti
 
 ## The Example Pack
 
-Every tutorial extends the same small content pack in the `example` namespace. The first few form one chain, each assuming the pages it depends on are done (the dual cultivation page hangs off the second one and only uses definitions the pack already has); the rest stand on their own and only use definitions the pack already has. By the end of the series it looks like this:
+Every tutorial extends the same small content pack in the `example` namespace. The first few form one chain, each assuming the pages it depends on are done (the dual cultivation page hangs off the second one and only uses definitions the pack already has); the rest stand on their own and only use definitions the pack already has. The one thing that is not written inside that pack is the data maps: their files always sit under the `mxt` namespace. By the end of the series it looks like this:
 
 ```text
 data/example/
@@ -26,8 +26,6 @@ data/example/
 │   ├── cultivation/dual_meditation.json  Only yields beside a friend holding a manual
 │   ├── aura_zone/common_land.json           Where the aura is
 │   ├── aura_zone/misty_valley.json          A denser zone (aura environment tutorial)
-│   ├── block_aura/spirit_stone_ore.json     Blocks that emit aura
-│   ├── item_aura/spirit_stone.json          Items that act as cultivation fuel
 │   ├── spirit_root/fire_root.json           Granted by a pill
 │   ├── spirit_root/fire_common_root.json    Two elements with shares (spirit root tutorial)
 │   ├── physique/sword_bone.json             Attributes, exclusion tags, damage multipliers
@@ -51,22 +49,27 @@ data/example/
 │   ├── tribulation/heavenly_gate.json       The trial a breakthrough starts
 │   ├── forging_method/light_strike.json     One strike: meter shift, cost, cooldown
 │   ├── forging_method/heavy_strike.json
-│   ├── tool_binding/smith_hammer.json       Claims the hammer; lists its methods
 │   ├── forging_blueprint/spirit_sword.json  Materials, target band, quality ladder
-│   ├── blueprint_binding/sword_manual.json  Claims the manual; lists its blueprint
 │   ├── quality/common.json             Quality tiers: chain identity, next tier, step cost
 │   ├── quality/refined.json
 │   ├── quality/flawless.json
-│   ├── item_binding/qi_pill.json            Bindings attach rules to real items
-│   ├── item_binding/root_pellet.json
 │   ├── pill/qi_pill.json                   What the pill does: dose action, toxicity, overdose
 │   ├── pill_binding/qi_pill.json            Which items are that pill, and their cap and cooldown
-│   ├── weapon_binding/spirit_sword.json
 │   ├── technique_binding/azure_manual.json
 │   ├── trigger/azure_mastery_from_kill.json  A kill raises mastery
 │   └── contract_type/spirit_familiar.json   Conditions, costs and caps for one beast
 ├── tags/entity_type/contract/spirit_familiar.json  Narrows which entities it accepts
 └── (kubejs/startup_scripts/mxt_items.js)    The items themselves, registered by KubeJS
+
+data/mxt/data_maps/                            The data maps, keyed by id or tag
+├── item/
+│   ├── item_aura.json          Items that act as cultivation fuel
+│   ├── item_binding.json       Rules attached to real items
+│   ├── weapon_binding.json     Weapon attributes and the three combat hooks
+│   ├── tool_binding.json       Which methods a tool item unlocks
+│   └── blueprint_binding.json  Which blueprints a blueprint item offers
+└── block/
+    └── block_aura.json         Blocks that emit aura
 ```
 
 ## The Tutorials
@@ -98,10 +101,10 @@ data/example/
 ## Conventions
 
 - **Namespace.** All examples use `example`. Rename it to your own modpack or content pack id, and keep the ids of the files and the references between them in sync.
-- **File locations.** Data pack files go under `data/<namespace>/mxt/<registry>/<path>.json`; tags go under `data/<namespace>/tags/...`. Once there is a lot of content, sort the files into subdirectories by category (the directories are part of the ID) — the [Datapack Overview](../datapack/overview.md) spells it out. The full list is in [JSON Data Formats](../datapack/json/index.md).
-- **Applying changes.** MiXianTu data tables are native data pack registries, which Minecraft reads **while the world loads**, so `/reload` does not re-read them. After editing a data pack file, leave to the title screen and open the world again (or restart the server). `/reload` only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts. Registering new items or blocks with KubeJS also needs a game restart.
+- **File locations.** Data pack files go under `data/<namespace>/mxt/<registry>/<path>.json`; tags go under `data/<namespace>/tags/...`. The **data maps** (eight of them: six keyed by item, two keyed by block) are the exception: the item-keyed ones go under `data/mxt/data_maps/item/` and the block-keyed ones under `data/mxt/data_maps/block/`, named after the table (for instance `item_aura.json`); the first namespace is the table's own `mxt` — a content pack adds values by dropping another file into that same directory. Once there is a lot of content, sort the files into subdirectories by category (the directories are part of the ID) — the [Datapack Overview](../datapack/overview.md) spells it out. The full list is in [JSON Data Formats](../datapack/json/index.md).
+- **Applying changes.** MiXianTu's 31 data pack registries and its nine data maps are both read by Minecraft **while the world loads**, so `/reload` does not re-read them. After editing a data pack file, leave to the title screen and open the world again (or restart the server). `/reload` only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts. Registering new items or blocks with KubeJS also needs a game restart.
 - **Broken files block the world.** There is no previous snapshot to fall back on: if a definition fails to decode, the world will not load until the file is fixed. The log names the file and the codec error, so keep the last working copy of a file you are editing.
-- **Verifying.** `/mxt registries validate` reports the registry count, the total entry count and whether validation passed, and `/mxt registries list` prints each registry id with its entry count. Both cover only some of the registries; each tutorial's Verify section says what applies to it. The other commands are listed in [Commands](../player-guide/commands.md).
+- **Verifying.** `/mxt registries validate` reports the registry count, the total entry count and whether validation passed, and `/mxt registries list` prints each registry id with its entry count (the nine data maps are not registries and are not in it). Both cover only some of the registries; each tutorial's Verify section says what applies to it. The other commands are listed in [Commands](../player-guide/commands.md).
 - **Version.** These pages follow the mod's **current development version** (no version number is pinned in the documentation — the jar you installed is the authority). The mod is still in development and its data pack format is not frozen; when a field changes, the reference page changes with it.
 
 ## Where to Go Next

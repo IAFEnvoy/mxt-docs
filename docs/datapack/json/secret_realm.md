@@ -18,6 +18,7 @@ aside: false
 | --- | --- | --- | --- |
 | `name` | Text Component | `secret_realm.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
 | `description` | Text Component | `secret_realm.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
+| `quality` | 品质 id | 无 | 可选。进入这座秘境的令牌起始的档位。 |
 | `generation` | 生成参数 | **必填** | 实例维度怎么造出来，见下。 |
 | `seed` | Long | `0` | `0` 表示每份实例随机一个种子；非 0 时所有实例共用。 |
 | `border` | 对象 | 无 | 秘境边界：`center`（`[x, z]`，默认 `[0, 0]`）、`size`（直径，默认原版 `29999984`）、`warning_blocks`（默认 `5`）、`warning_time`（默认 `15`，秒）、`damage_per_block`（默认 `0.2`）、`safe_zone`（默认 `5`）。 |
@@ -33,6 +34,8 @@ aside: false
 | `exit_denied_message` | `Component` | 无 | 同上，作用于退出条件。 |
 | `enter_action` | `EntityAction` | `mxt:no_op` | 进入行为，作用于进入者，时机在传送落位之后。 |
 | `exit_action` | `EntityAction` | `mxt:no_op` | 离开行为，作用于离开者，时机在传送回原位置之前。 |
+
+`quality` 是可选的：所有秘境共用同一件令牌物品 `mxt:secret_realm_token`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出——进入这座秘境的令牌起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
 
 `exit_condition` **不看**过期与强制送回，否则数据包能把玩家永久锁在秘境里。
 

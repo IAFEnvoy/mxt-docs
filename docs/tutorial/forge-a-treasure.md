@@ -7,7 +7,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 
 锻造台不合成物品，它**打**物品：你放进去一份材料，它按一张图纸给出目标，玩家用一个个"手法"把一条数值条推进区间，最后按**多打了几锤**决定品质。同一个结果可以是凡品，也可以是绝品，区别只在过程。
 
-这套系统的数据分四处：`forging_method` 是单次锻打，`tool_binding` 认领工具物品并给出它们解锁的手法，`forging_blueprint` 是"要什么材料、打成什么样"，`blueprint_binding` 则认领图纸物品并给出它们提供的蓝图。四张都是数据表：定义用 `items` 直接认领物品，**不需要给物品挂任何组件**；只有想让某几堆临时多带一份手法或图纸时，才用堆上的列表组件。
+这套系统的数据分四处：`forging_method` 是单次锻打，`tool_binding` 是以**工具物品**为键的数据表、给出它们解锁的手法，`forging_blueprint` 是"要什么材料、打成什么样"，`blueprint_binding` 则是以**图纸物品**为键的数据表、给出它们提供的蓝图。两张数据表都以物品 id 或 `#物品标签` 为键，**不需要给物品挂任何组件**；只有想让某几堆临时多带一份手法或图纸时，才用堆上的列表组件。
 
 本篇给示例包加一条铁剑生产线：四种手法、一把铁匠锤、一张图纸物品和三个品质档。
 
@@ -19,9 +19,9 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 | `data/example/mxt/forging_method/heavy_strike.json` | 重锤：数值 `+2`，带消耗、条件、冷却与音效。 |
 | `data/example/mxt/forging_method/quench.json` | 淬火：数值 `-1`，零消耗。 |
 | `data/example/mxt/forging_method/temper.json` | 回火：数值 `+2`，零消耗。 |
-| `data/example/mxt/tool_binding/smith_hammer.json` | 铁匠锤解锁哪四种手法。 |
+| `data/mxt/data_maps/item/tool_binding.json` | 铁匠锤解锁哪四种手法。 |
 | `data/example/mxt/forging_blueprint/spirit_sword.json` | 材料、允许手法、锻打条、收尾模式、品质阶梯、失败结算。 |
-| `data/example/mxt/blueprint_binding/sword_manual.json` | 图纸物品提供哪一份蓝图。 |
+| `data/mxt/data_maps/item/blueprint_binding.json` | 图纸物品提供哪一份蓝图。 |
 | `data/example/mxt/quality/flawless.json` | 品质阶梯的最高一档。 |
 
 ## 第 1 步 —— 一次锻打是什么
@@ -67,34 +67,42 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 
 ## 第 2 步 —— 工具与图纸物品
 
-两张绑定表都认领物品：写 `items` 说明这份定义管哪件（或哪族）工具、图纸，再给出这组定义：
+数据表以物品 id 或 `#物品标签` 为键：键说明这份值管哪件（或哪族）工具、图纸，值给出这组定义：
 
 ```json
-// data/example/mxt/tool_binding/smith_hammer.json
+// data/mxt/data_maps/item/tool_binding.json
 {
-  "items": "example:smith_hammer",
-  "methods": [
-    "example:heavy_strike", "example:light_strike",
-    "example:quench", "example:temper"
-  ]
+  "values": {
+    "example:smith_hammer": {
+      "methods": [
+        "example:heavy_strike", "example:light_strike",
+        "example:quench", "example:temper"
+      ]
+    }
+  }
 }
 ```
 
 ```json
-// data/example/mxt/blueprint_binding/sword_manual.json
+// data/mxt/data_maps/item/blueprint_binding.json
 {
-  "items": "example:sword_manual",
-  "blueprints": ["example:spirit_sword"]
+  "values": {
+    "example:sword_manual": {
+      "blueprints": ["example:spirit_sword"]
+    }
+  }
 }
 ```
 
-**工具与图纸物品由此自动生效**：定义的 `items` 命中谁，谁放进锻造台对应槽位就有效，物品本身不复制定义，所以改绑定表不需要动物品。
+两张数据表的文件固定放在 `data/mxt/data_maps/item/tool_binding.json` 与 `data/mxt/data_maps/item/blueprint_binding.json`：第一段命名空间是**表自己的** `mxt`，不是内容包的——内容包要加值，是往同一个目录里再放一个文件。
+
+**工具与图纸物品由此自动生效**：数据表里为谁写了值，谁放进锻造台对应槽位就有效，物品本身不复制定义，所以改数据表不需要动物品。
 
 **可用手法 = 蓝图 `allowed_methods` ∩ 所有已放置工具 `methods` 的并集。** 蓝图没声明 `allowed_methods` 时，蓝图一侧不做限制，列表就是工具的并集。
 
 ### 给物品堆临时附加
 
-绝大多数情况下这一步什么都不用做：定义的 `items` 已经认领了物品。两条**逐堆**附加的路：
+绝大多数情况下这一步什么都不用做：数据表里已经为这些物品写了值。两条**逐堆**附加的路：
 
 **测试用 `/give` 的物品组件语法**（不用写代码，改完数据表直接试）：
 
@@ -103,11 +111,11 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 /give @s minecraft:paper[mxt:forging_blueprints=["example:spirit_sword"]]
 ```
 
-**正式整合包不需要这条路**：把工具 / 图纸物品的 id 写进对应定义的 `items` 就够了，物品注册的地方一个字都不用改。（物品本身由内容包注册，例如用 [KubeJS](./create-items-with-kubejs.md)；本教程只写数据表，所以上面那条组件写法也是手边没有这两件物品时最快的试法。）
+**正式整合包不需要这条路**：把工具 / 图纸物品的 id 写成数据表的键就够了，物品注册的地方一个字都不用改。（物品本身由内容包注册，例如用 [KubeJS](./create-items-with-kubejs.md)；本教程只写数据表，所以上面那条组件写法也是手边没有这两件物品时最快的试法。）
 
 ::: tip 两条路指向的是同一批定义
 
-`items` 里写的是**物品** id（`example:smith_hammer`），堆上的组件里写的是**注册表条目** id（`example:heavy_strike` 属于 `forging_method` 注册表）。定义认领与堆上的列表**取并集**，所以工具槽问的是「这堆能解析出至少一种手法吗」；两处任一写错 id，那一项就解析不出来。
+数据表的键写的是**物品** id（`example:smith_hammer`），堆上的组件里写的是**注册表条目** id（`example:heavy_strike` 属于 `forging_method` 注册表）。数据表的值与堆上的列表**取并集**，所以工具槽问的是「这堆能解析出至少一种手法吗」；两处任一写错 id，那一项就解析不出来。
 
 :::
 
@@ -192,7 +200,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 - 品质取第一个满足 `额外步数 ≤ max_extra_steps` 的档，所以这个列表必须**升序**，并留一个 `2147483647` 兜底。
 - 档位的颜色写在**品质定义**自己的 `color` 上（选填）：写了就给提示框的物品名、提示框里品质那一行、`/picker` 里品质分类的条目名与蓝图 tooltip 的档位表上色，不写就保持原样（不是"默认白色"）。这张档位表本身在锻造台的蓝图 tooltip 里能看到，交工后读数区还会显示成品的那一档。
 - **材料的品质会除这个额外步数。** `quality` 的 `forging_modifier` 大于 1 时，同样的额外步数会被算成更少，于是拿到更好的档；多种材料取其中**最低**的一档（一件成品只和它最差的材料一样好），没有品质可解析的材料被跳过；修正项缺失或不可用时按 `1` 处理。
-- 这里读的是**蓝图声明的 `id` + `count`**（结算时重新构造的一份普通物品栈），而不是被拿走的那一摞。因此**只写在某一摞上的 `mxt:quality` 组件读不到**：要么把这种材料声明成灵植，品质才会参与锻造结算（品质链不参与这一格：链名只写在 `quality` 档位自己身上，绑定表不声明链）。
+- 这里读的是**这场会话锁定的那些材料堆**（结算时确实被拿走的那几摞），不是工具槽与图纸槽——后两者不消耗、会话中还能改，读它们的档只会描述台子此刻长什么样。所以材料堆上的 `mxt:quality` 组件算数，物品在 [default_quality](../datapack/json/default_quality.md) 里写的兜底档也算数。品质链不参与这一格：链名只写在 `quality` 档位自己身上，绑定表不声明链。
 
 ::: tip 完成是自动的
 
@@ -243,7 +251,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 /mxt registries list
 ```
 
-这两件物品还没注册的话，把定义里的 `items` 换成原版物品，或者直接给原版物品挂组件：
+这两件物品还没注册的话，把数据表的键换成原版物品，或者直接给原版物品挂组件：
 
 ```text
 /give @s minecraft:iron_ingot[mxt:forging_methods=["example:heavy_strike","example:light_strike","example:quench","example:temper"]]
@@ -256,7 +264,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 4. 在右列表选中一个手法（图标就是 `icon`，悬停显示"数值影响：+2"），按「使用方法」。当前值移动，下面的"当前"一行记录最近六锤；选中手法时条上还会出现一条黄色预测线。
 5. 把当前值打进绿带，并让最后两锤是"轻敲 → 重锤"。会话会自动结算，成品落进输出格，Tooltip 里出现品质行——显示的文字就是 `flawless.json` 里 `name` 指向的内容；`name` 省略时按条目 id 自动生成 `quality.mxt.example.flawless`（写翻译键的话，记得在自己的语言文件里给它一条译文）。
 6. 再打一件，这次故意多绕几锤，比较两次的品质。想中途放弃就按「取消」，材料按取消策略退回。
-7. `/mxt registries validate` 应当无错误，`/mxt registries list` 里能看到 `mxt:forging_method`、`mxt:forging_blueprint`、`mxt:tool_binding`、`mxt:blueprint_binding` 的条目数。
+7. `/mxt registries validate` 应当无错误，`/mxt registries list` 里能看到 `mxt:forging_method` 与 `mxt:forging_blueprint` 的条目数（`tool_binding` 与 `blueprint_binding` 现在是数据表，不在注册表列表里）。
 
 ::: tip 自动化与拒绝原因
 
@@ -270,14 +278,14 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 
 | 现象 | 原因 |
 | --- | --- |
-| 左列表空的 | 蓝图槽里没放物品，或者放进去的物品没有任何 `blueprint_binding` 定义的 `items` 认领、它自己也没带 `mxt:forging_blueprints` 组件。**没有"列出全注册表"的回退**：三格为空就没有蓝图。 |
+| 左列表空的 | 蓝图槽里没放物品，或者放进去的物品在 `blueprint_binding` 数据表里没有任何值、它自己也没带 `mxt:forging_blueprints` 组件。**没有"列出全注册表"的回退**：三格为空就没有蓝图。 |
 | 右列表里没有你要的手法 | 交集为空：蓝图 `allowed_methods` 里没有它，或没有任何已放置的工具解锁它。 |
 | 蓝图定义加载失败 | `input` 为空、超过 15 项、同一物品写两次、ID 解析不出；`meter_min`/`meter_max` 没有跨过 0；品质阶梯不是升序或末项不是 `2147483647`；`finish_pattern` 要校验却不是六项。 |
 | 「使用蓝图」按钮是灰的 | 材料不足（悬停蓝图看哪一行是 `✖`）、输出格里有东西，或者会话已经在跑。 |
 | 按「使用蓝图」没反应 | 服务端拒绝了。除了材料/输出格，最常见的是**目标区间不可达**：按这份蓝图允许的手法与收尾模式，搜索找不到解。 |
 | 怎么打都完不成 | 收尾模式要求的手法没有对应工具解锁；或者数值一直没进区间——注意越界的那一锤会被直接拒绝。 |
 | 打到步数上限还没有成品 | `max_steps` 到了仍未满足条件：**下一次**锻打把会话判失败，按 `failure_settlement` 结算。 |
-| 成品品质每次都一样 | 每次都用最短解（额外步数恒为 0）；或者材料的品质读取不到——只用 `mxt:quality` 组件标了品质的材料不算，见第 4 步。 |
+| 成品品质每次都一样 | 每次都用最短解（额外步数恒为 0）；或者材料的品质解析不出来——给材料一个档要么写堆上的 `mxt:quality` 组件，要么写 [default_quality](../datapack/json/default_quality.md)，灵植定义自身不声明档位，见第 4 步。 |
 | 中途一把手法突然不可用 | 可用手法每次锻打都重算，工具槽不锁定：拿掉锤子就少一批手法。 |
 | 冷却中按了没用 | `cooldown` 是按（玩家, 台子）记的，而且在条件与扣费**之前**判定，所以一次被打回的锻打也占冷却。 |
 | 材料没退回手里 | 输入格满了，多出来的部分掉在脚下。 |
@@ -286,6 +294,6 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 
 - [forging_blueprint（锻造图纸）](../datapack/json/forging_blueprint.md) —— 图纸的完整字段表与校验规则。
 - [forging_method（锻造手法）](../datapack/json/forging_method.md) 与 [tool_binding（工具绑定）](../datapack/json/tool_binding.md) —— 手法与工具那一半。
-- [blueprint_binding（图纸绑定）](../datapack/json/blueprint_binding.md) —— 定义怎么认领图纸物品，以及堆上的列表组件怎么追加。
+- [blueprint_binding（图纸绑定）](../datapack/json/blueprint_binding.md) —— 数据表怎么为图纸物品写值，以及堆上的列表组件怎么追加。
 - [quality（品质）](../datapack/json/quality.md) —— `forging_modifier`、品质链的顺序与入口档、以及品质的解析顺序。
 - [MxtEvents：事件](../kubejs/api/events.md) —— 用脚本读/改锻打消耗、拦下某个阶段。

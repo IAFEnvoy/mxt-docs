@@ -33,7 +33,7 @@ The price is that "gone" means gone: an entry whose condition fails is the same 
 
 ## Why Does `/reload` Not Apply My Edit?
 
-MiXianTu's data tables are native Minecraft data pack registries, and Minecraft reads those **while the world loads**. `/reload` only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts, so it never re-reads a MiXianTu table.
+MiXianTu's registries are native Minecraft data pack registries and its data maps are read in the same pass, and Minecraft reads them **while the world loads**. `/reload` only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts, so it never re-reads a MiXianTu registry or data map.
 
 To apply an edit, load the world again: in single player, leave to the title screen and open the world again; on a server, restart it. A file that cannot be decoded prevents the world from loading until it is fixed, because the registries keep no previous snapshot. See [Loading, Syncing and Debugging](./datapack/overview.md#loading-syncing-and-debugging).
 

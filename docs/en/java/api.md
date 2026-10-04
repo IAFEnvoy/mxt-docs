@@ -23,6 +23,7 @@ Three things up front:
 | Evaluate a datapack number | [`NumberProvider`](#numberprovider) | `util.formula` |
 | Ask "does this item count as this definition" | [`ItemMatcher`](#itemmatcher) | `util.matcher` |
 | Turn a registry's definitions into creative tab items | [`CreativeTabHelper`](#creativetabhelper) | `data` |
+| Ask which tier a stack reads, and let your own definitions answer | [`QualityService` / `QualityProvider`](#qualityservice) | `runtime.item` / `api` |
 | Ask how much aura a position has | [`AuraService`](#auraservice) | `runtime.world` |
 | Read or write one value on an entity | [`ResourceService`](#resourceservice) | `runtime.resource` |
 | Add cultivation progress, break through, set a realm | [`CultivationService`](#cultivationservice) | `runtime.cultivation` |
@@ -39,7 +40,9 @@ Three things up front:
 
 ### `MxtDatapackRegistries` {#mxtdatapackregistries}
 
-Package `com.iafenvoy.mxt.registry`. The declarations of the 39 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
+Package `com.iafenvoy.mxt.registry`. The declarations of the 31 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
+
+The nine item/block **data maps** (NeoForge Registry Data Maps) are not here: they are declared in `com.iafenvoy.mxt.registry.MxtDataMaps`, they are not registries and have no holder to look up. A caller reads one straight off the entry: `stack.getData(MxtDataMaps.X)` / `state.getData(MxtDataMaps.X)` (`ItemStack` and `BlockState` implement `IWithData` themselves, and the platform forwards it to the entry's own holder), with no other wrapper method. Fields and file locations are on [Data Maps](/en/datapack/overview#data-maps).
 
 Reading a value by id / holder (it reads the **server** registry):
 
@@ -94,7 +97,6 @@ Package `com.iafenvoy.mxt.util`. Turns a definition into a display name; the key
 | `key(String category, String registryNamespace, Identifier id)` | The low-level concatenation | **The only exit for building a definition key**; `ContextNameCodec`'s default value goes through it too |
 | `defaultText(String category, ResourceKey<?> entry, String suffix)` | The fallback text when a definition writes no `name` / `description` | **The only exit for fallback text**; `suffix` of `""` is the name, `".description"` is the description |
 | `resolved(Component text)` | Whether this text is "real text" or "an untranslated bare key" | Reads the client language file; a display-layer judgement |
-| `rarity(String rarity)` | Displays free text (the `rarity` of `spirit_root` / `physique`) | Looks up `mxt.rarity.<value>` first, using the translation when there is one and the literal otherwise |
 
 Key points: **do not assemble a second set of name keys anywhere else**; an untranslated key renders as the key itself (not an empty string), and `resolved(...)` is there to decide exactly that.
 
@@ -156,15 +158,17 @@ Key points:
 
 ### `CreativeTabHelper` {#creativetabhelper}
 
-Package `com.iafenvoy.mxt.data`. The **read** side of the "registry → selectable rows" catalogue: `/picker` and other mods both go through it. Each entry is one `PickerItem(stack, names)` row: `stack` is what is drawn, `names` are the names that row can be searched by. It is read-only — it writes nothing onto items and decides nothing about who may take them.
+Package `com.iafenvoy.mxt.data`. The **read** side of the "table → selectable rows" catalogue: `/picker` and other mods both go through it. Each entry is one `PickerItem(stack, names)` row: `stack` is what is drawn, `names` are the names that row can be searched by. It is read-only — it writes nothing onto items and decides nothing about who may take them.
+
+A category is a `PickerCategory` (`com.iafenvoy.mxt.screen.picker`) whose `id()` is exactly the id the command and the open packet use; there are two kinds: `OfRegistry` wraps a registry key and `OfDataMap` wraps a data map. The category id does not change, but whether the table is a registry or a data map decides where the rows come from: a registry category keeps one row per definition, a data map category's rows are **the items or blocks that carry a value**, named by the entry's own name. That is why there is an overload for a `PickerCategory` and one for a registry key.
 
 Every query takes the registry access from you (`HolderLookup.Provider`; `BuildCreativeModeTabContentsEvent.getParameters().holders()` is one), so the client reads the tables it has synced and the server reads its own — there is no "reading the other side" case.
 
 | Method | What it does | Notes |
 | --- | --- | --- |
-| `itemsOf(Provider, key)` | Every row of one table | `key` is the registry key; **a table that was never registered as a category gives an empty list**, never a throw |
-| `itemsOf(Provider, key, Predicate<Holder<?>>)` | Filter rows by definition | The predicate receives the definition's holder, so filtering by id and by the definition itself are the same door — which is why "a mod id" means reading the holder's namespace |
-| `itemsOfMod(Provider, key, String)` | The rows of one table that live in one namespace | `mxt:aura` entries belong to `mxt`, `mymod:aura/…` to `mymod`; in the item and block tables the definition *is* the item, so the namespace is the item's |
+| `itemsOf(Provider, category)` / `itemsOf(Provider, key)` | Every row of one table | `category` is a category object and `key` a registry key; **a table that was never registered as a category gives an empty list**, never a throw |
+| `itemsOf(Provider, category, Predicate<Identifier>)` / `itemsOf(Provider, key, Predicate<Identifier>)` | Filter rows by entry id | The predicate receives **the row's own id**: a definition's id for a registry category, the item's or block's own id for a data map — which is why "a mod id" means reading its namespace |
+| `itemsOfMod(Provider, category, String)` / `itemsOfMod(Provider, key, String)` | The rows of one table that live in one namespace | `mxt:aura` entries belong to `mxt`, `mymod:aura/…` to `mymod` |
 | `itemsOfMod(Provider, String)` | Across every category, the rows of one namespace | What a "everything from my mod" creative tab uses |
 | `stacksOf(...)` / `stacksOfMod(...)` | The stack view of the four above | See below |
 
@@ -175,7 +179,7 @@ Key points:
 - The queries have no side effects and work on both sides: they read only the access you pass in, touch no server singleton and write no attachment.
 - To draw the same rows as a picker page instead of feeding a tab, use `ItemPickerScreen.over(title, stacks)`, see [The Item Picker](screens.md#the-item-picker-itempickerscreen).
 
-**The catalogue itself lives elsewhere**: which registry maps to which rows, and how each row is built, is `com.iafenvoy.mxt.screen.picker.ItemPickerManager` — `categories()` / `category(Identifier)` list the categories and `registerSingle` / `register` add one (the `mxt:` definitions are registered by the mod). `CreativeTabHelper` only reads it, so the two classes stay apart. One limit to know: **one registry honours only the first category registered for it** — registering a second one for a key already taken is **silently inert** (the category list also lists it once).
+**The catalogue itself lives elsewhere**: which table maps to which rows, and how each row is built, is `com.iafenvoy.mxt.screen.picker.ItemPickerManager` — `categories()` gives every category object in registration order (its `id()` is the id the command and the open packet use), `category(Identifier)` finds one by id, `registerSingle` / `register` add a registry category and `registerDataMap` a data map one (the `mxt:` tables are registered by the mod). `CreativeTabHelper` only reads it, so the two classes stay apart. One limit to know: **one table honours only the first category registered for it** — registering a second one for an id already taken is **silently inert** (the category list also lists it once).
 
 ```java
 // Your own creative tab: everything this mod contributed (plus its own items)
@@ -186,6 +190,52 @@ public void buildContents(BuildCreativeModeTabContentsEvent event) {
         event.accept(stack);
 }
 ```
+
+## Item quality {#quality}
+
+### `QualityService` and `QualityProvider` {#qualityservice}
+
+Packages `com.iafenvoy.mxt.runtime.item` (the service) and `com.iafenvoy.mxt.api` (the interface). **There is exactly one resolution order for "which tier is this stack"**, and it lives in one place, `QualityService.find`. It walks **three layers** in order: the `mxt:quality` component on the stack, then **the definition the stack itself carries**, then the `mxt:default_quality` data map. Nine definitions in this mod sit on the second layer today. For the field-level rules see [Quality](/en/datapack/json/quality).
+
+`api/QualityProvider` is the contract a **definition type** implements to say "the tier my own items start on is mine to answer".
+
+```java
+public interface QualityProvider {
+    Optional<Holder<ItemQuality>> defaultQuality();
+}
+```
+
+**Implementing it alone changes nothing.** A definition type also has to register a carrier component with `QualityService.carry` before it joins the second layer:
+
+| Overload | Use it when |
+| --- | --- |
+| `carry(Supplier<? extends DataComponentType<Holder<T>>> type)` | the component's value **is** the definition, so it is read straight as a `Holder<T>` |
+| `carry(Supplier<? extends DataComponentType<C>> type, Function<C, Optional<Holder<T>>> extract)` | the component is a record with the definition inside it, pulled out by `extract` |
+
+`T extends QualityProvider`, so registering a carrier for a definition type that does not implement the interface **does not compile**.
+
+Key points:
+
+- **There is one registration order**: this mod's own carriers are registered in `QualityService`'s static block at class load, so an addon's carriers come after them. A lookup walks the whole list in registration order and the first one to answer wins.
+- **It is a registration, not a scan of whatever components a stack happens to carry**: when two providers sit on one stack, only the registration order can decide who is asked first - component iteration order has no contract at all.
+- **A carrier has to answer from the stack alone**: neither overload is handed a registry, because the gate that decides whether an item may be used (`QualityService.check`) only has the quality registry in hand. A design that wants to look another registry up by id will not work here.
+- **An unbound reference answers nothing**: when the holder a carrier pulls out is unbound (the current pack deleted that definition) this layer answers empty and resolution falls through, rather than producing a dead tier.
+- **The definition type is only the thing being asked**: what actually gets read is the definition's own `defaultQuality()`, so once a type implements the interface and registers a carrier, every one of its definitions joins the second layer automatically.
+
+The rest of `QualityService`'s public surface:
+
+| Method | What it does | Notes |
+| --- | --- | --- |
+| `find(Provider access, ItemStack stack)` | The tier this stack resolves to | The one implementation of the three-layer order; an empty stack gives empty |
+| `set(stack, quality)` / `clear(stack)` | Write / remove the override component | After `clear` the stack falls back to **the definition it carries**, then to the data map |
+| `hasOverride(stack)` | Whether the stack **has** that component | A different question from "did a tier resolve": a stack with no component can still read a tier from its definition or the data map |
+| `canUse(user, stack)` / `check(user, stack)` | The "may this be used" gate | `check` returns a `Failure`; binding conditions, the tier's own `condition`, pill use caps and cooldowns all live here |
+| `modifier(...)` | One of the quality's three modifiers | A multiplier; missing, non-finite or ≤ 0 all fall back to `DEFAULT_MODIFIER` (`1.0`) |
+| `displayName(quality)` | The tier's own name, in the tier's own colour | **The one way to list a tier** (it is `coloredName(quality, DefinitionText.name(quality))`); `/quality get\|set\|upgrade`, the spirit-root / physique lists and drawing settlement all go through it |
+| `coloredName(quality, text)` | Puts this tier's `color` on some **other** text | Returns the text unchanged when the quality declares no colour |
+| `ordered()` / `ordered(Provider access)` | Every tier, ordered by the `tooltip_order` tag | Clients use the overload that takes a `Provider` |
+
+Use `set` to store a single-stack override rather than writing the component yourself, and call `notifyCannotUse` when a refused use should give the player the same message (it is public so an interaction that runs below the gate's own priority can still report the refusal it sees).
 
 ## Aura and resources {#aura}
 
@@ -405,7 +455,7 @@ Key points:
 A formation's framework (structure, radius, costs) is on `Formation`; "what this formation does" is decided by its `actions` list, and every item in that list is a **functional module**.
 
 - `FormationActionType` (`com.iafenvoy.mxt.data.formation`) is the shape of a module: a `codec()`, plus a `CODEC` dispatching on the JSON `"type"` field (it must be a `Codec` rather than a `MapCodec`, because a formation holds a **list** of modules).
-- The dispatch registry `mxt:formation_action_type` is a **built-in registry** (default entry `none`), registered statically in code through `NewRegistryEvent`, and **not one of the 39 datapack registries in `MxtDatapackRegistries`**.
+- The dispatch registry `mxt:formation_action_type` is a **built-in registry** (default entry `none`), registered statically in code through `NewRegistryEvent`, and **not one of the 31 datapack registries in `MxtDatapackRegistries`**.
 - So: **a datapack can freely add `mxt:formation` entries (module combinations and parameters), but it cannot add a module type**. One more module kind = one record + one `DeferredRegister` registration, and the runtime dispatches on the record type, which is why the `data` package never touches the world.
 - There are currently only 5 legal `type`s, all registered in `MxtFormationActionTypes`: `mxt:none` (`NONE`, also the dispatch registry's default), `mxt:attack` (`ATTACK`), `mxt:buff` (`BUFF`), `mxt:protection` (`PROTECTION`), `mxt:range_display` (`RANGE_DISPLAY`).
 - Registration happens only once through `MxtFormationActionTypes.REGISTRY`; **do not register it again elsewhere, and do not build a second formation module registry**.

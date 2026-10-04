@@ -18,6 +18,7 @@ A secret realm definition is **a template**, not one fixed dimension: every entr
 | --- | --- | --- | --- |
 | `name` | Text Component | `secret_realm.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
 | `description` | Text Component | `secret_realm.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
+| `quality` | Quality id | none | Optional. The tier a token into this realm starts on. |
 | `generation` | Generation parameters | **required** | How the instance dimension is produced, see below. |
 | `seed` | Long | `0` | `0` means every instance rolls its own seed; any other value is shared by all instances. |
 | `border` | Object | none | The realm border: `center` (`[x, z]`, default `[0, 0]`), `size` (diameter, default the vanilla `29999984`), `warning_blocks` (default `5`), `warning_time` (default `15`, seconds), `damage_per_block` (default `0.2`) and `safe_zone` (default `5`). |
@@ -33,6 +34,8 @@ A secret realm definition is **a template**, not one fixed dimension: every entr
 | `exit_denied_message` | `Component` | none | The same, for the exit condition. |
 | `enter_action` | `EntityAction` | `mxt:no_op` | The entry behaviour, run on the entering entity after the teleport has landed. |
 | `exit_action` | `EntityAction` | `mxt:no_op` | The exit behaviour, run on the leaving entity before the teleport back to the origin. |
+
+`quality` is optional: every realm shares the one token item `mxt:secret_realm_token`, so the item itself cannot say which tier it is — only the definition the stack carries can: a token into this realm starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
 
 `exit_condition` **looks at neither** an expiry nor a forced return, otherwise a datapack could lock a player inside a secret realm forever.
 

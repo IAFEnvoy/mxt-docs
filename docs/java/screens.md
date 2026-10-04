@@ -156,7 +156,7 @@ if (screen != null) Minecraft.getInstance().setScreen(screen);
 
 `/picker` 仍然要求 gamemaster 权限，并要求 `player.hasInfiniteMaterials()`——后者不是额外的保守，而是和那个包被检查的条件对齐：开一个服务端每个动作都会拒绝的面板，比不开更糟。
 
-`ItemPickerManager` 只负责「注册表 → 可选项」的映射，现在只是**界面内容**的来源，服务端不再需要它。它产出的每一项是 `PickerItem(stack, names)`：**要画的堆**，加上**这一行能被哪些名字搜到**。堆本身保持原样，**不往物品上写任何东西**（没有自定义名称、没有后缀）——同一件替身物品代表好几个定义时靠搜索区分，不靠名字上的标记。名字交给目录自己给：
+`ItemPickerManager` 只负责「分类 → 可选项」的映射，现在只是**界面内容**的来源，服务端不再需要它。它产出的每一项是 `PickerItem(stack, names)`：**要画的堆**，加上**这一行能被哪些名字搜到**。堆本身保持原样，**不往物品上写任何东西**（没有自定义名称、没有后缀）——同一件替身物品代表好几个定义时靠搜索区分，不靠名字上的标记。名字交给目录自己给：
 
 - 物品/方块注册表的条目本身就是物品，堆上已经写着它叫什么，于是名字就是「它显示的名字 + 它的注册 id」；
 - 数据驱动定义没有自己的物品，堆上根本看不出它代表谁，于是名字由 `DefinitionText` 从它的 `Holder` / `ResourceKey` 生成翻译键得到——`mxt:fire` 在 `mxt:aura` 里就查 `aura.mxt.mxt.fire`——再补上它的 id。`resource`、`aura` 等 24 个注册表的定义自带 `name` / `description`，读字段本身；字段省略时由 `ContextNameCodec` 在加载期按 id 生成**同一套**键（描述再加 `.description`）；
@@ -166,7 +166,7 @@ if (screen != null) Minecraft.getInstance().setScreen(screen);
 
 翻译键的拼法统一由 `com.iafenvoy.mxt.util.DefinitionText` 决定：类别就是注册表自己的 path、注册表命名空间恒为 `mxt`，没有例外表。手里已经有 `Holder` / `ResourceKey` 时直接 `DefinitionText.name(holder)`，只有拿到的是一根光秃秃的 `Identifier` 时才需要把类别当参数传进去（`DefinitionText.name(id, "resource")`）。
 
-分类就是注册表本身，`/picker <分类 id>` 可以只列出某一个（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`），不写则给出全部已注册分类。
+分类是一张注册表或一张数据表，`/picker <分类 id>` 可以只列出某一个（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`），不写则给出全部已注册分类。物品选择器界面本身不变。
 
 目录也是**别的模组的入口**：读它的是 `com.iafenvoy.mxt.data.CreativeTabHelper`（`/picker` 这边也走它），每条查询都要求自己传注册表访问器，`itemsOfMod(access, "mymod")` 这类方法挑出某个命名空间（模组 id）的行，`stacksOf` / `stacksOfMod` 再给出**按原版创造栏规则去重、且每份都是拷贝**的堆列表，可以直接喂给自己的创造栏。哪张注册表对应哪些行、怎么登记仍然只有 `ItemPickerManager` 一处（一条注册表只认第一次注册的目录）；方法表与限制见 [Java 公开 API](/java/api#creativetabhelper)。只想把一批现成的堆画成同款界面（不走目录）时用 `ItemPickerScreen.over(title, stacks)`。
 

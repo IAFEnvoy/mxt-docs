@@ -88,16 +88,52 @@ aside: false
 
 ## 品质是哪一档 {#resolution}
 
-一条物品堆的品质按固定顺序取**第一个能拿到的**：
+一条物品堆是哪一档，按固定顺序取**第一个能拿到的**答案。一共**三层**，先命中的赢。
 
-1. 堆上的 `mxt:quality` **组件**（整份品质对象）——[`/quality set`](/player-guide/commands/quality) 与 [MxtQuality](/kubejs/api/quality) 写的就是它，`upgrade` 成功后也写它；
-2. 堆上的锻造结果 `mxt:forging_result` 记着的那一档；
-3. **定义默认档**，依次查：法器 [artifact](./artifact.md) 的 `quality`、符箓载体上铭刻的符所声明的档位、功法 [technique](./technique.md) 的 `quality`，以及炉型 [alchemy_furnace](./alchemy_furnace.md) 的 `quality`；
-4. 匹配到的灵植 [spirit_herb](./spirit_herb.md) 声明的 `quality`。
+**第一层，堆上的 `mxt:quality` 组件**（整份品质对象）。每个写档的地方写的都是它：[`/quality set`](/player-guide/commands/quality) 与 [MxtQuality](/kubejs/api/quality)，一次成功的 `upgrade`，以及**锻造台结算**与**画符铭刻**。它按注册表读回，所以当前包不再提供的那一档答不出东西，这一层落空后继续往下走，不会留下一个死的档位。
 
-链看这一堆解析出的那一档：链名写在档位自己身上，所以绑定表与组件都不必声明链。四格都没有答案时这一堆就是**没有品质**，不会去补某条链的入口档。
+**第二层，这一堆携带的定义自己声明的 `quality`。** 一类定义共用一件内置物品——每本功法手册都是 `mxt:cultivation_jade_slip`、每颗丹都是 `mxt:pill`、每份炉型规格都是方块物品 `mxt:alchemy_furnace`、灵根石是 `mxt:spirit_root`、体质石是 `mxt:physique`——物品本身说不清是哪一档，只有堆上携带的这份定义说得清。这个字段一律可选，为了从堆上读到它，那一类定义要有一个已登记的载体组件（模组在类加载时登记自己的几个；附属模组登记自己的载体是另一页的事）。九个定义声明 `quality`，各由一个已登记的载体读到：
 
-想按档位放行用物品条件 `mxt:item_quality`（**这是条件，组件叫 `mxt:quality`**）：`quality` 接受条目、`#标签` 或数组（至少一项，空表在加载期被拒），读的就是上面这四格解析出来的结果；解析不出任何一档的物品答否，而不是回落到最低档。
+| 定义 | 载体组件 |
+| --- | --- |
+| `technique` | `mxt:technique`，值就是这份定义 |
+| `alchemy_furnace` | `mxt:alchemy_furnace`，值就是这份定义 |
+| `alchemy_wall_material` | `mxt:alchemy_wall_material` |
+| `spirit_root` | `mxt:spirit_root` |
+| `physique` | `mxt:physique` |
+| `pill` | `mxt:pill`，组件是一个 record，定义在它里面的 `pill` 下 |
+| `formation` | `mxt:formation_plate`，定义在 `formation` 下 |
+| `secret_realm` | `mxt:secret_realm_token`，定义在 `realm` 下 |
+| `contract_type` | `mxt:contract_scroll`，定义在 `contract_type` 下 |
+
+当前包不再提供那一档时（那份定义被删掉，或引用没绑定）这一层答空，解析继续往下走。
+
+`spirit_root` 与 `physique` 没有自由文本的档位字段，档位就是它们这个可选的 `quality` 引用；也没有 `mxt.rarity.<值>` 这类按文本值查档位的键。列一档时显示的是那一档自己的名字。
+
+**第三层，数据表 [default_quality](./default_quality.md)**（键是物品 id 或 `#物品标签`，值是一个裸的品质 id）。它是**第三层，也是最后一层**，恰好在这一堆**没有定义可问**的时候给出答案：裸的创造模式 / `/give` 物品，以及**按物品认领**的定义——`artifact` 与 `spirit_herb` 命中一件物品就算数，堆上没有任何装定义身份的组件。
+
+三个定义刻意没有 `quality` 字段：
+
+- `artifact` 与 `spirit_herb` 按物品认领（一件物品命中一份定义），堆上没有装定义身份的组件，没有可问的对象。它们的档写在 `default_quality` 里；一件物品只意味着一份定义时，这就是准确答案。
+- `talisman` 的载体组件 `mxt:talisman` 装的是一**列**铭刻，同一堆上可能有好几张符，没有单份定义可问。它的档由画符配方的 `grades[].quality` 定，铭刻时写进 `mxt:quality` 组件；写不上才兜底到 `default_quality`。
+
+**装列表的载体一律不登记**：`mxt:forging_methods`、`mxt:forging_blueprints`、`mxt:element`、`mxt:talisman`——一列东西答不出「这一堆是哪一档」。
+
+链看这一堆解析出的那一档：链名写在档位自己身上，所以绑定表与组件都不必声明链。三层都没有答案时这一堆就是**没有品质**，不会去补某条链的入口档。
+
+`/quality clear` 摘掉组件之后，这一堆退回**携带的定义**那一档，再退回数据表。堆上的 `mxt:pill` 组件里那些效果字段（`on_consume`、`toxicity_gain` 之类）只改写这一堆服用时做什么，不参与定档：定档读的是它里面 `pill` 那份定义自己的 `quality`。
+
+**三个看起来像默认档、其实不是的东西：**
+
+- `forging_blueprint.quality_by_extra_steps[].quality` —— 锻造曲线上的**目标档**，按额外步数查出来；
+- 画符配方里的 `grades[].quality` —— 完成时命中的**目标档**，铭刻时写进组件；
+- `quality` 条目自己的 `quality` 字段 —— 那是**链名**，写在入口档上。
+
+这三个都不参与「这一堆是哪一档」的解析。
+
+想按档位放行用物品条件 `mxt:item_quality`（**这是条件，组件叫 `mxt:quality`**）：`quality` 接受条目、`#标签` 或数组（至少一项，空表在加载期被拒），读的就是上面**三层**解析出来的结果；解析不出任何一档的物品答否，而不是回落到最低档。
+
+**按档位筛物品只有两条路。** 一是上面这条条件，它是集合/标签的**成员判定**，没有「至少某档」的比较字段：要「三档及以上」就声明一条品质标签（`data/<命名空间>/tags/mxt/quality/<路径>.json`）把 3/4/5 列进去，条件里写 `#<命名空间>:<路径>`，每加一档都要回来补这条标签；二是灵气合成配方的 `key` / `ingredients`，用 `neoforge:components` 按 `mxt:quality` 组件精确匹配（要「及以上」就用 `neoforge:compound` 把几档做或），见[灵气合成](./spirit_crafting.md)。反过来，物品匹配条目（`mxt:item_matcher` 的 `items`、任何 `Cost` 里的 `mxt:item`）与[锻造蓝图](./forging_blueprint.md)的 `input` **读不到品质**：前两者只认 item / tag / wildcard / regex 与三个读数据的条目类型，后者只认硬物品 id 加数量。条件 `mxt:component` 也读不到品质——它要求 `nbt` 是复合标签并做偏序比较，而品质序列化成一个字符串。
 
 原版标签不参与品质解析：`group/<name>` 标签不读，`tooltip_order` 标签也没人读，界面没有任何按品质顺序排序的地方，所以它不是一条排序输入。`color` 只影响画品质名的地方，不参与解析。
 

@@ -15,7 +15,7 @@ This page adds one minimal production line to the example pack: two medicinal pr
 | --- | --- |
 | `data/example/mxt/medicinal_property/nourish.json` | The main-ingredient property. |
 | `data/example/mxt/medicinal_property/calm.json` | The auxiliary property. |
-| `data/example/mxt/quality/common.json` | The tier the herbs and the furnace use; keep the one you already have when the example pack has it. |
+| `data/example/mxt/quality/common.json` | The tier the furnace specification uses; keep the one you already have when the example pack has it. |
 | `data/example/mxt/spirit_herb/herb_a.json` | Main herb: 3 `nourish` power per item, hot. |
 | `data/example/mxt/spirit_herb/herb_c.json` | Auxiliary herb: 3 `calm` power per item, cold. |
 | `data/example/mxt/spirit_herb/herb_d.json` | Catalyst: 1 harmonising power per item, neutral. |
@@ -40,7 +40,7 @@ Write a second file, `calm.json`, the same way. `name` can be omitted, in which 
 
 ## Step 2 — Bind Existing Items as Herbs
 
-A spirit herb registers no new item; it attaches metadata to an **existing item**: a quality, an age, a thermal bias, and how much power it provides in each of the three roles.
+A spirit herb registers no new item; it attaches metadata to an **existing item**: an age, a thermal bias, and how much power it provides in each of the three roles. **A herb definition has no tier field of its own** — a herb is claimed by item, and the stack carries no "which definition am I" component, so resolution has no definition to ask. To give a herb a tier, write it in the [default_quality](../datapack/json/default_quality.md) data map.
 
 ```json
 // data/example/mxt/quality/common.json
@@ -53,7 +53,6 @@ A spirit herb registers no new item; it attaches metadata to an **existing item*
 // data/example/mxt/spirit_herb/herb_a.json
 {
   "items": ["minecraft:red_mushroom"],
-  "quality": "example:common",
   "main_effects": { "example:nourish": "3 + herb_age / 50" },
   "thermal_bias": 1.0
 }
@@ -63,7 +62,6 @@ A spirit herb registers no new item; it attaches metadata to an **existing item*
 // data/example/mxt/spirit_herb/herb_c.json
 {
   "items": ["minecraft:brown_mushroom"],
-  "quality": "example:common",
   "auxiliary_effects": { "example:calm": 3 },
   "thermal_bias": -1.0
 }
@@ -73,7 +71,6 @@ A spirit herb registers no new item; it attaches metadata to an **existing item*
 // data/example/mxt/spirit_herb/herb_d.json
 {
   "items": ["minecraft:sugar"],
-  "quality": "example:common",
   "catalyst_power": "1 + herb_age / 100"
 }
 ```
@@ -109,11 +106,14 @@ A furnace spec is a **specification**, not a block in the world: the core item c
 ```
 
 ```json
-// data/example/mxt/heat_source/magma.json
+// data/mxt/data_maps/block/heat_source.json
 {
-  "blocks": ["minecraft:magma_block"],
-  "max_temperature": 200,
-  "heating_per_tick": 4
+  "values": {
+    "minecraft:magma_block": {
+      "max_temperature": 200,
+      "heating_per_tick": 4
+    }
+  }
 }
 ```
 
@@ -121,7 +121,7 @@ A furnace spec is a **specification**, not a block in the world: the core item c
 - `capacity` caps how many material items one batch may hold, and the item's own stack size still applies.
 - `cooling_per_tick` is how much the heat falls back per tick once it is above the set point or the heat stops. With an empty heat cell the heat cools to `0`.
 - **The furnace withstands the coldest wall in it.** When all 18 casings are valid the furnace takes the lowest of their values and then the lower of that and the heat block's `max_temperature`; mixing in a heat-resistant casing does not average the weak spot away. The set temperature must land between `0` and that ceiling.
-- A `heat_source` gives one family of blocks two numbers: the highest temperature it supplies and how many degrees it adds per tick. `blocks` takes block ids or block tags, and when several definitions match the same block `priority` decides (the highest wins). This one makes **magma blocks** a heat block; the fields and the tie-break rule are under [heat_source](../datapack/json/heat_source.md).
+- A `heat_source` gives one family of blocks two numbers: the highest temperature it supplies and how many degrees it adds per tick. The table is keyed by block id or by a `#`-prefixed block tag, and when several values hit the same block `priority` decides (the highest wins, a tie going to whichever was processed later). This one makes **magma blocks** a heat block; the fields and the tie-break rule are under [heat_source](../datapack/json/heat_source.md).
 - Quality only decides the display name and the use condition. It never derives slots, capacity, cooling or the temperature ceiling.
 
 ## Step 4 — Build the Furnace, Load the Heat Block, Load the Herbs

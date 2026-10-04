@@ -38,7 +38,7 @@ data/example/mxt/aura/qi.json
 
 ## 灵气、元素与通用绑定示例
 
-这些示例把常见系统串成一个最小闭环：资源、境界、灵气环境、修炼行为和物品燃料都来自数据包；能拿在手里的物品仍然由 KubeJS 或其他模组注册，数据包只负责认领它们。
+这些示例把常见系统串成一个最小闭环：资源、境界、灵气环境、修炼行为和物品燃料都来自数据包；能拿在手里的物品仍然由 KubeJS 或其他模组注册，数据包只负责给它们挂上值。下面那些数据表的文件都放在 `data/mxt/data_maps/item/`（方块键的表在 `data/mxt/data_maps/block/`）下——第一段命名空间是表自己的 `mxt`，不是内容包的，内容包要加值就往这个目录里再放一个文件。
 
 资源定义。`max` 是表达式，`bars` 里的一条给这个资源加了界面上的条；`renderer` 用 `mxt:boss_bar` 的图集，`bar_index` 选图集里的第几格。
 
@@ -69,17 +69,20 @@ data/example/mxt/aura/qi.json
 }
 ```
 
-物品灵气。`items` 认领物品，`type` 指向一个数值定义，`consume_speed` 与 `release_speed` 决定按住右键时灵气进出得多快；`exhausted_action` 在存量见底时执行。
+物品灵气。这是一张物品数据表：值写在 `values` 里、键就是那件物品，`type` 指向一个数值定义，`consume_speed` 与 `release_speed` 决定按住右键时灵气进出得多快；`exhausted_action` 在存量见底时执行。
 
 ```json
-// data/example/mxt/item_aura/spirit_stone.json
+// data/mxt/data_maps/item/item_aura.json
 {
-  "items": "mxt:spirit_stone",
-  "type": "example:spirit_power",
-  "aura": 100,
-  "consume_speed": "0.5 + level * 0.05",
-  "release_speed": 2,
-  "exhausted_action": {"type": "mxt:no_op"}
+  "values": {
+    "mxt:spirit_stone": {
+      "type": "example:spirit_power",
+      "aura": 100,
+      "consume_speed": "0.5 + level * 0.05",
+      "release_speed": 2,
+      "exhausted_action": {"type": "mxt:no_op"}
+    }
+  }
 }
 ```
 
@@ -96,15 +99,23 @@ data/example/mxt/aura/qi.json
 }
 ```
 
-物品绑定。`items` 同时点名一个物品和一个标签；`actions` 在物品被使用时执行，这条给的是灵根。
+物品绑定。这也是一张物品数据表：一个物品 id 和一个物品标签各占 `values` 里的一个键；`actions` 在物品被使用时执行，这条给的是灵根。
 
 ```json
-// data/example/mxt/item_binding/root_pellet.json
+// data/mxt/data_maps/item/item_binding.json
 {
-  "items": ["kubejs:root_pellet", "#example:root_pellets"],
-  "actions": [
-    {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
-  ]
+  "values": {
+    "kubejs:root_pellet": {
+      "actions": [
+        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
+      ]
+    },
+    "#example:root_pellets": {
+      "actions": [
+        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
+      ]
+    }
+  }
 }
 ```
 
@@ -124,14 +135,17 @@ data/example/mxt/aura/qi.json
 }
 ```
 
-再给同一种丹药做一条绑定，这次授予上面那条体质。同一件物品只能命中一条绑定，冲突时按 `priority` 从高到低选。
+再给同一种丹药做一条绑定，这次授予上面那条体质。同一件物品只能命中一条绑定，冲突时按 `priority` 从高到低选，同分则后处理的那条赢。
 
 ```json
-// data/example/mxt/item_binding/body_pill.json
+// data/mxt/data_maps/item/item_binding.json（同一张表可以有多份文件，也可以把多条值写在同一个 values 里）
 {
-  "items": "kubejs:body_pill",
-  "actions": [
-    {"type": "mxt:grant_physique", "physique": "example:innate_sword_bone"}
-  ]
+  "values": {
+    "kubejs:body_pill": {
+      "actions": [
+        {"type": "mxt:grant_physique", "physique": "example:innate_sword_bone"}
+      ]
+    }
+  }
 }
 ```

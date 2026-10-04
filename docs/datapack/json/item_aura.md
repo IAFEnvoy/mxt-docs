@@ -10,18 +10,23 @@ aside: false
 
 ## 文件位置
 
-物品灵气文件放在数据包的 `data/<namespace>/mxt/item_aura/`。
+`item_aura` 是一张**物品数据表**（NeoForge Registry Data Map），不是注册表，文件固定放在：
+
+```text
+data/mxt/data_maps/item/item_aura.json
+```
+
+**第一段命名空间必须是表自己的 `mxt`，不是内容包自己的**：内容包要加值，是往 `data/mxt/data_maps/item/` 里再放一个文件。放错命名空间只会在日志里留一条 `Found data map file for non-existent data map type`。
+
+`values` 的键就是**物品 id 或 `#物品标签`**（标签在加载期展开成它当时的每个物品），值是下面字段表描述的那个对象。这张表**没有 `items` 字段**。文件级的 `replace` / `remove`，以及值级的 `{"value": …, "replace": true}` 与**值级** `neoforge:conditions`，见[数据表](../overview.md#数据表data-map)。
 
 **用途**：手持物品提供的修炼燃料。
-
-文件名对应它的 ID。例如 `data/example/mxt/item_aura/spirit_stone.json` 的 ID 是 `example:spirit_stone`。
 
 ## 字段
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `items` | `ItemMatcher` | **必填** | 手持时可作为灵气燃料的现有物品：单个物品 ID、物品标签或混合数组。 |
-| `priority` | Int | `0` | 多份定义匹配同一件物品时的先后：数值大者先（见 [匹配器](/datapack/types/shared_data_types#itemmatcher)）；相同则按注册表顺序。它决定灌注 / 燃放的是哪一条灵气。 |
+| `priority` | Int | `0` | 同一件物品被多份值命中时的先后：数值大者先；**同分后处理者赢**（同一文件里按书写顺序，不同文件按数据包加载顺序）。它决定灌注 / 燃放的是哪一条灵气。 |
 | `type` | 灵气 id | **必填** | 该物品消耗和释放的**灵气**（`mxt:aura` 注册表条目，例如 `mxt:common`）。 |
 | `aura` | `NumberProvider` | **必填** | 首次处理一组物品时，每件物品的灵气总量乘以堆叠数量后写入它的 `mxt:item_aura.remain`；对能灌注的物品则是每件的充能上限。 |
 | `consume_speed` | `NumberProvider` | **必填** | 每 tick 消耗的燃料值，按堆叠数量叠加；总消耗时间因此不变。 |
@@ -36,34 +41,48 @@ aside: false
 ## 示例
 
 ```json
+// data/mxt/data_maps/item/item_aura.json
 {
-  "items": "mxt:spirit_stone",
-  "type": "mxt:common",
-  "aura": 100,
-  "consume_speed": 1,
-  "release_speed": 2,
-  "result_stack": { "id": "mxt:empty_spirit_stone", "count": 1 },
-  "exhausted_action": {
-    "type": "mxt:apply_effect",
-    "effect": "minecraft:fire_resistance",
-    "duration_ticks": 40
+  "replace": false,
+  "values": {
+    "mxt:spirit_stone": {
+      "type": "mxt:common",
+      "aura": 100,
+      "consume_speed": 1,
+      "release_speed": 2,
+      "result_stack": { "id": "mxt:empty_spirit_stone", "count": 1 },
+      "exhausted_action": {
+        "type": "mxt:apply_effect",
+        "effect": "minecraft:fire_resistance",
+        "duration_ticks": 40
+      }
+    }
   }
 }
 ```
 
-速度也可以写成公式：
+速度也可以写成公式，键还可以是一个物品标签，一次覆盖一整族物品：
 
 ```json
 {
-  "items": ["mxt:spirit_stone", "#example:spirit_fuel"],
-  "type": "mxt:common",
-  "aura": 100,
-  "consume_speed": "0.5 + level * 0.05",
-  "release_speed": "1 + level * 0.1",
-  "exhausted_action": {
-    "type": "mxt:apply_effect",
-    "effect": "minecraft:fire_resistance",
-    "duration_ticks": 40
+  "values": {
+    "mxt:spirit_stone": {
+      "type": "mxt:common",
+      "aura": 100,
+      "consume_speed": 1,
+      "release_speed": 2
+    },
+    "#example:spirit_fuel": {
+      "type": "mxt:common",
+      "aura": 100,
+      "consume_speed": "0.5 + level * 0.05",
+      "release_speed": "1 + level * 0.1",
+      "exhausted_action": {
+        "type": "mxt:apply_effect",
+        "effect": "minecraft:fire_resistance",
+        "duration_ticks": 40
+      }
+    }
   }
 }
 ```
@@ -93,7 +112,7 @@ aside: false
 
 两边用的是同一对数，所以「灌进去再烧出来」刚好抵消：灌注不产生灵气，只是把持有者的灵气暂时存进物品（灵石即电池）。手势、姿势（`BLOCK`）与音效（紫水晶风铃）由长按模块驱动，与功法阅读共用同一套机制。
 
-- **灌注的是哪一条灵气**：由这件物品匹配到的 `item_aura` 定义的 `type` 决定，与燃放同一条；多条定义同时匹配时按各自声明的 `priority` **从高到低**选（字段默认 `0`；`artifact`、`item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` 六种绑定、`spirit_herb`、`item_aura`、`currency`，共十张表都接受它），只有 `priority` 相同的两条才回落到注册表顺序（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）；**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前（见 [`ItemMatcher`](/datapack/types/shared_data_types#itemmatcher)）。已经装过东西的物品以**自己记下的那条**为准：`mxt:spirit_storage` 把数量记在**灵气**键下（与符箓共用同一个组件），所以数据包事后把定义的 `type` 改掉时，世界里已有的灵石不会被悄悄读成另一种灵气——它只会与新的 `type` 对不上，既装不进也烧不出。
+- **灌注的是哪一条灵气**：由这件物品在数据表里命中的那条值的 `type` 决定，与燃放同一条；多份值同时命中时按值里的 `priority` **从高到低**选（字段默认 `0`），**同分则后处理的那个赢**（同一文件里按书写顺序，不同文件按数据包加载顺序），不回落注册表顺序。**这与键写成物品还是标签无关**：一条值只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。已经装过东西的物品以**自己记下的那条**为准：`mxt:spirit_storage` 把数量记在**灵气**键下（与符箓共用同一个组件），所以数据包事后把值的 `type` 改掉时，世界里已有的灵石不会被悄悄读成另一种灵气——它只会与新的 `type` 对不上，既装不进也烧不出。
 - **整单位灌注**：存储本身记的是**浮点数**（飞行法器就按每 tick 的小数扣燃料），但灌注手势按整单位移动，所以每刻注入 `max(1, floor(consume_speed × 堆叠))`。速度不足 1 时按 1 计，这是唯一一处声明速率不被精确执行的地方；速度求值为 0 或非法则这件物品不成为一次灌注（右键只提示无法容纳）。
 - **姿势长度**：`ceil(容量 / 每刻注入)`，上限 200 tick。容量远大于注入速度的物品一次手势灌不满，重复手势即可；充到上限的物品不再进入长按（右键提示已充满）。长度按**容量**而非缺口推导，因此同一次手势中它不会随充能进度变化。
 - **缺组件的物品视为满**，所以刚合成的灵石本来就是满的，灌注实际作用于被抽空过的、以及创造栏给出的空灵石。存储组件的形状是「灵气 → 已存量」的一张表（`{amounts:{"mxt:common":100}}`，键是 `mxt:aura` 注册表条目，数值是浮点数），一个物品可以只装一种（灵石，读它**唯一**的那条记录），也可以装多种（符箓载体，按容量逐条读）；空表表示被抽空，容量始终由物品自己回答（灵石取定义的 `aura`，符箓按 `capacity` 倍率算）。
@@ -103,6 +122,24 @@ aside: false
 - **物品也可以自己声明灌注**。`item_aura` 是「一件物品」的共享语言，容量按堆叠放大；若物品的容量取决于**这一堆上写了什么**，它就自己回答（按灵气分列：每种灵气已存多少、上限多少，顺序即灌注顺序），数值按整堆给出、不再乘堆叠。符箓载体就是这种物品：它的容量是所铭刻定义的 `capacity` 倍率乘上一次发动的灵气用量（实际倍率还要跟载体剩余使用次数取小），按灵气分别计量。这样的物品**不需要** `item_aura` 定义，因此也不会顺带成为修炼燃料。灌注的**速率与代价仍然是手势的**（自述存储按 1 单位/tick、1:1；有定义时按定义那两个速度反向使用），物品只负责说清自己是什么。
 - **满了之后做什么由物品说了算，但由写入者汇报**：任何往存储里写灵气的一方（长按灌注、展示架这类写入方）在**真实写入之后**才汇报，由物品自己判断是不是满了、要不要动手。汇报里同时带上**行为者**与**这次写入的位置**：行为者出账并为能力作答，位置是**这东西在哪**——展示架上的一张符是被站在别处的人或一枚灵爆填满的，所以位置不能从持有者身上读；还要说明这次算「手上的消耗」还是「摆着的存储消耗」，符箓的两套规则（冷却只算手上的路、消耗按位置分）正是由它区分。符箓正是在这里发动，并把位置写进能力公式（`block_x`/`block_y`/`block_z`）**并作为本次激发的原点交给位置类行为**（投射物、粒子、爆炸、音效、走位、方块行为；细节见[灌注与激发](/datapack/json/talisman)）。
 
-## 停用一条定义
+## 停用一条值
 
-和其他数据包注册表一样，「这条定义现在要不要生效」由它自己的 `neoforge:conditions` 在加载期回答，见[停用一条定义](../overview.md#停用一条定义)。
+条件**只能写在某一个值里**（值级 `neoforge:conditions`）；写在数据表文件的顶层会被静默忽略，值照常加上：
+
+```json
+{
+  "values": {
+    "example:legacy_fuel": {
+      "neoforge:conditions": [
+        { "type": "neoforge:never" }
+      ],
+      "type": "mxt:common",
+      "aura": 100,
+      "consume_speed": 1,
+      "release_speed": 1
+    }
+  }
+}
+```
+
+条件不成立的那个值等同于没写：那件物品没有这条定义。可用条件见[数据包开发总览](../overview.md#停用一条定义)。

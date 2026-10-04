@@ -61,7 +61,6 @@ The four action fields are written at the ability's own top level (see [Ability 
 | `capacity` | double | `1` | The **pour capacity multiplier** (at least 1): the capacity is one invocation's aura entries times it, which is roughly "how many times this carrier can fire in a row". The multiplier that applies is then capped by **what the carrier has left** (worked out from its wear: none means one, and wear means at least one). |
 | `durability` | int | `0` | How much wear it gives the carrier, summed over everything written onto one carrier; `0` or omitted means no wear account and the carrier is still burned one per use. |
 | `consume` | int | `1` | How much wear one invocation takes off (at least 1); it only means anything with a `durability` above zero. |
-| `quality` | `Holder<quality>` | none | The tier of this talisman (talisman paper and talisman treasures are graded this way), resolved through the ordinary quality module. |
 | `condition` | Entity condition | `mxt:always` | Whether **this holder may use the talisman right now**, unrelated to its price; tested against the holder and asked **before `costs`**, and when it fails the invocation is refused with nothing moved. |
 | `costs` | `Cost[]` | `[]` | What **one invocation** takes: an `mxt:aura` entry comes out of the carrier's own store, every other entry from the **holder**; a price that cannot be paid refuses the invocation. |
 

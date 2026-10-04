@@ -16,6 +16,7 @@ A `contract_type` describes one contract from the moment it is signed to the mom
 | --- | --- | --- | --- |
 | `name` | Text Component | `contract_type.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
 | `description` | Text Component | `contract_type.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; a contract scroll's tooltip shows it, and an untranslated default key is left out. |
+| `quality` | Quality id | none | Optional. The tier a scroll of this contract starts on. |
 | `owner_condition` | `EntityCondition` | `mxt:always` | The owner condition. |
 | `creature_condition` | `EntityCondition` | `mxt:always` | The spirit beast condition, checked after eligibility. |
 | `follow_action` | `EntityAction` | `mxt:no_op` | The action run every tick **while the order in force is "follow"**. |
@@ -29,6 +30,8 @@ A `contract_type` describes one contract from the moment it is signed to the mom
 | `costs` | `Cost` array | `[]` | The signing price, paid by the **owner**; the spirit beast pays nothing. |
 | `max_owned` | int | `0` | How many contracts of this type one owner may hold at once; `0` = no limit. |
 | `recall_cooldown` | int | `0` | Recall cooldown in ticks; `0` = no limit. |
+
+`quality` is optional: contract scrolls are the one item every contract shares, so the item itself cannot say which tier it is — only the definition the stack carries can: a scroll of this contract starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
 
 `follow_action` only runs for a creature that answers an order list, and it runs after that creature's own follow behaviour; switch the order to wander or stay and it stops - all it covers is the follow tick.
 

@@ -23,6 +23,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 | 求一个数据包数值 | [`NumberProvider`](#numberprovider) | `util.formula` |
 | 判断"这件物品算不算这条定义" | [`ItemMatcher`](#itemmatcher) | `util.matcher` |
 | 把注册表里的定义变成创造栏物品 | [`CreativeTabHelper`](#creativetabhelper) | `data` |
+| 问一堆物品是哪一档、让自己的定义参与定档 | [`QualityService` / `QualityProvider`](#qualityservice) | `runtime.item` / `api` |
 | 问某个坐标有多少灵气 | [`AuraService`](#auraservice) | `runtime.world` |
 | 读写实体身上的一条数值 | [`ResourceService`](#resourceservice) | `runtime.resource` |
 | 加修炼进度、突破、设置境界 | [`CultivationService`](#cultivationservice) | `runtime.cultivation` |
@@ -39,7 +40,9 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 
 ### `MxtDatapackRegistries` {#mxtdatapackregistries}
 
-包 `com.iafenvoy.mxt.registry`。39 张原生数据包注册表的声明与统一读取入口，`/reload` 重建与客户端同步都交给原版注册表系统，这个类**不持有任何快照**。
+包 `com.iafenvoy.mxt.registry`。31 张原生数据包注册表的声明与统一读取入口，`/reload` 重建与客户端同步都交给原版注册表系统，这个类**不持有任何快照**。
+
+九张物品/方块**数据表**（NeoForge Registry Data Map）不在这里：它们声明在 `com.iafenvoy.mxt.registry.MxtDataMaps`，不是注册表、也没有持有点。调用点直接按条目读：`stack.getData(MxtDataMaps.X)` / `state.getData(MxtDataMaps.X)`（`ItemStack` 与 `BlockState` 自己实现 `IWithData`，平台把它转给条目自己的 holder），没有别的包装方法。字段与文件位置见[数据表](/datapack/overview#数据表data-map)。
 
 按 id / holder 取值（读服务端注册表）：
 
@@ -94,7 +97,6 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 | `key(String category, String registryNamespace, Identifier id)` | 底层拼接 | **拼定义键的唯一出口**，`ContextNameCodec` 的默认值也走它 |
 | `defaultText(String category, ResourceKey<?> entry, String suffix)` | 定义没写 `name` / `description` 时的回退文本 | **回退文本的唯一出口**；`suffix` 传 `""` 是名字、传 `".description"` 是描述 |
 | `resolved(Component text)` | 这段文本是"真文本"还是"没被翻译的裸键" | 读客户端语言文件，属显示层判断 |
-| `rarity(String rarity)` | 展示自由文本（`spirit_root` / `physique` 的 `rarity`） | 先查 `mxt.rarity.<值>`，有翻译用翻译，否则原样字面量 |
 
 要点：**别在别处再拼一套名字键**；键没被翻译时渲染出来就是键本身（不是空串），`resolved(...)` 就是用来判这一点的。
 
@@ -156,15 +158,17 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 
 ### `CreativeTabHelper` {#creativetabhelper}
 
-包 `com.iafenvoy.mxt.data`。**读**那条「注册表 → 可选项」目录的入口：`/picker` 界面与别的模组都走它。每一项是一行 `PickerItem(stack, names)`：`stack` 是要画的堆，`names` 是这一行能被哪些名字搜到。它只读——不往物品上写东西，也不判定谁能拿。
+包 `com.iafenvoy.mxt.data`。**读**那条「表 → 可选项」目录的入口：`/picker` 界面与别的模组都走它。每一项是一行 `PickerItem(stack, names)`：`stack` 是要画的堆，`names` 是这一行能被哪些名字搜到。它只读——不往物品上写东西，也不判定谁能拿。
+
+分类是 `PickerCategory`（`com.iafenvoy.mxt.screen.picker`），`id()` 就是命令与开屏包用的那个 id；它有两种：`OfRegistry` 包一张注册表 key，`OfDataMap` 包一张数据表——分类 id 不变，但一张表是注册表还是数据表决定了行怎么来。注册表分类的行「一个定义一行」，数据表分类的行是**带着值的那件物品或方块**，行名用条目自己的名字。所以有 `PickerCategory` 与注册表 key 两套重载。
 
 每条查询都要求自己传注册表访问器（`HolderLookup.Provider`，`BuildCreativeModeTabContentsEvent.getParameters().holders()` 就是它），所以客户端用客户端已同步的表、服务端用服务端的表，不存在"读到另一侧"的问题。
 
 | 方法 | 作用 | 备注 |
 | --- | --- | --- |
-| `itemsOf(Provider, key)` | 一张表的全部行 | `key` 是注册表 key；**没登记成分类的表给空列表**，不抛 |
-| `itemsOf(Provider, key, Predicate<Holder<?>>)` | 按定义筛行 | 谓词拿到的是定义的 holder，按 id 筛与按定义本体筛是同一个入口，所以"模组 id"就是取 holder 的命名空间 |
-| `itemsOfMod(Provider, key, String)` | 一张表里属于某个命名空间的行 | `mxt:aura` 的条目属于 `mxt`，`mymod:aura/…` 属于 `mymod`；物品与方块两张表里定义就是物品，于是命名空间是物品的 |
+| `itemsOf(Provider, category)` / `itemsOf(Provider, key)` | 一张表的全部行 | `category` 是分类对象，`key` 是注册表 key；**没登记成分类的表给空列表**，不抛 |
+| `itemsOf(Provider, category, Predicate<Identifier>)` / `itemsOf(Provider, key, Predicate<Identifier>)` | 按条目 id 筛行 | 谓词拿到的是**行自己的 id**：注册表分类是定义的 id，数据表分类是物品或方块自己的 id，所以"模组 id"就是取它的命名空间 |
+| `itemsOfMod(Provider, category, String)` / `itemsOfMod(Provider, key, String)` | 一张表里属于某个命名空间的行 | `mxt:aura` 的条目属于 `mxt`，`mymod:aura/…` 属于 `mymod` |
 | `itemsOfMod(Provider, String)` | 跨全部分类，挑出某个命名空间的行 | 给自己做一个"我模组的东西"创造栏用它 |
 | `stacksOf(...)` / `stacksOfMod(...)` | 上面四条的堆视图 | 见下 |
 
@@ -175,7 +179,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 - 查询无副作用、双端可调：它只读你传进来的那份访问器，不碰服务端单例，也不写任何附件。
 - 想把这批行画成一张选择器页（而不是进创造栏），用 `ItemPickerScreen.over(title, stacks)`，见[物品选择界面](/java/screens)。
 
-**目录本身在别的类里**：哪张注册表对应哪些行、每行怎么造，是 `com.iafenvoy.mxt.screen.picker.ItemPickerManager`——`categories()` / `category(Identifier)` 列分类，`registerSingle` / `register` 登记一条分类（`mxt:` 的定义由本体登记好了）。`CreativeTabHelper` 只负责读它，两个类一眼能分开。有一条限制要知道：**一张注册表只认第一次注册的目录**，对已经登记过的 key 再注册一次是**静默无效**的（分类列表也只列一次）。
+**目录本身在别的类里**：哪张表对应哪些行、每行怎么造，是 `com.iafenvoy.mxt.screen.picker.ItemPickerManager`——`categories()` 按登记顺序给出全部分类对象（`id()` 就是命令与开屏包用的那个 id），`category(Identifier)` 按 id 找一个，`registerSingle` / `register` 登记注册表分类、`registerDataMap` 登记数据表分类（`mxt:` 的表由本体登记好了）。`CreativeTabHelper` 只负责读它，两个类一眼能分开。有一条限制要知道：**一张表只认第一次注册的分类**，对已经登记过的 id 再注册一次是**静默无效**的（分类列表也只列一次）。
 
 ```java
 // 自己的创造栏：让这个模组贡献过的定义（以及它自己的物品）全进来
@@ -186,6 +190,52 @@ public void buildContents(BuildCreativeModeTabContentsEvent event) {
         event.accept(stack);
 }
 ```
+
+## 物品品质 {#quality}
+
+### `QualityService` 与 `QualityProvider` {#qualityservice}
+
+包 `com.iafenvoy.mxt.runtime.item`（服务类）与 `com.iafenvoy.mxt.api`（接口）。**"这一堆物品是哪一档"只有一个解析顺序**，只在 `QualityService.find` 一处，按**三层**往下取：堆上的 `mxt:quality` 组件 → **这一堆携带的定义**自己声明的档 → 数据表 `mxt:default_quality`。本模组今天有九个定义走第 2 层。字段级写法见[品质](/datapack/json/quality)。
+
+`api/QualityProvider` 是给**定义类型**用的契约：一个定义类型实现它，就是在说"我的物品起步的那一档归我自己报"。
+
+```java
+public interface QualityProvider {
+    Optional<Holder<ItemQuality>> defaultQuality();
+}
+```
+
+**实现它本身什么都不改**——一类定义还要用 `QualityService.carry` **登记一个载体组件**，才算进了第 2 层：
+
+| 重载 | 用在 |
+| --- | --- |
+| `carry(Supplier<? extends DataComponentType<Holder<T>>> type)` | 组件的值**就是**那份定义，直接读 `Holder<T>` |
+| `carry(Supplier<? extends DataComponentType<C>> type, Function<C, Optional<Holder<T>>> extract)` | 组件是个 record，定义包在里面，由 `extract` 取出来 |
+
+`T extends QualityProvider`：给一个没实现这个接口的定义类型登记载体**编译不过**。
+
+要点：
+
+- **注册顺序只有一条**：本模组自己的载体在 `QualityService` 类加载时的静态块里登记完，附属模组的载体排在后面。一次查询按登记顺序走完整个列表，先给出答案的那一个赢。
+- **这是一份登记，不是"扫一遍堆上碰巧带着的组件"**：两个 provider 同时挂在一堆上时，"谁先被问到"只能由登记顺序说了算——按组件遍历的先后没有任何契约。
+- **载体必须只凭这一堆就答得出**：两个重载**都不给它注册表**，因为"这件物品能不能用"那道闸门（`QualityService.check`）手里只有品质注册表。想按 id 回查别的注册表的写法在这里走不通。
+- **引用失效就当作没有**：载体取出的 holder 没绑定时（当前包把那条定义删了）这一层答空，解析继续往下走，而不是给出一个死档位。
+- **定义类型只是"被问到"的入口**：真正读的是定义自己的 `defaultQuality()`，所以一个类型实现了接口、又登记了载体之后，它的每一条定义都自动参与第 2 层。
+
+`QualityService` 对外的其余入口：
+
+| 方法 | 作用 | 备注 |
+| --- | --- | --- |
+| `find(Provider access, ItemStack stack)` | 这一堆解析出的档 | 三层顺序的唯一实现；空堆给空 |
+| `set(stack, quality)` / `clear(stack)` | 写 / 摘掉覆盖组件 | `clear` 之后这一堆先退回**它携带的定义**那一层，再看数据表 |
+| `hasOverride(stack)` | 堆上**有没有**那个组件 | 与"解析出档没有"是两个问题：没写组件也可能从定义或数据表读到档 |
+| `canUse(user, stack)` / `check(user, stack)` | "能不能用"的闸门 | `check` 给出 `Failure` 枚举；绑定条件、档位自己的 `condition`、丹药次数与冷却都在这里 |
+| `modifier(...)` | 取品质的三个修正之一 | 是乘数；缺失、非有限或 ≤ 0 一律按 `DEFAULT_MODIFIER`（`1.0`） |
+| `displayName(quality)` | 品质这一档自己的名字，套上它自己的颜色 | **列一个档位时的统一写法**（就是 `coloredName(quality, DefinitionText.name(quality))`）；`/quality get\|set\|upgrade`、灵根 / 体质列表与画符结算都走它 |
+| `coloredName(quality, text)` | 给一段**别的**文本套上这一档的 `color` | 品质没写颜色就原样返回 |
+| `ordered()` / `ordered(Provider access)` | 按 `tooltip_order` 标签排好的全部档 | 客户端用带 `Provider` 的那个重载 |
+
+存单堆覆盖用 `set`，别自己往组件里写；被拒绝的使用想给玩家同一句提示，就调 `notifyCannotUse`（它是公开的，好让排在闸门自己的优先级之下、但仍要看这次拒绝的交互也报得出来）。
 
 ## 灵气与资源 {#aura}
 
@@ -405,7 +455,7 @@ public void buildContents(BuildCreativeModeTabContentsEvent event) {
 阵法的框架（结构、半径、消耗）在 `Formation` 上，"这个阵法干什么"由它的 `actions` 列表决定，而列表里每一项就是一个**功能模块**。
 
 - `FormationActionType`（`com.iafenvoy.mxt.data.formation`）是模块的形状：一个 `codec()`，加一个按 JSON 的 `"type"` 字段分派的 `CODEC`（必须是 `Codec` 而不是 `MapCodec`，因为阵法持有的是模块**列表**）。
-- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `none`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那 39 张数据包注册表里**。
+- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `none`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那 31 张数据包注册表里**。
 - 于是：**数据包能自由新增 `mxt:formation` 条目（模块组合与参数），但新增不了模块类型**。多加一种模块 = 一条记录 + 一次 `DeferredRegister` 注册，运行时按记录类型分派，`data` 包因此不碰世界。
 - 现在合法 `type` 只有 5 个，都登记在 `MxtFormationActionTypes`：`mxt:none`（`NONE`，也是分派表默认项）、`mxt:attack`（`ATTACK`）、`mxt:buff`（`BUFF`）、`mxt:protection`（`PROTECTION`）、`mxt:range_display`（`RANGE_DISPLAY`）。
 - 注册只经 `MxtFormationActionTypes.REGISTRY` 一次，**别在别处再注册一遍，也别另建第二张阵法模块表**。

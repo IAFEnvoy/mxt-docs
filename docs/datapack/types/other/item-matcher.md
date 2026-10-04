@@ -156,6 +156,6 @@ description: item_matcher_entry_type 的七个条目，各自的字段与匹配�
 
 ## 匹配顺序
 
-匹配器只引用已经注册的物品。多个定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`；`artifact`、`item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` 六种 binding、`spirit_herb`、`item_aura`、`currency`，共十张表都接受它）；只有 `priority` 相同的两条定义才回落到注册表顺序，所以「谁赢」由数据包自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。
+匹配器只引用已经注册的物品。多个定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`；`artifact`、`pill_binding`、`technique_binding`、`spirit_herb` 四张注册表接受它，物品数据表也接受它）。仍是注册表的四张表同分时回落到注册表顺序，而物品数据表的同分口径是**后处理者赢**（同一文件里按书写顺序，不同文件按数据包加载顺序）；两种情形「谁赢」都由数据包自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。**九张数据表没有 `items` 字段**，不吃这套匹配器，见[数据表](../../overview.md#数据表data-map)。
 
 通配符和正则条目是针对物品 ID 匹配的，例如 `minecraft:apple`，而不是针对显示名。

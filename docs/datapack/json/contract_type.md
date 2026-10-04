@@ -16,6 +16,7 @@ aside: false
 | --- | --- | --- | --- |
 | `name` | Text Component | `contract_type.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
 | `description` | Text Component | `contract_type.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；契约卷轴的提示框会把它显示出来，默认键没被翻译时不显示。 |
+| `quality` | 品质 id | 无 | 可选。这份契约的卷轴起始的档位。 |
 | `owner_condition` | `EntityCondition` | `mxt:always` | 主人条件。 |
 | `creature_condition` | `EntityCondition` | `mxt:always` | 灵宠条件，资格判定之后。 |
 | `follow_action` | `EntityAction` | `mxt:no_op` | **当前命令是「跟随」时**每 tick 执行的行为。 |
@@ -29,6 +30,8 @@ aside: false
 | `costs` | `Cost` 数组 | `[]` | 签订代价，由**主人**支付，灵宠不付。 |
 | `max_owned` | int | `0` | 每个主人同时能持有的本类型契约数，`0` = 不限。 |
 | `recall_cooldown` | int | `0` | 召回冷却（tick），`0` = 不限。 |
+
+`quality` 是可选的：契约卷轴是所有契约共用的一件物品，物品本身说不清是哪一档，只有堆上携带的这份定义报得出——这份契约的卷轴起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
 
 `follow_action` 只对回答了命令表的实体生效，且排在该实体自己的跟随行为之后；命令换成游荡 / 驻守时这条不跑——它给的是"跟随那一刻"。
 

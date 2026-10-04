@@ -84,6 +84,40 @@ The ingredients have to match the non-empty slots of the grid exactly, in any or
 }
 ```
 
+## Ingredients that Filter on Components
+
+`key` and `ingredients` take vanilla ingredients (`Ingredient`): writing an item id, or a tag (with its leading `#`), only compares the item itself and **never looks at anything on the stack**. To filter on components, use the custom-ingredient layer NeoForge adds on top of `Ingredient` — `neoforge:ingredient_type` picks the type, and `neoforge:components` matches on "item + components":
+
+```json
+{
+  "type": "mxt:spirit_shaped",
+  "pattern": ["PP"],
+  "key": {
+    "P": {
+      "neoforge:ingredient_type": "neoforge:components",
+      "items": "mxt:blank_talisman",
+      "components": { "mxt:quality": "example:paper_tier_3" }
+    }
+  },
+  "result": { "id": "example:refined_talisman" },
+  "aura": [{ "type": "mxt:aura", "aura": "mxt:common", "amount": 20 }]
+}
+```
+
+`items` takes an item id, a tag (with its leading `#`) or an array of them (required); `components` is a vanilla component patch, and **every entry in it has to be exactly equal to the one on the stack** to match; `strict` is optional (default `false`) and, when true, forbids any component on the stack that `components` does not list. The test is **equality**, not "at least", so "tier 3 or above" means writing one entry per tier and OR-ing them with `neoforge:compound`:
+
+```json
+{
+  "neoforge:ingredient_type": "neoforge:compound",
+  "children": [
+    { "neoforge:ingredient_type": "neoforge:components", "items": "mxt:blank_talisman", "components": { "mxt:quality": "example:paper_tier_3" } },
+    { "neoforge:ingredient_type": "neoforge:components", "items": "mxt:blank_talisman", "components": { "mxt:quality": "example:paper_tier_4" } }
+  ]
+}
+```
+
+`neoforge:compound`'s field is `children` (the older alias `ingredients` works too), and there are also `neoforge:difference` (`base` / `subtracted`) and `neoforge:intersection` (`children`). To gate on a [quality](./quality.md) tier you can also use the item condition `mxt:item_quality` — what each route costs, and the places that cannot read quality at all today, are in [Quality · Which tier an item is](./quality.md#resolution).
+
 ## The `aura` Field
 
 `aura` is a `Cost` array that **takes only `mxt:aura` entries** — any other type is a load error, and so is an empty array. An entry's `aura` is an **aura identity**, not a stored number: what is spent is that aura itself, identified by its definition; the definition's own `resource` field says which value it is counted in, see [`mxt:aura`](./aura.md). The table's own store pays here, so the charge is that aura, not the value it is measured in.
