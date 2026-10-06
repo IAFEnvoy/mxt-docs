@@ -1,11 +1,11 @@
 ---
 title: Dynamic Registries
-description: All 31 datapack registries with their file directory and purpose, plus the nine data maps, the built-in type dispatch table and the KubeJS extension types.
+description: All 40 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
 ---
 
 # Dynamic Registries
 
-The table below lists the mod's 31 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it. There are also **9 data maps** (NeoForge Registry Data Maps, not registries), listed after it.
+The table below lists the mod's 40 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it.
 
 **Recipes are not in this table.** The recipe pages that go through the vanilla `RecipeManager` sit in the **Recipes** group below: alchemy recipes (`mxt:alchemy`), spirit crafting (`mxt:spirit_shaped` / `mxt:spirit_shapeless`) and talisman drawing (`mxt:talisman_drawing`). Their JSON goes in `data/<namespace>/recipe/`, never in `mxt/<recipe name>/`; they are not registries either, so `/reload` reloads them. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
 
@@ -44,22 +44,17 @@ The table below lists the mod's 31 datapack registries. In the field tables, "De
 | `quality` | `mxt/quality` | Shared quality: name, colour, three modifiers, a use condition, and where the tier sits on its ladder with what one step up costs. |
 | `trigger` | `mxt/trigger` | Event rules: a signal, a condition and an action. |
 | `talisman` | `mxt/talisman` | Talisman definitions: the ability one inscribed talisman carries. |
+| `item_aura` | `mxt/item_aura` | The cultivation fuel an item provides: which items it claims, how much aura they hold and how fast it flows. |
+| `currency` | `mxt/currency` | An item's currency denomination and exchanges. |
+| `default_quality` | `mxt/default_quality` | An item's default quality when nothing else supplies a tier (the third and last layer of quality resolution). |
+| `item_binding` | `mxt/item_binding` | An existing item's actions, conditions and element. |
+| `weapon_binding` | `mxt/weapon_binding` | An existing item's weapon attributes and three actions. |
+| `tool_binding` | `mxt/tool_binding` | The forging methods a tool item unlocks. |
+| `blueprint_binding` | `mxt/blueprint_binding` | The blueprints a blueprint item offers. |
+| `block_aura` | `mxt/block_aura` | Aura provided by a block. |
+| `heat_source` | `mxt/heat_source` | How hot and how fast a block heats a furnace. |
 
-## Data Maps
-
-These 9 tables are NeoForge **Registry Data Maps**, **not registries**: the key is an entry id or a `#`-prefixed tag, the value is inline data with no id and no name that no other definition can reference. Files always live at `data/mxt/data_maps/<registry path>/<table path>.json` (item-keyed under `item/`, block-keyed under `block/`); how they are written is on [Data Maps](../overview.md#data-maps). In the sidebar they form a **Data Maps** group of their own (like **Recipes** above), which is why the registry list above does not include them.
-
-| Data map | File | Value |
-| --- | --- | --- |
-| `item_aura` | `data/mxt/data_maps/item/item_aura.json` | Cultivation fuel provided by held items. |
-| `currency` | `data/mxt/data_maps/item/currency.json` | Item currency denominations and exchange. |
-| `default_quality` | `data/mxt/data_maps/item/default_quality.json` | An item's default quality, the third and last layer of quality resolution. |
-| `item_binding` | `data/mxt/data_maps/item/item_binding.json` | An existing item's actions, conditions and element. |
-| `weapon_binding` | `data/mxt/data_maps/item/weapon_binding.json` | Weapon attributes and actions for existing items. |
-| `tool_binding` | `data/mxt/data_maps/item/tool_binding.json` | The forging methods a tool item unlocks. |
-| `blueprint_binding` | `data/mxt/data_maps/item/blueprint_binding.json` | The forging blueprints a blueprint item offers. |
-| `block_aura` | `data/mxt/data_maps/block/block_aura.json` | Aura provided by blocks. |
-| `heat_source` | `data/mxt/data_maps/block/heat_source.json` | How hot and how fast a block heats a furnace. |
+Seven of these — `item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding` and `blueprint_binding` — claim items through `items`, while `block_aura` and `heat_source` claim blocks through `blocks`; their shape is that of every other registry, and the file layout is on the [Datapack Development Overview](../overview.md).
 
 ## Built-in Type Dispatch
 

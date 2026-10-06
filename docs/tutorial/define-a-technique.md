@@ -69,7 +69,7 @@ description: "把进度链、熟练度数值与功法定义拼成一条会自己
 - 链在 `progression` 表里，`default_level` 由每门功法自己点，所以同一条链可以被多门功法共用：它们面对的是同一段爬升。
 - `damage_multiplier` 只在**这条链授予的能力施放**这条路上生效：持有者当前在哪一级，就用那一级的倍率（同一个能力被多处授予时取最高的那个）。它进的是伤害公式的 `damage_multiplier` 变量。
 
-链上的问题全部在世界加载时一次报出（`/mxt registries validate`）：`next_level` 指向不存在的条目（`next_level <id> is not a progression`）、一级被两处写成后继（`follows both <A> and <B>`）、成环（`chain is cyclic, or joins another chain, at level <id>`）、以及**后一级要求的熟练度比前一级低**（`lowers its mastery requirement at level <id>`）。有一条坏链接，整条链就不被索引：宁可没有顺序，也不留下半条链。
+链上的问题全部在世界加载时一次报出（`/mxt registries validate`）：一级被两处写成后继（`follows both <A> and <B>`）、成环（`chain is cyclic, or joins another chain, at level <id>`）、以及**后一级要求的熟练度比前一级低**（`lowers its mastery requirement at level <id>`）。走不出去的链整条不被索引：宁可没有顺序，也不留下半条链。`next_level` 指向不存在的条目不在这里——那会让整个数据包加载失败。
 
 ## 第 3 步 —— 功法把这条链接到自己身上
 
@@ -198,7 +198,7 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 | 报 `configures progression level <id>, which it can never reach from <entry>` | `configuration` 里配了一个从入口走不到的等级。 |
 | 报 `lowers its mastery requirement at level <id>` | 后一级的 `mastery` 比前一级低，整条链被丢掉、不索引。 |
 | 报 `follows both <A> and <B>` / `chain is cyclic, or joins another chain, at level <id>` | 一级被两处写成后继（分叉），或者成环。 |
-| 报 `next_level <id> is not a progression` | `next_level` 指向不存在的条目，整条链被丢掉。 |
+| 报 `next_level <id> is not a progression` | 这个包加载不到这一步：`next_level` 指向不存在的等级时世界直接拒绝加载，整次加载失败，而不是「那条链被丢掉」。 |
 | 等级记录莫名退回了入口级 | 包改过这门功法的 `default_level`：跑去不到的记录会在实体加入世界、登录与数据包重载时被清掉，日志里有对应的 `WARN`。 |
 | 改了文件却什么也没变 | 数据包注册表在世界加载时读，`/reload` 不重读。 |
 

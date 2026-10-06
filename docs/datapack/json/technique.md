@@ -35,7 +35,7 @@ aside: false
 
 这三个字段功法与生物档案共用，没有灵宠专用的条目字段。`action` 在进入那一级时跑一次：自然晋升与管理员的等级写入都算进入，它**先**跑、`mxt:progression_level` 信号**后**发，所以反应方看到的是已经变过的身体；写数组就是按顺序执行。
 
-`quality` 引用 `mxt:quality` 里的一档，可以省略。所有功法共用一件载体物品 `mxt:cultivation_jade_slip`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出：携带这份定义的功法书按它读档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
+`quality` 引用 `mxt:quality` 里的一档，可以省略。所有功法共用一件载体物品 `mxt:cultivation_jade_slip`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出：携带这份定义的功法书按它读档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到注册表 [default_quality](./default_quality.md)。
 
 `passive_modifiers` 用原版 AttributeModifier，`value` 为可选的动态公式。
 

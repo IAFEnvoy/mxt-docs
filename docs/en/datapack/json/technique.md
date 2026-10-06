@@ -35,7 +35,7 @@ Each `configuration` entry describes one level:
 
 These three fields are shared by techniques and creature profiles; there is no entry field only a spirit beast has. `action` runs once on entering that level: a natural promotion and an administrative level write both count as entering, and it runs **first** while the `mxt:progression_level` signal is published **after**, so whatever reacts sees a body that has already changed; an array of actions runs in order.
 
-`quality` names a tier in `mxt:quality` and may be left out. Every technique shares one carrier item, `mxt:cultivation_jade_slip`, so the item itself cannot say which tier it is — only the definition the stack carries can: a manual carrying this definition reads at that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
+`quality` names a tier in `mxt:quality` and may be left out. Every technique shares one carrier item, `mxt:cultivation_jade_slip`, so the item itself cannot say which tier it is — only the definition the stack carries can: a manual carrying this definition reads at that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) registry.
 
 `passive_modifiers` uses vanilla AttributeModifiers; `value` is an optional dynamic formula.
 

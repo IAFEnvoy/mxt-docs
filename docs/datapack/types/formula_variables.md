@@ -202,6 +202,7 @@ description: 公式能读到的每一个名字、由谁提供，以及写错名�
 | 诅咒的时长、间隔、条件、行为 | 施法者（或施加这条诅咒的那次施放的上下文） | 实体族，外加施加它那条技能的载荷 |
 | 物品、武器、丹药、功法绑定，物品品质，丹毒 | 使用的或持有的那个实体 | 实体族（含 `pill_toxicity`）；武器攻击时还有 `target_health` / `target_is_living` |
 | 灵植的药力（`main_effects`、`auxiliary_effects`、`catalyst_power`） | 这一堆药材，外加调用方给的上下文 | 局部值 `herb_age`；上下文里有实体时还有实体族 |
+| 炼丹配方自己的公式字段（阈值 / 温度 / 时长 / 环境门槛） | 开炉的玩家，外加核心那一档的位置 | 实体族；`furnace_rank`（核心那一档在它自己链上的位置，手里没有核心时读 `0`） |
 | 锻造、阵法、契约、生物档案、秘境、法器 | 玩家、阵主或生物 | 实体族（`entity_tick_action` 另有 `formation_radius` / `distance`；秘境实例里另有秘境族） |
 | 天劫时间线的节拍时长与条件 | 施法者 | 实体族 + `aura_tribulation_modifier` |
 | 只拿 Level 求值的公式：阵法的 `tick_action` / `deactivate_action`、阵法灵气加成、灵气工作台的花费、KubeJS 的方块行为与条件 | 无 | 只有 `zero` 与 `random` |

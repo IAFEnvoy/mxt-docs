@@ -5,7 +5,7 @@ description: Every built-in block action type registered by the mod, and the JSO
 
 # Block Actions (block_action_type)
 
-A **block action** operates on one block position in the world. The level and the position are supplied by whatever data table declares the action, and some callers also supply a facing direction; the action itself only describes what to do at that position.
+A **block action** operates on one block position in the world. The level and the position are supplied by whatever definition declares the action, and some callers also supply a facing direction; the action itself only describes what to do at that position.
 
 Block actions are a Java (built-in) registry: `type` ids are fixed, and a data pack can neither add entries to it nor remove them. `type` is written on the action object, side by side with its fields, and its value is one of the ids listed on this page, written with the `mxt` namespace. Adding a custom type means writing Java, or going through the KubeJS bridge — see the [KubeJS API](../../../kubejs/api-reference.md).
 
@@ -20,7 +20,7 @@ An action is a JSON object: `type` names the built-in type and every remaining k
 }
 ```
 
-Actions are values inside other data tables, so they usually appear nested under a field such as `block_action`:
+Actions are values inside other definitions, so they usually appear nested under a field such as `block_action`:
 
 ```json
 "block_action": {

@@ -69,7 +69,7 @@ Nothing points an aura at this value, so it has no aura identity: it never shows
 - The chain lives in `progression`, and each technique names its entry with `default_level`, so several techniques can share one chain: they climb the same ladder.
 - `damage_multiplier` only applies on the path where **an ability granted by this chain is cast**: whatever level the holder currently stands on supplies the multiplier (the highest one when several sources grant the same ability). It lands in the `damage_multiplier` formula variable.
 
-Every chain problem is reported at world load (`/mxt registries validate`): a `next_level` pointing at nothing (`next_level <id> is not a progression`), one level written as the successor by two others (`follows both <A> and <B>`), a loop (`chain is cyclic, or joins another chain, at level <id>`), and a level whose mastery requirement is **lower** than the one before it (`lowers its mastery requirement at level <id>`). One broken link and the whole chain is left unindexed: better no order than half a chain.
+Every chain problem is reported at world load (`/mxt registries validate`): one level written as the successor by two others (`follows both <A> and <B>`), a loop (`chain is cyclic, or joins another chain, at level <id>`), and a level whose mastery requirement is **lower** than the one before it (`lowers its mastery requirement at level <id>`). A chain that cannot be walked is left unindexed whole: better no order than half a chain. A `next_level` pointing at a level the pack does not provide is not among them — that fails the whole data pack load.
 
 ## Step 3 — Point the Technique at the Chain
 
@@ -198,7 +198,7 @@ Every second the server checks each learned technique: once the value reaches th
 | `configures progression level <id>, which it can never reach from <entry>` | `configuration` describes a level the entry cannot reach. |
 | `lowers its mastery requirement at level <id>` | A later level asks for less mastery than an earlier one; the whole chain is dropped and left unindexed. |
 | `follows both <A> and <B>` / `chain is cyclic, or joins another chain, at level <id>` | One level is written as the successor by two others (a fork), or the chain loops. |
-| `next_level <id> is not a progression` | `next_level` points at nothing; the whole chain is dropped. |
+| `next_level <id> is not a progression` | The pack never loads that far: a `next_level` pointing at a level that does not exist makes the world refuse to load, so it is a failed load, not "the chain is dropped". |
 | A level record fell back to the entry for no reason | The pack changed this technique's `default_level`: a record that can no longer be reached is cleared when a body joins the world, on login and on datapack reload, and the log has the matching `WARN`. |
 | Files changed but nothing happened | Datapack registries are read when the world loads; `/reload` does not reread them. |
 

@@ -1,24 +1,26 @@
 ---
 title: Currency (currency)
-description: Gives a registered item a denomination and a set of one-way exchanges, defined by the mxt:currency data map.
+description: Gives a registered item a denomination and a set of one-way exchanges, defined by the mxt:currency registry.
 aside: false
 ---
 
 # Currency (currency)
 
-A currency definition gives an **existing item** a denomination and a set of one-way exchanges: what it is worth, and what it can be turned into. Any registered item can act as currency — the Cheque Table, the Exchange Station and the settlement service all read the same `mxt:currency` data map.
+A currency definition gives an **existing item** a denomination and a set of one-way exchanges: what it is worth, and what it can be turned into. Any registered item can act as currency — the Cheque Table, the Exchange Station and the settlement service all read the same `mxt:currency` registry.
 
 ## File Location
 
-`currency` is an **item data map** (a NeoForge Registry Data Map), not a registry, and its file always lives at:
+`currency` is a **datapack registry**, and one file is one definition:
 
 ```text
-data/mxt/data_maps/item/currency.json
+data/<namespace>/mxt/currency/<entry>.json
 ```
 
-**The first namespace has to be the table's own namespace, `mxt`, not the content pack's**: a content pack adds values by dropping another file into `data/mxt/data_maps/item/`. A wrong namespace only leaves one log line, `Found data map file for non-existent data map type`.
+The entry id is `<namespace>:<path>` — `data/example/mxt/currency/copper_coin.json` is `example:copper_coin`. The mod's own entries live under `data/mxt/mxt/currency/`; a content pack uses its own namespace instead of `mxt`.
 
-The keys of `values` are **item ids or `#`-prefixed item tags** (a tag expands at load time into every item it held then), and the value is the object the field table below describes — this table has **no `items` field**, and the old single-item `item` shorthand is gone with it. The file-level `replace` / `remove`, plus the value-level `{"value": …, "replace": true}` and **value-level** `neoforge:conditions`, are on [Data Maps](../overview.md#data-maps).
+The fields of the table below go at the top level. There is **no `values` wrapper**, and one file describes one definition; to override the same item from another pack you sort it out with `priority`, not with a `replace` switch. A **file-level** `neoforge:conditions` works: when it does not hold, the definition never enters the registry at all.
+
+Like every other datapack registry it is read **while the world loads**, and `/reload` does not read it again. `/mxt registries list` and `/mxt registries validate` both cover it, and `/picker mxt:currency` lists the items these definitions claim.
 
 **Purpose**: Item currency denominations and exchange.
 
@@ -26,31 +28,34 @@ The keys of `values` are **item ids or `#`-prefixed item tags** (a tag expands a
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `priority` | Int | `0` | Order between several values hitting one item: the larger number wins, and **a tie goes to whichever was processed later** (writing order within one file, data pack load order across files). |
-| `value` | Long | **required** | Value of one item; must be greater than `0`. |
+| `items` | Item entries | none | Which items this definition claims: a single item id, a `#`-prefixed item tag, or an array of either; the array may also hold `type`-carrying matcher entries, written as on the [`ItemMatcher`](../types/shared_data_types.md#itemmatcher) page. |
+| `item` | Item id | none | Shorthand for claiming exactly one item; equivalent to writing one item id in `items`. |
+| `value` | Long | **required** | Denomination of one item; must be greater than `0`. |
 | `unavailable_when` | `ItemCondition` array | `[]` | Each entry binds one item condition to one reason; while the condition holds, the currency value of this stack reads as `0` and the matching reason is shown. |
 | `exchanges` | Exchange entry array | **required** | One-way exchange options; may be written as an empty array. |
+| `priority` | Int | `0` | Order between several definitions hitting one item: the larger number wins, and **a tie falls back to registry order**. |
 
-When two values hit the same item, only the one with the highest `priority` applies (**a tie goes to whichever was processed later**): both `value` and `exchanges` are read from it, and the losing value contributes neither a value nor any exchange.
+At least one of `items` and `item` has to be written: a definition with neither, or with a `value` that is not positive, is refused at load time.
+
+When several definitions hit one item, only the one with the highest `priority` wins (the field defaults to `0`); only two definitions with the same `priority` fall back to registry order, and both `value` and `exchanges` are read from it — the losing one contributes neither a value nor any exchange. **Whether `items` names an item or a tag is irrelevant**.
 
 ### `unavailable_when`
 
 Each entry pairs an existing item condition with a piece of reason text. `reason` may be a translation-key string or a vanilla text component object. Places that have a player at hand (the Cheque Table, the Exchange Station and tooltips) evaluate the condition with the current player; a pure server-side query with no entity context does not guess at the condition result.
 
+`data/example/mxt/currency/spirit_stone.json`:
+
 ```json
 {
-  "values": {
-    "mxt:spirit_stone": {
-      "value": 10,
-      "unavailable_when": [
-        {
-          "condition": { "type": "mxt:spirit_storage_not_full" },
-          "reason": "tooltip.mxt.currency_spirit_not_full"
-        }
-      ],
-      "exchanges": []
+  "item": "mxt:spirit_stone",
+  "value": 10,
+  "unavailable_when": [
+    {
+      "condition": {"type": "mxt:spirit_storage_not_full"},
+      "reason": "tooltip.mxt.currency_spirit_not_full"
     }
-  }
+  ],
+  "exchanges": []
 }
 ```
 
@@ -79,73 +84,57 @@ An `exchanges` array only describes turning **this** currency into something els
 
 ## Examples
 
-A copper coin offering a one-way exchange:
+`data/example/mxt/currency/copper_coin.json`, claiming a batch of items at once:
 
 ```json
 {
-  "values": {
-    "#example:copper_coins": {
-      "value": 1,
-      "exchanges": [
-        {
-          "cost": 10,
-          "result": {
-            "id": "mxt:iron_coin"
-          }
-        }
-      ]
-    }
-  }
+  "items": ["minecraft:iron_nugget", "#example:nuggets"],
+  "value": 1,
+  "exchanges": []
 }
 ```
 
-An iron coin keyed by its item id:
+`data/example/mxt/currency/iron_coin.json`, using the `item` shorthand and offering two exchanges:
 
 ```json
 {
-  "values": {
-    "mxt:iron_coin": {
-      "value": 10,
-      "exchanges": [
-        {
-          "cost": 1,
-          "result": {
-            "id": "mxt:copper_coin",
-            "count": 10
-          }
-        },
-        {
-          "cost": 10,
-          "result": {
-            "id": "mxt:gold_coin"
-          }
-        }
-      ]
+  "item": "example:iron_coin",
+  "value": 10,
+  "exchanges": [
+    {
+      "cost": 1,
+      "result": {
+        "id": "example:copper_coin",
+        "count": 10
+      }
+    },
+    {
+      "cost": 10,
+      "result": {
+        "id": "mxt:gold_coin"
+      }
     }
-  }
+  ]
 }
 ```
 
-An item tag with a component-carrying output:
+A tag with a component-carrying output:
 
 ```json
 {
-  "values": {
-    "#minecraft:emeralds": {
-      "value": 100,
-      "exchanges": [
-        {
-          "cost": 4,
-          "result": {
-            "id": "minecraft:diamond",
-            "components": {
-              "minecraft:custom_name": "{\"text\":\"Exchange Token\"}"
-            }
-          }
+  "items": "#minecraft:emeralds",
+  "value": 100,
+  "exchanges": [
+    {
+      "cost": 4,
+      "result": {
+        "id": "minecraft:diamond",
+        "components": {
+          "minecraft:custom_name": "{\"text\":\"Exchange Token\"}"
         }
-      ]
+      }
     }
-  }
+  ]
 }
 ```
 
@@ -153,12 +142,9 @@ A currency with no exchange options must still write an empty array; `exchanges`
 
 ```json
 {
-  "values": {
-    "minecraft:emerald": {
-      "value": 100,
-      "exchanges": []
-    }
-  }
+  "item": "minecraft:emerald",
+  "value": 100,
+  "exchanges": []
 }
 ```
 
@@ -166,35 +152,32 @@ A currency with no exchange options must still write an empty array; `exchanges`
 
 The Exchange Station is a stonecutter-style screen: the input slot only accepts currency items carrying a non-empty `exchanges`; the right side lists every exchange entry of that currency; and after an entry is selected, the result slot shows the output only once the input count reaches `cost`. Taking the result consumes `cost` input items.
 
-Both the list and the result are confirmed by the server-side menu; the client only draws the same options from the synchronized data map.
+Both the list and the result are confirmed by the server-side menu; the client only draws the same options from the synchronized registry.
 
-## Disabling a Value
+## Disabling a Definition
 
-A condition **can only be written on a value** (the example below is the value-level form); one written at the top level of the file is silently ignored and the value applies anyway:
+The condition is written **at the top level of the file** (one file is one definition). When it does not hold, the definition never enters the registry at all:
 
 ```json
 {
-  "values": {
-    "example:legacy_coin": {
-      "neoforge:conditions": [
-        { "type": "neoforge:never" }
-      ],
-      "value": 1,
-      "exchanges": []
-    }
-  }
+  "neoforge:conditions": [
+    {"type": "neoforge:never"}
+  ],
+  "item": "example:legacy_coin",
+  "value": 1,
+  "exchanges": []
 }
 ```
 
-A value whose condition does not hold is as good as unwritten: that item is not currency and takes no part in exchanges, cheques or settlement. The available conditions are on the [Datapack Development Overview](../overview.md#disabling-a-definition).
+A definition whose condition does not hold is as good as unwritten: that item is not currency and takes no part in exchanges, cheques or settlement. The available conditions are on the [Datapack Development Overview](../overview.md#disabling-a-definition).
 
 ## Validation and Loading
 
-- A key must be an item id or a `#`-prefixed item tag.
-- `value` must be a positive integer (`> 0`).
-- When any condition in `unavailable_when` holds, that stack takes no part in currency settlement and its value reads as `0`.
+- `items` may only name item ids that are already registered, plus `#item tags`; a matcher entry carrying a `type` is written as on the [`ItemMatcher`](../types/shared_data_types.md#itemmatcher) page.
+- At least one of `items` and `item` has to be written and `value` must be greater than `0`; otherwise the definition fails to load.
+- While any condition in `unavailable_when` holds, that stack takes no part in currency settlement and its value reads as `0`.
 - `exchanges` must be present; write `[]` when no exchange is offered.
-- When several values hit the same item, only the one with the highest `priority` applies, and a tie goes to whichever was processed later: both its `value` and its `exchanges` are read.
+- When several definitions hit one item, only the one with the highest `priority` wins, and a tie falls back to registry order: both its `value` and its `exchanges` are read.
 - Every `cost` must fall within `1..99`.
 - `result` must be a valid item stack template.
-- The data map is read while the world loads and synchronized to clients on join; after an edit, load the world again or restart the server, because `/reload` does not apply to it.
+- A datapack registry is read **while the world loads** and is synchronized to the client with the pack; after an edit, load the world again or restart the server, because `/reload` does not apply to it.

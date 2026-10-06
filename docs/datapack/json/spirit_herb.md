@@ -6,7 +6,7 @@ aside: false
 
 # spirit_herb（灵植） {#spirit_herb}
 
-`spirit_herb` 把一件**已有物品**标记成灵植，给它药性药力、寒热偏向，还可以给它一套培育方式。它不注册任何新物品：草本身由内容包或别的模组提供。**定义里没有 `quality` 字段**：灵植按**物品**认领（`items` 就是那套 `ItemMatcher`），堆上不装定义身份组件，没有可以问的对象，所以这株草的档写在数据表 [default_quality](./default_quality.md) 里，按物品 id 或 `#标签` 给。
+`spirit_herb` 把一件**已有物品**标记成灵植，给它药性药力、寒热偏向，还可以给它一套培育方式。它不注册任何新物品：草本身由内容包或别的模组提供。**定义里没有 `quality` 字段**：灵植按**物品**认领（`items` 就是那套 `ItemMatcher`），堆上不装定义身份组件，没有可以问的对象，所以这株草的档写在注册表 [default_quality](./default_quality.md) 里，按物品 id 或 `#标签` 给。
 
 ## 文件位置
 

@@ -7,12 +7,12 @@ description: "Register real items in a KubeJS startup script, then hang MiXianTu
 
 MiXianTu does not create items. What it creates is **rules for items**, and those rules always point at a real, registered item ID — whether that item comes from vanilla, another mod or a KubeJS script.
 
-That split is deliberate: before a data pack can refer to an item, the item has to exist, and the two are registered at different moments. They do meet in the same place in the end, though — an item registered by a script only becomes visible to the game after a restart, while the binding tables are read when the world loads (`item_binding` and `weapon_binding` are item data maps, `pill_binding` and `technique_binding` are data pack registries):
+That split is deliberate: before a data pack can refer to an item, the item has to exist, and the two are registered at different moments. They do meet in the same place in the end, though — an item registered by a script only becomes visible to the game after a restart, while all four binding tables are data pack registries, read when the world loads:
 
 ```text
 kubejs/startup_scripts/          the item itself      (game restart)
         ↓  real item ID: kubejs:qi_pill
-data/mxt/data_maps/item/         the rules            (world reload)
+data/example/mxt/                the rules            (world reload)
         ↓
 actions, conditions, quality, aura, tooltips
 ```
@@ -32,10 +32,10 @@ Do not invent `mxt:item` or `mxt:weapon` files out of thin air. Those registries
 | `data/example/mxt/element/fire.json` | The element the spirit root uses. |
 | `data/example/mxt/spirit_root/fire_root.json` | What the pellet grants. |
 | `data/example/mxt/technique/azure_breath.json` | What the manual teaches. |
-| `data/mxt/data_maps/item/item_binding.json` | Generic bindings: what using this item does. |
+| `data/example/mxt/item_binding/qi_pill.json` | Generic bindings: what using this item does. |
 | `data/example/mxt/pill/qi_pill.json` | What the pill does: dose action, toxicity and overdose. |
 | `data/example/mxt/pill_binding/qi_pill.json` | Which pill this item family is, plus its cap and cooldown. |
-| `data/mxt/data_maps/item/weapon_binding.json` | Weapon attribute modifiers and combat behaviour. |
+| `data/example/mxt/weapon_binding/spirit_sword.json` | Weapon attribute modifiers and combat behaviour. |
 | `data/example/mxt/technique_binding/azure_manual.json` | How that technique is read, and which item the mod generates as its carrier. |
 
 Quality tiers are not on this page: they have a chain and upgrade rules of their own, see [Define a Quality Chain](./define-a-quality-chain.md). The four items here use the three tiers built there.
@@ -87,43 +87,40 @@ ServerEvents.recipes(event => {
 
 ## Step 2 — What Each of the Four Binding Tables Covers
 
-The four tables do different jobs and their fields barely overlap. `item_binding` and `weapon_binding` are **data maps**: their files live under `data/mxt/data_maps/item/`, and the keys of `values` are item ids or item tags. `pill_binding` and `technique_binding` are still data pack registries and declare which items they cover through `items`:
+The four tables do different jobs and their fields barely overlap. All four are data pack registries, and each declares which items it covers through `items`:
 
 | Table | What it covers | Main fields |
 | --- | --- | --- |
-| `item_binding` | The generic "what happens when this item is used up" | `conditions`, `actions` |
-| `pill_binding` | Which pill this item family is, plus its use cap and cooldown | `pill`, `max_uses`, `cooldown`, `priority` |
-| `weapon_binding` | Attributes and actions while it is used as a weapon | `attributes`, `use_action`, `attack_action`, `tick_action` |
-| `technique_binding` | How the technique is read, and which item is its carrier | `technique`, `carrier_item`, `learn_time`, `hold_animation`, `hold_sound` |
+| `item_binding` | The generic "what happens when this item is used up" | `items`, `conditions`, `actions`, `element`, `priority` |
+| `pill_binding` | Which pill this item family is, plus its use cap and cooldown | `items`, `pill`, `max_uses`, `cooldown`, `priority` |
+| `weapon_binding` | Attributes and actions while it is used as a weapon | `items`, `attributes`, `use_action`, `attack_action`, `tick_action`, `conditions`, `element`, `priority` |
+| `technique_binding` | How the technique is read, and which item is its carrier | `items`, `technique`, `carrier_item`, `learn_time`, `hold_animation`, `hold_sound` |
 
 Three rules they share:
 
-- The keys of a data map and a registry's `items` both accept a single ID or an item tag, so one file can cover a whole family of items (a data map expands its tags at load time).
-- Every table decides who wins by `priority`, and **only one value per item per table ever runs** (highest wins, and a tie goes to whichever was processed later: writing order inside one file, data pack load order across files) — it is not "all of them stacked". Two entries can both be written correctly and still not both execute.
-- A key that matches no item at all, or an `items` that is missing or mistyped in one of the registries, means that entry never applies, and **no error is reported**.
+- `items` accepts a single ID, an item tag or an array of them, so one definition can cover a whole family of items (tags expand at load time).
+- Every table decides who wins by `priority`, and **only one definition per item per table ever runs** (highest wins, a tie falls back to registry order) — it is not "all of them stacked". Two definitions can both be written correctly and still not both execute.
+- A single unknown item ID in `items` **fails the data pack load**; an unknown ID written inside an array only logs one line and drops that element, with the rest of the file loading as usual — so a typo inside an array loses that match silently.
 
 When the hooks run, and how conditions are written and ordered, get a page of their own: [Bind Actions with KubeJS](./bind-actions.md).
 
 ## Step 3 — Generic Bindings
 
-`item_binding` is the general-purpose data map: the key is the item, and the value lists some actions.
+`item_binding` is the general-purpose one: the definition claims items through `items`, and lists some actions below.
 
 ```json
-// data/mxt/data_maps/item/item_binding.json
+// data/example/mxt/item_binding/qi_pill.json
 {
-  "values": {
-    "kubejs:qi_pill": {
-      "conditions": [
-        {
-          "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
-          "description": "condition.example.needs_qi_chain"
-        }
-      ],
-      "actions": [
-        {"type": "mxt:add_resource", "resource": "example:qi", "amount": 25}
-      ]
+  "items": "kubejs:qi_pill",
+  "conditions": [
+    {
+      "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
+      "description": "condition.example.needs_qi_chain"
     }
-  }
+  ],
+  "actions": [
+    {"type": "mxt:add_resource", "resource": "example:qi", "amount": 25}
+  ]
 }
 ```
 
@@ -151,15 +148,12 @@ A pellet that grants a spirit root:
 ```
 
 ```json
-// data/mxt/data_maps/item/item_binding.json
+// data/example/mxt/item_binding/root_pellet.json
 {
-  "values": {
-    "kubejs:root_pellet": {
-      "actions": [
-        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
-      ]
-    }
-  }
+  "items": "kubejs:root_pellet",
+  "actions": [
+    {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
+  ]
 }
 ```
 
@@ -204,22 +198,19 @@ A pill takes two tables: `pill` says what eating it does, and `pill_binding` say
 ## Step 5 — Weapon Bindings
 
 ```json
-// data/mxt/data_maps/item/weapon_binding.json
+// data/example/mxt/weapon_binding/spirit_sword.json
 {
-  "values": {
-    "kubejs:spirit_sword": {
-      "attributes": [
-        {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"},
-        {"attribute": "minecraft:attack_speed", "id": "example:spirit_sword/speed", "amount": -2.4, "operation": "add_value"}
-      ],
-      "use_action": {"type": "mxt:no_op"},
-      "attack_action": {
-        "type": "mxt:target_action",
-        "action": {"type": "mxt:damage", "amount": 3}
-      },
-      "tick_action": {"type": "mxt:no_op"}
-    }
-  }
+  "items": "kubejs:spirit_sword",
+  "attributes": [
+    {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"},
+    {"attribute": "minecraft:attack_speed", "id": "example:spirit_sword/speed", "amount": -2.4, "operation": "add_value"}
+  ],
+  "use_action": {"type": "mxt:no_op"},
+  "attack_action": {
+    "type": "mxt:target_action",
+    "action": {"type": "mxt:damage", "amount": 3}
+  },
+  "tick_action": {"type": "mxt:no_op"}
 }
 ```
 
@@ -275,9 +266,9 @@ Right-clicking the manual attempts to learn `example:azure_breath`. Every techni
 /mxt registries list                   → mxt:pill=1, mxt:pill_binding=1, mxt:technique_binding=1, …
 ```
 
-The two halves each need their own restart: KubeJS registers items at startup, and both the two item data maps and the two binding registries are read by Minecraft while the world loads. `/reload` does neither — it only refreshes recipes, loot tables, advancements, functions and KubeJS server scripts.
+The two halves each need their own restart: KubeJS registers items at startup, and all four binding tables are data pack registries that Minecraft reads while the world loads. `/reload` does neither — it only refreshes recipes, loot tables, advancements, functions and KubeJS server scripts.
 
-`/mxt registries list` only lists registries: `item_binding` and `weapon_binding` are data maps now and are not in it.
+`/mxt registries list` shows the entry counts of `mxt:item_binding`, `mxt:weapon_binding`, `mxt:pill_binding` and `mxt:technique_binding`.
 
 Then in game:
 
@@ -292,16 +283,16 @@ Then in game:
 
 | Symptom | Cause |
 | --- | --- |
-| The world refuses to load with an unknown item | A binding registry's `items` names an item ID that is not registered: as a single ID it fails the load; inside an array the element that cannot be read is dropped and one line is logged. When a data map key matches no item, that value simply does not apply. |
-| The rule silently never matches | `example:qi_pill` was written inside a registry's `items` array (or as a data map key) while the script produces `kubejs:qi_pill` (or any other typo), so that entry was dropped and the file loaded as usual. Use the ID that is really registered. |
-| Two definitions of the same table on one item, and only one applies | Every table takes exactly one entry, chosen by `priority`, and a tie goes to whichever was processed later. To run both, merge them into one file or write them as one array. |
+| The world refuses to load with an unknown item | A binding registry's `items` names an item ID that is not registered: as a single ID it fails the whole data pack load; inside an array the element that cannot be read is dropped and one line is logged. |
+| The rule silently never matches | `example:qi_pill` was written inside an `items` array while the script produces `kubejs:qi_pill` (or any other typo), so that entry was dropped and the file loaded as usual. Use the ID that is really registered. |
+| Two definitions of the same table on one item, and only one applies | Every table takes exactly one definition, chosen by `priority`, and a tie falls back to registry order. To run both, merge them into one definition, or write both into one `items` array. |
 | The item has no behaviour at all | The rule was put into a binding table that does not match this item, or the quality of that stack cannot be resolved. |
 | A pill on a plain item does nothing on right-click | That item answers the click through its own branch of `Item#use` (swappable equipment, a shield, a kinetic weapon), or a hold declaration claims it — both take their own path. Use another item, or remove that declaration. |
 | `conditions` is clearly false and the actions still ran | Conditions are checked once, when use starts, and not re-checked after that. |
 | Some hooks are written and do nothing | The hook was written into a table that does not declare it (for instance `use_action` in `item_binding`). An undeclared key is ignored silently. |
 | The check marks in the tooltip are not what you expected | A quality can carry conditions of its own, so that `✖` may come from the quality rather than from the binding. |
 | New items do not appear after `/reload` | Item registration happens at startup; restart the game. |
-| Edited bindings change nothing | `/reload` re-reads neither data pack registries nor data maps; load the world again. |
+| Edited bindings change nothing | `/reload` does not re-read data pack registries; load the world again. |
 | The manual has no effect and no error | First check whether that stack carries the `mxt:technique` component — a plain item without it teaches nothing. If it does, look at whether learning failed instead: `learn_condition`, a technique already learned, or an exclusivity conflict. |
 | The manual's `items` field does nothing | `items` is the **optional** second route, and the `mxt:technique` component on the stack still wins. Every item id written there has to match the id the script really registered (do not drop the `kubejs:` namespace), or it claims nothing. |
 

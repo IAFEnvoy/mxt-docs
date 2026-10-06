@@ -14,7 +14,7 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `input` | 材料需求数组 | **必填** | 无序材料需求，每项为 `{ "id": <物品 ID>, "count": <数量> }`，`count` 默认 `1`。 |
+| `input` | 材料需求数组 | **必填** | 无序材料需求，每项为 `{ "ingredient": <材料>, "count": <数量> }`，`count` 默认 `1`。 |
 | `allowed_methods` | 锻打方式 id、`#标签` 或数组 | 空 | 本蓝图允许的锻打方式。 |
 | `meter_min` / `meter_max` | Integer | **必填** | 锻打条边界，必须跨过 `0`。 |
 | `target_min` / `target_max` | Integer | **必填** | 成功区间，必须位于条边界内。 |
@@ -28,11 +28,26 @@ aside: false
 
 ## `input`
 
-**顺序无关**：锻造台只要求 15 格输入槽里合计持有每项声明的数量，材料来自哪些槽位不影响判定。
+**顺序无关**：锻造台只要求 15 格输入槽里合计持有每项声明的数量（**跨槽求和**，不是 `SizedIngredient#test` 那种"单堆够量"），材料来自哪些槽位不影响判定；会话锁下的是**实际取走的那几堆**，带组件的材料不会在结算时退化成裸物品。
 
-加载期会拒绝空列表、超过 15 项、同一物品重复出现，以及无法解析的物品 ID。因为数据包注册表早于物品组件绑定解析，`input` 用 `id` + `count` 而不是物品堆。
+加载期会拒绝空列表、超过 15 项、以及逐字重复的同一项；**"同一件物品写两次"不再可判**：材料是 `Ingredient`，两条材料可以合法地重叠。
 
-材料按**物品**匹配，不看物品堆上的组件：一摞带品质组件的材料与普通的同名物品在"够不够"上完全一样。
+> **破坏性形状改动**：这一项从 `{ "id": …, "count": n }` 改成 `{ "ingredient": …, "count": n }`（NeoForge 的 sized ingredient）。老写法因为缺 `ingredient` 而加载失败。
+
+`ingredient` 就是原版材料，所以物品 id、`#物品标签`、以及 `neoforge:ingredient_type` 的自定义材料都写得进去——**包括本体的 `mxt:quality`**，所以"材料至少某档"现在是可表达的：
+
+```json
+"input": [
+  {
+    "ingredient": {
+      "neoforge:ingredient_type": "mxt:quality",
+      "items": "mxt:blank_talisman",
+      "min_quality": "example:tier_3"
+    },
+    "count": 2
+  }
+]
+```
 
 ## `allowed_methods`
 

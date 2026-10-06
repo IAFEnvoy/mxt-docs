@@ -27,7 +27,7 @@ aside: false
 
 `holder_condition` 可以组合 `mxt:has_spirit_root`、`mxt:has_physique` 表达先决灵根或先决体质。
 
-`quality` 引用 `mxt:quality` 里的一档，可以省略。信息面板里体质那一行的 tooltip 读「定义名 · 品质名」，没有 `quality` 时这一段整个不写（不会显示 `-`）；`/mxt physique list` 则在没有档位时显示 `-`。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
+`quality` 引用 `mxt:quality` 里的一档，可以省略。信息面板里体质那一行的 tooltip 读「定义名 · 品质名」，没有 `quality` 时这一段整个不写（不会显示 `-`）；`/mxt physique list` 则在没有档位时显示 `-`。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到注册表 [default_quality](./default_quality.md)。
 
 ```json
 // data/example/mxt/physique/innate_sword_bone.json

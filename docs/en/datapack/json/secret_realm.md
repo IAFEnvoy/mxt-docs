@@ -35,7 +35,7 @@ A secret realm definition is **a template**, not one fixed dimension: every entr
 | `enter_action` | `EntityAction` | `mxt:no_op` | The entry behaviour, run on the entering entity after the teleport has landed. |
 | `exit_action` | `EntityAction` | `mxt:no_op` | The exit behaviour, run on the leaving entity before the teleport back to the origin. |
 
-`quality` is optional: every realm shares the one token item `mxt:secret_realm_token`, so the item itself cannot say which tier it is — only the definition the stack carries can: a token into this realm starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
+`quality` is optional: every realm shares the one token item `mxt:secret_realm_token`, so the item itself cannot say which tier it is — only the definition the stack carries can: a token into this realm starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) registry.
 
 `exit_condition` **looks at neither** an expiry nor a forced return, otherwise a datapack could lock a player inside a secret realm forever.
 

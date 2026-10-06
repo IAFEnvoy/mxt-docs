@@ -40,7 +40,7 @@ aside: false
 
 `resource` 只收**单个数值 id**：不能写 `#标签`，也不能写数组，一条灵气只描述一个数值。
 
-`CultivateConditions` 对象包含 `conditions`、可选 `triggers` 和可选 `action`。开始修炼和突破入口立即检查 `conditions`（全部满足）；达到突破阶段后，当前数值才会按 `triggers` 注册运行时订阅，匹配事件后再尝试突破。订阅不会直接序列化，存档加载或数据表加载后由修炼状态重建。
+`CultivateConditions` 对象包含 `conditions`、可选 `triggers` 和可选 `action`。开始修炼和突破入口立即检查 `conditions`（全部满足）；达到突破阶段后，当前数值才会按 `triggers` 注册运行时订阅，匹配事件后再尝试突破。订阅不会直接序列化，存档加载或注册表加载后由修炼状态重建。
 
 `cultivation_to_resource` 和 `resource_to_cultivation` 的两个字段如下：
 

@@ -22,7 +22,7 @@ aside: false
 | `toxicity_after_overdose` | `NumberProvider` | `0` | 过量之后丹毒被**设成**的值，不是清零。 |
 | `conditions` | `EntityCondition[]` | `[]` | 食用前检查；支持内联条件或带描述的条件对象。 |
 
-`quality` 是可选的：所有丹药共用本体这一件载体物品 `mxt:pill`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出——一剂这份丹药起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。堆上的 `mxt:pill` 组件只覆盖效果那几个字段（`on_consume`、`toxicity_gain` 之类），**改不动档位**：档读的始终是定义自己写的那一份 `quality`。
+`quality` 是可选的：所有丹药共用本体这一件载体物品 `mxt:pill`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出——一剂这份丹药起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到注册表 [default_quality](./default_quality.md)。堆上的 `mxt:pill` 组件只覆盖效果那几个字段（`on_consume`、`toxicity_gain` 之类），**改不动档位**：档读的始终是定义自己写的那一份 `quality`。
 
 一份定义只写"吃下去发生什么"，`data/example/mxt/pill/warming_pill.json`：
 

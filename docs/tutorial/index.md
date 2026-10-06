@@ -9,7 +9,7 @@ description: "一步步搭建一个小型 MiXianTu 内容包：灵气与境界�
 
 ## 示例包
 
-所有教程都在扩展同一个位于 `example` 命名空间下的小型内容包。前面几篇是一条线，每一篇都假定它依赖的页面已经完成（双修那篇挂在第二篇后面，只用到同一个包里已有的定义）；后面几篇各自独立，只用到这个包里已有的那几个定义。唯一不写在这个包里的是数据表：它们的文件固定放在 `mxt` 命名空间下。整组教程结束时，它长这样：
+所有教程都在扩展同一个位于 `example` 命名空间下的小型内容包。前面几篇是一条线，每一篇都假定它依赖的页面已经完成（双修那篇挂在第二篇后面，只用到同一个包里已有的定义）；后面几篇各自独立，只用到这个包里已有的那几个定义。按物品或方块认领的那几张表和别的定义一样放在这个包里，条目 id 就是 `example:<路径>`。整组教程结束时，它长这样：
 
 ```text
 data/example/
@@ -57,19 +57,15 @@ data/example/
 │   ├── pill_binding/qi_pill.json            Which items are that pill, and their cap and cooldown
 │   ├── technique_binding/azure_manual.json
 │   ├── trigger/azure_mastery_from_kill.json  A kill raises mastery
-│   └── contract_type/spirit_familiar.json   Conditions, costs and caps for one beast
+│   ├── contract_type/spirit_familiar.json   Conditions, costs and caps for one beast
+│   ├── item_aura/spirit_stone.json          Items that act as cultivation fuel
+│   ├── item_binding/qi_pill.json            Rules attached to real items
+│   ├── weapon_binding/spirit_sword.json     Weapon attributes and the three combat hooks
+│   ├── tool_binding/smith_hammer.json       Which methods a tool item unlocks
+│   ├── blueprint_binding/sword_manual.json  Which blueprints a blueprint item offers
+│   └── block_aura/spirit_stone_ore.json     Blocks that emit aura
 ├── tags/entity_type/contract/spirit_familiar.json  Narrows which entities it accepts
 └── (kubejs/startup_scripts/mxt_items.js)    The items themselves, registered by KubeJS
-
-data/mxt/data_maps/                            The data maps, keyed by id or tag
-├── item/
-│   ├── item_aura.json          Items that act as cultivation fuel
-│   ├── item_binding.json       Rules attached to real items
-│   ├── weapon_binding.json     Weapon attributes and the three combat hooks
-│   ├── tool_binding.json       Which methods a tool item unlocks
-│   └── blueprint_binding.json  Which blueprints a blueprint item offers
-└── block/
-    └── block_aura.json         Blocks that emit aura
 ```
 
 ## 教程列表
@@ -101,10 +97,10 @@ data/mxt/data_maps/                            The data maps, keyed by id or tag
 ## 约定
 
 - **命名空间。** 所有示例都使用 `example`。把它改成你自己整合包或内容包的 ID，并保持文件的 ID 与它们之间的引用同步。
-- **文件位置。** 数据包文件放在 `data/<namespace>/mxt/<registry>/<path>.json` 下；标签放在 `data/<namespace>/tags/...` 下。**数据表**（8 张：物品键 6 张、方块键 2 张）是例外：物品键的放在 `data/mxt/data_maps/item/` 下、方块键的放在 `data/mxt/data_maps/block/` 下，文件名就是表名（例如 `item_aura.json`）；第一段命名空间是表自己的 `mxt`，内容包要加值是往同一个目录里再放一个文件。内容一多就按类别分进子文件夹（目录是 ID 的一部分），写法见[数据包开发总览](../datapack/overview.md)。完整列表见 [动态注册表](../datapack/json/index.md)。
-- **生效方式。** MiXianTu 的 31 张数据包注册表与 9 张数据表都是 Minecraft 在**世界加载时**读取的，所以 `/reload` 不会重新读取。修改数据包文件后，请退回标题界面重新打开世界（或重启服务器）。`/reload` 只会刷新配方、战利品表、进度、函数和 KubeJS 服务端脚本。用 KubeJS 注册新物品或方块同样需要重启游戏。
+- **文件位置。** 数据包文件放在 `data/<namespace>/mxt/<注册表>/<path>.json` 下；标签放在 `data/<namespace>/tags/...` 下。一份文件就是一个定义，条目 id 是 `<namespace>:<路径>`，文件顶层没有 `values`。九张按物品或方块认领的表也一样：`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding` 在定义里用 `items` 认领物品，`block_aura`、`heat_source` 用 `blocks` 认领方块，所以内容包用 `example` 命名空间时文件就放在 `data/example/mxt/<表>/<名字>.json`。内容一多就按类别分进子文件夹（目录是 ID 的一部分），写法见[数据包开发总览](../datapack/overview.md)。完整列表见 [动态注册表](../datapack/json/index.md)。
+- **生效方式。** MiXianTu 的 40 张数据包注册表都是 Minecraft 在**世界加载时**读取的，所以 `/reload` 不会重新读取。修改数据包文件后，请退回标题界面重新打开世界（或重启服务器）。`/reload` 只会刷新配方、战利品表、进度、函数和 KubeJS 服务端脚本。用 KubeJS 注册新物品或方块同样需要重启游戏。
 - **坏文件会挡住世界。** 没有上一份快照可以退回：只要有定义解码失败，世界就会一直加载不了，直到该文件被修好。日志会给出文件名和 Codec 错误，所以要留一份正在编辑的文件的最后可用副本。
-- **校验。** `/mxt registries validate` 报告注册表数量、条目总数以及校验是否通过，`/mxt registries list` 打印每个注册表 ID 及其条目数量（9 张数据表不是注册表，不在其中）。两条命令都只覆盖一部分注册表，各自的适用范围写在对应教程的验证一节里。其余命令列在[命令](../player-guide/commands.md)里。
+- **校验。** `/mxt registries validate` 报告注册表数量、条目总数以及校验是否通过，`/mxt registries list` 打印每个注册表 ID 及其条目数量，九张按物品或方块认领的表也在里面。其余命令列在[命令](../player-guide/commands.md)里。
 - **版本。** 这些页面跟随模组的**当前开发版本**（不在文档里写死版本号，以你装的那份 Jar 为准），版本仍在开发中、数据包格式尚未冻结；字段变化时，参考页面也会随之更新。
 
 ## 延伸阅读

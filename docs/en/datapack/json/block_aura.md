@@ -6,11 +6,21 @@ aside: false
 
 # Block Aura (block_aura)
 
-A `block_aura` defines which blocks are aura sources: every matching block contributes to the aura inventory of the chunk it is in, on top of the natural environment. A spirit stone vein is what uses it to push the concentration far above the natural value.
+A `block_aura` defines which blocks are aura sources: every block a definition claims contributes to the aura inventory of the chunk it is in, on top of the natural environment. A spirit stone vein is what uses it to push the concentration far above the natural value.
 
 ## File Location
 
-`block_aura` is a **block data map** (a NeoForge Registry Data Map), not a registry, and its file always lives at `data/mxt/data_maps/block/block_aura.json`. **The first namespace has to be the table's own namespace, `mxt`, not the content pack's**: a content pack adds values by dropping another file into `data/mxt/data_maps/block/`. The keys of `values` are **block ids or `#`-prefixed block tags** (a tag expands at load time into every block it held then) — this table has **no `blocks` field**. See [Data Maps](../overview.md#data-maps) for the file shape.
+`block_aura` is a **datapack registry**, and one file is one definition:
+
+```text
+data/<namespace>/mxt/block_aura/<entry>.json
+```
+
+The entry id is `<namespace>:<path>` — `data/example/mxt/block_aura/aura_emitters.json` is `example:aura_emitters`. The mod's own entries live under `data/mxt/mxt/block_aura/`; a content pack uses its own namespace instead of `mxt`.
+
+The fields of the table below go at the top level. There is **no `values` wrapper** — one file describes exactly one definition — and to add another contribution from your own pack you simply write another definition; every definition hitting a block **applies**, and there is no `replace` switch. A **file-level** `neoforge:conditions` works: when it does not hold, the definition never enters the registry at all.
+
+Like every other datapack registry it is read **while the world loads**, and `/reload` does not read it again. `/mxt registries list` and `/mxt registries validate` both cover it, and `/picker mxt:block_aura` lists the blocks these definitions claim.
 
 **Purpose**: Aura provided by blocks.
 
@@ -18,8 +28,8 @@ A `block_aura` defines which blocks are aura sources: every matching block contr
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| (key) | block ID or a `#`-prefixed block tag | — | **This is "which block"**; no other field says it. |
-| (value) | Map of aura ID to value | `{}` | The aura table this block provides. **There is no outer field name** — the value is that table itself. |
+| `blocks` | Block entries | **required, must not be empty** | Which blocks this definition claims: a single block id, a `#`-prefixed block tag, or an array of either. |
+| `aura` | Map of aura ID to value | `{}` | Which auras this definition makes each claimed block provide, and how much of each. |
 
 The keys of the map are `mxt:aura` registry entries, not `mxt:resource` ones: a resource only stores a number, while the aura is what says which aura that number counts towards. Every entry in the map has the same fields as an `aura` entry in [aura_zone](./aura_zone.md):
 
@@ -30,32 +40,29 @@ The keys of the map are `mxt:aura` registry entries, not `mxt:resource` ones: a 
 | `regen_per_tick` | Double | `0` | How much is restored per tick. |
 | `color` | `RGBColor` | `#FFFFFF` | Colour, used for environment rendering only. |
 
-`amount` must be finite and non-negative, and `regen_per_tick` must be finite, otherwise the value is rejected at load time.
+`amount` must be finite and non-negative, and `regen_per_tick` must be finite, otherwise the definition is rejected at load time. With `aura` omitted or empty the definition contributes no aura at all; it only claims a few blocks.
 
-There is no "aura kind" field: the auras a block emits are exactly the key set of that map, so a block cannot claim an aura it does not actually supply.
+There is no "aura kind" field: the auras a definition makes a block emit are exactly the key set of that map, so a block cannot claim an aura it does not actually supply.
 
-**When several values hit the same block they are added together** (block aura is an additive quantity) and **`priority` plays no part** — only it and `default_quality` (which has no `priority` field at all) settle conflicts without `priority`, see the merge section of [Data Maps](../overview.md#data-maps).
+**When several definitions hit the same block they all apply and are added together** (block aura is an additive quantity): this registry has **no `priority` field**, never picks one winner, and nothing overrides anything else.
 
 ## Example
 
+`data/example/mxt/block_aura/aura_emitters.json`:
+
 ```json
-// data/mxt/data_maps/block/block_aura.json
 {
-  "values": {
-    "#example:aura_emitters": {
-      "mxt:common": { "amount": 5.0, "regen_per_tick": 0.01 }
-    },
-    "mxt:spirit_stone_ore": {
-      "mxt:common": { "amount": 20.0, "max": 40.0, "regen_per_tick": 0.05 }
-    }
+  "blocks": ["mxt:spirit_stone_ore", "#example:aura_emitters"],
+  "aura": {
+    "example:spirit_power": {"amount": 5.0, "max": 5.0, "regen_per_tick": 0.01}
   }
 }
 ```
 
 ## Runtime Behaviour
 
-- The cache is rebuilt after a chunk is loaded, a block changes, or the data tables are loaded.
-- A spirit stone vein can be stacked from several `block_aura` values and block tags to provide aura above the natural environment.
+- The cache is rebuilt after a chunk is loaded, a block changes, or the registry is loaded.
+- A spirit stone vein can be stacked from several `block_aura` definitions and block tags to provide aura above the natural environment.
 - At runtime the query is performed over a 7×7×7 sub-chunk range: within the 3×3×3 range around the current sub-chunk the **real positions** of matching blocks are used, the outer ring is approximated with sub-chunk centres, and everything decays uniformly by `1 / max(1, distance squared)`.
 - The contribution of each source sub-chunk is roughly split by the number of players currently visiting it, while the inventory is still shared at the chunk level.
 - Block aura does not occupy the environment base maximum: it also adds an equal amount of storable aura capacity to the current chunk. With an environment maximum of 100 and a total block contribution of 30, the effective maximum of that chunk is 130.

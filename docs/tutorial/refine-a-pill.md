@@ -21,6 +21,7 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 | `data/example/mxt/spirit_herb/herb_d.json` | 药引：每件调和药力 1，性平。 |
 | `data/example/mxt/alchemy_furnace/basic.json` | 炉型规格：槽位、容量与冷却。 |
 | `data/example/mxt/alchemy_wall_material/basic_wall.json` | 炉壁材料的耐温。 |
+| `data/example/mxt/heat_source/magma_block.json` | 供热方块：岩浆块能提供多高温度、每 tick 升多少。 |
 | `data/example/recipe/warming.json` | 丹方：药性阈值、寒热容限、目标炉温与容差、时长与产物。 |
 | `data/example/mxt/pill/warming_pill.json` | 丹药作用：药效、丹毒与过量。 |
 | `data/example/mxt/pill_binding/warming_pill.json` | 丹药绑定：认领这一族物品，并给出服用次数与冷却。 |
@@ -40,7 +41,7 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 
 ## 第 2 步 —— 将已有物品声明为药材
 
-灵植不注册新物品，它给**已有物品**挂一份元数据：药龄、寒热，以及它在三个角色里各提供多少药力。**灵植定义自己没有档位字段**——它按物品认领，物品堆上没有"我是哪份定义"的组件，所以解析时没有可问的定义；要给这株草一个档，就把它写进数据表 [default_quality](../datapack/json/default_quality.md)。
+灵植不注册新物品，它给**已有物品**挂一份元数据：药龄、寒热，以及它在三个角色里各提供多少药力。**灵植定义自己没有档位字段**——它按物品认领，物品堆上没有"我是哪份定义"的组件，所以解析时没有可问的定义；要给这株草一个档，就给它写一条 [default_quality](../datapack/json/default_quality.md) 定义，用 `items` 认领它。
 
 ```json
 // data/example/mxt/quality/common.json
@@ -106,23 +107,20 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 ```
 
 ```json
-// data/mxt/data_maps/block/heat_source.json
+// data/example/mxt/heat_source/magma_block.json
 {
-  "values": {
-    "minecraft:magma_block": {
-      "max_temperature": 200,
-      "heating_per_tick": 4
-    }
-  }
+  "blocks": "minecraft:magma_block",
+  "max_temperature": 200,
+  "heating_per_tick": 4
 }
 ```
 
 - `main_slots` 取 `1..2`，`auxiliary_slots` 取 `0..2`。药引固定占辅药仓的第三格，不用声明；规格没用到的格子不能放东西。
 - `capacity` 是一炉材料的件数上限，还要服从物品自己的堆叠上限。
 - `cooling_per_tick` 是高于设定值、或停止供热之后每 tick 回落的量。供热格空着时炉温冷却到 `0`。
-- **耐温取整炉最低的那一块。** 18 块炉壁都有效时整炉耐温取它们的最低值，再和供热方块的 `max_temperature` 取较低者；混用高耐温炉壁不能把薄弱处平均掉。设定温度必须落在 `0` 到那个上限之间。
-- `heat_source` 给一类方块定下两个数：能提供的最高温度与每 tick 升温量。这张表以方块 id 或 `#` 前缀的方块标签为键，同一个方块被多份值命中时比 `priority`（高的赢，同分后处理者赢）。这一份让**岩浆块**当热源；字段与仲裁规则见 [heat_source](../datapack/json/heat_source.md)。
-- 品质只决定显示与使用条件，不推导槽位、容量、冷却或耐温。
+- **炉温上限三者取最低。** 这款炉型规格自己可选的 `max_temperature`、18 块炉壁都有效时它们的最低耐温、以及供热方块给出的最高温，三者里最低的那个就是上限；混用高耐温炉壁不能把薄弱处平均掉。把炉型规格的 `max_temperature` 写大能抬高上限，但抬不过炉壁与供热。设定温度必须落在 `0` 到那个上限之间。
+- `heat_source` 给一类方块定下两个数：能提供的最高温度与每 tick 升温量。它按 `blocks` 认领方块（单个方块 id、`#` 前缀的方块标签，或它们的数组），`max_temperature` 与 `heating_per_tick` 都必填且是有限正数；几条定义命中同一个方块时比 `priority`（高的赢，同分回落注册表顺序，默认 `0`）。文件放在 `data/example/mxt/heat_source/<名字>.json` 下。这一份让**岩浆块**当热源；字段与仲裁规则见 [heat_source](../datapack/json/heat_source.md)。
+- 品质只决定显示、使用条件，以及丹方可以要求的**档位**（核心的 `furnace_quality` 与逐格投料的 `input_quality`）；它不推导槽位、容量、冷却或耐温。
 
 ## 第 4 步 —— 搭建丹炉、放入供热方块、投入药材
 
@@ -193,7 +191,7 @@ give @s mxt:alchemy_furnace_casing[mxt:alchemy_wall_material="example:basic_wall
 - 同时匹配上多条丹方时，只保留**唯一支配**其余每一条的那一条：药性键集合相同、每一项都不小于对方、且至少有一项严格更大。玩家不选丹方，没有唯一结果就是配伍冲突，同样不扣料。
 - `target_temperature` 与 `temperature_tolerance` 是炉温窗口。**第一次开炉时设定温度必须落在里面**，所以上面这份丹方要求你把炉温设到 `95..105`。
 - `minimum_aura` 查的是**环境灵气**，不是消耗，也不是热量。键写成本位世界里确实存在的那条灵气；或者让区域用 `alchemy_env_bonus` 顶替这道门槛（那个标记只顶门槛，不供热）。
-- `duration` 会被原料的炼丹修正缩短：取这批材料里最低的那一档品质的 `alchemy_modifier`，`有效时长 = max(1, round(声明时长 ÷ 修正))`，开炉时算一次就冻进这一批。
+- `duration` 会被炼丹修正缩短，开炉时算一次就冻进这一批：**原料侧**取这批材料里最低的那一档品质的 `alchemy_modifier`，**核心侧**取丹炉核心那一档自己的 `alchemy_modifier`（核心没有档时算 `1.0`），`有效时长 = max(1, round(声明时长 ÷ (原料侧 × 核心侧)))`。所以给高炉阶写 `alchemy_modifier: 2`，这座炉子炼什么丹方都更快。
 - 失败物由丹方声明，服务端不会硬塞药渣；不写 `failure_outputs` 就什么都不产出。
 - `guide` 只是可选的示例元数据，丹炉不读也不显示，不想维护就省略。
 
@@ -263,7 +261,7 @@ give @s mxt:pill[mxt:pill={pill:"example:warming_pill"}]
 | 现象 | 原因 |
 | --- | --- |
 | 结构不成型 | 壳缺块（底层只认四个角，中层中心也要砌）、炉壁物品没带有效的炉壁材料，或者格子被另一座炉占了。 |
-| 炉温升不上去 | 底层正中央没有热源方块；或者最薄的那块炉壁、这个方块的 `max_temperature` 把上限压到了设定值以下。 |
+| 炉温升不上去 | 底层正中央没有热源方块；或者最薄的那块炉壁、这个方块的 `max_temperature`、这款炉型规格的 `max_temperature` 把上限压到了设定值以下。 |
 | 第一次开炉被拒 | 设定温度必须落在丹方容差内；上限不够时温度根本设不下去。 |
 | 材料像没生效 | 角色由**仓位**决定：主药只看 `main_effects`，辅药只看 `auxiliary_effects`，药引只看 `catalyst_power`。放错仓等于没放。 |
 | 药力够了却报配伍冲突 | 出现了配方没要求的非零主药或辅药药性；或者同时匹配多条丹方而没有唯一支配结果；或者寒热偏差超出 `balance_tolerance`。 |

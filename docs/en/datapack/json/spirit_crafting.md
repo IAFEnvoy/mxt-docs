@@ -116,7 +116,17 @@ The ingredients have to match the non-empty slots of the grid exactly, in any or
 }
 ```
 
-`neoforge:compound`'s field is `children` (the older alias `ingredients` works too), and there are also `neoforge:difference` (`base` / `subtracted`) and `neoforge:intersection` (`children`). To gate on a [quality](./quality.md) tier you can also use the item condition `mxt:item_quality` — what each route costs, and the places that cannot read quality at all today, are in [Quality · Which tier an item is](./quality.md#resolution).
+**"Or above" needs no enumeration**: this mod registers a custom ingredient `mxt:quality` (`items` is required, plus either a `quality` membership list or a `min_quality` floor):
+
+```json
+{
+  "neoforge:ingredient_type": "mxt:quality",
+  "items": "mxt:blank_talisman",
+  "min_quality": "example:tier_3"
+}
+```
+
+It judges the [tier the stack resolves to](./quality.md#resolution) (component → the definition the stack carries → the `default_quality` registry) rather than exact component equality; a `min_quality` answers no across chains, and on its own an item with no tier answers no. `neoforge:compound`'s field is `children` (the older alias `ingredients` works too), and there are also `neoforge:difference` (`base` / `subtracted`) and `neoforge:intersection` (`children`). The entry points for filtering items by tier are in [Quality · Filtering items by tier](./quality.md#gating).
 
 ## The `aura` Field
 

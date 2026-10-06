@@ -14,7 +14,7 @@ A blueprint describes one complete forge run: what materials it needs, which str
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `input` | material requirement array | **required** | Unordered material requirement; each entry is `{ "id": <item ID>, "count": <count> }`, where `count` defaults to `1`. |
+| `input` | material requirement array | **required** | Unordered material requirement; each entry is `{ "ingredient": <material>, "count": <count> }`, where `count` defaults to `1`. |
 | `allowed_methods` | forging method ID, `#tag` or array | empty | The forging methods this blueprint allows. |
 | `meter_min` / `meter_max` | Integer | **required** | The forging meter bounds; they must cross `0`. |
 | `target_min` / `target_max` | Integer | **required** | The success range; it must sit inside the meter bounds. |
@@ -28,11 +28,26 @@ A blueprint describes one complete forge run: what materials it needs, which str
 
 ## `input`
 
-**Order does not matter**: the Forge Table only requires that its 15 input slots together hold the declared count of every entry, and which slots the materials come from does not affect the check.
+**Order does not matter**: the Forge Table only requires that its 15 input slots together hold the declared count of every entry (**summed across slots**, not `SizedIngredient#test`'s "one stack holds it all"), and which slots the materials come from does not affect the check; what a session locks is **the stacks actually taken**, so a material carrying components no longer degrades into a bare item at settlement time.
 
-Loading refuses an empty list, more than 15 entries, the same item appearing twice and item IDs that cannot be resolved. Because datapack registries are parsed before item component bindings, `input` uses `id` + `count` rather than an item stack.
+Loading refuses an empty list, more than 15 entries and a literally repeated entry; **"the same item twice" is no longer decidable**, because a material is an `Ingredient` and two materials may legitimately overlap.
 
-Materials are matched by **item**, not by the components on the stack: a stack carrying a quality component counts exactly the same as a plain item of the same name as far as "is there enough" goes.
+> **Breaking shape change**: an entry went from `{ "id": …, "count": n }` to `{ "ingredient": …, "count": n }` (NeoForge's sized ingredient). The old form fails to load because `ingredient` is missing.
+
+`ingredient` is a vanilla material, so an item id, a `#item tag` and a custom ingredient written with `neoforge:ingredient_type` all work — **including this mod's `mxt:quality`**, which is what makes "material of at least this tier" expressible:
+
+```json
+"input": [
+  {
+    "ingredient": {
+      "neoforge:ingredient_type": "mxt:quality",
+      "items": "mxt:blank_talisman",
+      "min_quality": "example:tier_3"
+    },
+    "count": 2
+  }
+]
+```
 
 ## `allowed_methods`
 

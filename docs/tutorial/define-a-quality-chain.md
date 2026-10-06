@@ -101,7 +101,7 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
 | --- | --- |
 | 物品上的 `mxt:quality` 组件 | `/give @s kubejs:qi_pill[mxt:quality="example:common"]`；`/quality set`、一次成功的升级、锻造台结算与画符铭刻写的都是它。 |
 | 这一堆携带的定义声明的 `quality` | 物品上装着定义身份的那份组件，读的是那份定义自己写的档。 |
-| 数据表 [default_quality](../datapack/json/default_quality.md) | 物品在表里写了哪一档；裸的创造 / `/give` 物品与按物品认领的 `artifact` / `spirit_herb` 走的就是这一条。 |
+| 注册表 [default_quality](../datapack/json/default_quality.md) | 有一条定义的 `items` 命中这件物品，就用它写的 `quality`；裸的创造 / `/give` 物品与按物品认领的 `artifact` / `spirit_herb` 走的就是这一条。 |
 
 第 2 层答的是"一类定义共用一件内置物品、物品说不清是哪一档"的那批：功法书默认是 `mxt:cultivation_jade_slip`（`technique_binding` 的 `carrier_item` 可以换成别的）、所有丹药都是 `mxt:pill`、所有炉型规格都是方块物品 `mxt:alchemy_furnace`、灵根石是 `mxt:spirit_root`、体质石是 `mxt:physique`。声明 `quality` 的九个定义是 `technique`、`alchemy_furnace`、`alchemy_wall_material`、`spirit_root`、`physique`、`pill`、`formation`、`secret_realm`、`contract_type`。
 
@@ -129,7 +129,7 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
 /quality get                      → 主手物品的那一档
 ```
 
-`/mxt registries validate` 一次报出全部问题，问题太多时只串前 12 条。链本身的问题都在这里出现：指向不存在的条目、成环、分叉、两个入口抢一个名字。
+`/mxt registries validate` 一次报出全部问题，问题太多时只串前 12 条。链本身的问题都在这里出现：成环、分叉、两个入口抢一个名字。`next` 指向一个当前包没有的档不在这里——那是整个数据包加载失败。
 
 ## 在游戏里验证
 
@@ -148,8 +148,8 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
 | 升级从来收不到代价 | `upgrade_costs` 写在了来源档上，那笔代价代表「升进它自己」，而入口档没人能升进去。那一步实际免费。**不报错**。 |
 | 报 `names quality <写的> inside <继承到的>` | 一档自己写的链名和从上面继承来的不同。 |
 | 报 `starts a second ladder named <名字>, which another tier already names` | 两个入口档抢同一个链名。 |
-| 报 `next <id> is not a quality`，随后又报 `reaches <id>, which is not an entry` | `next` 指向不存在的条目，那条链被整条丢掉。 |
-| 报 `follows both <A> and <B>` | 一档被两档写成 `next`（分叉），报在被指向的那一档；另一个入口另报 `joins <id>, which another chain already holds`。 |
+| 报 `next <id> is not a quality` | 这个包加载不到这一步：`next` 指向不存在的档时世界直接拒绝加载，整次加载失败，而不是「那条链被丢掉」。 |
+| 报 `follows both <A> and <B>` | 一档被两档写成 `next`（分叉），报在被指向的那一档；**走进这个分叉点的几条链整条不索引**（另一条入口那条线也在内），不会替你挑一个入口。 |
 | 报 `the chain is cyclic at <id>` | 成环。纯环、且环上没人写链名时什么都不报，那几档就是不在任何链上。 |
 | 报 `declares upgrade_costs or upgrade_condition but no next tier` | 某档没有 `next`，却写了 `upgrade_costs` 或非 `mxt:always` 的 `upgrade_condition`。 |
 | 报 `cannot be reached from the start of its ladder: it is cyclic, points into another, or names a quality that is already taken` | 一档写了链名却接不到入口。 |

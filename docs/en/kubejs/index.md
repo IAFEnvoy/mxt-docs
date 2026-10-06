@@ -60,22 +60,19 @@ StartupEvents.registry('item', event => {
 })
 ```
 
-**Two.** Attach rules to its real ID with a data map or a binding table:
+**Two.** Attach rules to its real ID with a registry or a binding table:
 
 ```json
-// kubejs/data/mxt/data_maps/item/item_binding.json
+// kubejs/data/example/mxt/item_binding/fire_root_pellet.json
 {
-  "values": {
-    "kubejs:fire_root_pellet": {
-      "actions": [
-        { "type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root" }
-      ]
-    }
-  }
+  "items": "kubejs:fire_root_pellet",
+  "actions": [
+    { "type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root" }
+  ]
 }
 ```
 
-The six tables (item, weapon, pill, tool, blueprint and technique) are documented with examples in [Items and Bindings](./items.md); `item_binding` / `weapon_binding` / `tool_binding` / `blueprint_binding` are data maps whose files always sit under the `mxt` namespace, while `pill_binding` / `technique_binding` are still registries.
+The six tables (item, weapon, pill, tool, blueprint and technique) are documented with examples in [Items and Bindings](./items.md); all six are registries, one file is one definition, they live under `kubejs/data/<namespace>/mxt/<table>/`, and an entry claims its items through `items`.
 
 **Three.** (Optional) provide a callback from a server script, then name it from a data pack field:
 
@@ -96,7 +93,7 @@ MxtActions.entity('example:heal', (entity, params, context) => {
 | What changed | How it takes effect |
 | --- | --- |
 | Startup scripts (items, blocks, recipes) | **Restart the game**; `/reload` never re-runs startup scripts. |
-| Binding tables, data maps and other data pack definitions | **Reload the world**; they are read while the world loads. |
+| Binding tables and other data pack definitions | **Reload the world**; they are read while the world loads. |
 | Server scripts (callbacks, event subscriptions) | `/reload` clears every callback and re-runs the scripts, so callbacks register again; runtime subscriptions a script armed are its own to re-arm. |
 
 ## Next

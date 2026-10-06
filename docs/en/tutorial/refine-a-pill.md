@@ -21,6 +21,7 @@ This page adds one minimal production line to the example pack: two medicinal pr
 | `data/example/mxt/spirit_herb/herb_d.json` | Catalyst: 1 harmonising power per item, neutral. |
 | `data/example/mxt/alchemy_furnace/basic.json` | The furnace spec: slots, capacity and cooling. |
 | `data/example/mxt/alchemy_wall_material/basic_wall.json` | The temperature the wall material withstands. |
+| `data/example/mxt/heat_source/magma_block.json` | The heat block: how hot magma blocks can get, and how much they add per tick. |
 | `data/example/recipe/warming.json` | The recipe: property thresholds, thermal tolerance, target heat and tolerance, duration and outputs. |
 | `data/example/mxt/pill/warming_pill.json` | What the pill does: effect, toxicity and overdose. |
 | `data/example/mxt/pill_binding/warming_pill.json` | The pill binding: claims this item family and gives it a use cap and cooldown. |
@@ -40,7 +41,7 @@ Write a second file, `calm.json`, the same way. `name` can be omitted, in which 
 
 ## Step 2 — Bind Existing Items as Herbs
 
-A spirit herb registers no new item; it attaches metadata to an **existing item**: an age, a thermal bias, and how much power it provides in each of the three roles. **A herb definition has no tier field of its own** — a herb is claimed by item, and the stack carries no "which definition am I" component, so resolution has no definition to ask. To give a herb a tier, write it in the [default_quality](../datapack/json/default_quality.md) data map.
+A spirit herb registers no new item; it attaches metadata to an **existing item**: an age, a thermal bias, and how much power it provides in each of the three roles. **A herb definition has no tier field of its own** — a herb is claimed by item, and the stack carries no "which definition am I" component, so resolution has no definition to ask. To give a herb a tier, write a [default_quality](../datapack/json/default_quality.md) definition and claim it with `items`.
 
 ```json
 // data/example/mxt/quality/common.json
@@ -106,23 +107,20 @@ A furnace spec is a **specification**, not a block in the world: the core item c
 ```
 
 ```json
-// data/mxt/data_maps/block/heat_source.json
+// data/example/mxt/heat_source/magma_block.json
 {
-  "values": {
-    "minecraft:magma_block": {
-      "max_temperature": 200,
-      "heating_per_tick": 4
-    }
-  }
+  "blocks": "minecraft:magma_block",
+  "max_temperature": 200,
+  "heating_per_tick": 4
 }
 ```
 
 - `main_slots` takes `1..2` and `auxiliary_slots` takes `0..2`. The catalyst always occupies the third slot of the auxiliary store and needs no declaration, while a slot the spec does not use accepts nothing.
 - `capacity` caps how many material items one batch may hold, and the item's own stack size still applies.
 - `cooling_per_tick` is how much the heat falls back per tick once it is above the set point or the heat stops. With an empty heat cell the heat cools to `0`.
-- **The furnace withstands the coldest wall in it.** When all 18 casings are valid the furnace takes the lowest of their values and then the lower of that and the heat block's `max_temperature`; mixing in a heat-resistant casing does not average the weak spot away. The set temperature must land between `0` and that ceiling.
-- A `heat_source` gives one family of blocks two numbers: the highest temperature it supplies and how many degrees it adds per tick. The table is keyed by block id or by a `#`-prefixed block tag, and when several values hit the same block `priority` decides (the highest wins, a tie going to whichever was processed later). This one makes **magma blocks** a heat block; the fields and the tie-break rule are under [heat_source](../datapack/json/heat_source.md).
-- Quality only decides the display name and the use condition. It never derives slots, capacity, cooling or the temperature ceiling.
+- **The temperature ceiling is the lowest of three.** The furnace specification's own optional `max_temperature`, the lowest rating among the 18 casings when they are all valid, and the highest temperature the heat block gives; mixing in a heat-resistant casing does not average the weak spot away. Writing a large `max_temperature` on the specification raises the ceiling, but never past the walls and the heat block. The set temperature must land between `0` and that ceiling.
+- A `heat_source` gives one family of blocks two numbers: the highest temperature it supplies and how many degrees it adds per tick. It claims blocks through `blocks` (a single block id, a `#`-prefixed block tag, or an array of either), and `max_temperature` and `heating_per_tick` are both required and finite positive. When several definitions hit one block, `priority` decides (the highest wins, a tie falls back to registry order, `0` by default). The file lives at `data/example/mxt/heat_source/<name>.json`. This one makes **magma blocks** a heat block; the fields and the tie-break rule are under [heat_source](../datapack/json/heat_source.md).
+- Quality only decides the display name, the use condition and the **tiers** a formula may require (the core's `furnace_quality` and the per-slot `input_quality`). It never derives slots, capacity, cooling or the temperature ceiling.
 
 ## Step 4 — Build the Furnace, Load the Heat Block, Load the Herbs
 
@@ -193,7 +191,7 @@ A recipe uses the vanilla recipe type `mxt:alchemy` and lives at `data/<namespac
 - When several recipes match at once, only the one that **uniquely dominates** every other survives: same set of property keys, every entry no smaller, and at least one entry strictly larger. The player never picks a recipe, and no unique result means a recipe conflict that consumes nothing either.
 - `target_temperature` and `temperature_tolerance` are the heat window. **The set temperature of the first batch must fall inside it**, so this recipe asks you to set the heat to `95..105`.
 - `minimum_aura` checks the **environment aura**; it is neither a cost nor heat. Name an aura your world actually has, or let the zone override the requirement with `alchemy_env_bonus` (that flag only replaces the threshold, it never provides heat).
-- `duration` is shortened by the brewing modifier of the materials: take the lowest tier among them, then `effective duration = max(1, round(declared duration ÷ modifier))`. It is computed once when the batch starts and frozen into that batch.
+- `duration` is shortened by the brewing modifiers, computed once when the batch starts and frozen into it: the **material side** takes the lowest tier among the materials' `alchemy_modifier`, the **core side** the furnace core tier's own `alchemy_modifier` (counting as `1.0` when the core has no tier), and `effective duration = max(1, round(declared duration ÷ (material side × core side)))`. So giving a high furnace tier `alchemy_modifier: 2` makes that furnace brew any recipe faster.
 - The failure outputs are declared by the recipe; the server never stuffs dregs in on its own, and leaving `failure_outputs` out means a failed batch produces nothing.
 - `guide` is optional example metadata. The furnace neither reads nor shows it, so drop it if you do not want to maintain it.
 
@@ -263,7 +261,7 @@ How a batch **settles once it has started** has not been checked item by item in
 | Symptom | Cause |
 | --- | --- |
 | The structure never forms | A cell is missing (only the four bottom corners count down there, and the middle centre must be walled too), a casing carries no valid wall material, or another furnace claimed a cell. |
-| The heat never rises | There is no heat block in the bottom centre cell, or the coldest wall and this block's `max_temperature` have pushed the ceiling below the set point. |
+| The heat never rises | There is no heat block in the bottom centre cell, or the coldest wall, this block's `max_temperature` and the specification's `max_temperature` have pushed the ceiling below the set point. |
 | The first batch is refused | The set temperature must fall inside the recipe's tolerance, and when the ceiling is too low the temperature cannot even be set. |
 | The materials seem to do nothing | The role comes from the **store**: main herbs read `main_effects`, auxiliary herbs read `auxiliary_effects` and the catalyst reads `catalyst_power`. The wrong store means no power. |
 | Enough power, but a recipe conflict | A non-zero main or auxiliary property the recipe does not ask for, several matching recipes with no unique dominator, or a thermal deviation outside `balance_tolerance`. |

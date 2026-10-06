@@ -23,7 +23,7 @@ File location: `data/<namespace>/mxt/pill/<path>.json`
 | `toxicity_after_overdose` | `NumberProvider` | `0` | The value toxicity is **set to** after an overdose, not cleared to zero. |
 | `conditions` | `EntityCondition[]` | `[]` | The check run before consumption; accepts inline conditions or described condition objects. |
 
-`quality` is optional: every pill shares the one built-in carrier item `mxt:pill`, so the item itself cannot say which tier it is — only the definition the stack carries can: a dose of this pill starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map. The `mxt:pill` component on a stack overrides only the effect fields (`on_consume`, `toxicity_gain` and the rest) and **never the tier**: the tier read is always the `quality` the definition itself declares.
+`quality` is optional: every pill shares the one built-in carrier item `mxt:pill`, so the item itself cannot say which tier it is — only the definition the stack carries can: a dose of this pill starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) registry. The `mxt:pill` component on a stack overrides only the effect fields (`on_consume`, `toxicity_gain` and the rest) and **never the tier**: the tier read is always the `quality` the definition itself declares.
 
 One definition describes only what a dose does, `data/example/mxt/pill/warming_pill.json`:
 

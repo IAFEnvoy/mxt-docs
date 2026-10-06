@@ -20,7 +20,7 @@ description: 多个注册表共用的复杂值：Cost、AuraGain、AttributeEntr
 | 注册表条目引用 | `"example:resource"` | 指向注册表的一个条目，写条目自己的 id。 |
 | 标签引用 | `"#example:fire"` | 原版标签，`#` 不能省略。 |
 | 条目或标签 | 字符串或字符串数组 | 单个 id、单个 `#标签`，或两者混在一个数组里。 |
-| `ItemMatcher` | ID、标签或混合数组 | 有 `items` 字段的认领表（`artifact`、`pill_binding`、`spirit_herb`、`technique_binding`）的 `items` 字段；匹配现有物品，不创建物品。 |
+| `ItemMatcher` | ID、标签或混合数组 | 所有按物品认领的注册表（`artifact`、`pill_binding`、`spirit_herb`、`technique_binding`、`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`）的 `items` 字段；匹配现有物品，不创建物品。 |
 | `Text Component` | 字符串或文本对象 | 支持翻译键字符串和原版文本组件。 |
 | `RGBColor` | `"#RRGGBB"` | 颜色，用原版十六进制写法：`#RRGGBB`（整数与 `[r,g,b]` 浮点数组也接受）。**值域是 RGB、没有 alpha**，写下的颜色一律按不透明处理——要透明度的字段自己另开键（雷的 `alpha` 是发光强度，不是颜色透明度）。 |
 | `ItemStackTemplate` | `{"id":"minecraft:stone"}` 或 `"minecraft:stone"` | 物品堆模板：可只写裸物品 ID，也可写对象（`id` 必填，可带 `count` 与 `components`）。数据包注册表**早于物品组件绑定**解析，所以数据包定义里的物品堆一律用它。 |
@@ -167,7 +167,7 @@ description: 多个注册表共用的复杂值：Cost、AuraGain、AttributeEntr
 
 ### `ItemMatcher`
 
-仍是注册表的认领表——`artifact`、`pill_binding`、`spirit_herb`——的 `items` 字段支持以下三种写法（`technique_binding` 的 `items` 是可选的第二条路，见[功法绑定](../json/technique_binding.md)）。**九张数据表（`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`、`block_aura`、`heat_source`）没有 `items` 字段**：它们的键就是条目 id 或 `#标签`，见[数据表](../overview.md#数据表data-map)。
+按物品认领的注册表——`artifact`、`pill_binding`、`spirit_herb`、`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`——都用 `items` 字段收下面三种写法（`technique_binding` 的 `items` 是可选的第二条路，见[功法绑定](../json/technique_binding.md)）。两张按方块认领的注册表（`block_aura`、`heat_source`）形状相同，只是字段叫 `blocks`。写法与文件路径见[数据包开发总览](../overview.md)。
 
 ```json
 "items": "minecraft:apple"
@@ -181,6 +181,6 @@ description: 多个注册表共用的复杂值：Cost、AuraGain、AttributeEntr
 "items": ["minecraft:apple", "#minecraft:logs", "othermod:token"]
 ```
 
-匹配器只引用已经注册的物品。多个定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`；`artifact`、`pill_binding`、`technique_binding`、`spirit_herb` 四张注册表接受它，六张物品数据表也接受它）。仍是注册表的四张表同分时回落到注册表顺序，而六张物品数据表的同分口径是**后处理者赢**（同一文件里按书写顺序，不同文件按数据包加载顺序）；两种情形「谁赢」都由数据包自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。
+匹配器只引用已经注册的物品。多个定义同时命中同一个目标时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`；上面那十一张按物品认领的注册表都接受它，按方块认领的 `heat_source` 也接受）。同分回落到注册表顺序。「谁赢」由定义自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。`block_aura` 没有 `priority`，命中同一个方块的多条定义都生效、相加。
 
 数组里的每一项也可以写成带 `type` 的对象，类型由固有注册表 `item_matcher_entry_type` 分派；每一种 `type` 的字段、默认值与匹配规则见[物品匹配器类型](/datapack/types/other/item-matcher)。

@@ -8,7 +8,7 @@ aside: false
 
 An `alchemy_wall_material` describes **one casing block** and nothing else: a name, a description, a finite temperature limit and an optional tier. Slots, capacity and cooling rate belong to the [furnace specification](./alchemy_furnace.md) and are not written here.
 
-A furnace's temperature limit is the **lowest** `max_temperature` among its 18 casings. When materials are mixed the weak spot decides, and hotter casings never average a weak one away.
+A furnace's temperature limit is the **lowest** `max_temperature` among its 18 casings. When materials are mixed the weak spot decides, and hotter casings never average a weak one away. It is only **one of three sources** of the furnace's temperature ceiling: the other two are the [furnace specification](./alchemy_furnace.md)'s own optional `max_temperature` and the highest temperature the heat block gives, and the ceiling is the lowest of the three.
 
 ## File Location
 
@@ -36,10 +36,10 @@ The filename corresponds to its ID. For example, `data/example/mxt/alchemy_wall_
 
 The example supplies its own name translation key; omitting `name` and `description` still uses the two keys generated from the entry id. The value of `max_temperature` is yours to pick — the mod ships no table of copper, iron or spirit material temperatures.
 
-`quality` is optional: casing blocks are the one kind of block every wall material shares, so a block cannot say which tier it is — only the material the stack carries can: a casing block of this material starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
+`quality` is optional: casing blocks are the one kind of block every wall material shares, so a block cannot say which tier it is — only the material the stack carries can: a casing block of this material starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) registry.
 
 ## Carrying and Forming
 
 Casing items carry the material identity through the `mxt:alchemy_wall_material` component: placing, saving, synchronizing, creative pick-block and a normal break all keep it. When the definition is not in the registry the material cannot form, and the mod does not fall back to a hard-coded number.
 
-The core, the three stores and all 18 casings must be in place before the furnace forms, and the set point a player may enter is the lower of the furnace's temperature limit and the heat block's maximum temperature — see [alchemy_furnace](./alchemy_furnace.md). Representative materials live only in the test data pack; production content comes from content packs.
+The core, the three stores and all 18 casings must be in place before the furnace forms, and the set point a player may enter is the lowest of the furnace specification's `max_temperature`, the furnace's temperature limit and the highest temperature the heat block gives — see [alchemy_furnace](./alchemy_furnace.md). Representative materials live only in the test data pack; production content comes from content packs.

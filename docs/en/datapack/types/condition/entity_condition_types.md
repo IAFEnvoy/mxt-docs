@@ -5,7 +5,7 @@ description: Every built-in entity condition type registered by the mod, with th
 
 # Entity Conditions (entity_condition_type)
 
-An **entity condition** checks the state of a single entity and returns `true` or `false`. The entity under test comes from whichever data table declares the condition; the condition itself only describes what to check.
+An **entity condition** checks the state of a single entity and returns `true` or `false`. The entity under test comes from whichever definition declares the condition; the condition itself only describes what to check.
 
 Entity conditions are a Java (built-in) registry with fixed `type` ids, so a data pack can neither add nor remove entries. Only Java code or the KubeJS bridge can introduce custom condition types — see the [KubeJS API](../../../kubejs/api-reference.md).
 
@@ -23,7 +23,7 @@ Entity conditions are a Java (built-in) registry with fixed `type` ids, so a dat
 }
 ```
 
-A condition is used as a value inside other data tables, so it usually lands under a field such as `condition`:
+A condition is used as a value inside other definitions, so it usually lands under a field such as `condition`:
 
 ```json
 "condition": {

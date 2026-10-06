@@ -36,7 +36,7 @@ These mods are optional compatibility. The game works fine without them.
 |---|---|
 | KubeJS `26.1.2-8.0.4` | Only needed if you want to register content from scripts. See [KubeJS](./kubejs/index.md) |
 | JEI | Recipe viewer integration: shows Spirit Shaped and Spirit Shapeless crafting and their aura cost |
-| Jade | Block information integration: block aura, the Spirit Crafting Table's aura and the Display Stand's stored spirit power |
+| Jade | Block information integration: block aura, the Spirit Crafting Table's aura, the Display Stand's stored spirit power, and a heat block's maximum furnace temperature and heating rate |
 
 ::: info KubeJS is not a hard dependency
 
@@ -65,7 +65,7 @@ The project is still in development. Datapack formats and other interfaces are n
 
 ## Where the Gameplay Comes From
 
-MiXianTu provides the generic rules and runtime — cultivation, aura environment, realms and resources, abilities, formations, tribulations, forging, alchemy and economy — without prescribing any particular setting or numbers. The actual items, blocks and recipes are provided by datapacks, KubeJS or other content mods, and MiXianTu's data tables and binding tables give them gameplay.
+MiXianTu provides the generic rules and runtime — cultivation, aura environment, realms and resources, abilities, formations, tribulations, forging, alchemy and economy — without prescribing any particular setting or numbers. The actual items, blocks and recipes are provided by datapacks, KubeJS or other content mods, and MiXianTu's registries and binding tables give them gameplay.
 
 Installing the mod on its own only gives you framework items, Curios slots, the HUD and commands; it contains no realm values, abilities or recipes, so nothing changes in game until you add content.
 

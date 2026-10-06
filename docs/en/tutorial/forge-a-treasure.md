@@ -7,7 +7,7 @@ description: Build a forge-table production line out of striking methods, tool b
 
 The Forge Table does not craft an item, it **hammers** one: you feed it materials, it hands the player a target from a blueprint, and the player pushes a numeric meter into a range with one method at a time. The quality of the piece is then decided by **how many spare strikes** it took. The same blueprint can produce a plain item or a flawless one, and the only difference is the process.
 
-The data splits into four places: `forging_method` is a single strike, `tool_binding` is a data map keyed by the tool item that lists the methods it unlocks, `forging_blueprint` says *what materials* and *what shape the meter has to end in*, and `blueprint_binding` is a data map keyed by the blueprint item that lists the blueprints it offers. Both data maps are keyed by an item id or an item tag, and the item needs **no component at all** — a stack only carries a component when you want that particular stack to bring one extra method or blueprint.
+The data splits into four places: `forging_method` is a single strike, `tool_binding` is a **registry keyed by tool item** that lists the methods it unlocks, `forging_blueprint` says *what materials* and *what shape the meter has to end in*, and `blueprint_binding` is a **registry keyed by blueprint item** that lists the blueprints it offers. Both binding registries claim items from the definition through `items` (a single id, a `#item tag` or an array), and the item needs **no component at all** — a stack only carries a list component when you want that particular stack to bring one extra method or blueprint.
 
 This tutorial adds an iron-sword line to the example pack: four methods, one smith's hammer, one blueprint item and three quality tiers.
 
@@ -19,9 +19,9 @@ This tutorial adds an iron-sword line to the example pack: four methods, one smi
 | `data/example/mxt/forging_method/heavy_strike.json` | Heavy strike: meter `+2`, with a cost, a condition, a cooldown and a sound. |
 | `data/example/mxt/forging_method/quench.json` | Quench: meter `-1`, no cost. |
 | `data/example/mxt/forging_method/temper.json` | Temper: meter `+2`, no cost. |
-| `data/mxt/data_maps/item/tool_binding.json` | Which four methods the hammer unlocks. |
+| `data/example/mxt/tool_binding/smith_hammer.json` | Which four methods the hammer unlocks. |
 | `data/example/mxt/forging_blueprint/spirit_sword.json` | Materials, allowed methods, meter, finish pattern, quality ladder, failure settlement. |
-| `data/mxt/data_maps/item/blueprint_binding.json` | Which blueprint the blueprint item offers. |
+| `data/example/mxt/blueprint_binding/sword_manual.json` | Which blueprint the blueprint item offers. |
 | `data/example/mxt/quality/flawless.json` | The top tier of the quality ladder. |
 
 ## Step 1 — What One Strike Is
@@ -67,55 +67,49 @@ The sound is resolved by name at load time, so a typo rejects **the whole method
 
 ## Step 2 — The Tool and the Blueprint Item
 
-A data map is keyed by an item id or an item tag: the key says which tool or blueprint item (or family of items) this value governs, and the value says what it unlocks or offers.
+Two registries keyed by item: the definition names the tool or blueprint item (or the family of them) it covers through `items`, and gives the set below:
 
 ```json
-// data/mxt/data_maps/item/tool_binding.json
+// data/example/mxt/tool_binding/smith_hammer.json
 {
-  "values": {
-    "example:smith_hammer": {
-      "methods": [
-        "example:heavy_strike", "example:light_strike",
-        "example:quench", "example:temper"
-      ]
-    }
-  }
+  "items": "example:smith_hammer",
+  "methods": [
+    "example:heavy_strike", "example:light_strike",
+    "example:quench", "example:temper"
+  ]
 }
 ```
 
 ```json
-// data/mxt/data_maps/item/blueprint_binding.json
+// data/example/mxt/blueprint_binding/sword_manual.json
 {
-  "values": {
-    "example:sword_manual": {
-      "blueprints": ["example:spirit_sword"]
-    }
-  }
+  "items": "example:sword_manual",
+  "blueprints": ["example:spirit_sword"]
 }
 ```
 
-The two data map files always live at `data/mxt/data_maps/item/tool_binding.json` and `data/mxt/data_maps/item/blueprint_binding.json`: the first namespace is **the table's own** `mxt`, not the content pack's — a content pack adds values by dropping another file into that same directory.
+The two definitions live at `data/example/mxt/tool_binding/<name>.json` and `data/example/mxt/blueprint_binding/<name>.json`, their entry ids are `example:<name>`, and one file is one definition. `items` and `methods` / `blueprints` are all required and must not be empty; `priority` is optional.
 
-**That is what makes the tool and blueprint items work**: whichever item has a value written for it in the data map works in the matching Forge Table slot, and the item never copies the value, so a data map can be rewritten without touching the item.
+**That is what makes the tool and blueprint items work**: whichever definition's `items` matches the item is in effect as soon as it goes into the matching Forge Table slot, and the item never copies the definition, so a definition can be rewritten without touching the item.
 
 **Usable methods = the blueprint's `allowed_methods` ∩ the union of every placed tool's `methods`.** When the blueprint declares no `allowed_methods` its side restricts nothing, and the list is the tools' union.
 
 ### Adding Something to Individual Stacks
 
-In the common case this section needs nothing at all: the data map already writes a value for the item. There are two ways to attach something to **one stack**:
+In the common case this section needs nothing at all: a definition in the registry already claims the item. There are two ways to attach something to **one stack**:
 
-**For testing, the `/give` component syntax** (no code, and you can change the data tables and retry straight away):
+**For testing, the `/give` component syntax** (no code, and you can edit the definition and try again straight away):
 
 ```text
 /give @s minecraft:iron_ingot[mxt:forging_methods=["example:heavy_strike","example:light_strike"]]
 /give @s minecraft:paper[mxt:forging_blueprints=["example:spirit_sword"]]
 ```
 
-**A real pack does not need this route at all**: using the tool or blueprint item id as a data map key is enough, and nothing changes where the item is registered. (The items themselves come from the content pack, for instance through [KubeJS](./create-items-with-kubejs.md); this tutorial only writes data tables, which is also why the component form above is the quickest way to try things before those items exist.)
+**A real pack does not need this route at all**: writing the tool or blueprint item id into the definition's `items` is enough, and nothing changes where the item is registered. (The items themselves come from the content pack, for instance through [KubeJS](./create-items-with-kubejs.md); this tutorial only writes registry definitions, which is also why the component form above is the quickest way to try things before those items exist.)
 
 ::: tip Both routes point at the same definitions
 
-A data map's key names **items** (`example:smith_hammer`), while a stack's component names **registry entries** (`example:heavy_strike` belongs to the `forging_method` registry). The data map's value and the stack's list are **unioned**, so the tool slot simply asks whether the stack resolves to at least one method; mistype either id and that entry does not resolve.
+`items` names **items** (`example:smith_hammer`), while a stack's component names **registry entries** (`example:heavy_strike` belongs to the `forging_method` registry). A definition's `methods` / `blueprints` and a stack's list are **unioned**, so the tool slot simply asks whether the stack resolves to at least one method; mistype either id and that entry does not resolve.
 
 :::
 
@@ -125,8 +119,8 @@ A data map's key names **items** (`example:smith_hammer`), while a stack's compo
 // data/example/mxt/forging_blueprint/spirit_sword.json
 {
   "input": [
-    { "id": "minecraft:iron_ingot", "count": 2 },
-    { "id": "minecraft:stick", "count": 1 }
+    { "ingredient": "minecraft:iron_ingot", "count": 2 },
+    { "ingredient": "minecraft:stick", "count": 1 }
   ],
   "allowed_methods": [
     "example:light_strike", "example:heavy_strike",
@@ -142,15 +136,30 @@ A data map's key names **items** (`example:smith_hammer`), while a stack's compo
 
 | Field | Type | Default | Effect |
 | --- | --- | --- | --- |
-| `input` | `List<ForgingMaterial>` | **required** | The material requirement: `id` plus `count` (`count` in `1..64`, default `1`). |
+| `input` | `List<SizedIngredient>` | **required** | The material requirement: `ingredient` (a vanilla material — an item id, a `#item tag`, or a custom ingredient) plus `count` (a positive integer, default `1`). |
 | `allowed_methods` | `HolderSet<forging_method>` | empty | A list of ids, a single `"#namespace:tag"`, or omitted entirely. **Omitted or empty means no restriction.** |
 | `meter_min` / `meter_max` | Integer | **required** | The two ends of the meter. They must **cross zero** (one negative, one positive). |
 | `target_min` / `target_max` | Integer | **required** | The target range, inside the meter bounds. |
 | `result` | Identifier | **required** | What a success produces. |
 
-`input` is **order-independent**: the twelve input slots only have to hold at least the declared amount of every entry, and which slot it comes from changes nothing. It is also a **strict** list — an empty list, more than 15 entries, the same item twice, or an item id that does not resolve all make the whole definition fail to load. Cost lists decode just as strictly now: a malformed cost entry fails the load instead of being dropped silently.
+`input` is **order-independent**: the twelve input slots only have to hold at least the declared amount of every entry (**summed across slots**), and which slot it comes from changes nothing. It is also a **strict** list — an empty list, more than 15 entries, or the same `ingredient` (with the same `count`) written twice all make the whole definition fail to load. Every entry needs its `ingredient`: leave it out and the whole definition is refused at load time. `count` is a positive integer (at least `1`) and defaults to `1`. "The same item twice" cannot be decided — a material is a vanilla `Ingredient`, and two materials may legitimately overlap. Cost lists decode just as strictly: a malformed cost entry fails the load instead of being dropped silently.
 
-Materials are matched by **item** (`stack.is(item)`) and not by their components. A stack carrying a quality component is therefore indistinguishable from a plain one here. To care about quality, you want the quality read at settlement (Step 4), not `input`.
+`ingredient` is a **vanilla material**, so it can match by item or by stack: an item id or a `#item tag` looks at the item only, while **gating a material on its tier** is written with this mod's `mxt:quality` ingredient — the one place "this material must be at least tier three" is expressible:
+
+```json
+"input": [
+  {
+    "ingredient": {
+      "neoforge:ingredient_type": "mxt:quality",
+      "items": "example:spirit_iron_ingot",
+      "min_quality": "example:tier_3"
+    },
+    "count": 2
+  }
+]
+```
+
+What a session locks is **the stacks actually taken**, so the quality the settlement reads (Step 4) is the real one rather than a flattened same-named item.
 
 ::: warning The meter and target constraints work both ways
 
@@ -251,7 +260,7 @@ The **cancel** button does **not** go through this settlement. It goes through a
 /mxt registries list
 ```
 
-If those two items are not registered yet, either use vanilla items as the data map keys, or put the component straight onto a vanilla stack:
+If those two items are not registered yet, either use vanilla items in the definitions' `items`, or put the component straight onto a vanilla stack:
 
 ```text
 /give @s minecraft:iron_ingot[mxt:forging_methods=["example:heavy_strike","example:light_strike","example:quench","example:temper"]]
@@ -264,7 +273,7 @@ If those two items are not registered yet, either use vanilla items as the data 
 4. Pick a method in the right list (the icon is its `icon`; hovering shows "value change: +2") and press "use method". The value moves and the "current" row underneath records the last six strikes; with a method picked, a yellow predicted mark also appears on the meter.
 5. Push the value into the green band with the last two strikes being light-then-heavy. The session settles itself, the piece lands in the output slot, and its tooltip gains a quality line — the text it shows is whatever `name` in `flawless.json` points at; omit `name` and it is generated from the entry id as `quality.mxt.example.flawless` (if you write a translation key, remember to give it an entry in your own language file).
 6. Forge a second one, deliberately taking a few extra strikes, and compare the two qualities. Press "cancel" in the middle of a session to see the materials come back through the cancellation policy.
-7. `/mxt registries validate` should report no errors, and `/mxt registries list` should show the entry counts of `mxt:forging_method` and `mxt:forging_blueprint` (`tool_binding` and `blueprint_binding` are data maps now, so they are not in the registry list).
+7. `/mxt registries validate` should report no errors, and `/mxt registries list` should show the entry counts of `mxt:forging_method`, `mxt:forging_blueprint`, `mxt:tool_binding` and `mxt:blueprint_binding`.
 
 ::: tip Automation, and where refusals go
 
@@ -278,9 +287,9 @@ One reality you have to know: **a refused request never shows a message.** The r
 
 | Symptom | Cause |
 | --- | --- |
-| The left list is empty | Nothing is in the blueprint slots, or what is there has no value in the `blueprint_binding` data map and carries no `mxt:forging_blueprints` component of its own. **There is no "list the whole registry" fallback**: three empty slots mean no blueprints. |
+| The left list is empty | Nothing is in the blueprint slots, or no `blueprint_binding` definition's `items` matches what is there and the stack carries no `mxt:forging_blueprints` component of its own. **There is no "list the whole registry" fallback**: three empty slots mean no blueprints. |
 | A method is missing from the right list | The intersection is empty: the blueprint's `allowed_methods` does not contain it, or no placed tool unlocks it. |
-| The blueprint fails to load | `input` empty, over 15 entries, the same item twice, an unresolvable id; `meter_min`/`meter_max` that do not cross zero; a quality ladder that is not ascending or does not end at `2147483647`; a `finish_pattern` that is checked but is not six entries long. |
+| The blueprint fails to load | `input` empty, over 15 entries, a literally repeated entry, a missing `ingredient`; `meter_min`/`meter_max` that do not cross zero; a quality ladder that is not ascending or does not end at `2147483647`; a `finish_pattern` that is checked but is not six entries long. |
 | The "use blueprint" button is greyed out | Materials short (hover the blueprint to see which line is `✖`), something in the output slot, or a session is already running. |
 | "use blueprint" does nothing | The server refused. Besides materials and the output slot, the usual cause is an **unreachable target range**: no solution exists with this blueprint's methods and finish pattern. |
 | It never completes | The finish pattern names a method no tool unlocks, or the value never enters the range — remember that an out-of-bounds strike is refused outright. |
@@ -294,6 +303,6 @@ One reality you have to know: **a refused request never shows a message.** The r
 
 - [forging_blueprint](../datapack/json/forging_blueprint.md) — the full field table and validation rules.
 - [forging_method](../datapack/json/forging_method.md) and [tool_binding](../datapack/json/tool_binding.md) — the methods and the tools that unlock them.
-- [blueprint_binding](../datapack/json/blueprint_binding.md) — how the data map writes values for blueprint items, and how a stack's own list adds to it.
+- [blueprint_binding](../datapack/json/blueprint_binding.md) — how the registry writes definitions for blueprint items, and how a stack's own list adds to them.
 - [quality](../datapack/json/quality.md) — `forging_modifier`, the ladder's order and entry tier, and the order qualities are resolved in.
 - [MxtEvents: Events](../kubejs/api/events.md) — read or rewrite a strike's cost, or veto a phase from a script.

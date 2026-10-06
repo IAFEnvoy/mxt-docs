@@ -35,7 +35,7 @@ aside: false
 | `enter_action` | `EntityAction` | `mxt:no_op` | 进入行为，作用于进入者，时机在传送落位之后。 |
 | `exit_action` | `EntityAction` | `mxt:no_op` | 离开行为，作用于离开者，时机在传送回原位置之前。 |
 
-`quality` 是可选的：所有秘境共用同一件令牌物品 `mxt:secret_realm_token`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出——进入这座秘境的令牌起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
+`quality` 是可选的：所有秘境共用同一件令牌物品 `mxt:secret_realm_token`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出——进入这座秘境的令牌起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到注册表 [default_quality](./default_quality.md)。
 
 `exit_condition` **不看**过期与强制送回，否则数据包能把玩家永久锁在秘境里。
 

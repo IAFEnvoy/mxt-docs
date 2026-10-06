@@ -5,7 +5,7 @@ description: 模组注册的所有内置物品条件类型，以及每种类型�
 
 # item_condition_type（物品条件）
 
-**物品条件**检查单个物品堆，返回 `true` 或 `false`。持有者实体与物品堆由声明该条件的那张数据表提供，所以条件只描述"交给它的这堆东西"要满足什么。
+**物品条件**检查单个物品堆，返回 `true` 或 `false`。持有者实体与物品堆由声明该条件的那个定义提供，所以条件只描述"交给它的这堆东西"要满足什么。
 
 物品条件是内置类型，`type` id 固定，数据包不能新增或删除条目。这一页列的就是全部取值，都带 `mxt` 命名空间。要加自定义类型只能写 Java 或走 KubeJS 桥接，见 [KubeJS API](../../../kubejs/api-reference.md)。
 
@@ -138,7 +138,7 @@ description: 模组注册的所有内置物品条件类型，以及每种类型�
 }
 ```
 
-`items` 接受单个值或数组，数组中可自由混合物品 id、物品标签和带类型的匹配器条目。带类型的条目有 `mxt:item`、`mxt:tag`、`mxt:wildcard`、`mxt:regex`、`mxt:technique`（带该组件的功法手册）、无字段的 `mxt:spirit_storage`（匹配所有能存储灵气的物品）以及 `mxt:herb_tag`（带有给定元素或材质标签的灵草）；见 [物品匹配器](/datapack/types/other/item-matcher#item-matcher-entry-type)。一组物品还没有现成标签覆盖时，这是收下它们最紧凑的写法。空列表在加载期被拒。
+`items` 接受单个值或数组，数组中可自由混合物品 id、物品标签和带类型的匹配器条目。带类型的条目有 `mxt:item`、`mxt:tag`、`mxt:wildcard`、`mxt:regex`、`mxt:technique`（带该组件的功法手册）、无字段的 `mxt:spirit_storage`（匹配所有能存储灵气的物品）以及 `mxt:herb_tag`（带有给定元素或材质标签的灵草）与 `mxt:quality`（物品列表 + 一份品质要求，见[品质 · 按档位筛物品](../../json/quality.md#gating)）；见 [物品匹配器](/datapack/types/other/item-matcher#item-matcher-entry-type)。一组物品还没有现成标签覆盖时，这是收下它们最紧凑的写法。空列表在加载期被拒。
 
 ### `mxt:amount`
 
@@ -355,15 +355,20 @@ description: 模组注册的所有内置物品条件类型，以及每种类型�
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `quality` | 品质 id、`#标签` 或它们的数组 | **必填** | 至少一项。 |
+| `quality` | 品质 id、`#标签` 或它们的数组 | — | 成员判定：解析出的那一档在不在里面。 |
+| `min_quality` | 品质 id | — | **至少到这一档**：按这一档所在的链比位置，跨链答否；只写它时没有档的物品答否。 |
 
 ```json
 { "type": "mxt:item_quality", "quality": ["example:fine", "#example:high_tier"] }
 ```
 
-走的是与品质闸门、tooltip 相同的解析顺序（**三层**，先命中的赢：堆上的 `mxt:quality` 组件 → 这一堆携带的定义自己声明的 `quality` → 数据表 `default_quality`），所以数据表给的那一档也算数。**这是条件，不是组件**：组件叫 `mxt:quality`（写整份品质对象），两者名字不同。空表在加载期被拒，解析不出任何一档的物品答否，而不是回落到最低档。
+```json
+{ "type": "mxt:item_quality", "min_quality": "example:tier_3" }
+```
 
-要按「至少某档」放行，就声明一条品质标签把那一档及以上的档位都列进去，条件里引它——`quality` 只做集合/标签的成员判定，没有比较档位高低的字段。
+走的是与品质闸门、tooltip 相同的解析顺序（**三层**，先命中的赢：堆上的 `mxt:quality` 组件 → 这一堆携带的定义自己声明的 `quality` → 注册表 `default_quality`），所以这一层给的那一档也算数。**这是条件，不是组件**：组件叫 `mxt:quality`（写整份品质对象），两者名字不同。两个字段至少写一个，都不写在加载期被拒（空条件会静默恒真）；解析不出任何一档的物品答否，而不是回落到最低档。
+
+`min_quality` 按**这一档所在的那条链**比位置（与升级、`/quality chain` 同一份实现）——不同链的序号没有可比性，所以**跨链一律答否**。要"至少某档"就用它，不必再维护一条把高档位列进去的品质标签。同一份要求还挂在另外两个口子上（匹配器条目 `mxt:quality`、自定义材料 `mxt:quality`——后者也是锻造蓝图 `input` 里"材料至少某档"的写法），见[品质 · 按档位筛物品](../../json/quality.md#gating)。
 
 ### `mxt:item_abilities`
 

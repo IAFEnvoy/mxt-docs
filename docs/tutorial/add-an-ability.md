@@ -16,7 +16,7 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 | `data/example/mxt/ability/qi_bolt.json` | 主动灵力弹：带消耗、冷却与条件，按下时跑自己的四个动作字段。 |
 | `data/example/mxt/ability/qi_recovery.json` | 触发恢复：对受伤做出反应，命中时跑自己的动作字段。 |
 | `data/example/mxt/realm_stage/foundation.json` | *（编辑）* 突破时授予这发灵力弹。 |
-| `data/mxt/data_maps/item/item_binding.json` | *（编辑）* 同时授予恢复技能。 |
+| `data/example/mxt/item_binding/root_pellet.json` | *（编辑）* 同时授予恢复技能。 |
 | `data/example/mxt/technique/azure_breath.json` | *（编辑）* 学会后同时授予两者。 |
 
 ## 第 1 步 —— 一个主动技能
@@ -116,19 +116,16 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 
 `success_action` 在玩家刚进入的那个阶段上运行，所以到达筑基就会教会这发灵力弹。阶段上的 `ability_requirements` 是它的镜像：列出突破前必须已经持有的技能。
 
-**从物品授予。** 把行为写进 `mxt:item_binding` 数据表：
+**从物品授予。** 把行为写进 `item_binding` 注册表里那条认领该物品的定义：
 
 ```json
-// data/mxt/data_maps/item/item_binding.json
+// data/example/mxt/item_binding/root_pellet.json
 {
-  "values": {
-    "example:root_pellet": {
-      "actions": [
-        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"},
-        {"type": "mxt:grant_ability", "ability": "example:qi_recovery", "source": "example:root_pellet"}
-      ]
-    }
-  }
+  "items": "kubejs:root_pellet",
+  "actions": [
+    {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"},
+    {"type": "mxt:grant_ability", "ability": "example:qi_recovery", "source": "example:root_pellet"}
+  ]
 }
 ```
 

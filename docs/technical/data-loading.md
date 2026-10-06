@@ -12,11 +12,11 @@ description: 源码级说明：数据包注册表怎么分成内容层与绑定�
 | 类 | 职责 |
 | --- | --- |
 | `registry.MxtResourceKeys` | 每张表的 `ResourceKey`，与注册表实例、注册事件分开，好让 codec 与运行时服务不必依赖注册类。 |
-| `registry.MxtDatapackRegistries` | 31 张数据包注册表的登记与统一读取入口；另有 9 张数据表由 `registry.MxtDataMaps` 登记（7 张物品键 + 2 张方块键），它们**不是注册表**。**不持有任何快照**，重载与同步都交给原版注册表系统。 |
+| `registry.MxtDatapackRegistries` | 40 张数据包注册表的登记与统一读取入口，其中九张按 `items`（物品键）或 `blocks`（方块键）认领条目。**不持有任何快照**，重载与同步都交给原版注册表系统。 |
 | `registry.MxtRegistries` | 固有注册表的 `DeferredRegister`：`type` 那一层的分派（行为、条件、消耗、技能类型……）。 |
 | `registry.MxtDataComponents` | 物品数据组件的登记：每个组件同时声明持久化 codec 与网络 codec。 |
 | `runtime.ServerCache` | 世界加载与 `/reload` 之后的唯一重建点：跨条目索引 + 校验报告。 |
-| `runtime.item.ItemBindingService` | 绑定表与数据表的解析：一次操作一份 `ResolvedBindings` 快照。 |
+| `runtime.item.ItemBindingService` | 绑定表的解析：一次操作一份 `ResolvedBindings` 快照。 |
 | `runtime.item.QualityService` | 品质的唯一解析顺序（三层），以及"这件物品能不能用"的闸门。 |
 | `util.matcher.ItemMatcher` | "哪条声明适用于这一堆"，两层共用。 |
 
@@ -24,20 +24,20 @@ description: 源码级说明：数据包注册表怎么分成内容层与绑定�
 
 ## 两层：内容层与绑定层
 
-注册表按**它回答什么问题**分成两层，两层的写法、读法都不一样；九张数据表**不是注册表**，在下面单列一组。
+注册表按**它回答什么问题**分成两层；另有九张按条目认领物品与方块的注册表，它们不定义东西，只给已经存在的物品、方块接上规则或值，也列在下面。
 
 | 层 | 表 | 回答什么 |
 | --- | --- | --- |
 | 内容层 | `artifact`、`spirit_herb` | "这件物品**是**什么"。定义自己就是那个东西（注册表 id 就是它的名字），并认领一批物品当自己的载体。 |
 | 内容层 | `resource`、`aura`、`realm_stage`、`element`、`spirit_root`、`physique`、`ability`、`technique`、`quality`、`formation`、`talisman`、`pill` 等其余各表 | 别的定义按 id 引用它们；它们不认领物品。 |
-| 绑定层 | `pill_binding`、`technique_binding` | "这件**已经有**的物品，在本模组里还算什么"。 |
-| 数据表 | `item_aura`、`currency`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`、`block_aura`、`heat_source` | "**这一个**条目带什么值"。**不是注册表**：键就是物品 id、方块 id 或它们的标签，值是内联数据，没有 id、没有名字，也不能被别的定义引用。 |
+| 绑定层 | `item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`、`pill_binding`、`technique_binding` | "这件**已经有**的物品，在本模组里还算什么"，以及要往上接哪些规则。 |
+| 绑定层 | `item_aura`、`currency`、`default_quality`（物品键）、`block_aura`、`heat_source`（方块键） | "**这一个**条目带什么值"：物品或方块自己带着的那份值。 |
 
-绑定层两张表形状一致：`items` 是匹配器，`priority` 决定谁赢，剩下的是各自要加的规则。数据表是另一套形状——物品键的落在 `data/mxt/data_maps/item/`、方块键的落在 `data/mxt/data_maps/block/`，第一段命名空间是表自己的 `mxt` 而不是内容包的，`values` 的键就是那件物品、那个方块或它们的标签，`priority` 写在值里（`block_aura` 例外，它累加，见下）。两种写法都**从不定义物品本身**：物理物品由原版、模组或 KubeJS 注册，绑定与数据表只往上接规则——`ItemStack` 里**从来不存一份逻辑物品定义**，只存组件。
+绑定层这些表写法一致：一份文件一条定义，文件在 `data/<命名空间>/mxt/<表>/<条目>.json`，条目用 `items`（物品键）或 `blocks`（方块键）认领物品与方块，`priority` 决定多条同时命中时谁赢——数值大者胜，同分回落注册表顺序（`block_aura` 没有这个字段：多条命中同一个方块时全部生效、相加）。它们都**从不定义物品本身**：物理物品由原版、模组或 KubeJS 注册，绑定层只往上接规则——`ItemStack` 里**从来不存一份逻辑物品定义**，只存组件。
 
 内容层与绑定层的区别不是"读不读物品"（内容层那两张表也按匹配器认领物品），而是**定义的是东西还是规则**：`artifact` 说"这几件物品是法器、它有这些能力"，`weapon_binding` 说"这件物品挥出去时多跑一段行为"。所以同一个物品可以同时被一个 `artifact` 认领、被一个 `weapon_binding` 接上武器规则、再被一个 `item_binding` 接上一段使用后行为。
 
-绑定层与数据表各加的是什么：
+绑定层各张表加的是什么：
 
 | 表 | 加上的规则 | 什么时候跑 |
 | --- | --- | --- |
@@ -61,12 +61,12 @@ flowchart TD
     E --> G["problems：每条带 data 路径，一次性打印，不中断加载"]
     D --> H["ItemBindingService.resolve：匹配器 + priority"]
     I["ItemStack 上的组件"] --> H
-    H --> J["QualityService.find：组件 → 携带的定义 → 数据表 default_quality（三层）"]
+    H --> J["QualityService.find：组件 → 携带的定义 → 注册表 default_quality（三层）"]
 ```
 
 **登记。** 数据包注册表在 `NewRegistry` 事件上登记，存档 codec 与同步 codec 传的是同一个对象，所以每个定义只写一份 codec。定义里引用另一条定义时用的是 **Holder codec**（`X.CODEC`，`RegistryFixedCodec`），它解出来的 holder **不看注册表**。
 
-**文件与解码。** 文件在 `data/<命名空间>/mxt/<注册表路径>/<条目路径>.json`，条目 id 就是命名空间加路径。九张数据表不走这条路：物品键的固定落在 `data/mxt/data_maps/item/`、方块键的落在 `data/mxt/data_maps/block/`，没有条目 id，值直接挂在那件物品、那个方块或它们的标签上。解码由该表自己的 codec 负责，四种结果要分清：
+**文件与解码。** 文件在 `data/<命名空间>/mxt/<注册表路径>/<条目路径>.json`，条目 id 就是命名空间加路径——上面那九张按条目认领物品与方块的注册表也走同一条路，一条定义一个文件、每个条目有自己的 id。解码由该表自己的 codec 负责，四种结果要分清：
 
 - **未知键静默丢弃**：`RecordCodecBuilder` 不认识没写的字段，一份写着旧字段的文件照常加载，只是那个键不再生效。改字段名时不会有人替你报错。
 - **空表、空列表、非法值拒收**：这一类走 `.validate(...)`，加载报错。
@@ -83,7 +83,7 @@ flowchart TD
 
 **跨条目的问题只能在这一步发现**，因为一条定义看不到别的条目：
 
-- 链只认直线：`next_realm` / `next_level` / 品质的 `next` 指向不存在的条目、被两处写成后继（分叉）、成环、接不到入口（境界链与品质链另有各自的跨链检查）。
+- 链只认直线：被两处写成后继（分叉）、成环、接不到入口都会让走进它的那条链整条不进索引（境界链与品质链另有各自的跨链检查）——分叉也一样，没人按注册表顺序替你在两个入口之间挑一个。**指向不存在的条目不在这条里**：`next_realm` / `next_level` / 品质的 `next` 都是注册表引用，指到一个当前包没有的条目会让**整个数据包加载失败**，世界直接拒绝加载，走不到运行期。
 - 两件 `artifact` 在**同一个 `priority`** 上认领同一个物品时，靠注册表顺序决定，这是一个真实的歧义，报出来。
 - `quality` 的一档写了 `upgrade_costs` / `upgrade_condition` 却没有 `next`——这份升级数据永远不会被读到。
 - `trigger` 没写 action（默认是 `mxt:no_op`）——照设计读得通，但几乎一定是漏了字段。
@@ -97,7 +97,7 @@ flowchart TD
 
 一次操作里"这一堆适用哪些声明"只解析一次：`ItemBindingService.resolve(access, stack)` 给出一个 `ResolvedBindings` 快照（物品 / 武器 / 丹药 / 功法四份 `Optional`），后面几步共用它。**空堆直接返回四份空**——通配匹配器否则会认领一件不存在的东西。
 
-**匹配规则只有一套**（`ItemMatcher`）：声明的条目**任意一条命中**就算命中；多条同时命中时，`priority` **最大**的那条胜，**同分怎么判分两种**——注册表定义回落到注册表顺序，数据表则**后处理的那条赢**（同一个文件里按书写顺序，不同文件按数据包加载顺序）；`block_aura` 与 `default_quality` 是例外，前者两份值**相加**、后者根本没有 `priority` 字段、直接按后处理者赢。绑定层两张表、内容层两张认领表与九张数据表，判先后用的是同一套语义。
+**匹配规则只有一套**（`ItemMatcher`）：声明的条目**任意一条命中**就算命中；多条同时命中时，`priority` **最大**的那条胜，**同分回落注册表顺序**。`block_aura` 是例外：它根本没有 `priority` 字段，命中同一个方块的多条定义**全部生效、相加**。除此之外，绑定层两张表、内容层两张认领表与那九张按条目认领的注册表，判先后用的是同一套语义。
 
 **组件压过声明**，三处合并各管一段：
 
@@ -114,11 +114,11 @@ flowchart TD
 
 1. 堆上的 `mxt:quality` 组件——**全模组只有这一个组件装档位**，`/quality set`、升级成功、**锻造台结算**与**画符铭刻**都写它；按 id 回查注册表，当前包没有这一条时这一层答空；
 2. **这一堆携带的定义**自己声明的档（可选字段 `quality`）——定义类型实现 `QualityProvider`、再登记它的载体组件，`QualityService.carry` 是唯一的登记入口，载体只凭这一堆就答得出，取出的引用在当前包没有对应条目时这一层同样答空。声明它的九个定义是 `technique` / `alchemy_furnace` / `alchemy_wall_material` / `spirit_root` / `physique` / `pill` / `formation` / `secret_realm` / `contract_type`；
-3. 数据表 `default_quality`（`stack.getData(MxtDataMaps.DEFAULT_QUALITY)`）——堆上没有定义可问时的答案：裸的创造 / `/give` 物品，以及按物品认领的 `artifact` / `spirit_herb`。
+3. 注册表 `mxt:default_quality`——堆上没有定义可问时的答案：裸的创造 / `/give` 物品，以及按物品认领的 `artifact` / `spirit_herb`。
 
 `artifact` 与 `spirit_herb` 没有 `quality` 是有意的：它们靠 `ItemMatcher` 按物品认领，堆上没有装定义身份的组件。`talisman` 也没有：它的载体装的是一列符的 id，没有单份定义可问，档由画符配方写组件、写不上才兜底到第 3 层。模块自己的定档逻辑另外接：锻造按蓝图 `quality_by_extra_steps` 曲线、画符按完成度 `grades[].quality`，都是定完把档写进第 1 层那个组件。`mxt:forging_result` 只记锻造记录（蓝图 id 与步数），**不含档位**；所以 `/quality clear` 会把锻造/铭刻写的那一档一起清掉，退回第 2 层、再退回第 3 层。
 
-`hasOverride(stack)` 问的是"组件在不在"，与"解析出没解析出档位"是两个问题：一件靠携带的定义或数据表兜底的物品也照样显示品质（组件不在）。
+`hasOverride(stack)` 问的是"组件在不在"，与"解析出没解析出档位"是两个问题：一件靠携带的定义或这张注册表兜底的物品也照样显示品质（组件不在）。
 
 **"能不能用"是另一道闸门，它自己两步**（`QualityService.check`）：先看这次解析出的绑定里所有 `conditions` 是否全过（不过报 `BINDING_CONDITIONS`），再看这次解析出的档位自己的 `condition`（不过报 `QUALITY_CONDITIONS`）。绑定解析的四个调用点是"用完一件 / 攻击 / 右键 / 每 tick"，四者都先过这道闸门再跑行为。
 
@@ -131,7 +131,7 @@ flowchart TD
 - **跨条目校验放在加载之后**，是因为单条定义的 codec 看不到别的条目；放在解码期就只能靠条目之间互相回调，那会让加载顺序变成语义的一部分。
 - **缓存的作废不能靠注册表实例**，理由是上面那句：实例可能不变，内容已经换了。
 
-代价也在这里：解析一次要扫一遍相关绑定表与数据表（`ItemMatcher.Entry#itemLevel()` 就是给这件事划的界——只由物品本身决定命中的条目能按物品开缓存，读堆上组件的必须每堆问一次）；跨条目的错误要等到世界加载或 `/reload` 之后才报，而且只报在日志里；被 `neoforge:conditions` 挡掉的条目在运行时完全不存在，客户端与服务端各自解释自己的那份包。
+代价也在这里：解析一次要扫一遍相关绑定表与按物品认领的注册表（`ItemMatcher.Entry#itemLevel()` 就是给这件事划的界——只由物品本身决定命中的条目能按物品开缓存，读堆上组件的必须每堆问一次）；跨条目的错误要等到世界加载或 `/reload` 之后才报，而且只报在日志里；被 `neoforge:conditions` 挡掉的条目在运行时完全不存在，客户端与服务端各自解释自己的那份包。
 
 ## 相关阅读
 

@@ -101,7 +101,7 @@ A stack takes the **first tier it can get**, in this order:
 | --- | --- |
 | The `mxt:quality` component on the stack | `/give @s kubejs:qi_pill[mxt:quality="example:common"]`; `/quality set`, a successful upgrade, a Forge Table settlement and a talisman inscription write this one too. |
 | The `quality` the definition the stack carries declares | Whichever component on that item names a definition identity, read for the tier that definition writes itself. |
-| The [default_quality](../datapack/json/default_quality.md) data map | Whichever tier the item is given there; a bare creative or `/give` item and the by-item `artifact` / `spirit_herb` definitions take this route. |
+| The [default_quality](../datapack/json/default_quality.md) registry | When a definition's `items` matches the item, the `quality` that definition writes applies; a bare creative or `/give` item and the by-item `artifact` / `spirit_herb` definitions take this route. |
 
 Layer 2 answers for "several definitions of a type share one built-in item, so the item cannot say which tier applies": every technique manual defaults to `mxt:cultivation_jade_slip` (a `technique_binding` may name another `carrier_item`), every pill is `mxt:pill`, every furnace specification is the block item `mxt:alchemy_furnace`, the spirit-root stone is `mxt:spirit_root` and the physique stone is `mxt:physique`. The nine definitions declaring `quality` are `technique`, `alchemy_furnace`, `alchemy_wall_material`, `spirit_root`, `physique`, `pill`, `formation`, `secret_realm` and `contract_type`.
 
@@ -129,7 +129,7 @@ Quality is a data pack registry, read once when the world loads, and `/reload` d
 /quality get                      → the tier of the item in your main hand
 ```
 
-`/mxt registries validate` reports every problem at once, and strings only the first 12 together when there are more. The ladder's own problems show up here: a `next` that does not exist, a cycle, a fork, two entries claiming one name.
+`/mxt registries validate` reports every problem at once, and strings only the first 12 together when there are more. The ladder's own problems show up here: a cycle, a fork, two entries claiming one name. A `next` pointing at a tier the pack does not provide is not among them — that fails the whole data pack load.
 
 ## Verify
 
@@ -148,8 +148,8 @@ Quality is a data pack registry, read once when the world loads, and `/reload` d
 | The upgrade never collects its cost | `upgrade_costs` was written on the source tier, so the cost means "climbing into itself", and nothing climbs into an entry tier. That step is in practice free. **Nothing is reported.** |
 | `names quality <written> inside <inherited>` | A tier's own name differs from the one inherited from above. |
 | `starts a second ladder named <name>, which another tier already names` | Two entry tiers claim one name. |
-| `next <id> is not a quality`, followed by `reaches <id>, which is not an entry` | `next` points at an entry that does not exist, and that whole ladder is dropped. |
-| `follows both <A> and <B>` | One tier is written as the `next` of two tiers (a fork); reported on the tier being pointed at. The other entry separately reports `joins <id>, which another chain already holds`. |
+| `next <id> is not a quality` | The pack never loads that far: a `next` pointing at a tier that does not exist makes the world refuse to load, so it is a failed load, not "that ladder is dropped". |
+| `follows both <A> and <B>` | One tier is written as the `next` of two tiers (a fork); reported on the tier being pointed at. **Every line running into that fork point is left out of the index whole** (the other entry's line included) — no winner is picked for you. |
 | `the chain is cyclic at <id>` | A cycle. A pure cycle whose tiers name nothing reports nothing at all — those tiers are simply on no ladder. |
 | `declares upgrade_costs or upgrade_condition but no next tier` | A tier has no `next` but writes `upgrade_costs` or an `upgrade_condition` other than `mxt:always`. |
 | `cannot be reached from the start of its ladder: it is cyclic, points into another, or names a quality that is already taken` | A tier names a ladder but cannot be reached from its entry. |

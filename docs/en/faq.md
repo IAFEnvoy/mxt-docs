@@ -7,7 +7,7 @@ description: Short answers to the most common questions about installing MiXianT
 
 ## Why Does Nothing Change in Game After Installing the Mod?
 
-The mod only provides the framework, generic items, slots, HUD and commands; it contains no realm values, abilities or recipes. You need a datapack or content pack (including content written with KubeJS) before real gameplay appears. Start with the [Datapack overview](./datapack/overview.md) and look up individual tables in [JSON Data Formats](./datapack/json/index.md).
+The mod only provides the framework, generic items, slots, HUD and commands; it contains no realm values, abilities or recipes. You need a datapack or content pack (including content written with KubeJS) before real gameplay appears. Start with the [Datapack overview](./datapack/overview.md) and look up an individual registry in [JSON Data Formats](./datapack/json/index.md).
 
 ## What Dependencies Are Required?
 
@@ -33,7 +33,7 @@ The price is that "gone" means gone: an entry whose condition fails is the same 
 
 ## Why Does `/reload` Not Apply My Edit?
 
-MiXianTu's registries are native Minecraft data pack registries and its data maps are read in the same pass, and Minecraft reads them **while the world loads**. `/reload` only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts, so it never re-reads a MiXianTu registry or data map.
+MiXianTu's registries are native Minecraft data pack registries, and Minecraft reads them **while the world loads**. `/reload` only refreshes recipes, loot tables, advancements, functions and the KubeJS server scripts, so it never re-reads a MiXianTu registry.
 
 To apply an edit, load the world again: in single player, leave to the title screen and open the world again; on a server, restart it. A file that cannot be decoded prevents the world from loading until it is fixed, because the registries keep no previous snapshot. See [Loading, Syncing and Debugging](./datapack/overview.md#loading-syncing-and-debugging).
 

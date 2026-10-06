@@ -5,7 +5,7 @@ description: Every built-in bi-entity action type registered by the mod, and the
 
 # Bi-entity Actions (bientity_action_type)
 
-A bi-entity action works on a pair of entities: an **actor** and a **target**. That pair comes from whichever data table declares the action; the action itself only describes what to do with the two entities it is handed, and never picks them.
+A bi-entity action works on a pair of entities: an **actor** and a **target**. That pair comes from whichever definition declares the action; the action itself only describes what to do with the two entities it is handed, and never picks them.
 
 `type` is written inside the action object, and its value is one of the ids listed below. These ids are registered by the mod and a data pack cannot add or remove them; custom types can only be introduced through KubeJS, see the [KubeJS API](../../../kubejs/api-reference.md). Apart from `type`, every other key is decided by the type.
 
@@ -20,7 +20,7 @@ An action is a JSON object, `type` names the type, and every other key is a fiel
 }
 ```
 
-Actions are usually nested in a field of another data table, for example `bientity_action`:
+Actions are usually nested in a field of another definition, for example `bientity_action`:
 
 ```json
 "bientity_action": {

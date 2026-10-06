@@ -7,12 +7,12 @@ description: "在 KubeJS 启动脚本里注册真实物品，再用四张绑定�
 
 MiXianTu 不创建物品。它创建的是**物品的规则**，而这些规则始终指向一个真实、已注册的物品 ID，无论该物品来自原版、其它模组还是 KubeJS 脚本。
 
-这种分工是刻意的：数据包要引用一个物品，它必须先存在，而两者注册的时机并不相同。不过它们最终会汇合到同一处——脚本注册的物品只有在重启游戏之后才对游戏可见，而绑定表在加载世界时才读取（`item_binding` / `weapon_binding` 是物品数据表，`pill_binding` / `technique_binding` 是数据包注册表）：
+这种分工是刻意的：数据包要引用一个物品，它必须先存在，而两者注册的时机并不相同。不过它们最终会汇合到同一处——脚本注册的物品只有在重启游戏之后才对游戏可见，而四张绑定表都是数据包注册表，在加载世界时才读取：
 
 ```text
 kubejs/startup_scripts/          the item itself      (game restart)
         ↓  real item ID: kubejs:qi_pill
-data/mxt/data_maps/item/         the rules            (world reload)
+data/example/mxt/                the rules            (world reload)
         ↓
 actions, conditions, quality, aura, tooltips
 ```
@@ -32,10 +32,10 @@ actions, conditions, quality, aura, tooltips
 | `data/example/mxt/element/fire.json` | 灵根使用的元素。 |
 | `data/example/mxt/spirit_root/fire_root.json` | 这枚丹药赋予什么。 |
 | `data/example/mxt/technique/azure_breath.json` | 手册传授什么。 |
-| `data/mxt/data_maps/item/item_binding.json` | 通用绑定：使用这件物品会做什么。 |
+| `data/example/mxt/item_binding/qi_pill.json` | 通用绑定：使用这件物品会做什么。 |
 | `data/example/mxt/pill/qi_pill.json` | 丹药作用：食用行为、丹毒与过量。 |
 | `data/example/mxt/pill_binding/qi_pill.json` | 这族物品是哪一份丹药，以及它的次数与冷却。 |
-| `data/mxt/data_maps/item/weapon_binding.json` | 武器属性修正与战斗行为。 |
+| `data/example/mxt/weapon_binding/spirit_sword.json` | 武器属性修正与战斗行为。 |
 | `data/example/mxt/technique_binding/azure_manual.json` | 这门功法怎么被读，以及本体生成的载体用哪件物品。 |
 
 品质档位不在这页：它有自己的链与升级规则，见[定义品质链](./define-a-quality-chain.md)。这页的四件物品用那篇建立的三档。
@@ -87,43 +87,40 @@ ServerEvents.recipes(event => {
 
 ## 第 2 步 —— 四张绑定表各自管什么
 
-四张表的用途不同，字段也几乎不重叠。`item_binding` 与 `weapon_binding` 是**数据表**：文件放在 `data/mxt/data_maps/item/` 下，`values` 的键就是物品 id 或 `#物品标签`；`pill_binding` 与 `technique_binding` 仍是数据包注册表，靠 `items` 声明自己管哪些物品：
+四张表的用途不同，字段也几乎不重叠。四张都是数据包注册表，定义里都用 `items` 声明自己管哪些物品：
 
 | 表 | 管什么 | 主要字段 |
 | --- | --- | --- |
-| `item_binding` | 通用的"用掉这件物品会怎样" | `conditions`、`actions` |
-| `pill_binding` | 这族物品是哪一份丹药，以及服用次数与冷却 | `pill`、`max_uses`、`cooldown`、`priority` |
-| `weapon_binding` | 当武器用时的属性与动作 | `attributes`、`use_action`、`attack_action`、`tick_action` |
-| `technique_binding` | 这门功法怎么被读、载体用哪件物品 | `technique`、`carrier_item`、`learn_time`、`hold_animation`、`hold_sound` |
+| `item_binding` | 通用的"用掉这件物品会怎样" | `items`、`conditions`、`actions`、`element`、`priority` |
+| `pill_binding` | 这族物品是哪一份丹药，以及服用次数与冷却 | `items`、`pill`、`max_uses`、`cooldown`、`priority` |
+| `weapon_binding` | 当武器用时的属性与动作 | `items`、`attributes`、`use_action`、`attack_action`、`tick_action`、`conditions`、`element`、`priority` |
+| `technique_binding` | 这门功法怎么被读、载体用哪件物品 | `items`、`technique`、`carrier_item`、`learn_time`、`hold_animation`、`hold_sound` |
 
 三条共同规则：
 
-- 数据表的键与注册表的 `items` 都接受单个 ID 或 `#物品标签`，所以一份文件就能覆盖整个物品家族（数据表的键在加载期把标签展开）。
-- 每张表都按 `priority` 决定谁生效，**同一件物品在同一张表里只有一个值会跑**（数值大者胜，同分则后处理的那个赢：同一文件按书写顺序、不同文件按数据包加载顺序），不是"全部叠加"。两份都写对了也不会都执行。
-- 一个匹配不到任何物品的键，或者注册表里没写 / 写错的 `items`，都让那一份永远不生效，而且**不会报错**。
+- `items` 接受单个 ID、`#物品标签` 或它们的数组，所以一份定义就能覆盖整个物品家族（标签在加载期展开）。
+- 每张表都按 `priority` 决定谁生效，**同一件物品在同一张表里只有一条定义会跑**（数值大者胜，同分回落注册表顺序），不是"全部叠加"。两条都写对了也不会都执行。
+- `items` 里单个未知的物品 ID 会让**数据包加载失败**；写在数组里的未知 ID 只记一行日志后丢弃那个元素，文件其余部分照常加载——所以数组里的拼写错误会静默地丢掉那次匹配。
 
 钩子的执行时机、条件的写法与顺序另有一篇：[KubeJS 绑定行为](./bind-actions.md)。
 
 ## 第 3 步 —— 通用绑定
 
-`item_binding` 是通用的数据表：键是物品，值里列出一些行为。
+`item_binding` 是通用的一张：定义里用 `items` 认领物品，下面列出一些行为。
 
 ```json
-// data/mxt/data_maps/item/item_binding.json
+// data/example/mxt/item_binding/qi_pill.json
 {
-  "values": {
-    "kubejs:qi_pill": {
-      "conditions": [
-        {
-          "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
-          "description": "condition.example.needs_qi_chain"
-        }
-      ],
-      "actions": [
-        {"type": "mxt:add_resource", "resource": "example:qi", "amount": 25}
-      ]
+  "items": "kubejs:qi_pill",
+  "conditions": [
+    {
+      "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
+      "description": "condition.example.needs_qi_chain"
     }
-  }
+  ],
+  "actions": [
+    {"type": "mxt:add_resource", "resource": "example:qi", "amount": 25}
+  ]
 }
 ```
 
@@ -151,15 +148,12 @@ ServerEvents.recipes(event => {
 ```
 
 ```json
-// data/mxt/data_maps/item/item_binding.json
+// data/example/mxt/item_binding/root_pellet.json
 {
-  "values": {
-    "kubejs:root_pellet": {
-      "actions": [
-        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
-      ]
-    }
-  }
+  "items": "kubejs:root_pellet",
+  "actions": [
+    {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
+  ]
 }
 ```
 
@@ -204,22 +198,19 @@ ServerEvents.recipes(event => {
 ## 第 5 步 —— 武器绑定
 
 ```json
-// data/mxt/data_maps/item/weapon_binding.json
+// data/example/mxt/weapon_binding/spirit_sword.json
 {
-  "values": {
-    "kubejs:spirit_sword": {
-      "attributes": [
-        {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"},
-        {"attribute": "minecraft:attack_speed", "id": "example:spirit_sword/speed", "amount": -2.4, "operation": "add_value"}
-      ],
-      "use_action": {"type": "mxt:no_op"},
-      "attack_action": {
-        "type": "mxt:target_action",
-        "action": {"type": "mxt:damage", "amount": 3}
-      },
-      "tick_action": {"type": "mxt:no_op"}
-    }
-  }
+  "items": "kubejs:spirit_sword",
+  "attributes": [
+    {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"},
+    {"attribute": "minecraft:attack_speed", "id": "example:spirit_sword/speed", "amount": -2.4, "operation": "add_value"}
+  ],
+  "use_action": {"type": "mxt:no_op"},
+  "attack_action": {
+    "type": "mxt:target_action",
+    "action": {"type": "mxt:damage", "amount": 3}
+  },
+  "tick_action": {"type": "mxt:no_op"}
 }
 ```
 
@@ -275,9 +266,9 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 /mxt registries list                   → mxt:pill=1, mxt:pill_binding=1, mxt:technique_binding=1, …
 ```
 
-两半各需要各自的重启：KubeJS 在启动时注册物品，而两张物品数据表与两张绑定注册表都是 Minecraft 在加载世界时读取的。`/reload` 两者都做不到——它只刷新配方、战利品表、进度、函数和 KubeJS 服务端脚本。
+两半各需要各自的重启：KubeJS 在启动时注册物品，而四张绑定表都是数据包注册表，Minecraft 在加载世界时才读取。`/reload` 两者都做不到——它只刷新配方、战利品表、进度、函数和 KubeJS 服务端脚本。
 
-`/mxt registries list` 只列注册表：`item_binding` 与 `weapon_binding` 现在是数据表，不在其中。
+`/mxt registries list` 里能看到 `mxt:item_binding`、`mxt:weapon_binding`、`mxt:pill_binding` 与 `mxt:technique_binding` 各自的条目数。
 
 然后在游戏里：
 
@@ -292,16 +283,16 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 
 | 现象 | 原因 |
 | --- | --- |
-| 世界带着未知物品拒绝加载 | 某个绑定注册表的 `items` 写了一个没有注册的物品 ID：作为单个 ID 会让加载失败，写在数组里则会丢弃那条读不出来的元素并记一行日志。数据表的键匹配不到物品时，那条值只是不生效。 |
-| 规则静默地从不匹配 | 在注册表的 `items` 数组里（或数据表的键上）写成了 `example:qi_pill`，而脚本产生的是 `kubejs:qi_pill`（或任何其它拼写错误），于是那一项被丢弃、文件照常加载。请使用真正注册的 ID。 |
-| 同一件物品上写了两个同表定义，只有一个生效 | 每张表按 `priority` 取唯一一条，同分则后处理的那个赢。想让两条都跑就合并成一个文件，或写成一个数组。 |
+| 世界带着未知物品拒绝加载 | 某个绑定注册表的 `items` 写了一个没有注册的物品 ID：作为单个 ID 会让整个数据包加载失败，写在数组里则会丢弃那条读不出来的元素并记一行日志。 |
+| 规则静默地从不匹配 | 在 `items` 数组里写成了 `example:qi_pill`，而脚本产生的是 `kubejs:qi_pill`（或任何其它拼写错误），于是那一项被丢弃、文件照常加载。请使用真正注册的 ID。 |
+| 同一件物品上写了两个同表定义，只有一个生效 | 每张表按 `priority` 取唯一一条，同分回落注册表顺序。想让两条都跑就合并成一条定义，或把两个 `items` 写成数组。 |
 | 物品完全没有行为 | 规则被放进了与该物品不匹配的绑定表，或者那一堆的品质解析不出来。 |
 | 绑在普通物品上的丹药右键没反应 | 这件物品由原版自己的分支应答右键（可换装且可交换、盾牌、动能武器），或者被某条长按声明认领了——两种情况都按物品自己那条路走。换一件物品，或去掉那条声明。 |
 | `conditions` 明明是假的，行为还是跑了 | 条件只在开始使用时查一次，之后不再复查。 |
 | 有些钩子写了却没反应 | 钩子写在了不声明它的那张表上（例如 `item_binding` 里写 `use_action`）。未声明的键会被静默忽略。 |
 | 提示框里的勾叉和预期不符 | 品质自己也能带条件，那一个 `✖` 可能来自品质而不是绑定。 |
 | 新物品在 `/reload` 后不出现 | 物品注册发生在启动阶段；请重启游戏。 |
-| 改过的绑定没有任何变化 | `/reload` 不会重新读取数据包注册表，也不会重读数据表；请重新加载世界。 |
+| 改过的绑定没有任何变化 | `/reload` 不会重新读取数据包注册表；请重新加载世界。 |
 | 手册没有效果也没有报错 | 先确认那一叠上有没有 `mxt:technique` 组件——没有组件的普通物品什么都不教。有组件时再看学习是否失败：`learn_condition`、是否已经学过同一门功法，或互斥冲突。 |
 | 手册的 `items` 字段没起作用 | `items` 是**可选**的第二条路，而且堆上的 `mxt:technique` 组件优先。写进去的物品 id 必须与脚本注册的真实 id 一致（`kubejs:` 命名空间别漏），否则它认领不到那一堆。 |
 

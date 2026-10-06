@@ -5,7 +5,7 @@ description: Every built-in item condition type registered by the mod, and the J
 
 # Item Conditions (item_condition_type)
 
-An **item condition** checks a single item stack and returns `true` or `false`. The holder entity and the stack come from whichever data table declares the condition, so a condition only describes what the stack it is handed has to satisfy.
+An **item condition** checks a single item stack and returns `true` or `false`. The holder entity and the stack come from whichever definition declares the condition, so a condition only describes what the stack it is handed has to satisfy.
 
 Item conditions are built-in types with fixed `type` ids, and a data pack can neither add nor remove entries. Every value is listed on this page, all of them in the `mxt` namespace. Custom types take Java or the KubeJS bridge — see the [KubeJS API](../../../kubejs/api-reference.md).
 
@@ -138,7 +138,7 @@ Matches the stack against any single matcher entry listed in `items`.
 }
 ```
 
-`items` accepts a single value or an array, and the array may freely mix item ids, item tags and typed matcher entries. The typed entries are `mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:technique` (a technique manual carrying that component), the fieldless `mxt:spirit_storage` (matches every item that can store aura) and `mxt:herb_tag` (a spirit herb carrying the given element or material tag); see [Item Matcher](/en/datapack/types/other/item-matcher#item-matcher-entry-type). It is the most compact way to take in a set of items that no existing tag covers yet. An empty list is refused at load.
+`items` accepts a single value or an array, and the array may freely mix item ids, item tags and typed matcher entries. The typed entries are `mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:technique` (a technique manual carrying that component), the fieldless `mxt:spirit_storage` (matches every item that can store aura) and `mxt:herb_tag` (a spirit herb carrying the given element or material tag) and `mxt:quality` (an item list plus a quality requirement, see [Quality · Filtering items by tier](../../json/quality.md#gating)); see [Item Matcher](/en/datapack/types/other/item-matcher#item-matcher-entry-type). It is the most compact way to take in a set of items that no existing tag covers yet. An empty list is refused at load.
 
 ### `mxt:amount`
 
@@ -355,15 +355,20 @@ Checks the [quality](../../json/quality.md) tier the stack resolves to.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `quality` | Quality id, `#` tag or array of them | **required** | At least one entry. |
+| `quality` | Quality id, `#` tag or array of them | — | Membership: is the tier the stack resolves to one of these. |
+| `min_quality` | Quality id | — | **At least this tier**: compared by position on that tier's own chain, and a cross-chain minimum answers no; on its own, an item with no tier answers no. |
 
 ```json
 { "type": "mxt:item_quality", "quality": ["example:fine", "#example:high_tier"] }
 ```
 
-It follows the same resolution order as the quality gate and the tooltip (**three layers**, first hit wins: the `mxt:quality` component on the stack → the `quality` declared by the definition the stack carries → the `default_quality` data map), so the tier the data map gives counts too. **This is the condition, not the component**: the component is `mxt:quality` (which writes a whole quality object), so the two names differ. An empty list is refused at load, and an item that resolves to no tier at all answers false rather than falling back to the lowest tier.
+```json
+{ "type": "mxt:item_quality", "min_quality": "example:tier_3" }
+```
 
-To gate on "at least this tier", declare a quality tag listing that tier and every tier above it, and reference it here — `quality` is a membership test over entries and tags only, and has no field that compares tier ranks.
+It follows the same resolution order as the quality gate and the tooltip (**three layers**, first hit wins: the `mxt:quality` component on the stack → the `quality` declared by the definition the stack carries → the `default_quality` registry), so the tier that layer gives counts too. **This is the condition, not the component**: the component is `mxt:quality` (which writes a whole quality object), so the two names differ. At least one of the two fields has to be written; writing neither is refused at load (an empty condition would silently always pass). An item that resolves to no tier at all answers false rather than falling back to the lowest tier.
+
+`min_quality` compares positions on **the chain that tier is on** (the same implementation as upgrading and `/quality chain`) — positions on different chains mean nothing to each other, so **a cross-chain minimum always answers no**. Use it for "at least this tier" instead of maintaining a quality tag that lists every tier above. The same requirement is attached at two more places (the `mxt:quality` matcher entry and the `mxt:quality` ingredient, the latter being how a forging blueprint's `input` asks for a tier); see [Quality · Filtering items by tier](../../json/quality.md#gating).
 
 ### `mxt:item_abilities`
 

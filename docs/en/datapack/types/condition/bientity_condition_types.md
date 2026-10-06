@@ -20,7 +20,7 @@ Bi-entity conditions are a Java (built-in) registry with fixed `type` ids: a dat
 }
 ```
 
-A condition is used as a value inside other data tables, so it usually lands under a field such as `bientity_condition`:
+A condition is used as a value inside other definitions, so it usually lands under a field such as `bientity_condition`:
 
 ```json
 "bientity_condition": {

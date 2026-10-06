@@ -5,7 +5,7 @@ description: Every built-in block condition type registered by the mod, and the 
 
 # Block Conditions (block_condition_type)
 
-A **block condition** checks one block position in the world and returns `true` or `false`. Which level and which position get checked is decided by the data table that declares the condition, so a condition only ever describes what the block at that position has to look like.
+A **block condition** checks one block position in the world and returns `true` or `false`. Which level and which position get checked is decided by the definition that declares the condition, so a condition only ever describes what the block at that position has to look like.
 
 Block conditions are a Java (built-in) registry, so `type` can only be one of the ids listed below, written with the `mxt` namespace. A data pack cannot add entries to this registry, and it cannot remove them either. Adding a custom type means writing Java, or going through the KubeJS bridge — see the [KubeJS API](../../../kubejs/api-reference.md).
 
@@ -20,7 +20,7 @@ A condition is a JSON object: `type` names the built-in type and every remaining
 }
 ```
 
-Conditions usually appear nested as a value inside other data tables, for example under a field such as `block_condition`:
+Conditions usually appear nested as a value inside other definitions, for example under a field such as `block_condition`:
 
 ```json
 "block_condition": {

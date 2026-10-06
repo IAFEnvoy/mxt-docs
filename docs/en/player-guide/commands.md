@@ -55,7 +55,7 @@ Registry IDs in commands use the vanilla `ResourceArgument`: parsing, tab comple
 
 A few arguments deliberately do not work that way, because their whole job is naming a reference the **current data pack no longer provides**: `/technique drop`, `/spirit_root remove|enable|disable`, `/physique remove|enable|disable`, `/curse remove` and `/ability revoke`. Those complete from the entries the registry currently holds, and what they really rescue is a reference **a body still stores while the current pack no longer provides it**: whether the entry was blocked by `neoforge:conditions` or its file was deleted outright, that `Holder` is still in the attachment **for the rest of the session** (attachments are decoded while the world loads and not on `/reload`; a reference whose definition cannot be found at that moment is dropped by the tolerant list codec, so entering the world again clears it), so `remove`, `enable` and `disable` all look the reference up among the ones the body holds rather than in the registry.
 
-Dimension IDs (`/mxt secret_realm info|destroy`, `/mxt rift target|place|bind`), trigger signals (`/mxt trigger rules|publish`) and the picker's category ID (`/picker mxt:aura`) are not registry entries either, and complete from the level list, the signal table and the picker's own categories respectively. A category may be a registry or a data map.
+Dimension IDs (`/mxt secret_realm info|destroy`, `/mxt rift target|place|bind`), trigger signals (`/mxt trigger rules|publish`) and the picker's category ID (`/picker mxt:aura`) are not registry entries either, and complete from the level list, the signal table and the picker's own categories respectively. A category is a registry.
 
 ## Server Configuration
 

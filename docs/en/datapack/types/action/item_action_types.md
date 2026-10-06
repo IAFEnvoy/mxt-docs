@@ -5,7 +5,7 @@ description: Every built-in item action type registered by the mod, with the JSO
 
 # Item Actions (item_action_type)
 
-An **item action** operates on a single item stack. The holder entity and the stack are supplied by whatever data table declares the action, so the action itself only describes what to do with the stack it is handed.
+An **item action** operates on a single item stack. The holder entity and the stack are supplied by whatever definition declares the action, so the action itself only describes what to do with the stack it is handed.
 
 Item actions are a Java (built-in) registry, so their `type` ids are fixed and a data pack cannot add new ones. `type` is written on the action object, side by side with its fields, and its value is one of the ids tabulated on this page, written with the `mxt` namespace. A data pack never adds or removes entries in this registry. Only Java code or the KubeJS bridge can introduce custom action types — see the [KubeJS API](../../../kubejs/api-reference.md).
 
@@ -16,7 +16,7 @@ Item actions are a Java (built-in) registry, so their `type` ids are fixed and a
 }
 ```
 
-Actions are normally nested as a value under a field of another data table, such as `item_action`:
+Actions are normally nested as a value under a field of another definition, such as `item_action`:
 
 ```json
 "item_action": {

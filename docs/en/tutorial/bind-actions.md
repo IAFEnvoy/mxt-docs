@@ -15,9 +15,9 @@ This page keeps using the four items from the main page, and the changes land in
 
 | File | What this page adds |
 | --- | --- |
-| `data/mxt/data_maps/item/item_binding.json` | Two entity actions with an order between them. |
-| `data/mxt/data_maps/item/item_binding.json` | One condition with a description that draws a check mark in the tooltip. |
-| `data/mxt/data_maps/item/weapon_binding.json` | One action for each of the three hooks: right click, hit, every tick. |
+| `data/example/mxt/item_binding/qi_pill.json` | Two entity actions with an order between them. |
+| `data/example/mxt/item_binding/root_pellet.json` | One condition with a description that draws a check mark in the tooltip. |
+| `data/example/mxt/weapon_binding/spirit_sword.json` | One action for each of the three hooks: right click, hit, every tick. |
 | `data/example/mxt/pill/qi_pill.json` | The action on the overdose line. |
 
 ## Step 1 — Which Hooks Each Table Has
@@ -41,22 +41,19 @@ Three things to remember first:
 ## Step 2 — The Generic Binding's Actions
 
 ```json
-// data/mxt/data_maps/item/item_binding.json
+// data/example/mxt/item_binding/qi_pill.json
 {
-  "values": {
-    "kubejs:qi_pill": {
-      "conditions": [
-        {
-          "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
-          "description": "condition.example.needs_qi_chain"
-        }
-      ],
-      "actions": [
-        {"type": "mxt:add_resource", "resource": "example:qi", "amount": 25},
-        {"type": "mxt:apply_effect", "effect": "minecraft:regeneration", "duration_ticks": 60}
-      ]
+  "items": "kubejs:qi_pill",
+  "conditions": [
+    {
+      "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
+      "description": "condition.example.needs_qi_chain"
     }
-  }
+  ],
+  "actions": [
+    {"type": "mxt:add_resource", "resource": "example:qi", "amount": 25},
+    {"type": "mxt:apply_effect", "effect": "minecraft:regeneration", "duration_ticks": 60}
+  ]
 }
 ```
 
@@ -70,25 +67,22 @@ Conditions are checked once, at the "start using" gate. **They are not re-checke
 ## Step 3 — The Weapon's Three Hooks
 
 ```json
-// data/mxt/data_maps/item/weapon_binding.json
+// data/example/mxt/weapon_binding/spirit_sword.json
 {
-  "values": {
-    "kubejs:spirit_sword": {
-      "attributes": [
-        {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"}
-      ],
-      "use_action": {
-        "type": "mxt:apply_effect",
-        "effect": "minecraft:speed",
-        "duration_ticks": 100
-      },
-      "attack_action": {
-        "type": "mxt:target_action",
-        "action": {"type": "mxt:damage", "amount": 3}
-      },
-      "tick_action": {"type": "mxt:no_op"}
-    }
-  }
+  "items": "kubejs:spirit_sword",
+  "attributes": [
+    {"attribute": "minecraft:attack_damage", "id": "example:spirit_sword/damage", "amount": 8, "operation": "add_value"}
+  ],
+  "use_action": {
+    "type": "mxt:apply_effect",
+    "effect": "minecraft:speed",
+    "duration_ticks": 100
+  },
+  "attack_action": {
+    "type": "mxt:target_action",
+    "action": {"type": "mxt:damage", "amount": 3}
+  },
+  "tick_action": {"type": "mxt:no_op"}
 }
 ```
 
@@ -107,22 +101,19 @@ The pill's two action hooks live on the **pill definition** ([pill](../datapack/
 ## Step 5 — The Two Faces of a Condition
 
 ```json
-// data/mxt/data_maps/item/item_binding.json
+// data/example/mxt/item_binding/root_pellet.json
 {
-  "values": {
-    "kubejs:root_pellet": {
-      "conditions": [
-        {"type": "mxt:has_spirit_root", "spirit_root": "example:fire_root"},
-        {
-          "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
-          "description": "condition.example.needs_qi_chain"
-        }
-      ],
-      "actions": [
-        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
-      ]
+  "items": "kubejs:root_pellet",
+  "conditions": [
+    {"type": "mxt:has_spirit_root", "spirit_root": "example:fire_root"},
+    {
+      "condition": {"type": "mxt:has_realm", "aura": "example:qi"},
+      "description": "condition.example.needs_qi_chain"
     }
-  }
+  ],
+  "actions": [
+    {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
+  ]
 }
 ```
 
@@ -166,7 +157,7 @@ Two easy traps:
 | A condition written into `weapon_binding.conditions` never holds | Target information from the attack event cannot be read there; only the entity's own state can. |
 | `actions` was written as a single object | `item_binding.actions` only accepts an array. |
 | Two actions want the same hook | One hook takes one action; to do several things in a row write an array (or put a sequence inside the array). |
-| Editing a binding changes nothing | `/reload` re-reads neither data pack registries nor data maps; load the world again. |
+| Editing a binding changes nothing | `/reload` does not re-read data pack registries; load the world again. |
 
 ## Next
 

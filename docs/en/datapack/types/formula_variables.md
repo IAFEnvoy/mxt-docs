@@ -204,6 +204,7 @@ Which variables a formula can read is decided by the objects the caller puts int
 | Curse duration, tick interval, conditions, actions | caster (or the context of whatever applied the curse) | Entity family, plus the payload of the ability that applied it |
 | Item, weapon, pill and technique bindings, item quality, pill toxicity | the user or holder entity | Entity family (including `pill_toxicity`), plus `target_health` / `target_is_living` on a weapon attack |
 | Spirit herb potency (`main_effects`, `auxiliary_effects`, `catalyst_power`) | The stack itself, plus whatever context the caller supplies | The local `herb_age`; the entity family when the context carries an entity |
+| A pill recipe's own formula fields (thresholds, temperature, duration, environment gate) | the player starting the batch, plus the core tier's position | The entity family; `furnace_rank` (where the core tier sits on its own ladder, reading `0` when no core is in hand) |
 | Forging, formations, contracts, creature profiles, secret realms, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for `entity_tick_action`; + the secret realm family inside an instance) |
 | Tribulation timeline entry duration and conditions | caster | Entity family + `aura_tribulation_modifier` |
 | Formulas evaluated from a Level alone instead of an entity: formation `tick_action` and `deactivate_action`, formation aura bonus, spirit crafting table costs, KubeJS block actions and conditions | nothing | `zero`, `random` only |

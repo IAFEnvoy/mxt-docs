@@ -60,22 +60,19 @@ StartupEvents.registry('item', event => {
 })
 ```
 
-**二、** 在数据包里用数据表或绑定表把规则接到它的真实 ID 上：
+**二、** 在数据包里用注册表或绑定表把规则接到它的真实 ID 上：
 
 ```json
-// kubejs/data/mxt/data_maps/item/item_binding.json
+// kubejs/data/example/mxt/item_binding/fire_root_pellet.json
 {
-  "values": {
-    "kubejs:fire_root_pellet": {
-      "actions": [
-        { "type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root" }
-      ]
-    }
-  }
+  "items": "kubejs:fire_root_pellet",
+  "actions": [
+    { "type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root" }
+  ]
 }
 ```
 
-物品、武器、丹药、工具、图纸与功法六张表的字段与示例见 [物品与绑定](/kubejs/items)；其中 `item_binding` / `weapon_binding` / `tool_binding` / `blueprint_binding` 是数据表（文件固定放在 `mxt` 命名空间下），`pill_binding` / `technique_binding` 仍是注册表。
+物品、武器、丹药、工具、图纸与功法六张表的字段与示例见 [物品与绑定](/kubejs/items)；六张表都是注册表，一份文件一条定义，放在 `kubejs/data/<命名空间>/mxt/<表>/` 下，条目按 `items` 认领物品。
 
 **三、**（可选）在服务端脚本里提供数据包要用的回调，然后在数据包字段里点名它：
 
@@ -96,7 +93,7 @@ MxtActions.entity('example:heal', (entity, params, context) => {
 | 改了什么 | 怎么生效 |
 | --- | --- |
 | 启动脚本（注册物品、方块、配方） | **重启游戏**；`/reload` 不会重跑启动脚本。 |
-| 绑定表、数据表与其它数据包定义 | **重新加载世界**；它们在世界加载时读取。 |
+| 绑定表与其它数据包定义 | **重新加载世界**；它们在世界加载时读取。 |
 | 服务端脚本（回调、事件订阅） | `/reload` 会清空全部回调并重跑脚本，因此回调会重新注册；脚本自己挂的运行时订阅需要自己重新挂。 |
 
 ## 接下来

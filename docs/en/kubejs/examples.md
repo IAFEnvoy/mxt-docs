@@ -46,7 +46,7 @@ MxtEvents.cultivationBreak(event => {
 })
 ```
 
-The matching data pack can bind `example:spirit_manual` to a technique and hook `example:spirit_stone` into the `item_aura` or `currency` data map. That way the script only registers content, while the rules stay data-driven and are synchronised to every client.
+The matching data pack can bind `example:spirit_manual` to a technique and hook `example:spirit_stone` into the `item_aura` or `currency` registry. That way the script only registers content, while the rules stay data-driven and are synchronised to every client.
 
 ## Defining a Script Action
 

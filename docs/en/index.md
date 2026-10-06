@@ -7,7 +7,7 @@ description: "Documentation for MiXianTu, a NeoForge cultivation mod framework: 
 
 MiXianTu is a **cultivation mod framework** for NeoForge. It provides the **generic rules and runtime** that cultivation gameplay needs — cultivation, aura environment, realms and resources, abilities, formations, tribulations, forging, alchemy and economy — without prescribing any particular setting or numbers.
 
-The actual items, blocks and recipes are provided by datapacks, KubeJS or other content mods, and MiXianTu's data tables and binding tables give them gameplay.
+The actual items, blocks and recipes are provided by datapacks, KubeJS or other content mods, and MiXianTu's registries and binding tables give them gameplay.
 
 - **Players**: installing the mod on its own only gives you framework items, Curios slots, HUD and commands; what you can actually play depends on the datapack or content pack you use.
 - **Content and mod authors**: define your own cultivation rules, aura distribution, abilities, formations, crafts and item bindings with datapacks, KubeJS or the Java API, without changing the mod itself.
@@ -26,7 +26,7 @@ The project is still in development. Datapack formats and other interfaces are n
 | Build your first content step by step | [Tutorials](./tutorial/index.md) |
 | Learn the keybinds, HUD, items and commands | [Player Guide](./player-guide/keys-and-hud.md) |
 | Write your first datapack | [Datapack overview](./datapack/overview.md) |
-| Look up every field of a data table | [JSON Data Formats](./datapack/json/index.md) |
+| Look up every field of a registry | [JSON Data Formats](./datapack/json/index.md) |
 | Browse the built-in action and condition types | [Types Reference](./datapack/types/index.md) |
 | Extend the framework from a script | [KubeJS](./kubejs/index.md) |
 | Build an addon in Java | [Java API](./java/index.md) |
@@ -71,7 +71,7 @@ The **status** column says how far along a module is (it follows the code, and i
 | Spirit Herbs | 🚧 | One spirit-herb plot grows one plant. Harvest returns an aged crop plus the original seed; age is stored on the item and read as potency. |
 | Item Binding | 🚧 | Brings existing items into gameplay: attach passive behavior and vanilla attribute modifiers to any item, or bind abilities that fire on right-click use and on attack. |
 | Talismans | 🚧 | A Talisman Brush inscribes ability definitions onto a carrier (one carrier can hold several); holding right-click until it is full fires them, spending a carrier or the wear a definition declares. A drawing workstation shows a formula's shape, the player traces it, and how well it was traced decides success and tier. |
-| Quality | ✅ | Items carry a quality shown in their tooltip; each tier links to the next with `quality` / `next` to form a low-to-high ladder, and the entry tier can be climbed; a stack's tier resolves in three layers: the item component, the `quality` the definition it carries declares, and the `default_quality` data map. |
+| Quality | ✅ | Items carry a quality shown in their tooltip; each tier links to the next with `quality` / `next` to form a low-to-high ladder, and the entry tier can be climbed; a stack's tier resolves in three layers: the item component, the `quality` the definition it carries declares, and the `default_quality` registry. |
 | Artifacts | 🚧 | Items become artifacts via `artifact`: `items` claims them, `spirit_capacity` sets a per-aura ceiling, and `abilities` names what carrying it grants. An artifact declares itself a flying mount (speed, seats, fuel, looks) that a technique-granted flying skill takes from either hand; storage is another ability type. |
 | Economy | ✅ | Items can be defined as currency with a value, supporting exchange and change; players can trade directly with each other, or use trade stations and cheques to settle transactions. |
 | Curios Slots | ✅ | Players have Curios slots for a back weapon, a belt item and four artifacts, rendered on the character and swappable with the main hand by keybind. |

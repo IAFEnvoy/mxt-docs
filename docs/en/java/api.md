@@ -40,9 +40,9 @@ Three things up front:
 
 ### `MxtDatapackRegistries` {#mxtdatapackregistries}
 
-Package `com.iafenvoy.mxt.registry`. The declarations of the 31 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
+Package `com.iafenvoy.mxt.registry`. The declarations of the 40 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
 
-The nine item/block **data maps** (NeoForge Registry Data Maps) are not here: they are declared in `com.iafenvoy.mxt.registry.MxtDataMaps`, they are not registries and have no holder to look up. A caller reads one straight off the entry: `stack.getData(MxtDataMaps.X)` / `state.getData(MxtDataMaps.X)` (`ItemStack` and `BlockState` implement `IWithData` themselves, and the platform forwards it to the entry's own holder), with no other wrapper method. Fields and file locations are on [Data Maps](/en/datapack/overview#data-maps).
+The nine item/block tables (`item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`, `block_aura`, `heat_source`) are here too: they are ordinary datapack registries, the item-keyed ones claim their entries through `items` and the block-keyed ones through `blocks`, and they are read exactly like everything below. To ask "which definition applies to this stack", use `ItemMatcher.find(...)`. Fields and file locations are in [Registry Overview](/en/datapack/json/index).
 
 Reading a value by id / holder (it reads the **server** registry):
 
@@ -150,7 +150,7 @@ Entry kinds (`mxt:item_matcher_entry_type`, default `item`): `item`, `tag`, `wil
 Key points:
 
 - The "first" in `find` is the definition with the **largest `priority` number** — not registration order, and not the "most specific" match; it is the same direction as `aura_zone` and `element_reaction`. Only equal `priority` values depend on the order of the stream passed in.
-- `priority` is **a field of ten definition tables themselves** (`artifact`, the `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` bindings, `spirit_herb`, `item_aura` and `currency`; default `0`, with no range validation at load time), so when a general definition and one that names items both exist the pack writes down which wins; naming an item **does not** move it up. `ArtifactHold` reads the field of the artifact it wraps; the `mxt:item` cost, the three item conditions and the two framework-owned hold declarations (technique reading and pouring) have no such field and always answer `DEFAULT_PRIORITY`.
+- `priority` is **a field of the claim tables themselves** (`artifact`, the `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` bindings, `spirit_herb`, `item_aura`, `currency` and `default_quality`; default `0`, with no range validation at load time), so when a general definition and one that names items both exist the pack writes down which wins; naming an item **does not** move it up. `ArtifactHold` reads the field of the artifact it wraps; the `mxt:item` cost, the three item conditions and the two framework-owned hold declarations (technique reading and pouring) have no such field and always answer `DEFAULT_PRIORITY`.
 - **`itemLevel()` is the cache-safety dividing line**: returning `true` means "whether it matches depends only on the item itself", and a caller caching per item **may only** cache such entries; an entry that reads components / NBT on the stack — or whose answer comes from another definition, like `mxt:herb_tag`, which asks which `spirit_herb` claims the item — has to be asked once per stack.
 - The shorthand covers only `item` and `tag`; another implementation encoded through the shorthand throws `IllegalArgumentException`.
 
@@ -160,15 +160,15 @@ Key points:
 
 Package `com.iafenvoy.mxt.data`. The **read** side of the "table → selectable rows" catalogue: `/picker` and other mods both go through it. Each entry is one `PickerItem(stack, names)` row: `stack` is what is drawn, `names` are the names that row can be searched by. It is read-only — it writes nothing onto items and decides nothing about who may take them.
 
-A category is a `PickerCategory` (`com.iafenvoy.mxt.screen.picker`) whose `id()` is exactly the id the command and the open packet use; there are two kinds: `OfRegistry` wraps a registry key and `OfDataMap` wraps a data map. The category id does not change, but whether the table is a registry or a data map decides where the rows come from: a registry category keeps one row per definition, a data map category's rows are **the items or blocks that carry a value**, named by the entry's own name. That is why there is an overload for a `PickerCategory` and one for a registry key.
+A category is just a registry: `ItemPickerManager.categories()` gives the `ResourceKey<Registry<?>>` list in registration order, and the category id the command and the open packet use is `key.identifier()`. Where the rows come from is decided by that registry's own provider — an item-shaped table (`item_aura`, `currency`, `default_quality`, the various bindings…) keeps one row per item its `items` claims, a block-shaped table (`block_aura`, `heat_source`) one row per block its `blocks` claims, and a row is named by the entry's own name (its `name` if the definition writes one, otherwise a translation key derived from the id). That is why every `CreativeTabHelper` overload takes a registry key and there is no category object.
 
 Every query takes the registry access from you (`HolderLookup.Provider`; `BuildCreativeModeTabContentsEvent.getParameters().holders()` is one), so the client reads the tables it has synced and the server reads its own — there is no "reading the other side" case.
 
 | Method | What it does | Notes |
 | --- | --- | --- |
-| `itemsOf(Provider, category)` / `itemsOf(Provider, key)` | Every row of one table | `category` is a category object and `key` a registry key; **a table that was never registered as a category gives an empty list**, never a throw |
-| `itemsOf(Provider, category, Predicate<Identifier>)` / `itemsOf(Provider, key, Predicate<Identifier>)` | Filter rows by entry id | The predicate receives **the row's own id**: a definition's id for a registry category, the item's or block's own id for a data map — which is why "a mod id" means reading its namespace |
-| `itemsOfMod(Provider, category, String)` / `itemsOfMod(Provider, key, String)` | The rows of one table that live in one namespace | `mxt:aura` entries belong to `mxt`, `mymod:aura/…` to `mymod` |
+| `itemsOf(Provider, key)` | Every row of one registry | `key` is a registry key; **a registry that was never registered as a category gives an empty list**, never a throw |
+| `itemsOf(Provider, key, Predicate<Identifier>)` | Filter rows by entry id | The predicate receives **the entry's own id** (a definition's id, or the item's or block's own id), which is why "a mod id" means reading its namespace |
+| `itemsOfMod(Provider, key, String)` | The rows of one registry that live in one namespace | `mxt:aura` entries belong to `mxt`, `mymod:aura/…` to `mymod` |
 | `itemsOfMod(Provider, String)` | Across every category, the rows of one namespace | What a "everything from my mod" creative tab uses |
 | `stacksOf(...)` / `stacksOfMod(...)` | The stack view of the four above | See below |
 
@@ -179,7 +179,7 @@ Key points:
 - The queries have no side effects and work on both sides: they read only the access you pass in, touch no server singleton and write no attachment.
 - To draw the same rows as a picker page instead of feeding a tab, use `ItemPickerScreen.over(title, stacks)`, see [The Item Picker](screens.md#the-item-picker-itempickerscreen).
 
-**The catalogue itself lives elsewhere**: which table maps to which rows, and how each row is built, is `com.iafenvoy.mxt.screen.picker.ItemPickerManager` — `categories()` gives every category object in registration order (its `id()` is the id the command and the open packet use), `category(Identifier)` finds one by id, `registerSingle` / `register` add a registry category and `registerDataMap` a data map one (the `mxt:` tables are registered by the mod). `CreativeTabHelper` only reads it, so the two classes stay apart. One limit to know: **one table honours only the first category registered for it** — registering a second one for an id already taken is **silently inert** (the category list also lists it once).
+**The catalogue itself lives elsewhere**: which registry maps to which rows, and how each row is built, is `com.iafenvoy.mxt.picker.ItemPickerManager` — `categories()` gives every category's registry key in registration order (`key.identifier()` is the category id the command and the open packet use), `category(Identifier)` finds one key by id, `provider(ResourceKey<? extends Registry<?>>)` gives that registry's own `ItemProvider<?>` (it turns registry entries into `PickerItem` rows), and `registerSingle` / `register` add entries (the `mxt:` registries are registered by the mod). `CreativeTabHelper` only reads it, so the two classes stay apart. One limit to know: **a registry honours only the first provider registered for it** — registering a second one for a key already taken is **silently inert** (the category list also lists it once).
 
 ```java
 // Your own creative tab: everything this mod contributed (plus its own items)
@@ -195,7 +195,7 @@ public void buildContents(BuildCreativeModeTabContentsEvent event) {
 
 ### `QualityService` and `QualityProvider` {#qualityservice}
 
-Packages `com.iafenvoy.mxt.runtime.item` (the service) and `com.iafenvoy.mxt.api` (the interface). **There is exactly one resolution order for "which tier is this stack"**, and it lives in one place, `QualityService.find`. It walks **three layers** in order: the `mxt:quality` component on the stack, then **the definition the stack itself carries**, then the `mxt:default_quality` data map. Nine definitions in this mod sit on the second layer today. For the field-level rules see [Quality](/en/datapack/json/quality).
+Packages `com.iafenvoy.mxt.runtime.item` (the service) and `com.iafenvoy.mxt.api` (the interface). **There is exactly one resolution order for "which tier is this stack"**, and it lives in one place, `QualityService.find`. It walks **three layers** in order: the `mxt:quality` component on the stack, then **the definition the stack itself carries**, then the `mxt:default_quality` registry. Nine definitions in this mod sit on the second layer today. For the field-level rules see [Quality](/en/datapack/json/quality).
 
 `api/QualityProvider` is the contract a **definition type** implements to say "the tier my own items start on is mine to answer".
 
@@ -227,8 +227,8 @@ The rest of `QualityService`'s public surface:
 | Method | What it does | Notes |
 | --- | --- | --- |
 | `find(Provider access, ItemStack stack)` | The tier this stack resolves to | The one implementation of the three-layer order; an empty stack gives empty |
-| `set(stack, quality)` / `clear(stack)` | Write / remove the override component | After `clear` the stack falls back to **the definition it carries**, then to the data map |
-| `hasOverride(stack)` | Whether the stack **has** that component | A different question from "did a tier resolve": a stack with no component can still read a tier from its definition or the data map |
+| `set(stack, quality)` / `clear(stack)` | Write / remove the override component | After `clear` the stack falls back to **the definition it carries**, then to the `mxt:default_quality` registry |
+| `hasOverride(stack)` | Whether the stack **has** that component | A different question from "did a tier resolve": a stack with no component can still read a tier from its definition or the `mxt:default_quality` registry |
 | `canUse(user, stack)` / `check(user, stack)` | The "may this be used" gate | `check` returns a `Failure`; binding conditions, the tier's own `condition`, pill use caps and cooldowns all live here |
 | `modifier(...)` | One of the quality's three modifiers | A multiplier; missing, non-finite or ≤ 0 all fall back to `DEFAULT_MODIFIER` (`1.0`) |
 | `displayName(quality)` | The tier's own name, in the tier's own colour | **The one way to list a tier** (it is `coloredName(quality, DefinitionText.name(quality))`); `/quality get\|set\|upgrade`, the spirit-root / physique lists and drawing settlement all go through it |
@@ -455,7 +455,7 @@ Key points:
 A formation's framework (structure, radius, costs) is on `Formation`; "what this formation does" is decided by its `actions` list, and every item in that list is a **functional module**.
 
 - `FormationActionType` (`com.iafenvoy.mxt.data.formation`) is the shape of a module: a `codec()`, plus a `CODEC` dispatching on the JSON `"type"` field (it must be a `Codec` rather than a `MapCodec`, because a formation holds a **list** of modules).
-- The dispatch registry `mxt:formation_action_type` is a **built-in registry** (default entry `none`), registered statically in code through `NewRegistryEvent`, and **not one of the 31 datapack registries in `MxtDatapackRegistries`**.
+- The dispatch registry `mxt:formation_action_type` is a **built-in registry** (default entry `none`), registered statically in code through `NewRegistryEvent`, and **not one of the 40 datapack registries in `MxtDatapackRegistries`**.
 - So: **a datapack can freely add `mxt:formation` entries (module combinations and parameters), but it cannot add a module type**. One more module kind = one record + one `DeferredRegister` registration, and the runtime dispatches on the record type, which is why the `data` package never touches the world.
 - There are currently only 5 legal `type`s, all registered in `MxtFormationActionTypes`: `mxt:none` (`NONE`, also the dispatch registry's default), `mxt:attack` (`ATTACK`), `mxt:buff` (`BUFF`), `mxt:protection` (`PROTECTION`), `mxt:range_display` (`RANGE_DISPLAY`).
 - Registration happens only once through `MxtFormationActionTypes.REGISTRY`; **do not register it again elsewhere, and do not build a second formation module registry**.

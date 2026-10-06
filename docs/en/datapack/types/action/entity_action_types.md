@@ -5,7 +5,7 @@ description: Every built-in entity action type registered by the mod, and the JS
 
 # Entity Actions (entity_action_type)
 
-An **entity action** performs one operation on a single entity. Whatever data table declares the action supplies the entity it acts on; the action itself only describes what to do with it. `type` is written on the action object, side by side with its fields, and its value is one of the ids listed on this page, written with the `mxt` namespace.
+An **entity action** performs one operation on a single entity. Whatever definition declares the action supplies the entity it acts on; the action itself only describes what to do with it. `type` is written on the action object, side by side with its fields, and its value is one of the ids listed on this page, written with the `mxt` namespace.
 
 Entity actions are a Java (built-in) registry: `type` ids are fixed, and a data pack can neither add entries nor remove them. Adding a custom type means writing Java, or going through the KubeJS bridge — see the [KubeJS API](../../../kubejs/api-reference.md).
 
@@ -16,7 +16,7 @@ Entity actions are a Java (built-in) registry: `type` ids are fixed, and a data 
 }
 ```
 
-Actions are values inside other data tables, so they usually appear nested under a field such as `entity_action`:
+Actions are values inside other definitions, so they usually appear nested under a field such as `entity_action`:
 
 ```json
 "entity_action": {
@@ -516,6 +516,46 @@ Creates a projectile entity, assigns the acting entity as its owner, and gives i
 ```
 
 Spawns on the server only. The spawn point is the activation's own place, and the rotation copies the acting entity's. All three velocity components must evaluate to finite values; when `entity_type` does not create a projectile, nothing happens.
+
+### `mxt:spawn_sword_aura`
+
+Spawns a sword aura at the activation's launch position. Its tip follows the acting entity's look direction and its speed comes from `speed`; the blade and the outer flames have separate ARGB colours.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `speed` | Number provider | `1` | Speed along the look direction; it must evaluate to a finite positive number. |
+| `blade_color` | ARGB colour | `#C778D9FF` | Inner blade colour; the top byte is opacity. |
+| `aura_color` | ARGB colour | `#CC78D9FF` | Outer aura colour; the top byte is opacity. |
+| `radial_flame` | Boolean | `false` | When `true`, flames flow outward from the blade; otherwise they flow upward. |
+| `length` | Float | `1.65` | Blade length, `0.01`–`32`. |
+| `blade_width` | Float | `0.26` | Blade width, `0.01`–`32`. |
+| `thickness` | Float | `0.08` | Blade thickness, `0.01`–`32`. |
+| `handle_length` | Float | `0.44` | Handle length, `0.01`–`32`. |
+| `guard_width` | Float | `0.52` | Guard width, `0.01`–`32`. |
+| `scale` | Float | `1` | Overall scale, `0.01`–`32`. |
+| `lifetime` | Integer | `80` | Lifetime in ticks, `1`–`72000`. |
+| `collide_action` | Entity action | none | The action run when the aura hits a solid block. Writing it is what makes the sword disappear on impact; without it the sword passes through blocks. |
+
+```json
+{
+  "type": "mxt:spawn_sword_aura",
+  "speed": 1.5,
+  "blade_color": "#C778D9FF",
+  "aura_color": "#CC78D9FF",
+  "radial_flame": false,
+  "length": 1.65,
+  "blade_width": 0.26,
+  "thickness": 0.08,
+  "handle_length": 0.44,
+  "guard_width": 0.52,
+  "scale": 1.0,
+  "lifetime": 80
+}
+```
+
+Spawns on the server only. The spawn point is the activation's launch position and the direction is the acting entity's look direction. The colour fields accept ARGB colours and do not read a separate opacity field. A dimension outside its range is refused at load; a `speed` that evaluates to a non-finite or non-positive value spawns nothing.
+
+A sword spawned with `collide_action` checks the solid block it is about to enter every tick: on a hit it runs that action at the impact point and then disappears. The action runs as the entity that fired the sword, so `caster_*` formula variables read it and actions that land on the acting entity, `mxt:damage` among them, hit it as well. Its position is the impact point, which is where sounds, particles, explosions and block actions happen. When that entity can no longer be resolved (disconnected, its chunk unloaded) the action does not run and the sword still disappears. The behaviour is kept on the server only, is never sent to clients and does not change how the sword is drawn.
 
 ### `mxt:add_experience`
 

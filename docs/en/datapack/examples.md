@@ -38,7 +38,7 @@ Do not invent a `tags` key in place of the vanilla tags; tag files live under `d
 
 ## Aura, Elements and Common Bindings
 
-These examples chain the common systems into one minimal loop: resources, realms, the aura environment, cultivation actions and item fuel all come from the data pack; the items you can actually hold are still registered by KubeJS or another mod, and the data pack only attaches values to them. The data map files below all live under `data/mxt/data_maps/item/` (block-keyed tables under `data/mxt/data_maps/block/`) - the first namespace is the table's own `mxt`, not the content pack's, so a content pack adds values by dropping another file into that directory.
+These examples chain the common systems into one minimal loop: resources, realms, the aura environment, cultivation actions and item fuel all come from the data pack; the items you can actually hold are still registered by KubeJS or another mod, and the data pack only claims them with definitions. The item-keyed registries (`item_aura`, `item_binding` and the rest) claim items through `items`, the block-keyed ones (`block_aura`, `heat_source`) claim blocks through `blocks`, and their files live under the content pack's own `data/<namespace>/mxt/<registry>/`.
 
 Resource definition. `max` is an expression, one entry in `bars` adds an on-screen bar for this resource, `renderer` uses the `mxt:boss_bar` atlas, and `bar_index` picks which cell of that atlas.
 
@@ -69,20 +69,17 @@ Aura definition. `resource` says which value this aura is recorded on, and `firs
 }
 ```
 
-Item aura. This is an item data map: the value sits in `values` and its key is the item itself, `type` points at a value definition, and `consume_speed` and `release_speed` decide how fast aura flows in and out while right-click is held; `exhausted_action` runs when the reserve bottoms out.
+Item aura. `items` claims this item (or this family of items), `type` points at a value definition, and `consume_speed` and `release_speed` decide how fast aura flows in and out while right-click is held; `exhausted_action` runs when the reserve bottoms out.
 
 ```json
-// data/mxt/data_maps/item/item_aura.json
+// data/example/mxt/item_aura/spirit_stone.json
 {
-  "values": {
-    "mxt:spirit_stone": {
-      "type": "example:spirit_power",
-      "aura": 100,
-      "consume_speed": "0.5 + level * 0.05",
-      "release_speed": 2,
-      "exhausted_action": {"type": "mxt:no_op"}
-    }
-  }
+  "items": "mxt:spirit_stone",
+  "type": "example:spirit_power",
+  "aura": 100,
+  "consume_speed": "0.5 + level * 0.05",
+  "release_speed": 2,
+  "exhausted_action": {"type": "mxt:no_op"}
 }
 ```
 
@@ -99,23 +96,25 @@ Cultivation method. `aura_costs` takes only `mxt:aura` entries and pays from the
 }
 ```
 
-Item binding. This is an item data map too: an item ID and an item tag each take one key inside `values`; `actions` run when the item is used, and this one grants a spirit root.
+Item binding. One item ID and one item tag take one definition each; `actions` run when the item is used, and this one grants a spirit root.
 
 ```json
-// data/mxt/data_maps/item/item_binding.json
+// data/example/mxt/item_binding/root_pellet.json
 {
-  "values": {
-    "kubejs:root_pellet": {
-      "actions": [
-        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
-      ]
-    },
-    "#example:root_pellets": {
-      "actions": [
-        {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
-      ]
-    }
-  }
+  "items": "kubejs:root_pellet",
+  "actions": [
+    {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
+  ]
+}
+```
+
+```json
+// data/example/mxt/item_binding/root_pellets_tag.json
+{
+  "items": "#example:root_pellets",
+  "actions": [
+    {"type": "mxt:grant_spirit_root", "spirit_root": "example:fire_root"}
+  ]
 }
 ```
 
@@ -135,17 +134,14 @@ Physique. `holder_condition` decides who may hold it, `attribute_modifiers` use 
 }
 ```
 
-Now bind the same kind of pill again, this time granting the physique above. One item can only match one binding; on a conflict the highest `priority` wins, and a tie goes to whichever value was processed later.
+Now bind the same kind of pill again, this time granting the physique above. Only one definition applies to an item; on a conflict the highest `priority` wins, and a tie falls back to registry order.
 
 ```json
-// data/mxt/data_maps/item/item_binding.json (one table may have several files, and several values may share one values object)
+// data/example/mxt/item_binding/body_pill.json (one directory may hold many files, and one file is one definition)
 {
-  "values": {
-    "kubejs:body_pill": {
-      "actions": [
-        {"type": "mxt:grant_physique", "physique": "example:innate_sword_bone"}
-      ]
-    }
-  }
+  "items": "kubejs:body_pill",
+  "actions": [
+    {"type": "mxt:grant_physique", "physique": "example:innate_sword_bone"}
+  ]
 }
 ```

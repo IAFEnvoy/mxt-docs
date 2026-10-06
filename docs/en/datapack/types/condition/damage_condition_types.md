@@ -5,7 +5,7 @@ description: Every built-in damage condition type registered by the mod, and the
 
 # Damage Conditions (damage_condition_type)
 
-A **damage condition** inspects an incoming hit: its source and its amount, and returns `true` or `false`. The source and the amount come from the data table that declares the condition, so the condition itself only describes what to check about those two.
+A **damage condition** inspects an incoming hit: its source and its amount, and returns `true` or `false`. The source and the amount come from the definition that declares the condition, so the condition itself only describes what to check about those two.
 
 It is a Java (built-in) registry, so `type` has to be one of the ids listed below, written with the `mxt` namespace. A data pack can neither add entries to this registry nor remove them. Custom types take Java or the KubeJS bridge — see the [KubeJS API](../../../kubejs/api-reference.md).
 
@@ -20,7 +20,7 @@ A condition is a JSON object: `type` names the built-in type, and every other ke
 }
 ```
 
-A condition is usually a value nested inside another data table, under a field such as `damage_condition`:
+A condition is usually a value nested inside another definition, under a field such as `damage_condition`:
 
 ```json
 "damage_condition": {

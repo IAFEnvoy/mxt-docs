@@ -4,7 +4,7 @@ title: 动态注册表
 
 # 动态注册表
 
-下表列出本模组的 31 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。另有 **9 张数据表**（NeoForge Registry Data Map，不是注册表），列在表后。
+下表列出本模组的 40 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。
 
 **配方不在表里。** 走原版 `RecipeManager` 的配方页收在下面的「合成表」分组里：炼丹配方（`mxt:alchemy`）、灵气合成（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）与画符配方（`mxt:talisman_drawing`）。它们的 JSON 放在 `data/<namespace>/recipe/`，**不要**放进 `mxt/<配方名>/`；它们也不是注册表，所以 `/reload` 会重新读取它们。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
 
@@ -43,22 +43,17 @@ title: 动态注册表
 | `quality` | `mxt/quality` | 共享品质：名字、颜色、三个修正、使用条件，以及它在品质链上的位置与升级代价。 |
 | `trigger` | `mxt/trigger` | 事件规则：信号、条件与行为。 |
 | `talisman` | `mxt/talisman` | 符箓定义：一张符箓铭刻的能力。 |
+| `item_aura` | `mxt/item_aura` | 物品提供的修炼燃料：认领哪些物品、存多少灵气、进出多快。 |
+| `currency` | `mxt/currency` | 物品的货币面值与兑换。 |
+| `default_quality` | `mxt/default_quality` | 物品在没有任何别的档位来源时的默认品质（品质解析的第三层、也是最后一层）。 |
+| `item_binding` | `mxt/item_binding` | 现有物品的行为、条件与元素。 |
+| `weapon_binding` | `mxt/weapon_binding` | 现有物品的武器属性与三个动作。 |
+| `tool_binding` | `mxt/tool_binding` | 工具物品解锁的锻打方式。 |
+| `blueprint_binding` | `mxt/blueprint_binding` | 图纸物品提供的蓝图。 |
+| `block_aura` | `mxt/block_aura` | 方块提供的灵气。 |
+| `heat_source` | `mxt/heat_source` | 供热方块的温度与升温速度。 |
 
-## 数据表
-
-这 9 张表是 NeoForge 的 **Registry Data Map**，**不是注册表**：键就是条目 id 或 `#标签`，值是内联数据，没有 id、没有名字，也不能被别的定义引用。文件固定放在 `data/mxt/data_maps/<注册表路径>/<表路径>.json`（物品键在 `item/`、方块键在 `block/`），写法见[数据表](../overview.md#数据表data-map)。侧边栏里它们另成「数据表」分组（同上面的「合成表」），所以上面那张注册表清单里没有它们。
-
-| 数据表 | 文件 | 值 |
-| --- | --- | --- |
-| `item_aura` | `data/mxt/data_maps/item/item_aura.json` | 手持物品提供的修炼燃料。 |
-| `currency` | `data/mxt/data_maps/item/currency.json` | 物品货币面值和兑换。 |
-| `default_quality` | `data/mxt/data_maps/item/default_quality.json` | 物品的默认品质，品质解析的第三层、也是最后一层。 |
-| `item_binding` | `data/mxt/data_maps/item/item_binding.json` | 现有物品的行为、条件与元素。 |
-| `weapon_binding` | `data/mxt/data_maps/item/weapon_binding.json` | 现有物品的武器属性和动作。 |
-| `tool_binding` | `data/mxt/data_maps/item/tool_binding.json` | 工具物品解锁的锻打方式。 |
-| `blueprint_binding` | `data/mxt/data_maps/item/blueprint_binding.json` | 图纸物品提供的锻造蓝图。 |
-| `block_aura` | `data/mxt/data_maps/block/block_aura.json` | 方块提供的灵气。 |
-| `heat_source` | `data/mxt/data_maps/block/heat_source.json` | 供热方块的温度与升温速度。 |
+`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding` 七张按 `items` 认领物品，`block_aura` 与 `heat_source` 两张按 `blocks` 认领方块；形状与其余注册表一致，文件路径见[数据包开发总览](../overview.md)。
 
 ## 固有类型分派
 

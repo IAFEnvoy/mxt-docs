@@ -27,7 +27,7 @@ An `attribute_modifiers` entry writes `attribute` plus the vanilla modifier's `i
 
 `holder_condition` can combine `mxt:has_spirit_root` and `mxt:has_physique` to express a prerequisite spirit root or prerequisite physique.
 
-`quality` names a tier in `mxt:quality` and may be left out. The info panel's physique row reads "definition name · quality name" in its tooltip, and with no `quality` that part is left out entirely (it never shows `-`); `/mxt physique list` shows `-` when there is no tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) data map.
+`quality` names a tier in `mxt:quality` and may be left out. The info panel's physique row reads "definition name · quality name" in its tooltip, and with no `quality` that part is left out entirely (it never shows `-`); `/mxt physique list` shows `-` when there is no tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) registry.
 
 ```json
 // data/example/mxt/physique/innate_sword_bone.json

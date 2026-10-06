@@ -166,7 +166,7 @@ if (screen != null) Minecraft.getInstance().setScreen(screen);
 
 翻译键的拼法统一由 `com.iafenvoy.mxt.util.DefinitionText` 决定：类别就是注册表自己的 path、注册表命名空间恒为 `mxt`，没有例外表。手里已经有 `Holder` / `ResourceKey` 时直接 `DefinitionText.name(holder)`，只有拿到的是一根光秃秃的 `Identifier` 时才需要把类别当参数传进去（`DefinitionText.name(id, "resource")`）。
 
-分类是一张注册表或一张数据表，`/picker <分类 id>` 可以只列出某一个（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`），不写则给出全部已注册分类。物品选择器界面本身不变。
+分类就是一张注册表，`/picker <分类 id>` 可以只列出某一个（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`），不写则给出全部已注册分类。物品选择器界面本身不变。
 
 目录也是**别的模组的入口**：读它的是 `com.iafenvoy.mxt.data.CreativeTabHelper`（`/picker` 这边也走它），每条查询都要求自己传注册表访问器，`itemsOfMod(access, "mymod")` 这类方法挑出某个命名空间（模组 id）的行，`stacksOf` / `stacksOfMod` 再给出**按原版创造栏规则去重、且每份都是拷贝**的堆列表，可以直接喂给自己的创造栏。哪张注册表对应哪些行、怎么登记仍然只有 `ItemPickerManager` 一处（一条注册表只认第一次注册的目录）；方法表与限制见 [Java 公开 API](/java/api#creativetabhelper)。只想把一批现成的堆画成同款界面（不走目录）时用 `ItemPickerScreen.over(title, stacks)`。
 

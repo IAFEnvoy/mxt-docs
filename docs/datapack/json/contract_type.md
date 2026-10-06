@@ -31,7 +31,7 @@ aside: false
 | `max_owned` | int | `0` | 每个主人同时能持有的本类型契约数，`0` = 不限。 |
 | `recall_cooldown` | int | `0` | 召回冷却（tick），`0` = 不限。 |
 
-`quality` 是可选的：契约卷轴是所有契约共用的一件物品，物品本身说不清是哪一档，只有堆上携带的这份定义报得出——这份契约的卷轴起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到数据表 [default_quality](./default_quality.md)。
+`quality` 是可选的：契约卷轴是所有契约共用的一件物品，物品本身说不清是哪一档，只有堆上携带的这份定义报得出——这份契约的卷轴起始就在这一档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到注册表 [default_quality](./default_quality.md)。
 
 `follow_action` 只对回答了命令表的实体生效，且排在该实体自己的跟随行为之后；命令换成游荡 / 驻守时这条不跑——它给的是"跟随那一刻"。
 

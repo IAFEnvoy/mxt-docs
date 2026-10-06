@@ -20,7 +20,7 @@ description: 模组注册的全部内置双实体条件类型，以及每种类�
 }
 ```
 
-条件会作为值嵌在别的数据表里，通常就落在 `bientity_condition` 这样的字段下：
+条件会作为值嵌在别的定义里，通常就落在 `bientity_condition` 这样的字段下：
 
 ```json
 "bientity_condition": {

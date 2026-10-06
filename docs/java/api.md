@@ -40,9 +40,9 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 
 ### `MxtDatapackRegistries` {#mxtdatapackregistries}
 
-包 `com.iafenvoy.mxt.registry`。31 张原生数据包注册表的声明与统一读取入口，`/reload` 重建与客户端同步都交给原版注册表系统，这个类**不持有任何快照**。
+包 `com.iafenvoy.mxt.registry`。40 张原生数据包注册表的声明与统一读取入口，`/reload` 重建与客户端同步都交给原版注册表系统，这个类**不持有任何快照**。
 
-九张物品/方块**数据表**（NeoForge Registry Data Map）不在这里：它们声明在 `com.iafenvoy.mxt.registry.MxtDataMaps`，不是注册表、也没有持有点。调用点直接按条目读：`stack.getData(MxtDataMaps.X)` / `state.getData(MxtDataMaps.X)`（`ItemStack` 与 `BlockState` 自己实现 `IWithData`，平台把它转给条目自己的 holder），没有别的包装方法。字段与文件位置见[数据表](/datapack/overview#数据表data-map)。
+九张物品/方块表（`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`、`block_aura`、`heat_source`）也在这里：它们就是普通的数据包注册表，物品键的按 `items` 认领条目、方块键的按 `blocks` 认领条目，读法与下面完全一样，没有第二套入口。要按物品堆查"哪条定义适用于它"用 `ItemMatcher.find(...)`。字段与文件位置见[注册表总览](/datapack/json/index)。
 
 按 id / holder 取值（读服务端注册表）：
 
@@ -150,7 +150,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 要点：
 
 - `find` 的"第一个"是 `priority` **数值最大**的那个定义，不是注册顺序，也不是"匹配得最具体"的那个，与 `aura_zone`、`element_reaction` 同一个方向；`priority` 相同的才取决于传入流的顺序。
-- `priority` 是**十张定义表自己的字段**（`artifact`、`item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` 六种 binding、`spirit_herb`、`item_aura`、`currency`，默认 `0`，加载期不校验范围），所以"通用定义 + 特地点名定义"共存时由数据包写死谁先；点名的条目**不会**因此更靠前。`ArtifactHold` 直接回读它那件法器的字段；消耗 `mxt:item`、三个物品条件与两个框架内置的长按声明（功法阅读、灌注）没有这个字段，恒为 `DEFAULT_PRIORITY`。
+- `priority` 是**认领表自己的字段**（`artifact`、`item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` 六种 binding、`spirit_herb`、`item_aura`、`currency` 与 `default_quality`，默认 `0`，加载期不校验范围），所以"通用定义 + 特地点名定义"共存时由数据包写死谁先；点名的条目**不会**因此更靠前。`ArtifactHold` 直接回读它那件法器的字段；消耗 `mxt:item`、三个物品条件与两个框架内置的长按声明（功法阅读、灌注）没有这个字段，恒为 `DEFAULT_PRIORITY`。
 - **`itemLevel()` 是缓存安全的分界线**：它返回 `true` 表示"命中与否只由物品本身决定"，按物品开缓存的调用方**只能**缓存这类项；会读堆上的组件 / NBT 的项，以及答案来自另一条定义的项（`mxt:herb_tag` 问的是哪条 `spirit_herb` 认领这件物品）必须每个堆都问一次。
 - 简写只覆盖 `item` 与 `tag`；其它实现走简写编码会抛 `IllegalArgumentException`。
 
@@ -160,15 +160,15 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 
 包 `com.iafenvoy.mxt.data`。**读**那条「表 → 可选项」目录的入口：`/picker` 界面与别的模组都走它。每一项是一行 `PickerItem(stack, names)`：`stack` 是要画的堆，`names` 是这一行能被哪些名字搜到。它只读——不往物品上写东西，也不判定谁能拿。
 
-分类是 `PickerCategory`（`com.iafenvoy.mxt.screen.picker`），`id()` 就是命令与开屏包用的那个 id；它有两种：`OfRegistry` 包一张注册表 key，`OfDataMap` 包一张数据表——分类 id 不变，但一张表是注册表还是数据表决定了行怎么来。注册表分类的行「一个定义一行」，数据表分类的行是**带着值的那件物品或方块**，行名用条目自己的名字。所以有 `PickerCategory` 与注册表 key 两套重载。
+分类就是一张注册表：`ItemPickerManager.categories()` 按登记顺序给出 `ResourceKey<Registry<?>>` 列表，命令与开屏包用的分类 id 就是 `key.identifier()`。行怎么来由那张注册表自己的 provider 决定——物品形状的表（`item_aura`、`currency`、`default_quality`、各种 binding…）一行是它 `items` 认领到的那件物品，方块形状的表（`block_aura`、`heat_source`）一行是它 `blocks` 认领到的那个方块，行名用条目自己的名字（定义写了 `name` 就读它，否则按 id 推翻译键）。所以 `CreativeTabHelper` 的重载只收注册表 key，没有分类对象那一套。
 
 每条查询都要求自己传注册表访问器（`HolderLookup.Provider`，`BuildCreativeModeTabContentsEvent.getParameters().holders()` 就是它），所以客户端用客户端已同步的表、服务端用服务端的表，不存在"读到另一侧"的问题。
 
 | 方法 | 作用 | 备注 |
 | --- | --- | --- |
-| `itemsOf(Provider, category)` / `itemsOf(Provider, key)` | 一张表的全部行 | `category` 是分类对象，`key` 是注册表 key；**没登记成分类的表给空列表**，不抛 |
-| `itemsOf(Provider, category, Predicate<Identifier>)` / `itemsOf(Provider, key, Predicate<Identifier>)` | 按条目 id 筛行 | 谓词拿到的是**行自己的 id**：注册表分类是定义的 id，数据表分类是物品或方块自己的 id，所以"模组 id"就是取它的命名空间 |
-| `itemsOfMod(Provider, category, String)` / `itemsOfMod(Provider, key, String)` | 一张表里属于某个命名空间的行 | `mxt:aura` 的条目属于 `mxt`，`mymod:aura/…` 属于 `mymod` |
+| `itemsOf(Provider, key)` | 一张注册表的全部行 | `key` 是注册表 key；**没登记成分类的注册表给空列表**，不抛 |
+| `itemsOf(Provider, key, Predicate<Identifier>)` | 按条目 id 筛行 | 谓词拿到的是**条目自己的 id**（定义 id / 物品或方块自己的 id），所以"模组 id"就是取它的命名空间 |
+| `itemsOfMod(Provider, key, String)` | 一张注册表里属于某个命名空间的行 | `mxt:aura` 的条目属于 `mxt`，`mymod:aura/…` 属于 `mymod` |
 | `itemsOfMod(Provider, String)` | 跨全部分类，挑出某个命名空间的行 | 给自己做一个"我模组的东西"创造栏用它 |
 | `stacksOf(...)` / `stacksOfMod(...)` | 上面四条的堆视图 | 见下 |
 
@@ -179,7 +179,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 - 查询无副作用、双端可调：它只读你传进来的那份访问器，不碰服务端单例，也不写任何附件。
 - 想把这批行画成一张选择器页（而不是进创造栏），用 `ItemPickerScreen.over(title, stacks)`，见[物品选择界面](/java/screens)。
 
-**目录本身在别的类里**：哪张表对应哪些行、每行怎么造，是 `com.iafenvoy.mxt.screen.picker.ItemPickerManager`——`categories()` 按登记顺序给出全部分类对象（`id()` 就是命令与开屏包用的那个 id），`category(Identifier)` 按 id 找一个，`registerSingle` / `register` 登记注册表分类、`registerDataMap` 登记数据表分类（`mxt:` 的表由本体登记好了）。`CreativeTabHelper` 只负责读它，两个类一眼能分开。有一条限制要知道：**一张表只认第一次注册的分类**，对已经登记过的 id 再注册一次是**静默无效**的（分类列表也只列一次）。
+**目录本身在别的类里**：哪张注册表对应哪些行、每行怎么造，是 `com.iafenvoy.mxt.picker.ItemPickerManager`——`categories()` 按登记顺序给出全部分类的注册表 key（`key.identifier()` 就是命令与开屏包用的那个分类 id），`category(Identifier)` 按 id 找一个 key，`provider(ResourceKey<? extends Registry<?>>)` 拿到那张注册表自己的 `ItemProvider<?>`（它把注册表条目变成一行行 `PickerItem`），`registerSingle` / `register` 登记（`mxt:` 的注册表由本体登记好了）。`CreativeTabHelper` 只负责读它，两个类一眼能分开。有一条限制要知道：**一张注册表只认第一次登记的那份 provider**，对已经登记过的 key 再登记一次是**静默无效**的（分类列表也只列一次）。
 
 ```java
 // 自己的创造栏：让这个模组贡献过的定义（以及它自己的物品）全进来
@@ -195,7 +195,7 @@ public void buildContents(BuildCreativeModeTabContentsEvent event) {
 
 ### `QualityService` 与 `QualityProvider` {#qualityservice}
 
-包 `com.iafenvoy.mxt.runtime.item`（服务类）与 `com.iafenvoy.mxt.api`（接口）。**"这一堆物品是哪一档"只有一个解析顺序**，只在 `QualityService.find` 一处，按**三层**往下取：堆上的 `mxt:quality` 组件 → **这一堆携带的定义**自己声明的档 → 数据表 `mxt:default_quality`。本模组今天有九个定义走第 2 层。字段级写法见[品质](/datapack/json/quality)。
+包 `com.iafenvoy.mxt.runtime.item`（服务类）与 `com.iafenvoy.mxt.api`（接口）。**"这一堆物品是哪一档"只有一个解析顺序**，只在 `QualityService.find` 一处，按**三层**往下取：堆上的 `mxt:quality` 组件 → **这一堆携带的定义**自己声明的档 → 注册表 `mxt:default_quality`。本模组今天有九个定义走第 2 层。字段级写法见[品质](/datapack/json/quality)。
 
 `api/QualityProvider` 是给**定义类型**用的契约：一个定义类型实现它，就是在说"我的物品起步的那一档归我自己报"。
 
@@ -227,8 +227,8 @@ public interface QualityProvider {
 | 方法 | 作用 | 备注 |
 | --- | --- | --- |
 | `find(Provider access, ItemStack stack)` | 这一堆解析出的档 | 三层顺序的唯一实现；空堆给空 |
-| `set(stack, quality)` / `clear(stack)` | 写 / 摘掉覆盖组件 | `clear` 之后这一堆先退回**它携带的定义**那一层，再看数据表 |
-| `hasOverride(stack)` | 堆上**有没有**那个组件 | 与"解析出档没有"是两个问题：没写组件也可能从定义或数据表读到档 |
+| `set(stack, quality)` / `clear(stack)` | 写 / 摘掉覆盖组件 | `clear` 之后这一堆先退回**它携带的定义**那一层，再看注册表 `mxt:default_quality` |
+| `hasOverride(stack)` | 堆上**有没有**那个组件 | 与"解析出档没有"是两个问题：没写组件也可能从定义或注册表 `mxt:default_quality` 读到档 |
 | `canUse(user, stack)` / `check(user, stack)` | "能不能用"的闸门 | `check` 给出 `Failure` 枚举；绑定条件、档位自己的 `condition`、丹药次数与冷却都在这里 |
 | `modifier(...)` | 取品质的三个修正之一 | 是乘数；缺失、非有限或 ≤ 0 一律按 `DEFAULT_MODIFIER`（`1.0`） |
 | `displayName(quality)` | 品质这一档自己的名字，套上它自己的颜色 | **列一个档位时的统一写法**（就是 `coloredName(quality, DefinitionText.name(quality))`）；`/quality get\|set\|upgrade`、灵根 / 体质列表与画符结算都走它 |
@@ -455,7 +455,7 @@ public interface QualityProvider {
 阵法的框架（结构、半径、消耗）在 `Formation` 上，"这个阵法干什么"由它的 `actions` 列表决定，而列表里每一项就是一个**功能模块**。
 
 - `FormationActionType`（`com.iafenvoy.mxt.data.formation`）是模块的形状：一个 `codec()`，加一个按 JSON 的 `"type"` 字段分派的 `CODEC`（必须是 `Codec` 而不是 `MapCodec`，因为阵法持有的是模块**列表**）。
-- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `none`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那 31 张数据包注册表里**。
+- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `none`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那 40 张数据包注册表里**。
 - 于是：**数据包能自由新增 `mxt:formation` 条目（模块组合与参数），但新增不了模块类型**。多加一种模块 = 一条记录 + 一次 `DeferredRegister` 注册，运行时按记录类型分派，`data` 包因此不碰世界。
 - 现在合法 `type` 只有 5 个，都登记在 `MxtFormationActionTypes`：`mxt:none`（`NONE`，也是分派表默认项）、`mxt:attack`（`ATTACK`）、`mxt:buff`（`BUFF`）、`mxt:protection`（`PROTECTION`）、`mxt:range_display`（`RANGE_DISPLAY`）。
 - 注册只经 `MxtFormationActionTypes.REGISTRY` 一次，**别在别处再注册一遍，也别另建第二张阵法模块表**。

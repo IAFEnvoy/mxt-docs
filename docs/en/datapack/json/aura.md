@@ -40,7 +40,7 @@ The value's own bounds (`min` / `max` / `default_value`), icon, ray colour and r
 
 `resource` takes a **single value ID only**: no `#tag`, and no array — one aura describes one value.
 
-A `CultivateConditions` object contains `conditions`, an optional `triggers` and an optional `action`. Starting cultivation and the breakthrough entry point check `conditions` immediately (all of them); only after the breakthrough stage is reached does the current value register runtime subscriptions from `triggers`, and a matching event then makes it attempt a breakthrough. Subscriptions are never serialised directly: they are rebuilt from the cultivation state after a save is loaded or the data tables are loaded.
+A `CultivateConditions` object contains `conditions`, an optional `triggers` and an optional `action`. Starting cultivation and the breakthrough entry point check `conditions` immediately (all of them); only after the breakthrough stage is reached does the current value register runtime subscriptions from `triggers`, and a matching event then makes it attempt a breakthrough. Subscriptions are never serialised directly: they are rebuilt from the cultivation state after a save is loaded or the registries are loaded.
 
 The two fields of `cultivation_to_resource` and `resource_to_cultivation` are:
 

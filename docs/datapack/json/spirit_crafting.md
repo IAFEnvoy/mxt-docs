@@ -116,7 +116,17 @@ aside: false
 }
 ```
 
-`neoforge:compound` 的字段是 `children`（别名 `ingredients` 也认），另有 `neoforge:difference`（`base` / `subtracted`）与 `neoforge:intersection`（`children`）。按[品质](./quality.md)档位放行也可以直接用物品条件 `mxt:item_quality`——两条路各自的代价，以及今天读不到品质的几处，见[品质 · 品质是哪一档](./quality.md#resolution)。
+**要「及以上」不必再枚举档位**：本体注册了一种自定义材料 `mxt:quality`（`items` 必填，加上 `quality` 成员列表或 `min_quality` 最少到哪一档）：
+
+```json
+{
+  "neoforge:ingredient_type": "mxt:quality",
+  "items": "mxt:blank_talisman",
+  "min_quality": "example:tier_3"
+}
+```
+
+它判的是这一堆[解析出来的档](./quality.md#resolution)（组件 → 携带的定义 → `default_quality` 注册表），不是组件精确相等；`min_quality` 跨链答否、只写它时没有档的物品答否。`neoforge:compound` 的字段是 `children`（别名 `ingredients` 也认），另有 `neoforge:difference`（`base` / `subtracted`）与 `neoforge:intersection`（`children`）。按档位筛物品的各个口子见[品质 · 按档位筛物品](./quality.md#gating)。
 
 ## `aura` 字段
 

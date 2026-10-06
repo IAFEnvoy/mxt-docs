@@ -22,6 +22,8 @@ description: item_matcher_entry_type 的七个条目，各自的字段与匹配�
 | `mxt:technique` | 无 |
 | `mxt:spirit_storage` | 无 |
 | `mxt:herb_tag` | `element`、`material` |
+| `mxt:quality` | `items`、`quality`、`min_quality` |
+| `mxt:ingredient` | `ingredient` |
 
 ```json
 "items": [
@@ -144,6 +146,43 @@ description: item_matcher_entry_type 的七个条目，各自的字段与匹配�
 }
 ```
 
+## `mxt:quality`
+
+先按 `items` 自己匹配（同样是一个条目数组，可以嵌套任意条目），再要求这一堆**解析出来的[品质档位](../../json/quality.md#resolution)**满足那份要求：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `items` | `ItemMatcher` | **必填**，至少一项。它是 OR 列表，不写物品约束就表达不了「必须是符纸且至少三档」。 |
+| `quality` | 品质 id、`#标签` 或数组 | 可选，成员判定。 |
+| `min_quality` | 品质 id | 可选，**至少到这一档**（按这一档所在的链比位置，跨链答否）。 |
+
+```json
+{ "type": "mxt:quality", "items": ["mxt:blank_talisman"], "min_quality": "example:tier_3" }
+```
+
+`quality` 与 `min_quality` 至少要写一个，两个都不写会被加载期拒绝。这个条目读的是堆上的档位，所以 `itemLevel()` 是假——按物品开缓存的调用方（例如长按识别）必须每个堆问一次。按档筛物品的各个口子见[品质 · 按档位筛物品](../../json/quality.md#gating)。
+
+## `mxt:ingredient` {#mxtingredient}
+
+把**一整个原版材料**当成一条匹配条目：凡是原版 `Ingredient` 写得出来的东西都能写在这里——物品 ID、物品 ID 数组、`#物品标签`，以及自定义材料（例如 `mxt:quality`，写法见[灵气合成](../../json/spirit_crafting.md)）。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `ingredient` | 原版材料 | **必填**。写法与任何配方材料相同。 |
+
+```json
+{
+  "type": "mxt:ingredient",
+  "ingredient": {
+    "neoforge:ingredient_type": "mxt:quality",
+    "items": "mxt:blank_talisman",
+    "min_quality": "example:tier_3"
+  }
+}
+```
+
+它用得上是因为**匹配器条目与配方材料是两套写法**：`mxt:quality` 本身是材料类型，只有包成这个条目才能写进 `Cost` 的 `mxt:item`、绑定表的 `items` 这些只吃 `ItemMatcher` 的位置——画符那次取纸的代价就是这么写的。`itemLevel()` 取那个材料自己的 `isSimple()`：普通材料（物品、标签）是"只看物品"，自定义材料不是，所以后者不会被按物品建索引。
+
 ## 简写
 
 裸字符串和 `#标签` 字符串分别是 `mxt:item` 与 `mxt:tag` 的简写，三种写法可以混在一个数组里：
@@ -156,6 +195,6 @@ description: item_matcher_entry_type 的七个条目，各自的字段与匹配�
 
 ## 匹配顺序
 
-匹配器只引用已经注册的物品。多个定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`；`artifact`、`pill_binding`、`technique_binding`、`spirit_herb` 四张注册表接受它，物品数据表也接受它）。仍是注册表的四张表同分时回落到注册表顺序，而物品数据表的同分口径是**后处理者赢**（同一文件里按书写顺序，不同文件按数据包加载顺序）；两种情形「谁赢」都由数据包自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。**九张数据表没有 `items` 字段**，不吃这套匹配器，见[数据表](../../overview.md#数据表data-map)。
+匹配器只引用已经注册的物品。多个定义同时命中同一个目标时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`；按物品认领的那十一张注册表都接受它，按方块认领的 `heat_source` 也接受）。同分回落到注册表顺序。「谁赢」由定义自己写死、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。`block_aura` 没有 `priority`，命中同一个方块的多条定义都生效、相加。
 
 通配符和正则条目是针对物品 ID 匹配的，例如 `minecraft:apple`，而不是针对显示名。

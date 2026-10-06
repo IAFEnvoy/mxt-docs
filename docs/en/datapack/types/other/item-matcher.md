@@ -22,6 +22,8 @@ These entries are registered by the mod; a data pack can pick one, never add a n
 | `mxt:technique` | none |
 | `mxt:spirit_storage` | none |
 | `mxt:herb_tag` | `element`, `material` |
+| `mxt:quality` | `items`, `quality`, `min_quality` |
+| `mxt:ingredient` | `ingredient` |
 
 ```json
 "items": [
@@ -144,6 +146,43 @@ It can be nested inside `mxt:item_matcher` in an entity condition (its `items` i
 }
 ```
 
+## `mxt:quality`
+
+First matches `items` on its own (also an array of entries, and it may nest any entry), then requires the [quality tier the stack resolves to](../../json/quality.md#resolution) to satisfy that requirement:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `items` | `ItemMatcher` | **Required**, at least one. It is an OR list, so without an item constraint it could not say "paper of at least the third tier". |
+| `quality` | Quality id, `#` tag or array | Optional membership test. |
+| `min_quality` | Quality id | Optional floor: **at least this tier**, compared by position on that tier's own chain, answering no across chains. |
+
+```json
+{ "type": "mxt:quality", "items": ["mxt:blank_talisman"], "min_quality": "example:tier_3" }
+```
+
+At least one of `quality` and `min_quality` has to be written; writing neither is refused at load. This entry reads the tier off the stack, so `itemLevel()` is false — a caller caching per item (hold detection, for instance) has to ask it about every stack. The entry points for filtering items by tier are in [Quality · Filtering items by tier](../../json/quality.md#gating).
+
+## `mxt:ingredient` {#mxtingredient}
+
+Puts **a whole vanilla ingredient** where a matcher entry goes: everything a vanilla `Ingredient` can say can be written here — an item id, a list of item ids, a `#item tag`, or a custom ingredient such as `mxt:quality` (see [Spirit Crafting Recipes](../../json/spirit_crafting.md)).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `ingredient` | Ingredient | **Required**. Written exactly like any recipe ingredient. |
+
+```json
+{
+  "type": "mxt:ingredient",
+  "ingredient": {
+    "neoforge:ingredient_type": "mxt:quality",
+    "items": "mxt:blank_talisman",
+    "min_quality": "example:tier_3"
+  }
+}
+```
+
+It exists because **matcher entries and recipe ingredients are two different formats**: `mxt:quality` is itself an ingredient type, so it needs this entry to be written where only an `ItemMatcher` goes — `mxt:item` inside a `Cost`, the `items` of a binding table — which is exactly how the drawing's paper cost is written. `itemLevel()` takes the ingredient's own `isSimple()`: a simple ingredient (items, tags) is decided by the item alone, a custom one is not, so the latter is never cached per item.
+
 ## Shorthand
 
 A bare string and a `#tag` string are shorthands for `mxt:item` and `mxt:tag`, and the three forms can be mixed in one array:
@@ -156,6 +195,6 @@ A bare string and a `#tag` string are shorthands for `mxt:item` and `mxt:tag`, a
 
 ## Match order
 
-A matcher only references items that are already registered. When several definitions match the same item, the one with the **highest** declared `priority` is picked (the field defaults to `0`; the four registries `artifact`, `pill_binding`, `technique_binding` and `spirit_herb` accept it, and so do the item data maps). Among those four registries a tie falls back to registry order, while the item data maps send a tie to **whichever value was processed later** (writing order within one file, data pack load order across files); either way which one wins is written in the pack itself and has nothing to do with file names (the same direction as `priority` on `aura_zone` and `element_reaction`). **Which kind of matcher entry matched is irrelevant**: any definition that hits joins the ranking with the number it declares, and naming an item does not move it up. **The nine data maps have no `items` field** and do not take this matcher at all, see [Data Maps](../../overview.md#data-maps).
+A matcher only references items that are already registered. When several definitions hit the same target, the one with the **highest** declared `priority` is picked (the field defaults to `0`; the eleven item-keyed registries all accept it, and so does the block-keyed `heat_source`). A tie falls back to registry order. Which one wins is written in the definition itself and has nothing to do with file names (the same direction as `priority` on `aura_zone` and `element_reaction`). **Which kind of matcher entry matched is irrelevant**: any definition that hits joins the ranking with the number it declares, and naming an item does not move it up. `block_aura` has no `priority`: every definition that hits the same block applies, and they add up.
 
 Wildcard and regex entries are matched against the item ID, such as `minecraft:apple`, not against display names.

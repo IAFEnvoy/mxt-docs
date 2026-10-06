@@ -1,11 +1,11 @@
 ---
-title: Registries and Data Tables
-description: How MiXianTu registers built-in MapCodec types, which codec each definition exposes, and how to read the datapack data tables.
+title: Registries and Codecs
+description: How MiXianTu registers built-in MapCodec types, which codec each definition exposes, and how to read the datapack registries.
 ---
 
-# Registries and Data Tables
+# Registries and Codecs
 
-MiXianTu has two kinds of registries. Built-in registries hold the `MapCodec` implementations that a datapack selects with the `type` field, and are populated in Java code. Dynamic data tables are native datapack registries whose entries live in JSON files: Minecraft reads them while the world loads, and they are synchronised to the client by the registry system. Because they are read at world load, `/reload` does not re-read them — see [Loading, Syncing and Debugging](../datapack/overview.md#loading-syncing-and-debugging).
+MiXianTu has two kinds of registries. Built-in registries hold the `MapCodec` implementations that a datapack selects with the `type` field, and are populated in Java code. Datapack registries are native Minecraft registries whose entries live in JSON files: Minecraft reads them while the world loads, and they are synchronised to the client by the registry system. Because they are read at world load, `/reload` does not re-read them — see [Loading, Syncing and Debugging](../datapack/overview.md#loading-syncing-and-debugging).
 
 ## Built-In Type Registries
 
@@ -41,11 +41,13 @@ The registry instances are declared in `MxtRegistries`, and their keys are decla
 | `MxtRegistries.ITEM_CONDITION_TYPE` | `mxt:item_condition_type` | Item condition codecs. |
 | `MxtRegistries.DAMAGE_CONDITION_TYPE` | `mxt:damage_condition_type` | Damage condition codecs. |
 | `MxtRegistries.RESOURCE_BAR_RENDER_DATA_TYPE` | `mxt:resource_bar_render_data_type` | Resource bar render data codecs. |
+| `MxtRegistries.MOUNT_RENDER_TYPE` | `mxt:mount_render_type` | Mount renderer codecs. |
 | `MxtRegistries.RESOURCE_BAR_CONTEXT` | `mxt:resource_bar_context` | Resource bar contexts. |
 | `MxtRegistries.RESOURCE_BAR_VISIBILITY_TYPE` | `mxt:resource_bar_visibility_type` | Resource bar visibility codecs. |
 | `MxtRegistries.ITEM_MATCHER_ENTRY_TYPE` | `mxt:item_matcher_entry_type` | Item matcher entry codecs. |
 | `MxtRegistries.FORMATION_ACTION_TYPE` | `mxt:formation_action_type` | Formation module codecs, dispatched by a module's `type`; the built-in ones are registered in `MxtFormationActionTypes`. |
 | `MxtRegistries.TIMELINE_ENTRY_TYPE` | `mxt:timeline_entry_type` | Tribulation timeline entry codecs, dispatched by an entry's `type`; the built-in ones are registered in `MxtTimelineEntries`. |
+| `MxtRegistries.SECRET_REALM_GENERATION_TYPE` | `mxt:secret_realm_generation_type` | Secret realm generation codecs. |
 
 The built-in types are grouped and registered by classes such as `MxtEntityActions`, `MxtBiEntityActions`, `MxtBlockActions`, `MxtItemActions` and `MxtEntityConditions`. Registering a new built-in type means providing a `MapCodec` and adding it to the matching `DeferredRegister`; a data pack never adds entries to these registries.
 
@@ -65,11 +67,11 @@ Register an entry with `DeferredRegister.create(MxtRegistries.FORMULA_VARIABLE, 
 
 A requested name is split into the variables that claim it once per expression, not once per evaluation: `Expression` keeps the resulting binding next to its compiled exp4j expression, so a formula evaluated every tick resolves each name a single time and afterwards only re-reads the values. The names themselves are documented in [Formula Variables](../datapack/types/formula_variables.md).
 
-## Dynamic Data Tables
+## Datapack Registries
 
-Every table the mod declares is listed — with its file directory, its purpose and every field — in [JSON Data Formats](../datapack/json/index.md). An addon normally adds entries to those tables rather than new tables.
+Every registry the mod declares is listed — with its file directory, its purpose and every field — in [JSON Data Formats](../datapack/json/index.md). An addon normally adds entries to those registries rather than new registries.
 
-## Reading Data Tables
+## Reading Registries
 
 `MxtDatapackRegistries` is the supported entry point for both the server and the synchronised client copy. Every read is a plain registry read: it filters nothing. Switching a definition off is load-time work — a `neoforge:conditions` block in the definition file keeps the entry out of the registry entirely — so an entry in the registry is an entry you can use (see [Disabling a Definition](../datapack/overview.md#disabling-a-definition)).
 

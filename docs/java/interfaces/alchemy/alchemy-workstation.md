@@ -19,14 +19,14 @@ title: AlchemyWorkstation
 | `BlockPos heatSourcePos()` | 供热格的位置：底层正中央那一格，结构从不校验也不认领它。 |
 | `double wallTemperatureLimit()` | 18 块炉壁耐温的**最低值**；任一格缺失、区块未加载、没有材料或材料定义读不出来时给 `0`。 |
 | `double heatTemperatureLimit()` | 供热格里那个方块的最高温度；那一格空着、区块未加载、或答案不是有限正数时给 `0`。 |
-| `double maximumTemperature()` | `min(炉壁, 供热)`；任一侧不可用时给 `0`。 |
+| `double maximumTemperature()` | 三者取最低：炉型规格自己可选的 `max_temperature`、炉壁、供热；炉壁或供热缺一时给 `0`（那时炉子根本不能开）。 |
 | `AlchemyFurnaceStructure.Status structureStatus()` | 结构检查结果：成型、完整、缺块、未加载区块、被别的炉占用。 |
 | `AlchemyPhase phase()` | `IDLE` / `WARMING` / `RUNNING` / `READY`。 |
 | `void setChanged()` | 状态变了之后标脏存档并同步。 |
 
 **供热格是底层正中央那一格**（本地 index 4，上层炉体中心的正下方）：那一格不被结构校验、也不被认领，读法见 [heat_source](/datapack/json/heat_source)。供热方块不消耗；拆核心不掉它，它留在原地；活动批次里把它挖掉或换成别的方块不会中止这一批，只是停止升温、按炉型的 `cooling_per_tick` 回落。
 
-**可设上限是两条限制里较低的那条**：`wallTemperatureLimit()` 取 18 块炉壁耐温里最低的一块，缺一块、那块没加载、或那份炉壁材料定义读不出来就是 `0`——不能拿高耐温的壁平均掉薄弱处；`heatTemperatureLimit()` 读供热格里那个方块的最高温度，那一格空着、区块未加载、或答案非有限正数也是 `0`；`maximumTemperature()` 给 `min(炉壁, 供热)`，任一侧不可用时整炉给 `0`，此时设定温度只能停在 `0`。设定温度必须是有限数并落在 `0` 与这个上限之间，非法请求拒绝。
+**可设上限是三者里最低的那条**：`wallTemperatureLimit()` 取 18 块炉壁耐温里最低的一块，缺一块、那块没加载、或那份炉壁材料定义读不出来就是 `0`——不能拿高耐温的壁平均掉薄弱处；`heatTemperatureLimit()` 读供热格里那个方块的最高温度，那一格空着、区块未加载、或答案非有限正数也是 `0`；`maximumTemperature()` 再并上炉型规格自己可选的 `max_temperature`（它写多大都抬不过前两条），炉壁或供热缺一时整炉给 `0`，此时设定温度只能停在 `0`。设定温度必须是有限数并落在 `0` 与这个上限之间，非法请求拒绝。
 
 **推进与结算归服务端炼丹服务**：读供热格里那个方块的热量、把炉温推向设定值（不越过）、进出 `WARMING` / `RUNNING` / `READY`、生成待产出、判废与结算都在那里，核心不要在自述的 tick 里再推一套温度。**开炉不是核心的事**：起批、预览与终止都走 [公开 API](../../api.md) 的 `AlchemyWorkstationService`（`start` / `preview` / `abort`），它从 `container()`、`furnaceItem()`、`furnaceDefinition()`、`structureStatus()`、`getBlockPos()` 与 `state()`（忙不忙、在哪一阶段）、`targetTemperature()` / `maximumTemperature()` 取判定所需的输入，核心不自己扣料、不自己判配方。
 

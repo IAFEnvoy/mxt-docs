@@ -49,7 +49,7 @@ public record AbilityWheelEntry(Identifier id, Ability definition) implements Wh
 - 页会随装备出现和消失，**后面的编号因此会前后移动**：编号是"第几格"这个位置，不是某个条目的身份。这正是要的效果——拿掉物品时编号不动，物品回来时同一个编号指回同一个技能。
 - 页列表只在客户端（`screen/wheel/WheelMenuContent#pages`，每页一个 `WheelPage`）；服务端不知道有几页。
 
-从盘读的是**技能授予账**（`AbilityAttachment` 的 `SourceLedger`），而它本来就按来源计数（装备槽记 `mxt:equipment/<槽位>/<物品>`，Curios 记 `mxt:curios_equipment`）；来源 id 的写法收在 `runtime/ability/AbilitySources`，授予侧与轮盘侧共用一份。读取与判定的算术都在 `runtime/wheel/WheelSources`：`abilities(entity, source)` 给出一个来源现在的**全部技能**条目（只列需要按键的、按 id 排序、**不截断**：分页是客户端的事）；"这一页该读哪几件装备的栈"由来源自己的 `equipment(entity)` 回答（主盘给双手 + Curios，见 [需要按键的技能](#toggable)），"这个来源现在认不认这一项"由来源自己的 `offers(entity, kind, id)` 回答（`WheelSources#offers` 只替它挡掉空 kind 与"这一 kind 根本不持条目"两种输入）。**从盘没有任何存储**：把物品换掉、摘掉法器，那几页当场就没了。
+从盘读的是**技能授予账**（`AbilityAttachment` 的 `SourceLedger`），而它本来就按来源计数（装备槽记 `mxt:equipment/<槽位>/<物品>`，Curios 记 `mxt:curios_equipment`）；来源 id 的写法收在 `runtime/Sources`（框架自己造的来源 id 只有这一处），授予侧与轮盘侧共用一份。读取与判定的算术都在 `runtime/wheel/WheelSources`：`abilities(entity, source)` 给出一个来源现在的**全部技能**条目（只列需要按键的、按 id 排序、**不截断**：分页是客户端的事）；"这一页该读哪几件装备的栈"由来源自己的 `equipment(entity)` 回答（主盘给双手 + Curios，见 [需要按键的技能](#toggable)），"这个来源现在认不认这一项"由来源自己的 `offers(entity, kind, id)` 回答（`WheelSources#offers` 只替它挡掉空 kind 与"这一 kind 根本不持条目"两种输入）。**从盘没有任何存储**：把物品换掉、摘掉法器，那几页当场就没了。
 
 `R` 打开时判空的是**"整张轮盘一格有内容的都没有"**：主盘空但手里那把剑有技能时轮盘照样开，否则从盘永远够不着。
 

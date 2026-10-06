@@ -6,7 +6,7 @@ aside: false
 
 # Spirit Herb (spirit_herb) {#spirit_herb}
 
-`spirit_herb` marks an **existing item** as a spirit herb and gives it medicinal power and a thermal bias — plus, optionally, a way to grow it. It registers no new item: the herb itself comes from a content pack or another mod. **The definition has no `quality` field**: a herb is claimed **by item** (`items` is that same `ItemMatcher`), so the stack carries no component holding a definition identity and there is nothing on it to ask; this herb's tier is written in the [default_quality](./default_quality.md) data map under the item id or a `#`-prefixed tag.
+`spirit_herb` marks an **existing item** as a spirit herb and gives it medicinal power and a thermal bias — plus, optionally, a way to grow it. It registers no new item: the herb itself comes from a content pack or another mod. **The definition has no `quality` field**: a herb is claimed **by item** (`items` is that same `ItemMatcher`), so the stack carries no component holding a definition identity and there is nothing on it to ask; this herb's tier is written in the [default_quality](./default_quality.md) registry, as an entry claiming the item through `items`.
 
 ## File Location
 
