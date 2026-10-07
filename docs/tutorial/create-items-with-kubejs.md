@@ -303,3 +303,4 @@ give @s kubejs:azure_manual[mxt:technique="example:azure_breath"]
 - [定义技能](./add-an-ability.md) —— 让这些物品有地方花掉它们储存的灵气。
 - [物品绑定](../datapack/json/item_binding.md)、[丹药](../datapack/json/pill.md)、[丹药绑定](../datapack/json/pill_binding.md)、[武器绑定](../datapack/json/weapon_binding.md) 和 [功法绑定](../datapack/json/technique_binding.md) —— 完整字段列表。
 - [KubeJS API 参考](../kubejs/api-reference.md) —— 脚本对象，如果你想用脚本写规则本身。
+- [发布触发器信号](./publish-a-trigger-signal.md) —— 发布一条自定义触发器信号，再让数据包规则或另一段脚本消费它。

@@ -73,7 +73,16 @@ export const sections = [
     text: { zh: '开发教程', en: 'Tutorials' },
     items: [
       { page: 'tutorial/index', zh: '教程', en: 'Tutorials' },
-      { page: 'tutorial/add-an-ability', zh: '定义技能', en: 'Define an Ability' },
+      // The sword aura is one entity action the ability page does not have room for, so it hangs
+      // under it as a child; the parent stays a link to its own page.
+      {
+        page: 'tutorial/add-an-ability',
+        zh: '定义技能',
+        en: 'Define an Ability',
+        items: [
+          { page: 'tutorial/launch-a-sword-aura', zh: '放出一道剑气', en: 'Launch a Sword Aura' }
+        ]
+      },
       { page: 'tutorial/define-a-technique', zh: '定义功法与晋级', en: 'Define a Technique and Its Levels' },
       // The dual cultivation page is a follow-up to the aura tutorial and only uses what that
       // one built, so it hangs under it as a child; the parent stays a link to its own page.
@@ -82,7 +91,8 @@ export const sections = [
         zh: '定义灵气与境界',
         en: 'Define Aura and Realms',
         items: [
-          { page: 'tutorial/dual-cultivation', zh: '编写双修功法', en: 'Write a Dual Cultivation Method' }
+          { page: 'tutorial/dual-cultivation', zh: '编写双修功法', en: 'Write a Dual Cultivation Method' },
+          { page: 'tutorial/define-an-element-reaction', zh: '定义元素反应', en: 'Define an Element Reaction' }
         ]
       },
       { page: 'tutorial/define-spirit-roots-and-physiques', zh: '定义灵根与体质', en: 'Define Spirit Roots and Physiques' },
@@ -94,13 +104,26 @@ export const sections = [
         zh: 'KubeJS 创建物品并绑定行为',
         en: 'Create Items and Bind Actions with KubeJS',
         items: [
-          { page: 'tutorial/bind-actions', zh: 'KubeJS 绑定行为', en: 'Bind Actions with KubeJS' }
+          { page: 'tutorial/bind-actions', zh: 'KubeJS 绑定行为', en: 'Bind Actions with KubeJS' },
+          { page: 'tutorial/publish-a-trigger-signal', zh: '发布触发器信号', en: 'Publish a Trigger Signal' }
         ]
       },
       { page: 'tutorial/define-a-quality-chain', zh: '定义品质链', en: 'Define a Quality Chain' },
+      // Costs are reused by most other tutorials and belong to no single module, so they get a page
+      // of their own rather than a section inside whichever module happens to need one.
+      { page: 'tutorial/write-a-cost', zh: '编写消耗', en: 'Write a Cost' },
       { page: 'tutorial/define-a-formation', zh: '定义阵法', en: 'Define a Formation' },
       { page: 'tutorial/open-a-realm', zh: '定义秘境', en: 'Define a Secret Realm' },
-      { page: 'tutorial/inscribe-a-talisman', zh: '定义符箓', en: 'Define a Talisman' },
+      // The manual half of the talisman chain — writing a formula for the drawing workstation — is a
+      // follow-up to this page and hangs under it, the same way dual cultivation hangs under the aura one.
+      {
+        page: 'tutorial/inscribe-a-talisman',
+        zh: '定义符箓',
+        en: 'Define a Talisman',
+        items: [
+          { page: 'tutorial/author-a-talisman-drawing', zh: '编写画符配方', en: 'Write a Drawing Recipe' }
+        ]
+      },
       { page: 'tutorial/bring-down-a-tribulation', zh: '定义天劫', en: 'Define a Tribulation' },
       { page: 'tutorial/define-a-curse', zh: '定义诅咒', en: 'Define a Curse' },
       { page: 'tutorial/forge-a-treasure', zh: '锻造法器', en: 'Forge a Treasure' },
@@ -108,6 +131,7 @@ export const sections = [
       // about the tutorial not being written yet, so the sidebar slot exists before the content does.
       { page: 'tutorial/refine-a-pill', zh: '炼制丹药', en: 'Refine a Pill' },
       { page: 'tutorial/contract-a-beast', zh: '契约灵兽', en: 'Contract a Beast' },
+      { page: 'tutorial/define-a-currency', zh: '定义货币', en: 'Define a Currency' },
       // Storage and the flying mount are both follow-ups to this page and hang under it as children, the
       // same way dual cultivation hangs under the aura one; the parent stays a link to its own page.
       {

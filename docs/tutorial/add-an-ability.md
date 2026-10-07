@@ -187,3 +187,5 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 - [定义功法与晋级](./define-a-technique.md) —— 把技能挂到一条会往上爬的进度链上，让熟练度决定什么时候解锁哪一个。
 - [行为类型](../datapack/types/action/entity_action_types.md)与[条件类型](../datapack/types/condition/entity_condition_types.md) —— 技能能做和能检查的一切。
 - [战利品与进度条件](../datapack/loot-and-criteria.md) —— 对突破与技能使用做出反应的奖励和进度。
+- [编写消耗](./write-a-cost.md) —— `costs` 数组里那四种类型各自扣什么，以及一次动作里的几笔什么时候整笔回退。
+- [放出一道剑气](./launch-a-sword-aura.md) —— 用 `mxt:spawn_sword_aura` 让技能甩出一个会飞的剑气。

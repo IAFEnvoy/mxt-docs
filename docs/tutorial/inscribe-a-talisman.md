@@ -9,9 +9,9 @@ description: 写一份符箓定义、把它交给玩家、灌注灵气并发动�
 
 ::: warning 手工铭刻还没有入口
 
-符笔 `mxt:talisman_brush` 现在只管自己的**颜料存量**（蘸料，见[通用物品](../player-guide/items.md)）；"拿着符笔右键把技能刻上去"这条路还没接——写符要么在**画符工作站**里按符方誊写（见 [talisman_drawing（画符配方）](../datapack/json/talisman_drawing.md)），要么直接写进物品：`/talisman give …`、物品组件语法（`/give` 的 `components`）、创造模式检索里生成的单条铭刻物品。
+符笔 `mxt:talisman_brush` 现在只管自己的**颜料存量**（蘸料，见[通用物品](../player-guide/items.md)）；"拿着符笔右键把技能刻上去"这条路还没接——写符要么在**画符工作站**里按符方誊写（见[编写画符配方](./author-a-talisman-drawing.md)），要么直接写进物品：`/talisman give …`、物品组件语法（`/give` 的 `components`）、创造模式检索里生成的单条铭刻物品。
 
-所以这一篇讲的是**定义 → 发放 → 灌注 → 发动**这条链（第 3 步就是"交到玩家手里"的那几条路）；工作站里照着符形誊写的那条手工路，见 [talisman_drawing（画符配方）](../datapack/json/talisman_drawing.md)。
+所以这一篇讲的是**定义 → 发放 → 灌注 → 发动**这条链（第 3 步就是"交到玩家手里"的那几条路）；工作站里照着符形誊写的那条手工路，见[编写画符配方](./author-a-talisman-drawing.md)，字段表仍在 [talisman_drawing（画符配方）](../datapack/json/talisman_drawing.md)。
 
 :::
 
@@ -166,3 +166,4 @@ give @s mxt:talisman[mxt:talisman={talismans:["example:flame_sigil"],mode:"fire"
 - [通用物品](../player-guide/items.md) —— 符箓、符笔、展示架这些物品在游戏里怎么用。
 - [item_aura（物品灵气）](../datapack/json/item_aura.md) —— 灌注与灵石共用的一套存储。
 - [定义技能](./add-an-ability.md) —— 被铭刻的那些能力怎么写。
+- [编写画符配方](./author-a-talisman-drawing.md) —— 给画符工作站写一张符方：符形怎么画、完成度判什么、符纸与颜料从哪来。

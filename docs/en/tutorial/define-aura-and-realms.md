@@ -312,3 +312,4 @@ Then, in game:
 - [Write a Dual Cultivation Method](./dual-cultivation.md) — add a method to the same pack that only yields while somebody is beside you.
 - [Define the Aura Environment](./aura-environment.md) — make the concentration vary by place, block and time, and put it on the HUD.
 - [Resource](../datapack/json/resource.md) and [Realm Stage](../datapack/json/realm_stage.md) — every remaining field, including resource bars, conversions and tribulations.
+- [Define an Element Reaction](./define-an-element-reaction.md) — how a second element claims damage types, and what attachments do once they add up.

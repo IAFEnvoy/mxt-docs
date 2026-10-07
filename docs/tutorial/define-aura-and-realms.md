@@ -312,3 +312,4 @@ realm_stage chain             progress + conditions + costs → next realm
 - [编写双修功法](./dual-cultivation.md) —— 在同一个包上再加一条"身边有人才出成果"的修炼法门。
 - [定义灵气环境](./aura-environment.md) —— 让浓度随地点、方块和时间变化，并把它放到 HUD 上。
 - [resource（资源）](../datapack/json/resource.md)与 [realm_stage（境界阶段）](../datapack/json/realm_stage.md) —— 所有剩下的字段，包括资源条、换算和天劫。
+- [定义元素反应](./define-an-element-reaction.md) —— 第二种元素怎么认领伤害类型，附着攒够之后又能做什么。

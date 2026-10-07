@@ -303,3 +303,4 @@ Then in game:
 - [Define an Ability](./add-an-ability.md) — give these items somewhere to spend the aura they store.
 - [Item Binding](../datapack/json/item_binding.md), [Pill](../datapack/json/pill.md), [Pill Binding](../datapack/json/pill_binding.md), [Weapon Binding](../datapack/json/weapon_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) — the full field lists.
 - [KubeJS API Reference](../kubejs/api-reference.md) — the script objects, if you want to write the rules themselves in a script.
+- [Publish a Trigger Signal](./publish-a-trigger-signal.md) — publish a custom trigger signal, then consume it from a data pack rule or another script.

@@ -187,3 +187,5 @@ Abilities are a data pack registry, so load the world again rather than running 
 - [Define a Technique and Its Levels](./define-a-technique.md) — hang these abilities on a progression chain that climbs, so mastery decides when each one unlocks.
 - [Action Types](../datapack/types/action/entity_action_types.md) and [Condition Types](../datapack/types/condition/entity_condition_types.md) — everything an ability can do and check.
 - [Loot and Advancement Criteria](../datapack/loot-and-criteria.md) — rewards and advancements that react to breakthroughs and ability use.
+- [Write a Cost](./write-a-cost.md) — what each of the four entry types takes, and when several payments in one action are rolled back whole.
+- [Launch a Sword Aura](./launch-a-sword-aura.md) — use `mxt:spawn_sword_aura` to make an ability throw a flying blade.
