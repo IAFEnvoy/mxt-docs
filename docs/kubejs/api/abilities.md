@@ -14,7 +14,7 @@ description: 施放技能，并授予、撤销、查询实体持有的技能，�
 | `use(entity, ability)` | `Entity`、技能 ID | `AbilityService.UseResult` | 施放实体已持有的技能，仅在服务端生效。 |
 | `selector(id, callback)` | 回调 ID、`(actor, context, params) => Entity[]` | `void` | 注册数据包类型 `mxt:js` 的技能目标选择器。 |
 | `grant(entity, ability, source)` | `Entity`、技能 ID、来源 ID（`命名空间:路径`） | `boolean` | 以该来源授予技能；来源此前未持有该技能才返回 `true`。未知技能返回 `false`（不是错误），客户端不改动任何东西。 |
-| `revoke(entity, ability, source)` | `Entity`、技能 ID、来源 ID | `boolean` | 只撤这一份来源，成功时返回 `true`；**技能本身要等最后一份来源松手才消失**，那时它的冷却和按技能存储的状态一并丢弃。目标没有这一来源时返回 `false`。 |
+| `revoke(entity, ability, source)` | `Entity`、技能 ID、来源 ID | `boolean` | 只撤这一份来源，成功时返回 `true`；**技能本身要等最后一份来源松手才消失**，那时它按技能存储的状态一并丢弃——**冷却除外**，它继续走完，免得把授予它的物品换下去再换回来就能免冷却再放一次。目标没有这一来源时返回 `false`。 |
 | `has(entity, ability)` | `Entity`、技能 ID | `boolean` | 是否持有；读的是附件，因此停用或已删除的定义也答得出来。 |
 | `list(entity)` | `Entity` | `List<String>` | 当前持有的全部技能 ID，按 ID 排序。 |
 | `sources(entity, ability)` | `Entity`、技能 ID | `List<String>` | 当前还在维持这项技能的来源，按 ID 排序；没持有则为空列表。 |

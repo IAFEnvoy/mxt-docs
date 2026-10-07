@@ -81,7 +81,7 @@ Charges refill on their own: when there is a `remaining`, it has not reached `ma
 
 ## Revoking and re-granting
 
-Revoking an ability's last grant source clears every piece of state under it. An ability granted back does not come back with the charges or the cooldown it had before.
+Revoking an ability's last grant source clears the state under it, **except the cooldown**: that one keeps running to its end, so putting the item that granted the ability away and taking it out again cannot buy the cast again. Every other kind still goes with the source, so an ability granted back does not come back with the charges it had before.
 
 ## Writing state
 
@@ -120,5 +120,5 @@ Apart from `mxt:storage_cooldown`, the other five only see kinds the host **decl
 ## Costs and limits
 
 - **The attachment is synced**, so ability state follows the entity to the client. Conditions are evaluated on the client too (an item tooltip, for instance), where there is no server registry and everything reads as false.
-- **Clearing state is all-or-nothing**: revoking the last grant source wipes the charges and the cooldown together; there is no "keep the state, grant it back" road.
+- **`mxt:cooldown` is the one kind that stays**: revoking the last grant source clears the state under it, but the cooldown does not go with it - it keeps counting down, because otherwise putting the item away and taking it out again would be a free second cast. The other kinds (charges, the channel cursor, the toggle) are still cleared with the source.
 - **`mxt:cooldown` is the only gate content can write straight into**: writing a `duration` is locking that ability, and the writer decides for how long.

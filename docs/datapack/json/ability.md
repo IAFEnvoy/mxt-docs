@@ -92,7 +92,7 @@ aside: false
 
 内容用 `family` 与 `id` 给出这两个维度（`family` 是宿主所在的注册表，今天只有 `mxt:ability`）。内容能写的是六种状态种类，各自的声明字段与状态字段见[状态存储类型](/datapack/types/other/data-storage)。
 
-**只有宿主声明过的种类才写得进**，撤销技能最后一个授予来源会清掉它名下的全部状态。声明表、读写用的行为与条件、冷却与充能的口径，见[技能施放](/technical/ability)。哪些类型声明了哪些种类，见[技能类型](/datapack/types/other/ability)。
+**只有宿主声明过的种类才写得进**，撤销技能最后一个授予来源会清掉它名下的状态——只有冷却留下继续走（见[技能施放](/technical/ability)）。声明表、读写用的行为与条件、冷却与充能的口径，见[技能施放](/technical/ability)。哪些类型声明了哪些种类，见[技能类型](/datapack/types/other/ability)。
 
 ## 技能类型 {#ability-types}
 

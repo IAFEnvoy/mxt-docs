@@ -93,7 +93,7 @@ State lives in the ability's own attachment, one per ability. It is saved with t
 
 Content supplies those two dimensions as `family` and `id` (`family` is the registry the host lives in, which today means `mxt:ability`). Six state kinds are writable, and each one's declaration fields and state fields are on [Data Storage](/en/datapack/types/other/data-storage).
 
-**Only a kind the host declared can be written**, and revoking an ability's last grant source clears every piece of state under it. The declaration table, the action and the conditions that write and read it, and how cooldown and charges behave are on [Ability Casting](/en/technical/ability). Which types declare which kinds is on [Ability Types](/en/datapack/types/other/ability).
+**Only a kind the host declared can be written**, and revoking an ability's last grant source clears the state under it - only the cooldown stays and keeps running (see [Ability Casting](/en/technical/ability)). The declaration table, the action and the conditions that write and read it, and how cooldown and charges behave are on [Ability Casting](/en/technical/ability). Which types declare which kinds is on [Ability Types](/en/datapack/types/other/ability).
 
 ## Ability Types {#ability-types}
 
