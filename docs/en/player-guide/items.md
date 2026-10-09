@@ -42,7 +42,6 @@ Blank carriers, identity items and fixed props are ordinary items as well. Block
 | Identity and record | Cultivation Jade Slip | `mxt:cultivation_jade_slip` |
 | Identity and record | Blank Talisman | `mxt:blank_talisman` |
 | Fixed prop | Recall Talisman | `mxt:recall_talisman` |
-| Fixed prop | Secret Realm Reward Box | `mxt:secret_realm_reward_box` |
 
 ## Generic Functional Items
 
@@ -55,8 +54,9 @@ The items below are backed by a unified server-side implementation shipped with 
 | Spirit Beast Bag | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | Stores the complete persistent entity data of one contracted creature (its contract and profile attachments included), plus its type, its name at the time, the contract type and the owner - which is what lets the tooltip say what is inside without loading it. Use it on a spirit beast to store it, and right-click a block to release it on top of that block. |
 | Formation Plate | `mxt:formation_plate` | `mxt:formation_plate` | Stores `allowed` (which formations may be run, `#tags` included) and the selected `formation`. Using it on a block calls `FormationWorldService`; a plate with no bound formation identifies the structure built in front of it. |
 | Secret Realm Token | `mxt:secret_realm_token` | `mxt:secret_realm_token` | Stores a `secret_realm` definition. Right-click to enter the bound secret realm — the definition's own entry condition, instance cap and member cap all apply — and right-click inside the secret realm to return to the origin position, subject to its exit condition. |
+| Reward Box | `mxt:reward_box` | `mxt:reward_box` | Stores the id of a loot table; right-click rolls that table once and puts what it rolls straight into the inventory. The roll happens where the player stands, with the player as its context and luck included, so conditions reading either work as they do for any other gift. One box is one roll, and **creative mode keeps the box**. A box with no table bound, or one naming a table the loaded packs do not provide, refuses with a message instead of eating the box. |
 | Rift (block item) | `mxt:rift` | `mxt:rift` | Places rift blocks; a stack carrying the component places a rift with that destination and colour. The whole mechanic is on the [Rifts](./rift.md) page. |
-| Spirit Vessel | `mxt:spirit_vessel` | `mxt:resource_container` | Stores any `resource`. Right-click releases it to the holder, sneak-right-click stores from the holder; each resource has a capacity of 1000. |
+| Spirit Vessel | `mxt:spirit_vessel` | `mxt:resource_capacity`, `mxt:resource_container` | Stores any `resource`, with a capacity of its own per resource (a resource the cap map does not name cannot be stored at all). **Hold right-click** to pour it into the holder's account, one unit of each resource a tick; there is **no mode** and no storing click. Filling it takes a display stand's spirit-power ray, or **firing spirit power with it in the main hand** — that firing is charged into the vessel instead of launching a ray. |
 | Wooden Token / Stone Token | `mxt:wooden_token`, `mxt:stone_token` | `mxt:token` | Carry `kind`, `value` and `owner` together for the secret realm and trade permission systems. |
 | Identification Mirror | `mxt:identification_mirror` | consumes `mxt:identification` | Resolves items that carry an identification component in a unified way; the items to identify come from content packs or other mods. |
 | Spirit Root | `mxt:spirit_root` | `mxt:spirit_root` | Stores a `spirit_root` definition; right-click to gain that root ("already held" and element conflicts are refused as usual, see [spirit_root](/en/datapack/json/spirit_root#holding)), spending one item on success and **none in creative mode**. |
@@ -64,9 +64,9 @@ The items below are backed by a unified server-side implementation shipped with 
 | Talisman Brush | `mxt:talisman_brush` | `mxt:brush_pigment` | A brush holds a pigment store of its own, refilled with the same click the vanilla bundle uses (point at pigment with the brush on the cursor). Pigment is whatever sits in the `#mxt:brush_pigment` item tag, which in the base pack is cinnabar `mxt:cinnabar` alone; what one portion is worth comes from the server config (see [Talisman Brush and Pigment](#brushes-and-pigment)). |
 | Talisman | `mxt:talisman` | `mxt:talisman`, `mxt:spirit_storage` | Holds the `talisman` definitions inscribed on it, in order, plus a `mode` (`fire` by default, or `store`). Holding right-click pours spirit power in (capacity = one invocation's aura entries times the inscriptions' `capacity` multiplier, itself capped by what the carrier has left, counted per aura); a full carrier fires everything inscribed on it, and once the store covers one invocation's aura entries a plain right-click fires it too — declare a `durability` / `consume` and a larger multiplier to fire several times from a single pour. A sneak-use switches the mode. An inscribed definition may declare a durability (`durability` / `consume`): the cap is written into the vanilla components (`max_damage` plus `max_stack_size: 1` and `damage: 0`), so the item shows a durability bar, and firing spends wear instead of whole carriers until the carrier breaks. |
 
-The value of `mxt:resource_container` is a bare map whose keys are resource IDs; there is no `values` wrapper, and a wrongly wrapped value is silently read as one unreadable key — the container stays empty and only a warning is logged.
+The values of both `mxt:resource_container` and `mxt:resource_capacity` are bare maps whose keys are resource IDs; there is no `values` wrapper, and a wrongly wrapped value is silently read as one unreadable key — the map stays empty and only a warning is logged. A spirit vessel with no capacity written down stores nothing at all: a value has no natural maximum, so the number has to come from `mxt:resource_capacity`.
 
-When a Contract Scroll, Formation Plate or Secret Realm Token has no binding definition, it fails safely and shows a message. The state of Spirit Beast Bags, Spirit Vessels and tokens is kept in ItemStack data components, and the server is the only authority.
+When a Contract Scroll, Formation Plate, Secret Realm Token or Reward Box has no binding definition, it fails safely and shows a message. The state of Spirit Beast Bags, Spirit Vessels and tokens is kept in ItemStack data components, and the server is the only authority.
 
 ## See Also
 
@@ -81,8 +81,9 @@ Component values can be written directly with the item component syntax or from 
 give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_servant"}]
 give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
 give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_realm"}]
+give @s mxt:reward_box[mxt:reward_box="mxt_test:reward_box/spirit_stones"]
 give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
-give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
+give @s mxt:spirit_vessel[mxt:resource_capacity={"mxt_test:qi":1000.0},mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
 give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
 give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]

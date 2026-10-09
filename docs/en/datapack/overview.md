@@ -70,6 +70,19 @@ data/mxt/tags/damage_type/no_bonus.json
 
 A damage type listed in `mxt:no_bonus` takes no part in damage bonus settlement: no progression-level or affinity multiplier, no physique multiplier, no `overcomes`/`adapted_to` relation read, and no element buildup either. The number is handed to vanilla as it arrived, and vanilla's own mitigation (armour, enchantments, resistance, absorption, invulnerability frames) still applies. By default it holds two: the void damage `minecraft:out_of_world`, and `mxt:lifespan`, which the mod uses for a lifespan running out; a content pack can append at the same path (`replace: false`) or replace it outright (`replace: true`). See [The damage system](/en/technical/damage).
 
+### The Mod's Own Grouping Tags
+
+The mod also ships a few **grouping tags** for its own items and blocks, at the vanilla path `data/mxt/tags/<registry>/<name>.json`; a content pack appends to them with `replace: false`:
+
+| Tag | Kind | What it holds |
+| --- | --- | --- |
+| `#mxt:spirit_stones` | item | The four spirit stones, lesser to supreme: `mxt:spirit_stone`, `mxt:medium_spirit_stone`, `mxt:high_spirit_stone` and `mxt:supreme_spirit_stone`. |
+| `#mxt:coins` | item | The six coins: copper, iron, gold, diamond, emerald and netherite (`mxt:copper_coin` onwards). |
+| `#mxt:workstations` | item + block | The blocks a player operates: the exchange station, cheque table, trade station, system station, spirit crafting table, forging table and talisman workstation. |
+| `#mxt:display_stands` | item + block | The six wooden display stands. |
+
+These are **grouping only** - nothing in the mod reads them - so they are there for recipe ingredients, claiming tables and conditions to reference (an ingredient can simply say `"#mxt:coins"`). A few other tags do carry meaning (`#mxt:talisman_paper`, `#mxt:brush_pigment`, `#mxt:back_equipable` / `#mxt:belt_equipable`); what they are for is on their own pages.
+
 ## Numeric Fields
 
 A number can be written as a constant, an expression string or a number provider object:

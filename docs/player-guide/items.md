@@ -8,7 +8,7 @@ MiXianTu 不为每个玩法预设具体数值，但提供少量通用承载物�
 
 ## 通用物品
 
-当前内置内容包括灵石系列、灵铁锭、灵木、朱砂、符纸、符箓、契约卷轴、召回符、御兽铃、令牌、灵石袋、戒指、锻造台、丹炉部件、灵田、丹药载体、药渣、杂质、秘境奖励箱和展示架等。具体注册名以 `src/main/java/com/iafenvoy/mxt/registry` 和资源文件为准。
+当前内置内容包括灵石系列、灵铁锭、灵木、朱砂、符纸、符箓、契约卷轴、召回符、御兽铃、令牌、灵石袋、戒指、锻造台、丹炉部件、灵田、丹药载体、药渣、杂质、奖励箱和展示架等。具体注册名以 `src/main/java/com/iafenvoy/mxt/registry` 和资源文件为准。
 
 ## 物品绑定
 
@@ -53,7 +53,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 基础材料 | `mxt:spirit_iron_ingot`、`mxt:spirit_iron_nugget`、`mxt:spirit_wood`、`mxt:spirit_wood_core`、`mxt:cinnabar`、`mxt:alchemy_dregs`、`mxt:impurity` |
 | 空白载体 | `mxt:spirit_ring`、`mxt:spirit_stone_bag` |
 | 身份与记录 | `mxt:wooden_token`、`mxt:stone_token`、`mxt:cultivation_jade_slip`、`mxt:blank_talisman` |
-| 固定道具 | `mxt:contract_scroll`、`mxt:recall_talisman`、`mxt:beast_taming_bell`、`mxt:secret_realm_reward_box` |
+| 固定道具 | `mxt:contract_scroll`、`mxt:recall_talisman`、`mxt:beast_taming_bell` |
 
 ## 统一功能载体
 
@@ -66,8 +66,9 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 灵兽袋 | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | 保存一只已契约生物的完整持久化实体数据（契约与档案附件也在里面），另外记着它的类型、当时的名字、契约类型与主人——这几项让提示框不必加载实体就能说清袋里是谁。对灵宠右键收纳，**对着方块右键在方块上方放出**。 |
 | 阵盘 | `mxt:formation_plate` | `mxt:formation_plate` | 保存 `allowed`（允许激活哪些阵法，支持 `#标签`）与 `formation`（当前选中）；对方块使用时调用 `FormationWorldService`。没绑定阵法时会**自动识别**脚下这座阵法。 |
 | 秘境令牌 | `mxt:secret_realm_token` | `mxt:secret_realm_token` | 保存一份 `secret_realm` 定义；右键进入绑定秘境（走定义自己的进入条件、实例上限与在场人数上限），在秘境内右键返回原位置（受定义的退出条件约束）。 |
+| 奖励箱 | `mxt:reward_box` | `mxt:reward_box` | 保存一张掉落物表的 id；右键按这张表抽一次，抽到的东西直接进背包。这次抽取的位置是玩家脚下、上下文里带着开箱的玩家（`luck` 也算进去），所以按运气或按开箱者判的条件照常生效；一次消耗 1 个箱子，**创造模式不消耗**。没绑表、或当前数据包没有这张表时拒绝打开并给出提示，不会白吃掉箱子。 |
 | 裂隙（方块物品） | `mxt:rift` | `mxt:rift` | 摆放裂隙方块；堆叠上带组件时按组件里的目标与颜色摆。整套机制见[裂隙](./rift.md)。 |
-| 灵力容器 | `mxt:spirit_vessel` | `mxt:resource_container` | 保存任意 `resource`；右键释放给持有者，潜行右键从持有者存入，每种资源容量为 1000。 |
+| 灵力容器 | `mxt:spirit_vessel` | `mxt:resource_capacity`、`mxt:resource_container` | 保存任意 `resource`，每种资源各自一份上限（上限表里没写的资源存不进）；**按住右键**把它倒进持有者账户（每 tick 每种资源 1 单位），**没有模式**、也没有"存入"的右键；往里灌靠展示架的灵力射线，或者**把它拿在主手发射灵力**（那一次灵力直接充进容器，不射出射线）。 |
 | 木/石令牌 | `mxt:wooden_token`、`mxt:stone_token` | `mxt:token` | 统一承载 `kind`、`value`、`owner`，供秘境和交易等权限系统共用。 |
 | 鉴定镜 | `mxt:identification_mirror` | 消费 `mxt:identification` | 统一解析带有鉴定组件的物品；具体待鉴定物品由内容包或其他模组提供。 |
 | 灵根 | `mxt:spirit_root` | `mxt:spirit_root` | 保存一份 `spirit_root` 定义；右键获得这条灵根（"已持有"与元素互斥照旧被拒，见 [spirit_root](/datapack/json/spirit_root#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
@@ -115,8 +116,9 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_servant"}]
 give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
 give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_realm"}]
+give @s mxt:reward_box[mxt:reward_box="mxt_test:reward_box/spirit_stones"]
 give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
-give @s mxt:spirit_vessel[mxt:resource_container={"mxt_test:qi":25.0}]
+give @s mxt:spirit_vessel[mxt:resource_capacity={"mxt_test:qi":1000.0},mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
 give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
 give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
@@ -127,7 +129,7 @@ give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
 
 倒数第二、第三行是**灵根物品**与**体质物品**的做法：组件里写定义 ID，右键即授予（灵根被拒的理由是"已持有 / 元素互斥"，体质是"已持有 / 条件不满足 / 互斥标签冲突"），成功消耗 1 个、**创造模式不消耗**，见 [spirit_root](/datapack/json/spirit_root#holding) 与 [physique](/datapack/json/physique#holding)。
 
-注意 `mxt:resource_container` 的值是**裸 map**，键就是资源 ID，**没有** `values` 外壳；写错外壳会被当作一个无法解析的键**静默忽略**（只留一条 WARN 日志），容器仍是空的。
+注意 `mxt:resource_container` 与 `mxt:resource_capacity` 的值都是**裸 map**，键就是资源 ID，**没有** `values` 外壳；写错外壳会被当作一个无法解析的键**静默忽略**（只留一条 WARN 日志），表仍是空的。灵力容器**没写上限就什么都存不进**——数值本身没有天然上限，容量必须由 `mxt:resource_capacity` 写下来。
 
 铭刻好的符箓还可以带上一部分灌注进度（`mxt:spirit_storage` 与灵石共用，按 aura 记已灌单位，缺省表示一点都没灌）：
 
@@ -137,7 +139,7 @@ give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:common_sigil"]},mxt:spir
 
 阵盘也可以在游戏内绑定：主手持有阵盘时执行 `/mxt formation bind <formation>`（需要 gamemaster 权限）。绑定不再是取得可用阵盘的前提——**没绑定的阵盘右键时会自己认出脚下的阵法**（见 [未绑定的阵盘会自动识别](/datapack/json/formation)），命令与组件语法的用处变成了**限制**这块盘能立哪一座。组件语法要求先知道注册表 ID 和 NBT 结构，命令则由服务端做 Tab 补全并在 ID 不存在时拒绝。
 
-契约卷轴、阵盘和秘境令牌没有绑定定义时会安全失败，并显示提示；灵兽袋、灵力容器和令牌的状态保存在 ItemStack 数据组件中，服务端是唯一权威。
+契约卷轴、阵盘、秘境令牌和奖励箱没有绑定定义时会安全失败，并显示提示；灵兽袋、灵力容器和令牌的状态保存在 ItemStack 数据组件中，服务端是唯一权威。
 
 ## 另见
 

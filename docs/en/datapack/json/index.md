@@ -1,11 +1,11 @@
 ---
 title: Dynamic Registries
-description: All 40 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
+description: All 41 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
 ---
 
 # Dynamic Registries
 
-The table below lists the mod's 40 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it.
+The table below lists the mod's 41 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it.
 
 **Recipes are not in this table.** The recipe pages that go through the vanilla `RecipeManager` sit in the **Recipes** group below: alchemy recipes (`mxt:alchemy`), spirit crafting (`mxt:spirit_shaped` / `mxt:spirit_shapeless`) and talisman drawing (`mxt:talisman_drawing`). Their JSON goes in `data/<namespace>/recipe/`, never in `mxt/<recipe name>/`; they are not registries either, so `/reload` reloads them. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
 
@@ -53,6 +53,7 @@ The table below lists the mod's 40 datapack registries. In the field tables, "De
 | `blueprint_binding` | `mxt/blueprint_binding` | The blueprints a blueprint item offers. |
 | `block_aura` | `mxt/block_aura` | Aura provided by a block. |
 | `heat_source` | `mxt/heat_source` | How hot and how fast a block heats a furnace. |
+| `incomplete` | `mxt/incomplete` | Marks an item as unfinished: the client draws a warning badge on its slot. |
 
 Seven of these — `item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding` and `blueprint_binding` — claim items through `items`, while `block_aura` and `heat_source` claim blocks through `blocks`; their shape is that of every other registry, and the file layout is on the [Datapack Development Overview](../overview.md).
 

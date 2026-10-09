@@ -162,6 +162,8 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 
 分类就是一张注册表：`ItemPickerManager.categories()` 按登记顺序给出 `ResourceKey<Registry<?>>` 列表，命令与开屏包用的分类 id 就是 `key.identifier()`。行怎么来由那张注册表自己的 provider 决定——物品形状的表（`item_aura`、`currency`、`default_quality`、各种 binding…）一行是它 `items` 认领到的那件物品，方块形状的表（`block_aura`、`heat_source`）一行是它 `blocks` 认领到的那个方块，行名用条目自己的名字（定义写了 `name` 就读它，否则按 id 推翻译键）。所以 `CreativeTabHelper` 的重载只收注册表 key，没有分类对象那一套。
 
+匹配条目里**只有物品与标签能直接点名物品**，其余条目会拿**每一件已注册物品**试一遍（通配符、正则、整份材料、`mxt:spirit_storage` 这类都能这样出行）；**只有读堆数据的那几种**（`mxt:quality` 的档位、`mxt:technique` 组件、按药性筛的灵草）对裸物品答否，因此不出行。
+
 每条查询都要求自己传注册表访问器（`HolderLookup.Provider`，`BuildCreativeModeTabContentsEvent.getParameters().holders()` 就是它），所以客户端用客户端已同步的表、服务端用服务端的表，不存在"读到另一侧"的问题。
 
 | 方法 | 作用 | 备注 |

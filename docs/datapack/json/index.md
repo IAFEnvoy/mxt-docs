@@ -4,7 +4,7 @@ title: 动态注册表
 
 # 动态注册表
 
-下表列出本模组的 40 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。
+下表列出本模组的 41 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。
 
 **配方不在表里。** 走原版 `RecipeManager` 的配方页收在下面的「合成表」分组里：炼丹配方（`mxt:alchemy`）、灵气合成（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）与画符配方（`mxt:talisman_drawing`）。它们的 JSON 放在 `data/<namespace>/recipe/`，**不要**放进 `mxt/<配方名>/`；它们也不是注册表，所以 `/reload` 会重新读取它们。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
 
@@ -52,6 +52,7 @@ title: 动态注册表
 | `blueprint_binding` | `mxt/blueprint_binding` | 图纸物品提供的蓝图。 |
 | `block_aura` | `mxt/block_aura` | 方块提供的灵气。 |
 | `heat_source` | `mxt/heat_source` | 供热方块的温度与升温速度。 |
+| `incomplete` | `mxt/incomplete` | 给一件物品打「未完成」标记：客户端在槽位里画一个警告角标。 |
 
 `item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding` 七张按 `items` 认领物品，`block_aura` 与 `heat_source` 两张按 `blocks` 认领方块；形状与其余注册表一致，文件路径见[数据包开发总览](../overview.md)。
 

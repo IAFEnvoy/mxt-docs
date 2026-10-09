@@ -70,6 +70,19 @@ data/mxt/tags/damage_type/no_bonus.json
 
 被列进 `mxt:no_bonus` 的伤害类型不参与伤害加成结算：不乘进度等级与亲和倍率、不乘体质倍率、不读 `overcomes`/`adapted_to` 关系，也不留元素附着。数值原样交给原版，而原版自己的减免（护甲、附魔、抗性、吸收、无敌帧）照旧生效。默认收两条：虚空伤害 `minecraft:out_of_world`，以及模组自己用于寿元耗尽的 `mxt:lifespan`；内容包可以在同一路径上追加（`replace: false`）或整体替换（`replace: true`）。详见[伤害系统](/technical/damage)。
 
+### 本模组自己的分组标签
+
+模组还给自己的物品与方块留了几张**分组标签**，路径就是原版那一套 `data/mxt/tags/<注册表>/<名字>.json`，内容包用 `replace: false` 追加即可：
+
+| 标签 | 种类 | 装了什么 |
+| --- | --- | --- |
+| `#mxt:spirit_stones` | 物品 | 四种灵石：下品 `mxt:spirit_stone`、中品 `mxt:medium_spirit_stone`、上品 `mxt:high_spirit_stone`、极品 `mxt:supreme_spirit_stone`。 |
+| `#mxt:coins` | 物品 | 六种硬币：铜 / 铁 / 金 / 钻石 / 绿宝石 / 下界合金（`mxt:copper_coin` 起）。 |
+| `#mxt:workstations` | 物品 + 方块 | 玩家操作用的那几台：兑换站、支票台、交易站、系统站、灵气工作台、锻造台、画符工作站。 |
+| `#mxt:display_stands` | 物品 + 方块 | 六种木质的展示架。 |
+
+这几张**只作分组**用——本体没有任何一处读它们，写配方材料、写认领表或写条件时按需引用（例如材料写 `"#mxt:coins"`）。模组另有几张**有语义**的标签（`#mxt:talisman_paper`、`#mxt:brush_pigment`、`#mxt:back_equipable` / `#mxt:belt_equipable`），它们的用途写在各自那页。
+
 ## 数值字段
 
 数值可以写成常量、表达式字符串或数值提供器对象：

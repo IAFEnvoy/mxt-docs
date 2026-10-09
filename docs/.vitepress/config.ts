@@ -12,7 +12,7 @@ export default defineConfig({
   srcExclude: ['**/README.md'],
 
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/webp', href: '/favicon.webp' }],
     ['meta', { name: 'theme-color', content: '#5b8def' }]
   ],
 
@@ -39,7 +39,8 @@ export default defineConfig({
   },
 
   themeConfig: {
-    logo: '/logo.svg',
+    // One asset covers both roles: the mark in the navbar and the browser tab icon.
+    logo: '/favicon.webp',
     // Shared defaults; each locale overrides the strings below with its own language.
     outline: { level: [2, 3] },
     search: {

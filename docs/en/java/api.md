@@ -162,6 +162,8 @@ Package `com.iafenvoy.mxt.data`. The **read** side of the "table → selectable 
 
 A category is just a registry: `ItemPickerManager.categories()` gives the `ResourceKey<Registry<?>>` list in registration order, and the category id the command and the open packet use is `key.identifier()`. Where the rows come from is decided by that registry's own provider — an item-shaped table (`item_aura`, `currency`, `default_quality`, the various bindings…) keeps one row per item its `items` claims, a block-shaped table (`block_aura`, `heat_source`) one row per block its `blocks` claims, and a row is named by the entry's own name (its `name` if the definition writes one, otherwise a translation key derived from the id). That is why every `CreativeTabHelper` overload takes a registry key and there is no category object.
 
+Among matcher entries **only an item and a tag name their items outright**; every other entry is asked of **each registered item** instead (wildcards, regexes, a whole ingredient and capabilities such as `mxt:spirit_storage` all produce rows that way), and only the entries that read stack data (a `mxt:quality` tier, the `mxt:technique` component, a spirit herb filtered by its properties) answer no for a bare stack and therefore add no row.
+
 Every query takes the registry access from you (`HolderLookup.Provider`; `BuildCreativeModeTabContentsEvent.getParameters().holders()` is one), so the client reads the tables it has synced and the server reads its own — there is no "reading the other side" case.
 
 | Method | What it does | Notes |
