@@ -72,7 +72,7 @@ public static final DeferredRegister<MapCodec<? extends Cost>> REGISTRY =
 
 ## 读取注册表
 
-`MxtDatapackRegistries` 是服务端与已同步的客户端副本共用的入口。每次读都是普通注册表读，**不过滤任何东西**。把一条定义停用是加载期的事——定义文件里的 `neoforge:conditions` 让那条条目根本不进注册表——所以注册表里有它，就一定能用（见[停用一条定义](/datapack/overview#停用一条定义)）。
+`MxtDatapackRegistries` 是服务端与已同步的客户端副本共用的入口。每次读都是普通注册表读，**不过滤任何东西**。把一条定义停用是加载期的事——定义文件里的 `neoforge:conditions` 让那条条目根本不进注册表——所以注册表里有它，就一定能用（见[停用一条定义](/datapack/conventions#停用一条定义)）。
 
 | 成员 | 说明 |
 | --- | --- |

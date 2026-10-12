@@ -28,7 +28,7 @@ title: 动态注册表
 | `progression` | `mxt/progression` | 进度链的单级定义。 |
 | `cultivation` | `mxt/cultivation` | 一次运功法门：吸收哪些环境灵气、每 tick 做什么、结算成功那一拍做什么、代价与收获。 |
 | `spirit_herb` | `mxt/spirit_herb` | 已有物品的灵植元数据。 |
-| `medicinal_property` | `mxt/medicinal_property` | 药性身份：一种药用效果的名字与描述。 |
+| `medicinal_property` | `mxt/medicinal_property` | 药性身份：一种药用效果的身份。 |
 | `alchemy_furnace` | `mxt/alchemy_furnace` | 炉型规格：槽位、一炉容量与炉温回落速度。 |
 | `alchemy_wall_material` | `mxt/alchemy_wall_material` | 炉壁材料：一块炉壁的耐温上限。 |
 | `formation` | `mxt/formation` | 阵法生命周期和灵气覆写。 |

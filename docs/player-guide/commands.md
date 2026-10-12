@@ -50,11 +50,11 @@ title: 命令
 
 ## 补全
 
-命令里的注册表 ID 用原版 `ResourceArgument`：解析、Tab 补全与"没有这个条目"的报错都由它给出，补全建议来自服务端当前加载的注册表，所以补出来的总是数据包真正定义了的 ID。**补全里的一条就是能用的**：被 `neoforge:conditions` 挡掉的条目根本不进注册表（见[停用一条定义](/datapack/overview#停用一条定义)），所以不存在"补全里有、执行时被拒"这种状态。
+命令里的注册表 ID 用原版 `ResourceArgument`：解析、Tab 补全与"没有这个条目"的报错都由它给出，补全建议来自服务端当前加载的注册表，所以补出来的总是数据包真正定义了的 ID。**补全里的一条就是能用的**：被 `neoforge:conditions` 挡掉的条目根本不进注册表（见[停用一条定义](/datapack/conventions#停用一条定义)），所以不存在"补全里有、执行时被拒"这种状态。
 
-少数参数**故意**不这样做，因为它们的用途就是点名一个**当前数据包已经不提供**的引用——`/technique drop`、`/spirit_root remove|enable|disable`、`/physique remove|enable|disable`、`/curse remove`、`/ability revoke`。这些参数的补全来自注册表里当前存在的条目，而它们真正要救的是**身体里还存着、当前包却已经不提供**的那份引用：条目被 `neoforge:conditions` 挡掉、或者文件直接被删之后，**同一次会话里**附件里那份 `Holder` 还在（附件只在**世界加载**时解码，`/reload` 不重解；那一刻找不到定义的引用会被容错列表丢掉，所以重新进一次世界就干净了），所以 `remove`、`enable`、`disable` 都按身体持有的那条引用来找、不回查注册表。
+少数参数的用途是点名一个**当前数据包已经不提供**的引用——`/technique drop`、`/technique forget`、`/spirit_root remove|enable|disable`、`/physique remove|enable|disable`、`/curse remove`、`/ability revoke`。它们改用原版 `ResourceKeyArgument`（`resource_key`）：**补全照样来自注册表**（和上面同一份当前定义），但**解析时不校验条目是否存在**，所以手打一个补全里没有的 ID 也不会被拒。这是必须的——它们真正要救的是**身体里还存着、当前包却已经不提供**的那份引用：条目被 `neoforge:conditions` 挡掉、或者文件直接被删之后，**同一次会话里**附件里那份 `Holder` 还在（附件只在**世界加载**时解码，`/reload` 不重解；那一刻找不到定义的引用会被容错列表丢掉，所以重新进一次世界就干净了），所以 `remove`、`enable`、`disable` 都按身体持有的那条引用来找、不回查注册表。换成 `ResourceArgument` 会在解析阶段就按注册表拒收这个 ID，把唯一一条救人路径堵死。
 
-维度 ID（`/mxt secret_realm info|destroy`、`/mxt rift target|place|bind`）、触发器信号（`/mxt trigger rules|publish`）与 `/picker` 的分类 ID（如 `mxt:aura`）同样不是注册表条目，它们的补全各自来自维度列表、信号表与选择器分类。分类就是一张注册表。
+维度 ID（`/mxt secret_realm info|destroy`、`/mxt rift target|place|bind`）用原版 `DimensionArgument`，补全来自服务端当前的维度列表（因此 `info` 与 `destroy` 也有补全）。触发器信号（`/mxt trigger rules|publish`）与 `/picker` 的分类 ID（如 `mxt:aura`）**不是注册表条目**，它们的补全各自来自信号表与选择器分类；契约命令的 `behavior` 来自代码里那份命令表，`/curse cleanse` 的 `#标签` 要的是一个标签 ID。分类就是一张注册表。
 
 ## 服务端配置
 

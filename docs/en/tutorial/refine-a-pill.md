@@ -28,26 +28,22 @@ This page adds one minimal production line to the example pack: two medicinal pr
 
 ## Step 1 — Write the Properties First
 
-A medicinal property is a table with nothing but a name, and a recipe refers to it by ID. It is **not an element**: do not reuse an element, aura or resource ID, and do not look for a bundled list of properties such as "blood-quickening" or "qi-gathering".
+A medicinal property is an **empty table** that is nothing but an identity, and a recipe refers to it by ID. It is **not an element**: do not reuse an element, aura or resource ID, and do not look for a bundled list of properties such as "blood-quickening" or "qi-gathering".
 
 ```json
 // data/example/mxt/medicinal_property/nourish.json
-{
-  "name": "property.example.nourish"
-}
+{}
 ```
 
-Write a second file, `calm.json`, the same way. `name` can be omitted, in which case the key `medicinal_property.mxt.example.<path>` is generated from the entry id.
+Write a second file, `calm.json`, the same way. A medicinal property definition has **no fields at all** (writing one is not read): its name and description are always derived from the registered id, so `nourish` has the name key `mxt.medicinal_property.example.nourish` and the description key that plus `.description` — translate those two keys to give it words.
 
 ## Step 2 — Bind Existing Items as Herbs
 
-A spirit herb registers no new item; it attaches metadata to an **existing item**: an age, a thermal bias, and how much power it provides in each of the three roles. **A herb definition has no tier field of its own** — a herb is claimed by item, and the stack carries no "which definition am I" component, so resolution has no definition to ask. To give a herb a tier, write a [default_quality](../datapack/json/default_quality.md) definition and claim it with `items`.
+A spirit herb registers no new item; it attaches metadata to an **existing item**: an age, a thermal bias, and how much power it provides in each of the three roles. **A herb definition has no tier field of its own** — it carries no item identity, and the stack holds no "which definition am I" component, so resolution has no definition to ask. To give a herb a tier, write a [default_quality](../datapack/json/default_quality.md) definition and claim it with `items`.
 
 ```json
 // data/example/mxt/quality/common.json
-{
-  "name": "quality.example.common"
-}
+{}
 ```
 
 ```json
@@ -82,7 +78,7 @@ Three things to remember:
 - **`thermal_bias` is hot and cold, not an element.** Negative is cold, positive is hot, and the value sits in `-1..1`; it has nothing to do with the fire or water elements.
 - **`herb_age` is a local variable inside the potency formulas.** It reads the stack's `mxt:herb_age` component, falling back to that herb's `default_age` when the component is absent. Age raises the power itself and the pipeline never multiplies age in a second time; what a year of age is worth is whatever the formula says - the formula on this page folds it in as `3 + herb_age / 50` (5 at age 100), and only with something like `3 * (1 + herb_age / 100)` is one century-old A worth two fresh ones. The thermal weighting moves with age too, which makes an exactly balanced recipe sensitive to it.
 
-To make a herb plantable, give the definition a `growth` object (the required seeds, `mature_age` / `max_age`, `growth_rate`, texture and harvest; `condition` and `costs` are optional). All three herbs here are for the furnace only, so they omit `growth`.
+To make a herb grow in the ground, give the definition `blocks` (which blocks count as this herb) and a `growth` object (the required `mature_age` / `max_age`, `growth_rate` and `drops`, its fruit; `condition` and `costs` are optional). All three herbs here are for the furnace only, so they omit `growth`.
 
 ## Step 3 — The Furnace Spec, the Wall Material and the Heat Source
 
@@ -215,7 +211,6 @@ A pill is written in two halves: **what it does** goes into `pill`, and **which 
 ```json
 // data/example/mxt/pill_binding/warming_pill.json
 {
-  "name": "pill_binding.example.warming_pill",
   "items": ["mxt:pill"],
   "pill": "example:warming_pill",
   "max_uses": 2,
@@ -278,4 +273,4 @@ How a batch **settles once it has started** has not been checked item by item in
 - [pill](../datapack/json/pill.md) — the dose action, toxicity, the threshold and what is left after an overdose.
 - [pill_binding](../datapack/json/pill_binding.md) — which items are claimed, the use cap and the cooldown.
 - [quality](../datapack/json/quality.md) — how `alchemy_modifier` shortens a batch.
-- [Items and Blocks](../player-guide/items.md) — how the furnace parts, the plot and the pill carrier behave in game.
+- [Items and Blocks](../player-guide/items.md) — how the furnace parts and the pill carrier behave in game.

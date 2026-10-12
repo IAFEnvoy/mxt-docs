@@ -44,8 +44,6 @@ A curse definition lives in `data/<namespace>/mxt/curse/<path>.json`. `type` is 
 
 | Field | Type | Default | Effect |
 | --- | --- | --- | --- |
-| `name` | Text component | `curse.mxt.<namespace>.<path>` | Display name. Omitted, it is the generated key in the previous column. |
-| `description` | Text component | that key with `.description` appended | Description. Same fallback. |
 | `type` | Curse type | **required** | One of the four above. |
 | `duration_ticks` | Number or formula string | `0` | How long it lasts, in ticks. |
 | `tick_interval` | Number or formula string | `20` | Interval of the periodic behaviour; only a finite value greater than `0` drives `on_tick` on a period. |

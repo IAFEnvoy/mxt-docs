@@ -1,6 +1,6 @@
 ---
 title: Quality (quality)
-description: One tier of quality — its name, colour and three modifiers, plus where it sits on the ladder, what names that ladder, and what one step up costs.
+description: One tier of quality — its colour and three modifiers, plus where it sits on the ladder, what names that ladder, and what one step up costs.
 aside: false
 ---
 
@@ -12,8 +12,6 @@ One `quality` is one tier. What it is called is for the interface to show; `valu
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `quality.mxt.<namespace>.<path>` | The tier's name. |
-| `description` | Text Component | `quality.mxt.<namespace>.<path>.description` | The tier's description, drawn under its name. |
 | `color` | Color | none | The tier's colour, written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too); always treated as opaque. |
 | `value_multiplier` | `Modifier` | `1` | Currency value modifier. |
 | `forging_modifier` | `Modifier` | `1` | Forging modifier. |
@@ -24,18 +22,18 @@ One `quality` is one tier. What it is called is for the interface to show; `valu
 | `upgrade_condition` | `EntityCondition` | `mxt:always` | Whether the step **into this tier** may be taken, asked before anything is paid. |
 | `quality` | Identifier | none | The ladder's name, **written on the entry tier** (the entry tier is the one nothing writes as its `next`). The name is read from the entry tier alone, so writing it on another tier does not name the ladder. |
 
-Both `name` and `description` may be omitted: omitting one uses the key generated from the entry id in the table above, writing one uses your own text (a bare string is a translation key, an object is a full component).
+What this tier is called is derived from the registered id: the name key is `quality.mxt.<definition namespace>.<path>`, and the description key is that plus `.description`. The definition has no writable text field, so give it words by translating those two keys; the description is drawn under the quality name.
 
 A `condition` that does not pass makes the item unusable: use, attack, the main-hand weapon's periodic behaviour and the vanilla attribute modifiers it grants all stop.
 
-`color` does not follow the two text fields: **when it is written it wins** (it even overrides a colour inside a `name` component), and **when it is omitted nothing changes at all**. It is not "white by default", so a tier without a colour still draws in the vanilla rarity colour. Only four places are tinted: the item-name line of the tooltip, the `Quality: <name>` line inside it, the entries of the quality category in `/picker`, and the tier table of a forging blueprint's tooltip. A player can still turn the name line off in the client config ("Tooltip → tint the item name with its quality", on by default); the other three are unaffected. The description line is always grey.
+`color` does not follow those two keys: **when it is written it wins** (it even overrides a colour inside the translated text), and **when it is omitted nothing changes at all**. It is not "white by default", so a tier without a colour still draws in the vanilla rarity colour. Only four places are tinted: the item-name line of the tooltip, the `Quality: <name>` line inside it, the entries of the quality category in `/picker`, and the tier table of a forging blueprint's tooltip. A player can still turn the name line off in the client config ("Tooltip → tint the item name with its quality", on by default); the other three are unaffected. The description line is always grey.
 
 `Modifier` is three optional objects, and inside each one both `description` and `modifier` may be omitted: an omitted `modifier` means `1`, an omitted `description` means **that line is simply not drawn** (the modifier still applies). Its text is entirely the pack's own, nothing is generated:
 
 ```json
 {
   "value_multiplier": {
-    "description": "quality.mxt.example.refined.value_multiplier",
+    "description": "mxt.quality.example.refined.value_multiplier",
     "modifier": 1.25
   },
   "forging_modifier": {
@@ -44,7 +42,7 @@ A `condition` that does not pass makes the item unusable: use, attack, the main-
 }
 ```
 
-The entry above omits `name`, `description` and `forging_modifier.description`.
+The entry above writes only the three modifiers, and leaves even `forging_modifier`'s `description` out.
 
 At settlement, `value_multiplier` multiplies the item's currency denomination by `modifier` and rounds to a whole number, so **what you see is what you pay** (the tooltip shows the settled value too). A `modifier` that is missing, non-finite or ≤ 0 counts as 1; a product that is non-finite, below 1 or beyond `long` falls back to the declared denomination rather than inventing a number the pack never wrote.
 
@@ -110,11 +108,11 @@ When the current pack no longer provides that tier (the definition was deleted, 
 
 `spirit_root` and `physique` have no free-text tier field: their tier is this optional `quality` reference, and there is no `mxt.rarity.<value>` key to look a tier up by text. A tier is listed under its own name.
 
-**Layer three, the [default_quality](./default_quality.md) registry** (its entries claim items through `items` and name the tier in `quality`). It is the **third and last layer**, and it is the answer exactly when the stack **has no definition to ask**: a bare creative or `/give` item, and the definitions claimed **by item** — `artifact` and `spirit_herb` are in force as soon as an item matches, and the stack carries no identity component to ask.
+**Layer three, the [default_quality](./default_quality.md) registry** (its entries claim items through `items` and name the tier in `quality`). It is the **third and last layer**, and it is the answer exactly when the stack **has no definition to ask**: a bare creative or `/give` item, and the definitions carrying no item identity — `artifact` and `spirit_herb` are in force as soon as an item matches, and the stack carries no identity component to ask.
 
 Three definitions deliberately have no `quality` field:
 
-- `artifact` and `spirit_herb` are claimed **by item** (one item matches one definition) and the stack carries no identity component, so there is nothing on it to ask. Their tier is written in `default_quality`, which is exact while one item means one definition.
+- Neither `artifact` nor `spirit_herb` carries an item identity (`artifact` matches an item directly, `spirit_herb` through its fruit) and the stack carries no identity component, so there is nothing on it to ask. Their tier is written in `default_quality`, which is exact while one item means one definition. A herb has one more route: when the definition writes `quality_by_age`, the [harvest](./spirit_herb.md#age-and-quality) stamps the tier for the age into the layer-1 component, and a herb without that ladder keeps falling back to `default_quality`.
 - A `talisman`'s carrier component `mxt:talisman` holds a **list** of inscriptions, so one stack may carry several talismans and there is no single definition to ask. Its tier is settled by the drawing recipe's `grades[].quality` and stamped into the `mxt:quality` component at inscription; only when that writes nothing does it fall back to `default_quality`.
 
 **List-valued carriers are not registered at all**: `mxt:forging_methods`, `mxt:forging_blueprints`, `mxt:element` and `mxt:talisman` — a list cannot answer which tier a stack is.
@@ -123,20 +121,21 @@ The ladder follows the tier the stack resolves to: a ladder is named on the tier
 
 After `/quality clear` removes the component the stack falls back to the tier of **the definition it carries**, and only then to the registry. The effect fields on the `mxt:pill` component (`on_consume`, `toxicity_gain` and the rest) only rewrite what that stack does when it is taken and never change which tier it is: the tier comes from the `quality` of the definition inside it under `pill`.
 
-**Three things that look like a default tier but are not:**
+**Four things that look like a default tier but are not:**
 
 - `forging_blueprint.quality_by_extra_steps[].quality` — the **target tier** on the forging curve, looked up by extra steps;
 - `grades[].quality` in a drawing recipe — the **target tier** hit by completion, written into the component at inscription;
+- `spirit_herb.quality_by_age[].quality` — the **target tier** looked up by **age** at harvest and written into the component; a herb definition has no `quality` field of its own;
 - the `quality` field of a `quality` entry itself — that one is the **ladder's name**, written on the entry tier.
 
-None of the three takes part in which tier a stack is.
+None of the four takes part in which tier a stack is.
 
 ## Filtering items by tier {#gating}
 
 Three entry points share one requirement, and two slots are still hard checks: `quality` (a membership test over entries, `#tags` or an array) and `min_quality` (**at least this tier**). `min_quality` compares positions on **the chain that tier is on** (the same implementation as upgrading and `/quality chain`), and **answers no across chains** — positions on different chains mean nothing to each other; giving both means both have to hold; giving only `min_quality` means **an item with no tier answers no**. A requirement that gives neither is **refused at load** (an empty requirement would silently always pass). The check has one implementation; the three entry points only differ in how the requirement is attached:
 
 1. **The item condition `mxt:item_quality`** (`quality`, plus the new optional `min_quality`): works anywhere an item condition runs, such as `unavailable_when` of a currency entry or `conditions` of a binding; see [Item Conditions](/en/datapack/types/condition/item_condition_types).
-2. **The matcher entry `mxt:quality`** (`items` is required, plus the two fields above): works anywhere an [ItemMatcher](/en/datapack/types/other/item-matcher) is accepted — `mxt:item` inside a `Cost`, the `items` of `artifact` / `pill_binding` / `technique_binding` / `spirit_herb`, the `mxt:item_matcher` / `mxt:item_id` / `mxt:item_tag` conditions, the seeds of a spirit herb, and the picker.
+2. **The matcher entry `mxt:quality`** (`items` is required, plus the two fields above): works anywhere an [ItemMatcher](/en/datapack/types/other/item-matcher) is accepted — `mxt:item` inside a `Cost`, the `items` of `artifact` / `pill_binding` / `technique_binding`, the `blocks` of `spirit_herb`, the `mxt:item_matcher` / `mxt:item_id` / `mxt:item_tag` conditions, the seeds of a spirit herb, and the picker.
 3. **The custom ingredient `mxt:quality`** (`neoforge:ingredient_type`, plus `items` and the two fields above): **works anywhere a vanilla `Ingredient` does** — vanilla and other mods' recipes, spirit crafting, talisman drawing, the `mxt:ingredient` condition, the `input` of a [forging blueprint](./forging_blueprint.md) (that entry is a sized ingredient), and the `paper` of a [drawing recipe](./talisman_drawing.md) (that one is an ingredient); see [Spirit Crafting Recipes](./spirit_crafting.md).
 
 One narrow path exists for "material entries" only: the matcher entry [**`mxt:ingredient`**](/en/datapack/types/other/item-matcher#mxtingredient) puts a whole vanilla ingredient — `mxt:quality` included — anywhere an `ItemMatcher` is accepted, which is how the drawing's paper cost carries an ingredient at all.
@@ -153,4 +152,4 @@ Vanilla tags take no part in quality resolution: the `group/<name>` tag is not r
 
 ## Names and translation {#translation}
 
-The category is the registry's own path: `example:refined` looks up `quality.mxt.example.refined`, and its description adds `.description` (**the registry namespace is still `mxt`**). Among the registries that carry their own `name` / `description`, quality is the one that has its `description` drawn (under the name); the others are only stored and read, and nothing draws them. There is no `translation_key` field in the JSON; a `/` in the path stays in the key like every other registry.
+The category is the registry's own path: `example:refined` looks up `mxt.quality.example.refined`, and its description adds `.description` (**the registry namespace is still `mxt`**). Both the name and the description can only come from translating those two keys — the definition has no writable text field — and only three places draw a description: quality (under the name), `contract_type` (a contract scroll's tooltip) and `pill` (the tooltip of an item the pill claims); every other registry's description key is read by no screen or tooltip. There is no `translation_key` field in the JSON; a `/` in the path stays in the key like every other registry.

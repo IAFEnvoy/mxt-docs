@@ -666,6 +666,25 @@ Plays a sound event.
 
 The sound plays at the action's position.
 
+### `mxt:send_message`
+
+Sends one message to players.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `message` | Text | **required** | A string is read as a translation key, an object as a full text component. |
+| `channel` | `chat` / `action_bar` | `chat` | Whether the line goes to the chat log or above the hotbar. |
+| `target` | `self` / `other` / `all` | `self` | Who it is addressed to: the action's own entity, the far side of a pair, or every player in the level. |
+| `recipients` | Entity condition | always true | Asked per candidate player, to narrow the recipients down. |
+
+```json
+{ "type": "mxt:send_message", "message": "your.pack.message_key", "channel": "action_bar" }
+```
+
+What `target` can name is limited by how many entities the axis has at hand: an entity or item action has only the action's own entity, so `other` sends nothing; a block action has only a place, so only `all` finds anyone. `all` does not consult the action's own entity, which is why a block action can use it.
+
+`recipients` is asked **per player**, so a message can reach only some of them; the action's own entity is one of the candidates and the condition may just as well drop it. A translation key has to come from the pack itself.
+
 ### `mxt:remove_effect`
 
 Removes one status effect.

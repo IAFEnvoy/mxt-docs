@@ -340,6 +340,23 @@ An entry that is already written is not written a second time, and the entries a
 
 Besides the definition's own `abilities`, an item can carry abilities through the `mxt:item_abilities` data component (`{"abilities": ["example:foo"]}`): what the runtime reads is the **union of what the definition declares and what the component writes**, so two stacks claimed by one artifact definition can carry different abilities. The component stores **ability ids only** and takes no tags (tags are expanded on the definition's side, in its `abilities`), so every id written has to resolve in the ability registry, and entries that do not resolve are dropped. This action writes ids and reads the current registry, so a newly written id only takes effect at the point where the item is next read by the runtime.
 
+### `mxt:send_message`
+
+Sends one message to players.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `message` | Text | **required** | A string is read as a translation key, an object as a full text component. |
+| `channel` | `chat` / `action_bar` | `chat` | Whether the line goes to the chat log or above the hotbar. |
+| `target` | `self` / `other` / `all` | `self` | Who it is addressed to. This axis has only the stack's holder, so `other` sends nothing. |
+| `recipients` | Entity condition | always true | Asked per candidate player, to narrow the recipients down. |
+
+```json
+{ "use_action": { "type": "mxt:send_message", "message": "your.pack.message_key" } }
+```
+
+The fields and what `target` can name are described under the [entity action](entity_action_types.md#mxt-send-message).
+
 ::: info Nested Values
 The `condition` of `mxt:if_else` takes an [item condition](../condition/item_condition_types.md). The `enchantments` of `mxt:add_enchantment` are a map from an enchantment id to a level. The `enchantment` of `mxt:remove_enchantment` takes one enchantment or a list of them, and `level` limits how far the removal goes. `mxt:merge_components` takes a vanilla data component patch.
 :::

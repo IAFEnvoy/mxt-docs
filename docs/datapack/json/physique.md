@@ -12,8 +12,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `physique.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键，写了就用写的文本。 |
-| `description` | Text Component | `physique.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
 | `attribute_modifiers` | 属性修正条目数组 | `[]` | 独立于灵根的原版属性加成。 |
 | `granted_abilities` | 能力 id 或 `#标签` 的数组 | `[]` | 授予的能力。 |
 | `holder_condition` | `EntityCondition` | `mxt:always` | 授予前的持有条件。 |
@@ -68,4 +66,4 @@ aside: false
 
 已持有的体质可以被**关闭**而不失去：关闭后它的属性修正、授予能力与两个伤害倍率全部不生效，但它仍然"持有"（`mxt:has_physique` 照旧为真，也能正常移除）。这份状态存在 `spirit_identity` 附件里，随存档与同步一起走。
 
-**开 / 关**这一半**没有玩家入口**（没有按键或界面）：操作用脚本的 `MxtPhysiques.setEnabled`，或管理员命令 `/mxt physique enable|disable`。它与"从数据包里拿掉这条定义"是两件事：开关只管被关的那一条、而且它仍然被持有；拿掉定义则是这条定义整个不在了（写 `neoforge:conditions`，见[停用一条定义](../overview.md#停用一条定义)）。
+**开 / 关**这一半**没有玩家入口**（没有按键或界面）：操作用脚本的 `MxtPhysiques.setEnabled`，或管理员命令 `/mxt physique enable|disable`。它与"从数据包里拿掉这条定义"是两件事：开关只管被关的那一条、而且它仍然被持有；拿掉定义则是这条定义整个不在了（写 `neoforge:conditions`，见[停用一条定义](../conventions.md#停用一条定义)）。

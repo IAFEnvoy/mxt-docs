@@ -5,14 +5,12 @@ description: "A ladder of item tiers from low to high: where the ladder's name g
 
 # Define a Quality Chain
 
-A quality tier is one file at `data/<namespace>/mxt/quality/<path>.json`, in the `mxt:quality` registry. A tier says four things: what it is called and how it is drawn; which tier sits above it (`next`); what the step up costs and requires (`upgrade_costs` / `upgrade_condition`); and which ladder it belongs to (`quality`).
+A quality tier is one file at `data/<namespace>/mxt/quality/<path>.json`, in the `mxt:quality` registry. A tier says three things: how it is drawn (`color` and friends); which tier sits above it (`next`); what the step up costs and requires (`upgrade_costs` / `upgrade_condition`); and which ladder it belongs to (`quality`). **What it is called is not up to the definition**: the name and description are always derived from the registered id, with the keys `quality.mxt.<definition namespace>.<path>` (the description adding `.description`), so translate those two keys in your language file to give the tier words.
 
 The order of the tiers is written nowhere else. No table holds the ladder on its own: the runtime walks `next` once and gets a straight line.
 
 | Field | Default | What it does |
 | --- | --- | --- |
-| `name` | `quality.mxt.<namespace>.<path>` | The tier's display name. |
-| `description` | That same key plus `.description` | The line under the name; drawn only when non-empty. |
 | `color` | none | Tints the name, written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too); always treated as opaque. |
 | `value_multiplier` | `1` | Multiplies the item's currency value. |
 | `forging_modifier` | `1` | Divides the extra steps forging reads. |
@@ -53,7 +51,7 @@ The price is paid in `example:qi`, which already has a `resource/qi.json` in [De
   "next": "example:flawless",
   "upgrade_costs": [{"id": "example:qi", "amount": 20}],
   "value_multiplier": {
-    "description": "quality.mxt.example.refined.value",
+    "description": "mxt.quality.example.refined.value",
     "modifier": 1.25
   }
 }
@@ -65,7 +63,7 @@ The price is paid in `example:qi`, which already has a `resource/qi.json` in [De
 ```
 
 - `next` points at the tier above, so walking `next` upwards reads `common` → `refined` → `flawless`.
-- `flawless` is an empty object: the top tier leaves `next` out and gets neither a name nor modifiers here.
+- `flawless` is an empty object: the top tier leaves `next` out and takes every modifier default. Its name and description are generated from the id like any other tier (`mxt.quality.example.flawless`), since the definition has neither field in the first place.
 - `{"id": …, "amount": …}` inside `upgrade_costs` is the shorthand for a `mxt:resource` cost; the long form with a `type` works too.
 - A modifier sits on the tier it settles with: `refined`'s `value_multiplier` multiplies the currency value of its items by `1.25`, and its own `description` decides whether that extra tooltip line is drawn. `common` and `flawless` declare no modifiers, so both behave as `1`.
 
@@ -101,7 +99,7 @@ A stack takes the **first tier it can get**, in this order:
 | --- | --- |
 | The `mxt:quality` component on the stack | `/give @s kubejs:qi_pill[mxt:quality="example:common"]`; `/quality set`, a successful upgrade, a Forge Table settlement and a talisman inscription write this one too. |
 | The `quality` the definition the stack carries declares | Whichever component on that item names a definition identity, read for the tier that definition writes itself. |
-| The [default_quality](../datapack/json/default_quality.md) registry | When a definition's `items` matches the item, the `quality` that definition writes applies; a bare creative or `/give` item and the by-item `artifact` / `spirit_herb` definitions take this route. |
+| The [default_quality](../datapack/json/default_quality.md) registry | When a definition's `items` matches the item, the `quality` that definition writes applies; a bare creative or `/give` item and the item-identity-free `artifact` / `spirit_herb` definitions take this route. |
 
 Layer 2 answers for "several definitions of a type share one built-in item, so the item cannot say which tier applies": every technique manual defaults to `mxt:cultivation_jade_slip` (a `technique_binding` may name another `carrier_item`), every pill is `mxt:pill`, every furnace specification is the block item `mxt:alchemy_furnace`, the spirit-root stone is `mxt:spirit_root` and the physique stone is `mxt:physique`. The nine definitions declaring `quality` are `technique`, `alchemy_furnace`, `alchemy_wall_material`, `spirit_root`, `physique`, `pill`, `formation`, `secret_realm` and `contract_type`.
 

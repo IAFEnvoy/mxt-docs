@@ -69,7 +69,7 @@ aside: false
 
 `result` 里的公式多两个变量：`percentage` 是本次完成度（0 到 1），`paper_rank` 是**实际取走的那张纸上写的档在它自己那条链上的位置**（从入口档数起，`0` 是入口档，也是"这张纸没有档 / 档不在链上"时唯一能给的数——公式分不出这两种）。`max_damage`、`charge_ratio` 与两个动作里的数值提供器都能读它们，写法就是普通公式（`"0.5 + 0.5 * percentage"`、`"percentage * percentage + paper_rank * 50"`）。变量名必须是 `percentage` / `paper_rank` 或注册表提供的公式变量，**两边都不是的名字在加载期被拒**，不会静默取 0。`paper_rank` 读的是开局时**实际取走的那一份**，所以"好纸画好符"直接写在这条公式里。`outputs` 读不到它们——`ItemStackTemplate` 的数量是写死的，要按完成度给不同数量就分档写。
 
-符方**不声明 `name` / `description`**：符方列表里的条目名与产物 tooltip 里那条符箓名，一律取自顶层 `talisman` 点名的那份定义。
+符方不声明名字也不声明描述：符方列表里的条目名与产物 tooltip 里那条符箓名，一律取自顶层 `talisman` 点名的那份定义**按注册 id 生成的名字键**（`talisman.mxt.<定义命名空间>.<路径>`，翻译它才有词）。
 
 ## 加载期校验
 

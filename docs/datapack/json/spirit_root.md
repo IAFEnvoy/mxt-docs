@@ -12,8 +12,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `spirit_root.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `spirit_root.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
 | `elements` | 元素与权重数组 | **必填且非空** | 灵根绑定的元素，可以写多个。 |
 | `cultivation_multiplier` | `NumberProvider` | `1` | 修炼倍率。 |
 | `element_ability_modifier` | `NumberProvider` | `1` | 元素亲和技能倍率。 |
@@ -53,4 +51,4 @@ aside: false
 
 每条已持有的灵根和体质都可以被单独**关闭**而不失去：关闭后它的元素、修炼倍率、授予的能力、被动属性、伤害倍率与它声明的 `conflicting_elements` 全部不生效，但它仍然"持有"（`mxt:has_spirit_root` / `mxt:has_physique` 照旧为真，也能正常移除），`spirit_identity` 附件里的 `disabled_spirit_roots` / `disabled_physiques` 就是这份状态，随存档与同步一起走。
 
-这个模块**没有玩家入口**（没有按键或界面）：操作用脚本的 `MxtSpiritRoots.setEnabled` / `MxtPhysiques.setEnabled`，或管理员命令 `/mxt spirit_root enable|disable`、`/mxt physique enable|disable`，接入方式照样留给内容方或整合包。它与"从数据包里拿掉这条定义"是两件事：开关只管被关的那一条、而且它仍然被持有；拿掉定义则是这条定义整个不在了（写 `neoforge:conditions`，见[停用一条定义](../overview.md#停用一条定义)）。
+这个模块**没有玩家入口**（没有按键或界面）：操作用脚本的 `MxtSpiritRoots.setEnabled` / `MxtPhysiques.setEnabled`，或管理员命令 `/mxt spirit_root enable|disable`、`/mxt physique enable|disable`，接入方式照样留给内容方或整合包。它与"从数据包里拿掉这条定义"是两件事：开关只管被关的那一条、而且它仍然被持有；拿掉定义则是这条定义整个不在了（写 `neoforge:conditions`，见[停用一条定义](../conventions.md#停用一条定义)）。

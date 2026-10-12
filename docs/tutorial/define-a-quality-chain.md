@@ -5,14 +5,12 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
 
 # 定义品质链
 
-一档品质是 `data/<命名空间>/mxt/quality/<路径>.json` 里的一个文件，注册表 id 是 `mxt:quality`。一档写四件事：这档叫什么、怎么显示；它上面那一档是谁（`next`）；升上去要付什么、要满足什么（`upgrade_costs` / `upgrade_condition`）；以及它属于哪条链（`quality`）。
+一档品质是 `data/<命名空间>/mxt/quality/<路径>.json` 里的一个文件，注册表 id 是 `mxt:quality`。一档写三件事：怎么显示（`color` 等）；它上面那一档是谁（`next`）；升上去要付什么、要满足什么（`upgrade_costs` / `upgrade_condition`）；以及它属于哪条链（`quality`）。**这档叫什么不由定义决定**：名字与描述一律按注册 id 现算，键是 `quality.mxt.<定义命名空间>.<路径>`（描述再加 `.description`），想配词就往语言文件里翻译这两个键。
 
 档次的顺序不写在第二个地方：没有一张只装阶梯的表，运行期沿 `next` 走一遍，得到的是一条直线。
 
 | 字段 | 默认 | 作用 |
 | --- | --- | --- |
-| `name` | `quality.mxt.<命名空间>.<路径>` | 品质显示名。 |
-| `description` | 上面那个键再加 `.description` | 品质名下面那一行，非空才画。 |
 | `color` | 无 | 给品质名上色，写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受），一律按不透明处理。 |
 | `value_multiplier` | `1` | 货币价值修正。 |
 | `forging_modifier` | `1` | 锻造修正，用来除锻造读取的额外步数。 |
@@ -53,7 +51,7 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
   "next": "example:flawless",
   "upgrade_costs": [{"id": "example:qi", "amount": 20}],
   "value_multiplier": {
-    "description": "quality.mxt.example.refined.value",
+    "description": "mxt.quality.example.refined.value",
     "modifier": 1.25
   }
 }
@@ -65,7 +63,7 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
 ```
 
 - `next` 指向上面那一档，沿 `next` 走上去就是 `common` → `refined` → `flawless`。
-- `flawless` 是空对象：最高档不写 `next`，也不给它名字和修正。
+- `flawless` 是空对象：最高档不写 `next`，修正也全按默认。名字与描述和其他档一样按 id 生成（`mxt.quality.example.flawless`），定义里本来就没有这两个字段。
 - `upgrade_costs` 里的 `{"id": …, "amount": …}` 是 `mxt:resource` 消耗的简写，也可以写成带 `type` 的完整消耗条目。
 - 修正写在结算它的那一档上：`refined` 的 `value_multiplier` 让这档物品的货币价值乘 `1.25`，它自己的 `description` 决定提示框里要不要多画那一行。`common` 与 `flawless` 没写修正，都按 `1`。
 
@@ -101,7 +99,7 @@ description: "一条从低到高的物品品质阶梯：链名写在哪、入口
 | --- | --- |
 | 物品上的 `mxt:quality` 组件 | `/give @s kubejs:qi_pill[mxt:quality="example:common"]`；`/quality set`、一次成功的升级、锻造台结算与画符铭刻写的都是它。 |
 | 这一堆携带的定义声明的 `quality` | 物品上装着定义身份的那份组件，读的是那份定义自己写的档。 |
-| 注册表 [default_quality](../datapack/json/default_quality.md) | 有一条定义的 `items` 命中这件物品，就用它写的 `quality`；裸的创造 / `/give` 物品与按物品认领的 `artifact` / `spirit_herb` 走的就是这一条。 |
+| 注册表 [default_quality](../datapack/json/default_quality.md) | 有一条定义的 `items` 命中这件物品，就用它写的 `quality`；裸的创造 / `/give` 物品与不携带物品身份的 `artifact` / `spirit_herb` 走的就是这一条。 |
 
 第 2 层答的是"一类定义共用一件内置物品、物品说不清是哪一档"的那批：功法书默认是 `mxt:cultivation_jade_slip`（`technique_binding` 的 `carrier_item` 可以换成别的）、所有丹药都是 `mxt:pill`、所有炉型规格都是方块物品 `mxt:alchemy_furnace`、灵根石是 `mxt:spirit_root`、体质石是 `mxt:physique`。声明 `quality` 的九个定义是 `technique`、`alchemy_furnace`、`alchemy_wall_material`、`spirit_root`、`physique`、`pill`、`formation`、`secret_realm`、`contract_type`。
 

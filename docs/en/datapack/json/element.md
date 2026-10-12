@@ -20,8 +20,6 @@ The filename is its ID. For example, `data/example/mxt/element/fire.json` has th
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `element.mxt.<namespace>.<path>` | Display name; when omitted, the generated key in the left column is used, and when written, your text is. |
-| `description` | Text Component | `element.mxt.<namespace>.<path>.description` | Definition description; when omitted, the generated key in the left column is used. It is stored and read today, but nothing draws it yet. |
 | `overcomes` | Relation array | `[]` | Which elements this element overcomes, and what each overcoming edge is worth in damage. |
 | `adapted_to` | Relation array | `[]` | Which elements this element is adapted to (resists), and what each adapting edge multiplies incoming damage by. |
 | `damage_types` | Array whose entries are a damage type id, a `#tag`, or an object | `[]` | Which damage types this element claims: a claimed damage type **is** this element. A bare string (or `#tag`) uses the element's own `damage_attachment`, while `{"damage_type": "minecraft:lava", "damage_attachment": 2.0}` gives that kind of hit **its own buildup**. See "A claimed type is a group" below. |

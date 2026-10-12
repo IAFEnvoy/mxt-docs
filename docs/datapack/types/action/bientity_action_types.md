@@ -305,3 +305,26 @@ description: 模组注册的全部内置双实体行为类型，以及每种类�
 ```
 
 `mxt:actor_action` 与 `mxt:target_action` 里嵌套的实体行为默认沿用**这次发动的地点**：按位置落点的行为会落在发动处，从符箓 / 展示架发动时就是符箓 / 架子那里（`mxt:spawn_lightning`、`mxt:explode`、`mxt:spawn_particles`、`mxt:spawn_effect_cloud`、`mxt:play_sound`、`mxt:block_action` 都是这样）。所以"对每个选中的目标各落一道雷"必须写 `"use_target_position": true`，否则每一道雷都会落在施动者 / 符箓脚下。读实体的行为在同一个值下不受影响。
+
+### mxt:send_message
+
+给玩家发一条消息。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `message` | 文本 | **必填** | 字符串按翻译键读，对象按完整文本组件读。 |
+| `channel` | `chat` / `action_bar` | `chat` | 发到聊天栏还是物品栏上方的动作栏。 |
+| `target` | `self` / `other` / `all` | `self` | 发给谁：`self` 是施动者，`other` 是目标，`all` 是世界里的全部玩家。 |
+| `recipients` | 实体条件 | 恒真 | 逐个候选玩家判定，用来收窄收件人。 |
+
+```json
+{
+  "type": "mxt:send_message",
+  "message": "your.pack.message_key",
+  "target": "other"
+}
+```
+
+这一轴同时握有施动者与目标两个实体，所以 `other` 在这里才有意义——"告诉对方一声"写 `target: "other"`。想让消息看起来来自某个人而不是凭空出现，写 `mxt:actor_action` 套一条 `target: "self"` 的实体行为。
+
+字段含义见[实体行为](entity_action_types.md#mxt-send-message)。

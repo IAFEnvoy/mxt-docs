@@ -132,4 +132,4 @@ The condition goes at the **top level of the file** (one file is one definition)
 }
 ```
 
-A definition whose condition does not hold is as good as absent: that item has no such definition. The available conditions are on the [Datapack Development Overview](../overview.md#disabling-a-definition).
+A definition whose condition does not hold is as good as absent: that item has no such definition. The available conditions are on the [Datapack Development Overview](../conventions.md#disabling-a-definition).

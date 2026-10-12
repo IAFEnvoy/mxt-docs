@@ -8,7 +8,7 @@ MiXianTu 不为每个玩法预设具体数值，但提供少量通用承载物�
 
 ## 通用物品
 
-当前内置内容包括灵石系列、灵铁锭、灵木、朱砂、符纸、符箓、契约卷轴、召回符、御兽铃、令牌、灵石袋、戒指、锻造台、丹炉部件、灵田、丹药载体、药渣、杂质、奖励箱和展示架等。具体注册名以 `src/main/java/com/iafenvoy/mxt/registry` 和资源文件为准。
+当前内置内容包括灵石系列、灵铁锭、灵木、朱砂、符纸、符箓、契约卷轴、召回符、御兽铃、令牌、灵石袋、戒指、锻造台、丹炉部件、丹药载体、药渣、杂质、奖励箱和展示架等。具体注册名以 `src/main/java/com/iafenvoy/mxt/registry` 和资源文件为准。**灵植方块不在其中**：灵植定义用 `blocks` 认领已有方块、用 `growth.drops` 认领自己的果实，本体不注册任何草方块。
 
 ## 物品绑定
 
@@ -69,7 +69,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 奖励箱 | `mxt:reward_box` | `mxt:reward_box` | 保存一张掉落物表的 id；右键按这张表抽一次，抽到的东西直接进背包。这次抽取的位置是玩家脚下、上下文里带着开箱的玩家（`luck` 也算进去），所以按运气或按开箱者判的条件照常生效；一次消耗 1 个箱子，**创造模式不消耗**。没绑表、或当前数据包没有这张表时拒绝打开并给出提示，不会白吃掉箱子。 |
 | 裂隙（方块物品） | `mxt:rift` | `mxt:rift` | 摆放裂隙方块；堆叠上带组件时按组件里的目标与颜色摆。整套机制见[裂隙](./rift.md)。 |
 | 灵力容器 | `mxt:spirit_vessel` | `mxt:resource_capacity`、`mxt:resource_container` | 保存任意 `resource`，每种资源各自一份上限（上限表里没写的资源存不进）；**按住右键**把它倒进持有者账户（每 tick 每种资源 1 单位），**没有模式**、也没有"存入"的右键；往里灌靠展示架的灵力射线，或者**把它拿在主手发射灵力**（那一次灵力直接充进容器，不射出射线）。 |
-| 木/石令牌 | `mxt:wooden_token`、`mxt:stone_token` | `mxt:token` | 统一承载 `kind`、`value`、`owner`，供秘境和交易等权限系统共用。 |
+| 木/石令牌 | `mxt:wooden_token`、`mxt:stone_token` | `mxt:token` | 统一承载 `kind`、`value`、`owner`，供秘境和交易等权限系统共用。**在铁砧里给它改名即认主**：`owner` 记成改名那个玩家的 UUID，原来记着的主人会被覆盖；`owner` 不进提示框（提示框只印 `kind` 与 `value`）。 |
 | 鉴定镜 | `mxt:identification_mirror` | 消费 `mxt:identification` | 统一解析带有鉴定组件的物品；具体待鉴定物品由内容包或其他模组提供。 |
 | 灵根 | `mxt:spirit_root` | `mxt:spirit_root` | 保存一份 `spirit_root` 定义；右键获得这条灵根（"已持有"与元素互斥照旧被拒，见 [spirit_root](/datapack/json/spirit_root#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
 | 体质 | `mxt:physique` | `mxt:physique` | 保存一份 `physique` 定义；右键获得这项体质（"已持有"、`holder_condition` 不满足与互斥标签冲突照旧被拒，见 [physique](/datapack/json/physique#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
@@ -87,7 +87,6 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 辅药投料仓 | `mxt:alchemy_auxiliary_input` | 面向正面时在右侧，两个辅药格加一个药引格。 |
 | 丹炉产物仓 | `mxt:alchemy_output` | 顶部中心，四个输出格，只能取出。 |
 | 丹炉炉壁 | `mxt:alchemy_furnace_casing` | 底层四角与上面两层，共 18 格，每块带自己的炉壁材料；炉壁不打开界面。 |
-| 灵田 | `mxt:spirit_herb_plot` | 一格一株：持种苗右键种下，成熟后右键采收，潜行空手拔回种苗。 |
 | 丹药 | `mxt:pill` | 丹药载体，提供原版食用、名字与 Tooltip；吃下去做什么写在 [pill](../datapack/json/pill.md) 上，服用次数与冷却由 [pill_binding](../datapack/json/pill_binding.md) 给。 |
 
 手感是：**供热方块放进底层正中央那一格，主药放左侧仓，辅药与药引放右侧仓，成品从产物仓取。** 放进材料不会自己开炉，要玩家在核心那一页点「开炉」。壳不齐、炉壁材料无效、格子被另一座炉占了，都不算成型，也就开不了炉。

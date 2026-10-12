@@ -16,8 +16,6 @@ A secret realm definition is **a template**, not one fixed dimension: every entr
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `secret_realm.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `secret_realm.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `quality` | Quality id | none | Optional. The tier a token into this realm starts on. |
 | `generation` | Generation parameters | **required** | How the instance dimension is produced, see below. |
 | `seed` | Long | `0` | `0` means every instance rolls its own seed; any other value is shared by all instances. |
@@ -126,7 +124,7 @@ An instance dimension is a runtime dimension with no generator registry entry of
     { "random_center": [64.0, 64.0], "random_radius": 24.0, "weight": 1 }
   ],
   "enter_condition": { "type": "mxt:has_realm", "aura": "example:qi" },
-  "enter_denied_message": "secret_realm.mxt.example.too_weak",
+  "enter_denied_message": "mxt.secret_realm.example.too_weak",
   "enter_action": { "type": "mxt:apply_effect", "effect": "minecraft:night_vision", "duration_ticks": 12000 },
   "exit_action": { "type": "mxt:heal", "amount": 4 }
 }

@@ -28,26 +28,22 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 
 ## 第 1 步 —— 编写药性
 
-药性就是一张只有名字的表，丹方按 ID 引用它。它**不是元素**：别复用元素、灵气或资源的 ID，也不要在本体里找"活血、聚元"这类名单。
+药性就是一张只有身份的**空表**，丹方按 ID 引用它。它**不是元素**：别复用元素、灵气或资源的 ID，也不要在本体里找"活血、聚元"这类名单。
 
 ```json
 // data/example/mxt/medicinal_property/nourish.json
-{
-  "name": "property.example.nourish"
-}
+{}
 ```
 
-第二条照抄一份 `calm.json`。`name` 可以省略，省略时按条目 id 生成 `medicinal_property.mxt.example.<路径>`。
+第二条照抄一份 `calm.json`。药性定义**一个字段都没有**（给了也读不到）：显示名与描述一律按注册 id 现算，`nourish` 的名字键是 `mxt.medicinal_property.example.nourish`、描述键再加 `.description`，翻译这两个键才有词。
 
 ## 第 2 步 —— 将已有物品声明为药材
 
-灵植不注册新物品，它给**已有物品**挂一份元数据：药龄、寒热，以及它在三个角色里各提供多少药力。**灵植定义自己没有档位字段**——它按物品认领，物品堆上没有"我是哪份定义"的组件，所以解析时没有可问的定义；要给这株草一个档，就给它写一条 [default_quality](../datapack/json/default_quality.md) 定义，用 `items` 认领它。
+灵植不注册新物品，它给**已有物品**挂一份元数据：药龄、寒热，以及它在三个角色里各提供多少药力。**灵植定义自己没有档位字段**——它不携带物品身份，物品堆上没有"我是哪份定义"的组件，所以解析时没有可问的定义；要给这株草一个档，就给它写一条 [default_quality](../datapack/json/default_quality.md) 定义，用 `items` 认领它的果实。
 
 ```json
 // data/example/mxt/quality/common.json
-{
-  "name": "quality.example.common"
-}
+{}
 ```
 
 ```json
@@ -82,7 +78,7 @@ description: 手搭一座 3×3×3 丹炉，写一条按药性判定的丹方，�
 - **`thermal_bias` 是寒热，不是元素。** 负为寒、正为热，取值在 `-1..1`；它和火、水元素没有关系。
 - **`herb_age` 是药力公式里的局部变量。** 它读的是堆上的 `mxt:herb_age` 组件，没有组件时用这条灵植的 `default_age`。年龄抬高的是药力本身，管线不会再乘一次；一年药龄值多少完全由公式决定——这一页的公式把它折成 `3 + herb_age / 50`（药龄 100 时是 5），写成 `3 * (1 + herb_age / 100)` 时一件百年 A 才抵得上两件零龄 A。寒热加权也跟着年龄变，所以要求完全配平的丹方对药龄很敏感。
 
-想让药材能种，就给定义加 `growth`（必填的种苗、`mature_age` / `max_age`、`growth_rate`、贴图与收获物；`condition` 与 `costs` 可选）。这一页的三株都只入药，所以省略 `growth`。
+想让药材长在地里，就给定义加 `blocks`（哪些方块算这株草）与 `growth`（必填的 `mature_age` / `max_age`、`growth_rate` 与 `drops`，也就是它的果实；`condition` 与 `costs` 可选）。这一页的三株都只入药，所以省略 `growth`。
 
 ## 第 3 步 —— 炉型、炉壁材料与供热方块
 
@@ -215,7 +211,6 @@ give @s mxt:alchemy_furnace_casing[mxt:alchemy_wall_material="example:basic_wall
 ```json
 // data/example/mxt/pill_binding/warming_pill.json
 {
-  "name": "pill_binding.example.warming_pill",
   "items": ["mxt:pill"],
   "pill": "example:warming_pill",
   "max_uses": 2,
@@ -278,4 +273,4 @@ give @s mxt:pill[mxt:pill={pill:"example:warming_pill"}]
 - [pill（丹药）](../datapack/json/pill.md) —— 服用行为、丹毒、阈值与过量后的残留。
 - [pill_binding（丹药绑定）](../datapack/json/pill_binding.md) —— 认领物品、服用次数与冷却。
 - [quality（品质）](../datapack/json/quality.md) —— `alchemy_modifier` 怎么缩短开炉时长。
-- [内置物品与组件](../player-guide/items.md) —— 丹炉各部件、灵田与丹药载体在游戏里怎么用。
+- [内置物品与组件](../player-guide/items.md) —— 丹炉各部件与丹药载体在游戏里怎么用。

@@ -10,7 +10,7 @@ aside: false
 
 `data/<namespace>/mxt/ability/<path>.json`
 
-An ability is always exactly one `mxt:ability` entry, and this is the only place it is defined. Its identity is its own registry id: when `name` / `description` are omitted, the default keys are built from that id's namespace and path, with nothing appended after the path.
+An ability is always exactly one `mxt:ability` entry, and this is the only place it is defined. Its identity is its own registry id, and the definition **stores no text**: the name and description are always derived from that id, the name key being `ability.mxt.<namespace>.<path>` (the registry namespace is always `mxt`, and a `/` in the path is kept as written) and the description key being the name key plus `.description`. The only way to give this ability words is to translate those two keys.
 
 A host writes only its id or a `#tag`. An [artifact](./artifact.md)'s `abilities`, a technique's or a talisman's `granted_abilities`, spirit roots and physiques, commands and scripts all reference it, without exception, and none of them may copy an ability into the host definition: **an ability written inline inside a host is not recognised**, and it makes that whole host definition fail to parse.
 
@@ -20,8 +20,6 @@ Active, passive and triggered abilities all live on this page. An artifact abili
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `ability.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `ability.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; today it is only stored and read, nothing draws it yet. |
 | `type` | Ability type id | **required** | Written at the **top level** (`{"type": "mxt:active", ...}`), not nested inside an `ability` object. For the values see [Ability Types](/en/datapack/types/other/ability). |
 | `costs` | `Cost` list | `[]` | Costs deducted before the ability executes, **all or nothing** as one array; see [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 | `cast_time` | `NumberProvider` | `0` | Cast time. Above `0` a press only books a due tick, and the action fields actually run on that tick. |

@@ -20,7 +20,7 @@ These values belong to no single registry; many fields take them. Check the shap
 | Registry Entry Reference | `"example:resource"` | Points at one registry entry; write the entry's own id. |
 | Tag Reference | `"#example:fire"` | A vanilla tag; the `#` is required. |
 | Entry or Tag | A string or an array of strings | One id, one `#tag`, or both mixed in one array. |
-| `ItemMatcher` | An ID, a tag or a mixed array | The `items` field of every registry that claims items (`artifact`, `pill_binding`, `spirit_herb`, `technique_binding`, `item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`); it matches existing items and never creates one. |
+| `ItemMatcher` | An ID, a tag or a mixed array | The `items` field of every registry that claims items (`artifact`, `pill_binding`, `technique_binding`, `item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`); it matches existing items and never creates one. |
 | `Text Component` | A string or a text object | Accepts translation key strings and vanilla text components. |
 | `RGBColor` | `"#RRGGBB"` | A colour, written the vanilla way: `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too). **The value is RGB with no alpha**, so a written colour is always opaque — a field that needs transparency declares a key of its own (the bolt's `alpha` is glow strength, not colour transparency). |
 | `ItemStackTemplate` | `{"id":"minecraft:stone"}` or `"minecraft:stone"` | An item stack template: write either a bare item ID or an object (`id` is required, `count` and `components` are optional). Datapack registries are parsed **before item components are bound**, so every item stack inside a datapack definition uses this. |
@@ -167,7 +167,7 @@ Every entry in the array stays an entry reference or a tag; duplicate values do 
 
 ### `ItemMatcher`
 
-Every registry that claims items — `artifact`, `pill_binding`, `spirit_herb`, `item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding` — takes the three forms below in its `items` field (`technique_binding`'s `items` is the optional second route, see [Technique Binding](../json/technique_binding.md)). The two registries that claim blocks (`block_aura`, `heat_source`) have the same shape with a `blocks` field. The forms and the file layout are on the [Datapack Development Overview](../overview.md).
+Every registry that claims items — `artifact`, `pill_binding`, `item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding` — takes the three forms below in its `items` field (`technique_binding`'s `items` is the optional second route, see [Technique Binding](../json/technique_binding.md)). The three registries that claim blocks (`block_aura`, `heat_source`, `spirit_herb`) have the same shape with a `blocks` field. The forms and the file layout are on the [Datapack Development Overview](../overview.md).
 
 ```json
 "items": "minecraft:apple"
@@ -181,6 +181,6 @@ Every registry that claims items — `artifact`, `pill_binding`, `spirit_herb`, 
 "items": ["minecraft:apple", "#minecraft:logs", "othermod:token"]
 ```
 
-A matcher only references items that are already registered. When several definitions hit the same target, the one with the **highest** declared `priority` is picked (the field defaults to `0`; the eleven item-keyed registries above all accept it, and so does the block-keyed `heat_source`). A tie falls back to registry order. Which one wins is fixed by the definition itself and has nothing to do with file names (the same direction as `priority` on `aura_zone` and `element_reaction`). **This is independent of which kind of matcher entry matched**: any definition that hits joins the ranking with the number it declares, and naming an item does not move it up. `block_aura` has no `priority`: every definition that hits the same block applies, and they add up.
+A matcher only references items that are already registered. When several definitions hit the same target, the one with the **highest** declared `priority` is picked (the field defaults to `0`; the ten item-keyed registries above all accept it, and so do the block-keyed `heat_source` and `spirit_herb`). A tie falls back to registry order. Which one wins is fixed by the definition itself and has nothing to do with file names (the same direction as `priority` on `aura_zone` and `element_reaction`). **This is independent of which kind of matcher entry matched**: any definition that hits joins the ranking with the number it declares, and naming an item does not move it up. `block_aura` has no `priority`: every definition that hits the same block applies, and they add up.
 
 Every entry in the array may also be written as an object with a `type`, dispatched by the built-in `item_matcher_entry_type` registry; the fields, defaults and matching rules of every `type` are in [Item Matcher Types](/en/datapack/types/other/item-matcher).

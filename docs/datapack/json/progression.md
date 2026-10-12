@@ -12,8 +12,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `progression.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `progression.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
 | `next_level` | 下一级 id | 无 | 链上的下一级，最高一级省略。 |
 | `mastery` | `NumberProvider` | `0` | 到达该级所需的熟练度。 |
 | `damage_multiplier` | Double | `1.0` | 该等级的伤害倍率。 |

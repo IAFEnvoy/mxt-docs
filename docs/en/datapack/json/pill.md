@@ -12,8 +12,6 @@ File location: `data/<namespace>/mxt/pill/<path>.json`
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `pill.mxt.<namespace>.<path>` | Display name. When omitted the key in the left column is used. |
-| `description` | Text Component | the same key plus `.description` | Description. |
 | `quality` | Quality id | none | Optional. The tier a dose of this pill starts on. |
 | `color` | Colour | `#FFFFFF` | The icon colour of the **built-in carrier** `mxt:pill`, written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too, always opaque); white means no tint. It tints that one item only — an item a binding claims keeps its own texture. |
 | `on_consume` | `EntityAction` | `mxt:no_op` | The action run once consumption finishes. |
@@ -61,7 +59,7 @@ A stack of pills may carry an `mxt:pill` component of its own, overriding this d
 
 1. **The component's `pill` wins**: when it names a definition, that one is used; without a `pill` key the pill named by the matched binding is used.
 2. **Five effect keys are laid over it**: `on_consume`, `toxicity_gain`, `toxicity_threshold`, `on_overdose`, `toxicity_after_overdose`; a key left out still reads the definition.
-3. **A named pill whose reference has no value** (the key is still there, the registry holds nothing for it) refuses the dose, with no fallback to another definition and no fallback to the defaults. Note that naming a pill the pack does not provide **from a definition** is not that refusal — it fails the whole data pack load (see [Datapack Development Overview](../overview.md#disabling-a-definition)).
+3. **A named pill whose reference has no value** (the key is still there, the registry holds nothing for it) refuses the dose, with no fallback to another definition and no fallback to the defaults. Note that naming a pill the pack does not provide **from a definition** is not that refusal — it fails the whole data pack load (see [Datapack Development Overview](../conventions.md#disabling-a-definition)).
 
 ```mcfunction
 give @s mxt:pill[mxt:pill={pill:"example:warming_pill",toxicity_gain:2}]
@@ -85,7 +83,7 @@ Toxicity is read with the entity condition `mxt:pill_toxicity` (`comparison` and
 
 ## Carrier and Display Name
 
-The built-in `mxt:pill` item only provides vanilla eating, a name and a tooltip; the effect still runs exactly **once**. The carrier's title comes from the pill this stack resolves to when the component names one; **with no component** (the dose named by the binding) the title stays the built-in `item.mxt.pill`, and that pill's name shows on the first tooltip line. The component itself takes no part in quality or element merging, see [Item Binding](./item_binding.md).
+The built-in `mxt:pill` item only provides vanilla eating, a name and a tooltip; the effect still runs exactly **once**. The carrier's title comes from the pill this stack resolves to when the component names one — its **generated name** (`pill.mxt.<namespace>.<path>`, which only has words once you translate that key); **with no component** (the dose named by the binding) the title stays the built-in `item.mxt.pill`, and that pill's name shows on the first tooltip line. The component itself takes no part in quality or element merging, see [Item Binding](./item_binding.md).
 
 **Whether the stack can be eaten is answered by the item a binding claims**: vanilla starts a use cycle only from a `minecraft:consumable` on the stack. An item that carries one is eaten with that item's own duration and pose (a food is still refused while the player is full, which now says so on the action bar); an item that carries none has one written for it on the click and taken back when the gesture ends, so a pill bound to an item with no use of its own can be taken and the item is left untouched. Items with a use of their own (swapping, shields, kinetic weapons) and items a hold declaration claims keep their own path — a pill never takes that click away. See [pill_binding](./pill_binding.md).
 

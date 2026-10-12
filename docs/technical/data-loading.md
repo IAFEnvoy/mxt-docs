@@ -114,9 +114,9 @@ flowchart TD
 
 1. 堆上的 `mxt:quality` 组件——**全模组只有这一个组件装档位**，`/quality set`、升级成功、**锻造台结算**与**画符铭刻**都写它；按 id 回查注册表，当前包没有这一条时这一层答空；
 2. **这一堆携带的定义**自己声明的档（可选字段 `quality`）——定义类型实现 `QualityProvider`、再登记它的载体组件，`QualityService.carry` 是唯一的登记入口，载体只凭这一堆就答得出，取出的引用在当前包没有对应条目时这一层同样答空。声明它的九个定义是 `technique` / `alchemy_furnace` / `alchemy_wall_material` / `spirit_root` / `physique` / `pill` / `formation` / `secret_realm` / `contract_type`；
-3. 注册表 `mxt:default_quality`——堆上没有定义可问时的答案：裸的创造 / `/give` 物品，以及按物品认领的 `artifact` / `spirit_herb`。
+3. 注册表 `mxt:default_quality`——堆上没有定义可问时的答案：裸的创造 / `/give` 物品，以及不携带物品身份的 `artifact` / `spirit_herb`（后者由它的果实命中物品）。
 
-`artifact` 与 `spirit_herb` 没有 `quality` 是有意的：它们靠 `ItemMatcher` 按物品认领，堆上没有装定义身份的组件。`talisman` 也没有：它的载体装的是一列符的 id，没有单份定义可问，档由画符配方写组件、写不上才兜底到第 3 层。模块自己的定档逻辑另外接：锻造按蓝图 `quality_by_extra_steps` 曲线、画符按完成度 `grades[].quality`，都是定完把档写进第 1 层那个组件。`mxt:forging_result` 只记锻造记录（蓝图 id 与步数），**不含档位**；所以 `/quality clear` 会把锻造/铭刻写的那一档一起清掉，退回第 2 层、再退回第 3 层。
+`artifact` 与 `spirit_herb` 没有 `quality` 是有意的：它们不携带物品身份，堆上没有装定义身份的组件。`talisman` 也没有：它的载体装的是一列符的 id，没有单份定义可问，档由画符配方写组件、写不上才兜底到第 3 层。模块自己的定档逻辑另外接：锻造按蓝图 `quality_by_extra_steps` 曲线、画符按完成度 `grades[].quality`、灵植按 `quality_by_age` 与药龄，都是定完把档写进第 1 层那个组件。`mxt:forging_result` 只记锻造记录（蓝图 id 与步数），**不含档位**；所以 `/quality clear` 会把锻造/铭刻写的那一档一起清掉，退回第 2 层、再退回第 3 层。
 
 `hasOverride(stack)` 问的是"组件在不在"，与"解析出没解析出档位"是两个问题：一件靠携带的定义或这张注册表兜底的物品也照样显示品质（组件不在）。
 
@@ -137,4 +137,3 @@ flowchart TD
 
 - [数据包开发总览](/datapack/overview)、[动态注册表](/datapack/json/index)、[物品匹配器](/datapack/types/other/item-matcher)
 - [注册表与 Codec](/java/registries)、[公开 API](/java/api)（`MxtDatapackRegistries` 的重载与缓存规则）
-- [接口 · NamedDefinition](/java/interfaces/definition/named-definition)（定义自带的 `name` / `description`）

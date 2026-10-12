@@ -304,6 +304,23 @@ description: 模组注册的全部内置方块行为类型，以及每种类型�
 
 只在服务端、且该位置已加载时生成。生成点在方块中心，不是方块角。
 
+### mxt:send_message
+
+给玩家发一条消息。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `message` | 文本 | **必填** | 字符串按翻译键读，对象按完整文本组件读。 |
+| `channel` | `chat` / `action_bar` | `chat` | 发到聊天栏还是物品栏上方的动作栏。 |
+| `target` | `self` / `other` / `all` | `self` | 发给谁。方块行为只有一个位置、没有自己的实体，所以只有 `all` 找得到收件人。 |
+| `recipients` | 实体条件 | 恒真 | 逐个候选玩家判定，用来收窄收件人。 |
+
+```json
+{ "type": "mxt:send_message", "message": "your.pack.message_key", "target": "all" }
+```
+
+字段含义与「发给谁」的限制见[实体行为](entity_action_types.md#mxt-send-message)。
+
 ::: info 嵌套值
 收别的家族的只有三处：`mxt:if_else` 的 `condition` 和 `mxt:explode` 的 `indestructible` 收[方块条件](../condition/block_condition_types.md)，`mxt:spawn_entity` 的 `entity_action` 收[实体行为](entity_action_types.md)。
 :::

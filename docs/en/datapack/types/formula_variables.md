@@ -182,9 +182,9 @@ They read the entity the formula is evaluated for (the context's caster, or the 
 | Variable | Available when | Description |
 | --- | --- | --- |
 | `pill_toxicity` | The context has an entity | Pill toxicity accumulated on the entity the formula is evaluated for. An entity that has never taken a pill reads `0` and does not gain an empty record for it; in a Level-only or empty context this name cannot be provided at all. |
-| `herb_age` | Only inside that herb's own potency formulas | The age of the stack, a non-negative integer. It is **local**: it is injected into `main_effects`, `auxiliary_effects` and `catalyst_power`, it cannot be read anywhere else, and the pipeline never multiplies age in a second time. |
+| `herb_age` | Only inside that herb's own formulas | The herb's age, a non-negative integer. It is **local**: it is injected into `main_effects`, `auxiliary_effects` and `catalyst_power` (which read the stack's copy) and also into `growth_rate`, `condition` and `costs` (which read **the plant's own** age), it cannot be read anywhere else, and the pipeline never multiplies age in a second time. |
 
-Write the age bonus into the expression yourself when a potency formula needs it, for example `"3 + herb_age / 50"`. The age is read from the stack's `mxt:herb_age` component, falling back to that herb's `default_age` when the component is absent.
+Write the age bonus into the expression yourself when a potency formula needs it, for example `"3 + herb_age / 50"`. On the potency side that reads the stack's `mxt:herb_age` component, falling back to that herb's `default_age`; on the growth side it reads the plant's current age, the number in the chunk attachment.
 
 ## Where Each Variable Is Available
 
@@ -204,6 +204,7 @@ Which variables a formula can read is decided by the objects the caller puts int
 | Curse duration, tick interval, conditions, actions | caster (or the context of whatever applied the curse) | Entity family, plus the payload of the ability that applied it |
 | Item, weapon, pill and technique bindings, item quality, pill toxicity | the user or holder entity | Entity family (including `pill_toxicity`), plus `target_health` / `target_is_living` on a weapon attack |
 | Spirit herb potency (`main_effects`, `auxiliary_effects`, `catalyst_power`) | The stack itself, plus whatever context the caller supplies | The local `herb_age`; the entity family when the context carries an entity |
+| Spirit herb growth (`growth_rate`, `condition`, `costs`) | The Level the plant stands in | The local `herb_age` (**the plant's own** age, not the stack's), plus whatever a Level-only context can read |
 | A pill recipe's own formula fields (thresholds, temperature, duration, environment gate) | the player starting the batch, plus the core tier's position | The entity family; `furnace_rank` (where the core tier sits on its own ladder, reading `0` when no core is in hand) |
 | Forging, formations, contracts, creature profiles, secret realms, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for `entity_tick_action`; + the secret realm family inside an instance) |
 | Tribulation timeline entry duration and conditions | caster | Entity family + `aura_tribulation_modifier` |

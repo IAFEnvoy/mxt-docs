@@ -12,15 +12,13 @@ A `realm_stage` is one stage of a realm chain. `aura` decides which chain the st
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `realm_stage.mxt.<namespace>.<path>` | Display name; omitted, it is the default key in the previous column. |
-| `description` | Text Component | `realm_stage.mxt.<namespace>.<path>.description` | Description; omitted, it is the default key in the previous column. It is stored and read, but no screen draws it. |
 | `aura` | Aura ID | **required** | The realm chain this stage belongs to. |
 | `aura_share_weight` | `NumberProvider` | `1` | Weight in the same-chunk aura split while `aura_zone.distribution` is `realm_weighted`. |
 | `cultivate_condition` | `EntityCondition` | `mxt:always` | Environment conditions under which this realm may cultivate. |
 | `next_realm` | Realm ID | none | The next stage on the chain; at most one. |
 | `breakthrough_exp` | `NumberProvider` | `0` | Minimum progress count needed to break through to the next stage. |
 | `max_experience` | `NumberProvider` | `Double.MAX_VALUE` | Largest progress count that may be held before moving on to the next stage. |
-| `minor_stages` | Text Component array or integer | `[]` | Minor stage names, or how many layers there are. |
+| `minor_stages` | Integer | `0` | How many minor stages this realm has, `0..1024`; the names are always generated from this stage's name key. |
 | `breakthrough` | Condition group object | empty object | Breakthrough conditions checked once the minimum progress is reached. |
 | `auto_breakthrough` | `Boolean` | `false` | Whether cultivation mode attempts a breakthrough on its own. |
 | `passive_modifiers` | Attribute modifier entry array | `[]` | Vanilla attribute modifiers this stage grants. |
@@ -47,11 +45,11 @@ An entry of `passive_modifiers` writes `attribute` and the vanilla modifier's `i
 
 `lifespan` is added only by the breakthrough that successfully reaches this stage, and only once. It is an **increment**: a later stage written smaller merely adds less, and it never takes back life the body already earned. A literal constant must be finite and non-negative, or loading is refused outright; a formula is judged at the moment of the breakthrough instead, and a result that is not finite or is negative logs one warning and adds nothing. Writing `0` (or a formula that evaluates to `0`) means this stage grants no extra life — it does **not** mark the body as "out of lifespan". See [Lifespan](/en/player-guide/lifespan).
 
-An array writes those names (a string counts as a translation key, an object as a full component); a single integer writes how many layers there are, and the names are generated as `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>` (the index starts at `0`, capped at `1024`). Minor stage names are read in three places: the information panel prints the current one after the realm name, the `minor_stage` formula variable, and the threshold index of `minor_stage_abilities`.
+`minor_stages` is a **count** only: whatever number you write is how many minor stages this realm has, `0` by default and `0..1024` in range. The name of each stage has **no way to be written**, and is always generated from this stage's name key: `realm_stage.mxt.<definition namespace>.<path>.minor_stage.<index>`, the index starting at `0` (declare `9` for `qi_refining` and you get `.minor_stage.0` through `.minor_stage.8`). Translate those keys to give them words. This stage's own name key is `realm_stage.mxt.<definition namespace>.<path>`, and its description key is that plus `.description`; the definition has no writable text field. Minor stage names are read in three places: the information panel prints the current one after the realm name, the `minor_stage` formula variable, and the threshold index of `minor_stage_abilities`.
 
 `breakthrough` is a condition group, not a single condition. It reads three keys: `conditions` (condition array, empty by default, all of which must pass), `triggers` (trigger array, empty by default) and `action` (optional entity action). `conditions` is evaluated immediately once the breakthrough stage is reached; `triggers` only register as runtime subscriptions after that, and a matching event then attempts the breakthrough. Subscriptions are never written to the save: they are rebuilt from the cultivation state after a save or the registries are loaded.
 
-An entry of `minor_stage_abilities` looks like `{ "stage": 2, "ability": ["example:qi_sense"] }`: `stage` is the **0-based index** into `minor_stages` (the same numbering the `minor_stage` formula variable uses), and `ability` is a list of ability IDs / `#tags`; omit it and that layer unlocks nothing. The check is **cumulative**: a layer ≥ `stage` is in effect; **an unlock is permanent** and breaking through out of this realm or resetting progress to zero never takes it back. Load-time validation: `stage` must be non-negative, must fall inside this realm's `minor_stages`, and the same `stage` must not be written twice.
+An entry of `minor_stage_abilities` looks like `{ "stage": 2, "ability": ["example:qi_sense"] }`: `stage` is the **0-based index** into `minor_stages` (the same numbering the `minor_stage` formula variable uses), and `ability` is a list of ability IDs / `#tags`; omit it and that layer unlocks nothing. The check is **cumulative**: a layer ≥ `stage` is in effect; **an unlock is permanent** and breaking through out of this realm or resetting progress to zero never takes it back. Load-time validation: `stage` must be non-negative, must be below this realm's `minor_stages`, and the same `stage` must not be written twice.
 
 ```json
 // data/example/mxt/realm_stage/foundation.json
@@ -84,15 +82,9 @@ An entry of `minor_stage_abilities` looks like `{ "stage": 2, "ability": ["examp
 }
 ```
 
-That file declares nine layers with the integer form, so the names are generated as `realm_stage.mxt.example.foundation.minor_stage.0` through `…minor_stage.8`. Written as an array, translation keys and full components may be mixed, for example:
+That file declares nine minor stages with the integer form, so the names are generated as `mxt.realm_stage.example.foundation.minor_stage.0` through `…minor_stage.8`; add them to your own language file and the information panel prints the current one after the realm name.
 
-```json
-{
-  "minor_stages": ["example:layer_1", {"text": "Third Layer", "color": "gold"}]
-}
-```
-
-Minor stages change no threshold by themselves; they only answer "which layer is this now": the stage's `breakthrough_exp` is evaluated and cut evenly into as many segments as there are entries, and the progress falls into one of them (`0` is the first — with nine minor stages and a `breakthrough_exp` of `900`, `0`–`100` is the first and `minor_stage` is `0`). Progress may exceed `breakthrough_exp` (whose cap is `max_experience`), and past it the body stays on the last layer. The `minor_stage` formula variable reads `NaN` when `breakthrough_exp` evaluates to `0` or a negative number, when the stage writes no `minor_stages`, and while the player has no realm at all (a mortal still reads `realm` as `0`, so the two do not agree). The segment width moves with the `breakthrough_exp` formula, so a formula only settles the width at runtime.
+Minor stages change no threshold by themselves; they only answer "which layer is this now": the stage's `breakthrough_exp` is evaluated and cut evenly into as many segments as `minor_stages`, and the progress falls into one of them (`0` is the first — with nine minor stages and a `breakthrough_exp` of `900`, `0`–`100` is the first and `minor_stage` is `0`). Progress may exceed `breakthrough_exp` (whose cap is `max_experience`), and past it the body stays on the last layer. The `minor_stage` formula variable reads `NaN` when `breakthrough_exp` evaluates to `0` or a negative number, when the stage writes no `minor_stages` (or writes `0`), and while the player has no realm at all (a mortal still reads `realm` as `0`, so the two do not agree). The segment width moves with the `breakthrough_exp` formula, so a formula only settles the width at runtime.
 
 **Unlocking by minor stage** (`minor_stage_abilities`) and the **conditional gate** (`min_minor_stage` on the `mxt:realm` entity condition) read the same record: **the highest layer the body has ever reached in each realm**, kept in the `spirit_identity` attachment and **only ever growing**. That record is what carries "an unlock is permanent", and it is why `min_minor_stage` still holds after the realm has been left. It is refreshed every time cultivation progress lands and after a successful breakthrough (`/realm set` refreshes it too), so it never lags behind the layers actually reached; a realm that was never entered reads as "no record", and no `min_minor_stage` is satisfied by it.
 

@@ -36,6 +36,8 @@ data/<namespace>/mxt/weapon_binding/<条目>.json
 
 **武器自己的攻击力与攻速也写在 `attributes` 里**（`minecraft:attack_damage` / `minecraft:attack_speed`，`operation` 用 `add_value`）：它是**加法叠加**在物品自带的修正之上，**不会替换**物品自身的数值。想「这件武器的基础伤害就是 8」要改物品自己的 `minecraft:attribute_modifiers`（配方组件、`mxt:merge_components` 或 KJS），或者换一个本来就没有攻击修正的底材。每个条目写它属于哪个属性、用哪个原版修正、修正量多少；修正本身按原版属性修正的形状写。
 
+**两只手都算**：`attributes` 只写修正量与修正本身的 id，**落在哪只手由那一堆当时在哪个槽位决定**——主手那一堆写主手组、副手那一堆写副手组，所以副手拿的武器也会生效，而且只作用于它所在的那只手。两条不同的武器同时握在手里时，条目 `id` **必须互不相同**：原版的属性表按 id 索引，同名会让后写的把先写的顶掉。
+
 `data/example/mxt/weapon_binding/frost_blade.json`：
 
 ```json

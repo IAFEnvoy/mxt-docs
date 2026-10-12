@@ -22,8 +22,6 @@ The filename corresponds to its ID. For example, `data/example/mxt/alchemy_furna
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `alchemy_furnace.mxt.<namespace>.<path>` | The furnace's display name. |
-| `description` | Text Component | the same key plus `.description` | The furnace's description. |
 | `quality` | Quality id | none | Optional. The tier a furnace built to this specification starts on. |
 | `main_slots` | Integer | **required** | Main ingredient slots, `1..2`. |
 | `auxiliary_slots` | Integer | `0` | Auxiliary ingredient slots, `0..2`. |

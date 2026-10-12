@@ -29,7 +29,7 @@ The table below lists the mod's 41 datapack registries. In the field tables, "De
 | `progression` | `mxt/progression` | One level of a progression chain. |
 | `cultivation` | `mxt/cultivation` | One cultivation routine: which ambient aura it absorbs, what it does every tick and on a tick that settles, and what it costs and yields. |
 | `spirit_herb` | `mxt/spirit_herb` | Spirit herb metadata for existing items. |
-| `medicinal_property` | `mxt/medicinal_property` | Medicinal identities: a name and description for one medicinal effect. |
+| `medicinal_property` | `mxt/medicinal_property` | Medicinal identities: the identity of one medicinal effect. |
 | `alchemy_furnace` | `mxt/alchemy_furnace` | Furnace specifications: slots, per-batch capacity and cooling rate. |
 | `alchemy_wall_material` | `mxt/alchemy_wall_material` | Wall materials: the temperature limit of one casing block. |
 | `formation` | `mxt/formation` | Formation lifecycle and aura overrides. |
@@ -41,7 +41,7 @@ The table below lists the mod's 41 datapack registries. In the field tables, "De
 | `pill_binding` | `mxt/pill_binding` | Claims a family of existing items as one pill, with its use cap and cooldown. |
 | `technique_binding` | `mxt/technique_binding` | Bindings from existing items to cultivation technique learning. |
 | `aura_zone` | `mxt/aura_zone` | Environment aura templates. |
-| `quality` | `mxt/quality` | Shared quality: name, colour, three modifiers, a use condition, and where the tier sits on its ladder with what one step up costs. |
+| `quality` | `mxt/quality` | Shared quality: colour, three modifiers, a use condition, and where the tier sits on its ladder with what one step up costs. |
 | `trigger` | `mxt/trigger` | Event rules: a signal, a condition and an action. |
 | `talisman` | `mxt/talisman` | Talisman definitions: the ability one inscribed talisman carries. |
 | `item_aura` | `mxt/item_aura` | The cultivation fuel an item provides: which items it claims, how much aura they hold and how fast it flows. |

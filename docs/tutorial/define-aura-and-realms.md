@@ -182,7 +182,7 @@ realm_stage chain             progress + conditions + costs → next realm
 把三个文件放在一起读：
 
 - `breakthrough_exp` 是**离开**该阶段所需的修为，`max_experience` 是你身处其中时的修为上限。两者不能交叉：常量 `breakthrough_exp` 大于常量 `max_experience` 会在加载期被拒绝。
-- 可选的 `minor_stages` 是子境界：写数组就是名字本身（字符串当翻译键、对象当完整组件），写一个整数 N 就是「这么多重」——名字按条目 id 自动生成为 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`，下标从 `0` 起。它影响三处：信息面板在境界名后写出当前这一重、公式里多一个从 `0` 起的 `minor_stage`、以及 `minor_stage_abilities` 用这个下标按层解锁能力（累计，解锁过就永久保留）。切分是把本阶段的 `breakthrough_exp` 均分，不改变阈值、消耗或任何结算。
+- 可选的 `minor_stages` 只是一个**数量**：写一个整数 N 就是「这么多重」（默认 `0`，范围 `0..1024`），**没有写名字的途径**——每一重的名字一律按本境界的名字键生成，为 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`，下标从 `0` 起。老包里写成名字数组的形式不再接受（类型不符会让整份定义解码失败），要改写成整数。它影响三处：信息面板在境界名后写出当前这一重、公式里多一个从 `0` 起的 `minor_stage`、以及 `minor_stage_abilities` 用这个下标按层解锁能力（累计，解锁过就永久保留）。切分是把本阶段的 `breakthrough_exp` 均分，不改变阈值、消耗或任何结算。
 - `costs` 在突破成功时支付；`breakthrough.conditions` 与修为一起检查。两者都属于你正要离开的那个阶段——只有最开始的一步例外，那时阈值来自 aura 的 `start_exp`，条件来自目标阶段的 `breakthrough`。
 - `auto_breakthrough` 默认为 `false`：玩家到达阈值后要自己等。想让修炼模式自行尝试突破就设为 `true`。
 - `passive_modifiers` 是在该阶段被持有期间授予的原版属性修正。`value` 是可选的公式，声明了它的条目每 tick 重新计算。
@@ -250,24 +250,24 @@ realm_stage chain             progress + conditions + costs → next realm
 
 ## 第 6 步 —— 名称
 
-显示名称默认由定义 ID 自动生成，所以你不需要把翻译键写进 JSON —— 除非你想自己写名字：`resource`、`aura`、`realm_stage`、`element`、`cultivation` 等 24 个注册表的定义都可以写可选的 `name` / `description`（两者都可省略，省略时按 id 生成键）。把这些键加到你自己的语言文件里：
+显示名称一律由定义 ID 自动生成，你**没有地方把名字写进 JSON**：定义里没有 `name` / `description` 字段，给了也读不到。包唯一能给一个定义配词的办法就是翻译生成的键。把这些键加到你自己的语言文件里：
 
 ```json
 // assets/example/lang/en_us.json
 {
-  "resource.mxt.example.qi": "Spirit Qi",
-  "aura.mxt.example.qi": "Spirit Qi",
-  "realm_stage.mxt.example.qi_condensation": "Qi Condensation",
-  "realm_stage.mxt.example.foundation": "Foundation Establishment",
-  "realm_stage.mxt.example.core_formation": "Core Formation",
-  "element.mxt.example.common": "Common Aura",
-  "cultivation.mxt.example.meditation": "Meditation"
+  "mxt.resource.example.qi": "Spirit Qi",
+  "mxt.aura.example.qi": "Spirit Qi",
+  "mxt.realm_stage.example.qi_condensation": "Qi Condensation",
+  "mxt.realm_stage.example.foundation": "Foundation Establishment",
+  "mxt.realm_stage.example.core_formation": "Core Formation",
+  "mxt.element.example.common": "Common Aura",
+  "mxt.cultivation.example.meditation": "Meditation"
 }
 ```
 
-规则始终是 `<category>.<registry namespace>.<namespace>.<path>`，其中 category 是注册表自己的 path，而**注册表命名空间恒为 `mxt`**，所以 `resource` 里的 `example:qi` 是 `resource.mxt.example.qi`，同一个 ID 在 `aura` 里则是 `aura.mxt.example.qi`。含有 `/` 的 path 会保留斜杠：`example:realm/qi` 是 `realm_stage.mxt.example.realm/qi`。没有键的定义依然可用；游戏只会显示原始键名。
+规则始终是 `<registry namespace>.<category>.<namespace>.<path>`，其中 category 是注册表自己的 path，而**注册表命名空间恒为 `mxt`**（所以键总以 `mxt.` 开头），`resource` 里的 `example:qi` 是 `mxt.resource.example.qi`，同一个 ID 在 `aura` 里则是 `mxt.aura.example.qi`。含有 `/` 的 path 会保留斜杠：`example:realm/qi` 是 `mxt.realm_stage.example.realm/qi`。没有键的定义依然可用；游戏只会显示原始键名。
 
-定义自带文本字段时用的是**同一个键**：`quality` 的 `name` / `description` 省略时拿到 `quality.mxt.<命名空间>.<路径>`（描述再加 `.description`，例如 `mxt_test:poor` 是 `quality.mxt.mxt_test.poor`），`realm_stage` 用整数写法声明子境界时拿到 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`。除了 `quality` 的 `description`（品质名下面那一行），这些字段目前只被存储与读取，还没有地方绘制它们。
+描述用的是**名字键再接 `.description`**：`quality` 里 `mxt_test:poor` 的名字键是 `mxt.quality.mxt_test.poor`、描述键是 `mxt.quality.mxt_test.poor.description`；`realm_stage` 的子境界名键是 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`。**描述只有三处会画出来**：`quality`（品质名下面那一行）、`contract_type`（契约卷轴的提示框）与 `pill`（认领丹药的物品提示框），而且只在这个键被翻译时才画；其余注册表的描述键没有任何界面或提示框去读，属于「生成了但没人画」。
 
 ## 在游戏里验证
 

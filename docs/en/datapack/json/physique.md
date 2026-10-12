@@ -12,8 +12,6 @@ A physique hands out bonuses that stand apart from elements: vanilla attributes,
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `physique.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column; when written, that text is used. |
-| `description` | Text Component | `physique.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is stored and read, but no screen draws it. |
 | `attribute_modifiers` | Attribute modifier entry array | `[]` | Vanilla attribute bonuses independent of spirit roots. |
 | `granted_abilities` | Array of ability ids or `#tags` | `[]` | Granted abilities. |
 | `holder_condition` | `EntityCondition` | `mxt:always` | The holder condition checked before granting. |
@@ -68,4 +66,4 @@ The mod also ships a **physique item**, `mxt:physique`: the `mxt:physique` compo
 
 A physique that is already held can be **switched off without being lost**: once it is off, its attribute modifiers, granted abilities and both damage multipliers all stop applying, but it is still "held" (`mxt:has_physique` still answers true, and it can still be removed normally). That state lives in the `spirit_identity` attachment, so it is saved and synchronised with the entity.
 
-**Switching off** has **no player-facing entry point** (no keybind and no screen): the operation is the script-side `MxtPhysiques.setEnabled`, or the administrator command `/mxt physique enable|disable`. That is a different question from taking the definition out of the data pack: the switch only governs the one entry that was switched off, and that entry is still held, while removing the definition takes it out of the registry entirely (write `neoforge:conditions`, see [Disabling a Definition](../overview.md#disabling-a-definition)).
+**Switching off** has **no player-facing entry point** (no keybind and no screen): the operation is the script-side `MxtPhysiques.setEnabled`, or the administrator command `/mxt physique enable|disable`. That is a different question from taking the definition out of the data pack: the switch only governs the one entry that was switched off, and that entry is still held, while removing the definition takes it out of the registry entirely (write `neoforge:conditions`, see [Disabling a Definition](../conventions.md#disabling-a-definition)).

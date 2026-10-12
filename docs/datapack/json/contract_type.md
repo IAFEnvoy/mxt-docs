@@ -14,8 +14,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `contract_type.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `contract_type.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；契约卷轴的提示框会把它显示出来，默认键没被翻译时不显示。 |
 | `quality` | 品质 id | 无 | 可选。这份契约的卷轴起始的档位。 |
 | `owner_condition` | `EntityCondition` | `mxt:always` | 主人条件。 |
 | `creature_condition` | `EntityCondition` | `mxt:always` | 灵宠条件，资格判定之后。 |

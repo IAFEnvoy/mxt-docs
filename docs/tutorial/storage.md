@@ -26,7 +26,6 @@ description: "给一件物品挂一条储物技能：格数怎么算、箱子存
 // data/example/mxt/ability/blade_storage.json
 {
   "type": "mxt:storage",
-  "name": "剑鞘储物",
   "slots": 27,
   "cooldown": 20
 }
@@ -39,7 +38,7 @@ description: "给一件物品挂一条储物技能：格数怎么算、箱子存
 | `slots` | 数字或公式串 | **必填** | 声明格数。 |
 | `cooldown` | 数字或公式串 | `0` | 按下之后的冷却，单位 tick。 |
 
-通用字段（`name`、`condition`、`icon` 这些）照旧可用，见 [ability（技能）](../datapack/json/ability.md)。
+通用字段（`condition`、`icon` 这些，**不包括 `name`**：技能名一律按注册 id 现算，写成 `ability.mxt.<命名空间>.<路径>`，翻译那个键才有显示名）照旧可用，见 [ability（技能）](../datapack/json/ability.md)。
 
 `slots` 的求值顺序是固定的：
 

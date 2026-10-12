@@ -36,6 +36,8 @@ Like every other datapack registry it is read **while the world loads**, and `/r
 
 **A weapon's own attack damage and attack speed go in `attributes` too** (`minecraft:attack_damage` / `minecraft:attack_speed`, with `operation` set to `add_value`): they are **added on top of** the modifiers the item already ships with and **never replace** the item's own numbers. If you want "this weapon's base damage is exactly 8", change the item's own `minecraft:attribute_modifiers` (recipe components, `mxt:merge_components` or KJS), or start from a base item that carries no attack modifiers at all. Each entry says which attribute it belongs to, which vanilla modifier it uses and how much it moves the number; the modifier itself uses the vanilla attribute modifier shape.
 
+**Both hands count**: `attributes` only states the modifier and its id; **which hand it lands on is decided by the slot the stack is in** - a mainhand stack is written as a mainhand entry and an offhand stack as an offhand entry, so a weapon held in the offhand applies as well, and only to the hand it is in. When two different weapons are held at once, their entry `id`s **must differ**: vanilla's attribute map is keyed by id, so the second write would evict the first.
+
 `data/example/mxt/weapon_binding/frost_blade.json`:
 
 ```json

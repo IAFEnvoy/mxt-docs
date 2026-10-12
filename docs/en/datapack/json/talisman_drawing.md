@@ -69,7 +69,7 @@ Not one field here can change the product — this block only moves the completi
 
 A formula inside `result` gets two extra variables: `percentage`, the completion of this attempt (0 to 1), and `paper_rank`, **where the tier written on the sheet actually taken sits on its own ladder** (counted from the entry tier, so `0` is the entry tier and also the only number a sheet with no tier — or a tier no ladder holds — can give; a formula cannot tell those apart). `max_damage`, `charge_ratio` and the number providers of both actions can read them, written as ordinary formulas (`"0.5 + 0.5 * percentage"`, `"percentage * percentage + paper_rank * 50"`). The names have to be `percentage` / `paper_rank` or a formula variable the registry provides, and **anything else is refused at load** rather than silently read as 0. `paper_rank` reads the sheet the drawing **actually took**, so "good paper, better talisman" is written right there in the formula. `outputs` cannot read them — an `ItemStackTemplate` count is fixed, so different counts per completion means different grades.
 
-A drawing recipe **declares no `name` / `description`**: the entry in the recipe list and the talisman name in the output's tooltip both come from the definition the top-level `talisman` names.
+A drawing recipe declares neither a name nor a description: the entry in the recipe list and the talisman name in the output's tooltip both come from the **name key generated from the registered id** of the definition the top-level `talisman` names (`talisman.mxt.<definition namespace>.<path>`, which only has words once you translate it).
 
 ## Load-Time Checks
 

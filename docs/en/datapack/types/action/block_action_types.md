@@ -304,6 +304,23 @@ Spawns an entity at the acted block position and runs an optional entity action 
 
 Only spawned on the server, and only when that position is loaded. The spawn point is the centre of the block, not a corner.
 
+### mxt:send_message
+
+Sends one message to players.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `message` | Text | **required** | A string is read as a translation key, an object as a full text component. |
+| `channel` | `chat` / `action_bar` | `chat` | Whether the line goes to the chat log or above the hotbar. |
+| `target` | `self` / `other` / `all` | `self` | Who it is addressed to. A block action has only a place and no entity of its own, so only `all` finds anyone. |
+| `recipients` | Entity condition | always true | Asked per candidate player, to narrow the recipients down. |
+
+```json
+{ "type": "mxt:send_message", "message": "your.pack.message_key", "target": "all" }
+```
+
+The fields and what `target` can name are described under the [entity action](entity_action_types.md#mxt-send-message).
+
 ::: info Nested Values
 Only three fields take a value from another family: `condition` on `mxt:if_else` and `indestructible` on `mxt:explode` take a [block condition](../condition/block_condition_types.md), and `entity_action` on `mxt:spawn_entity` takes an [entity action](entity_action_types.md).
 :::

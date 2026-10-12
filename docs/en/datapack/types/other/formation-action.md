@@ -11,6 +11,8 @@ The `actions` array of a [formation](../../json/formation.md) holds these functi
 
 The same module may appear more than once, and the list is not merged: two attack modules with different parameters are two strikes.
 
+**`interval_periods` is a field shared by all four modules that run on a period** (`attack` / `buff` / `send_message` / `range_display`); it defaults to `1`, meaning every period, which behaves exactly as not writing the field at all. It counts **formation periods** rather than ticks: dispatch only ever lands on a period boundary (1 period = 20 ticks), so a tick count would be silently rounded to that grid. The phase comes from the **world clock** rather than a counter kept per module, so every entity inside one formation — and every formation running one definition — runs **on the same beat**; a larger interval never makes the people inside one formation receive a message in turn.
+
 ```json
 {
   "actions": [
@@ -43,6 +45,7 @@ Attacks entities inside the radius.
 | `attribute_to_owner` | Boolean | `true` | Credits the **first owner** (the head of the list, the one who raised the formation) as the attacker |
 | `effects` | Array | `[]` | Status effects applied each period; the fields are exactly those of `mxt:apply_effect`: `effect` / `duration_ticks` / `amplifier` |
 | `target_condition` | `EntityCondition` | always true | An extra filter on the **target entity** (undead only, players only, …), evaluated after the friend-or-foe decision |
+| `interval_periods` | Integer `1..1200` | `1` | How often to strike, in formation periods (1 period = 20 ticks) |
 
 ```json
 {"type": "mxt:attack", "damage": 8, "damage_type": "minecraft:lightning_bolt"}
@@ -66,6 +69,7 @@ Grants abilities to entities inside the radius, overrides the aura zone of the a
 | `target` | Enum | `all` | Which entities the module applies to: `all`, `allies` or `owner` |
 | `aura_zone` | Aura zone ID | none | A high-priority runtime aura override that replaces the aura resolved at the formation's position |
 | `max_bonus` | Map from aura ID to `NumberProvider` | `{}` | Extra aura capacity per aura, for the chunks in range |
+| `interval_periods` | Integer `1..1200` | `1` | How often to re-grant, in formation periods (1 period = 20 ticks) |
 
 ```json
 {"type": "mxt:buff", "abilities": ["example:blessing"], "target": "allies"}
@@ -80,6 +84,8 @@ The three `target` settings are one rule at three widths: `all` filters nothing;
 `max_bonus` is only applied together with the `aura_zone` override: with no `aura_zone` there is nowhere to add it, and an aura the zone does not provide cannot be raised either (it does not conjure aura out of nothing). When several bonuses land on the same aura, the highest wins.
 
 Attribute bonuses do not look for a field here: passive attributes are the `modifiers` field of the `mxt:modifier` ability itself, so granting an `mxt:modifier` ability is the same as granting its attribute modifiers; there is no second entry point, or the same thing would have two sets of rules — including the easiest part to get wrong, "a modifier outliving the formation that granted it".
+
+`interval_periods` only makes the **re-granting** sparser and does not affect **revoking**: granting is idempotent, so an ability already handed out stays in force through the periods that are skipped. Leaving the radius and dismantling the formation are the two revoke paths that **ignore this field** and take effect at once; only "standing still while an owner stops treating you as a friend" waits for the next due period, because that one is decided in passing during the re-granting pass.
 
 ### `mxt:protection`
 
@@ -197,5 +203,25 @@ A formation's range is a sphere, and nothing in the world says where it ends —
 - It is only sent to **players who can see it**: within the radius **+ 32 blocks**. Vanilla's broadcast call is pinned at 32 blocks, so this sends per player instead — otherwise a formation with a radius above 32 would have a ring of its outline cut off. One particle packet per point, so `points` times the number of players who can see it is the cost per period.
 - `ring` is drawn at the **centre height of the controller block**; `sphere` lays points out by the golden angle, so a latitude/longitude grid does not bunch them up at the poles.
 - It runs after `TickEffects` and before `tick_action`, so **cancelling the period of `TickEffects` stops the range from being drawn along with it**.
-- `interval_periods` counts **formation periods**, not ticks: dispatch only ever lands on period boundaries.
 - Several may be written to layer different particles.
+
+### `mxt:send_message`
+
+Sends a message to the players a formation covers.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `message` | Text | **required** | A string is read as a translation key, an object as a full text component |
+| `channel` | Enum | `chat` | `chat` puts it in the chat log, `action_bar` above the hotbar |
+| `recipients` | `EntityCondition` | always true | Asked **per covered entity**; when it does not hold, that entity is not told |
+| `interval_periods` | Integer `1..1200` | `1` | How often to send, in formation periods (1 period = 20 ticks) |
+
+```json
+{"type": "mxt:send_message", "message": "example.array.warning", "channel": "action_bar"}
+```
+
+It runs on the formation period and **runs once per covered entity**, so each person gets their own message rather than the whole area getting one broadcast. It is not addressed to the owner: whoever stands inside the radius receives it, the owner included.
+
+`recipients` is evaluated per person, so only some of them can be warned (only the owner's enemies, only friends, only one kind of creature). Non-player entities receive nothing, and asking the condition about them means nothing.
+
+It only affects the recipients: it takes no part in the friend-or-foe decision and does not change whether the formation is hostile.

@@ -182,7 +182,7 @@ Each `realm_stage` file is one stage. A stage names exactly one aura, and `next_
 Reading the three files together:
 
 - `breakthrough_exp` is the progress required to **leave** this stage, and `max_experience` is the progress cap while you are in it. They must not cross: a constant `breakthrough_exp` greater than a constant `max_experience` is rejected at load time.
-- The optional `minor_stages` holds the sub-stages: an array is the names themselves (a bare string is a translation key, an object is a full component), while an integer N means "N layers" — the names are then generated from the entry id as `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`, counting from `0`. It is read in three places: the information panel prints the current one after the realm name, formulas gain a 0-based `minor_stage`, and `minor_stage_abilities` uses that index to unlock abilities by layer (cumulative, and an unlock is permanent). The cut is an even split of this stage's `breakthrough_exp`, and it changes no threshold, cost or settlement.
+- The optional `minor_stages` is only a **count**: an integer N means "N layers" (`0` by default, range `0..1024`), and there is **no way to write the names** — each layer's name is always generated from this stage's name key as `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`, counting from `0`. The old array-of-names form is no longer accepted (the type mismatch fails the whole definition's decode), so rewrite it as an integer. It is read in three places: the information panel prints the current one after the realm name, formulas gain a 0-based `minor_stage`, and `minor_stage_abilities` uses that index to unlock abilities by layer (cumulative, and an unlock is permanent). The cut is an even split of this stage's `breakthrough_exp`, and it changes no threshold, cost or settlement.
 - `costs` are paid on a successful breakthrough; `breakthrough.conditions` are checked alongside the progress. Both belong to the stage you are leaving — except for the very first step, where the threshold comes from the aura's `start_exp` and the conditions come from the target's `breakthrough`.
 - `auto_breakthrough` defaults to `false`: the player reaches the threshold and waits. Set it to `true` if you want cultivation mode to attempt the breakthrough on its own.
 - `passive_modifiers` are vanilla attribute modifiers granted while the stage is held. `value` is an optional formula, and an entry that declares it is recalculated every tick.
@@ -250,24 +250,24 @@ The aura environment has enough depth to deserve its own page — that is [Defin
 
 ## Step 6 — Names
 
-Display names are generated from the definition ID by default, so you do not have to write a translation key into the JSON — unless you want your own text: the definitions of 24 registries, including `resource`, `aura`, `realm_stage`, `element` and `cultivation`, may carry an optional `name` / `description`, both filled in from the id when omitted. Add the keys to your own language file:
+Display names are always generated from the definition ID, and you have **nowhere to write a name into the JSON**: a definition has no `name` / `description` field, and writing one is not read. The only way a pack gives a definition words is by translating the generated key. Add the keys to your own language file:
 
 ```json
 // assets/example/lang/en_us.json
 {
-  "resource.mxt.example.qi": "Spirit Qi",
-  "aura.mxt.example.qi": "Spirit Qi",
-  "realm_stage.mxt.example.qi_condensation": "Qi Condensation",
-  "realm_stage.mxt.example.foundation": "Foundation Establishment",
-  "realm_stage.mxt.example.core_formation": "Core Formation",
-  "element.mxt.example.common": "Common Aura",
-  "cultivation.mxt.example.meditation": "Meditation"
+  "mxt.resource.example.qi": "Spirit Qi",
+  "mxt.aura.example.qi": "Spirit Qi",
+  "mxt.realm_stage.example.qi_condensation": "Qi Condensation",
+  "mxt.realm_stage.example.foundation": "Foundation Establishment",
+  "mxt.realm_stage.example.core_formation": "Core Formation",
+  "mxt.element.example.common": "Common Aura",
+  "mxt.cultivation.example.meditation": "Meditation"
 }
 ```
 
-The pattern is always `<category>.<registry namespace>.<namespace>.<path>`, where the category is the registry's own path and the **registry namespace is always `mxt`**, so `example:qi` in `resource` is `resource.mxt.example.qi` and the same id in `aura` is `aura.mxt.example.qi`. A path containing `/` keeps the slash: `example:realm/qi` is `realm_stage.mxt.example.realm/qi`. A definition without a key still works; the game simply shows the raw key.
+The pattern is always `<registry namespace>.<category>.<namespace>.<path>`, where the category is the registry's own path and the **registry namespace is always `mxt`** (so the key always starts with `mxt.`), so `example:qi` in `resource` is `mxt.resource.example.qi` and the same id in `aura` is `mxt.aura.example.qi`. A path containing `/` keeps the slash: `example:realm/qi` is `mxt.realm_stage.example.realm/qi`. A definition without a key still works; the game simply shows the raw key.
 
-A definition whose text field is omitted uses the **same key**: `quality`'s `name` / `description` read as `quality.mxt.<namespace>.<path>` (the description adds `.description`, so `mxt_test:poor` is `quality.mxt.mxt_test.poor`), and a `realm_stage` counting its layers in an integer reads `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`. Apart from `quality`'s `description` (the line under the quality name), those fields are stored and read today but nothing draws them yet.
+A description uses the **name key with `.description` appended**: `mxt_test:poor` in `quality` has the name key `mxt.quality.mxt_test.poor` and the description key `mxt.quality.mxt_test.poor.description`; a `realm_stage`'s minor stage name key is `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`. **Only three places draw a description**: `quality` (the line under the quality name), `contract_type` (a contract scroll's tooltip) and `pill` (the tooltip of an item the pill claims) — and only when that key is actually translated; every other registry's description key is generated but drawn by no screen or tooltip.
 
 ## Verify
 

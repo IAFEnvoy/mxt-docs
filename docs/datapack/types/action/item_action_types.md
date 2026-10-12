@@ -340,6 +340,23 @@ description: 模组注册的全部内置物品行为类型，以及每种类型�
 
 除了定义里的 `abilities`，一件物品还能靠数据组件 `mxt:item_abilities`（`{"abilities": ["example:foo"]}`）自带技能：运行时读的是**定义声明的与组件写的并集**，所以同一件法器定义认领的两堆物品可以带不一样的技能。组件里只存**技能 id**，不收标签（标签在定义那一侧的 `abilities` 里展开），所以写下的每个 id 都要能在技能注册表里解析出来，解析不出来的条目会被丢掉。这条行为写入的是 id，读的是当前注册表，因此新写下的 id 要在物品重新被运行时读到那一步才生效。
 
+### `mxt:send_message`
+
+给玩家发一条消息。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `message` | 文本 | **必填** | 字符串按翻译键读，对象按完整文本组件读。 |
+| `channel` | `chat` / `action_bar` | `chat` | 发到聊天栏还是物品栏上方的动作栏。 |
+| `target` | `self` / `other` / `all` | `self` | 发给谁。这一轴只有物品的持有者一个实体，所以 `other` 发不出去。 |
+| `recipients` | 实体条件 | 恒真 | 逐个候选玩家判定，用来收窄收件人。 |
+
+```json
+{ "use_action": { "type": "mxt:send_message", "message": "your.pack.message_key" } }
+```
+
+字段含义与「发给谁」的限制见[实体行为](entity_action_types.md#mxt-send-message)。
+
 ::: info 嵌套值
 `mxt:if_else` 的 `condition` 接受一个[物品条件](../condition/item_condition_types.md)。`mxt:add_enchantment` 的 `enchantments` 是从附魔 id 到等级的映射。`mxt:remove_enchantment` 的 `enchantment` 接受一个附魔或一组附魔，用 `level` 限制移除的程度。`mxt:merge_components` 接受一份原版数据组件补丁。
 :::

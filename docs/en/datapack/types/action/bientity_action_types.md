@@ -305,3 +305,26 @@ Applies an [entity action](entity_action_types.md) to the target.
 ```
 
 An entity action nested in `mxt:actor_action` or `mxt:target_action` uses **the activation's own place** by default: an action that places something lands where the activation happened, which for a talisman or a display stand is the talisman or the stand (`mxt:spawn_lightning`, `mxt:explode`, `mxt:spawn_particles`, `mxt:spawn_effect_cloud`, `mxt:play_sound` and `mxt:block_action` all work this way). So "drop one bolt on each selected target" needs `"use_target_position": true`, or every bolt lands at the actor's or the talisman's feet. Actions that read the entity are unaffected by the same value.
+
+### mxt:send_message
+
+Sends one message to players.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `message` | Text | **required** | A string is read as a translation key, an object as a full text component. |
+| `channel` | `chat` / `action_bar` | `chat` | Whether the line goes to the chat log or above the hotbar. |
+| `target` | `self` / `other` / `all` | `self` | Who it is addressed to: `self` is the actor, `other` the target, `all` every player in the level. |
+| `recipients` | Entity condition | always true | Asked per candidate player, to narrow the recipients down. |
+
+```json
+{
+  "type": "mxt:send_message",
+  "message": "your.pack.message_key",
+  "target": "other"
+}
+```
+
+This is the one axis holding both an actor and a target, so `other` is meaningful here - "tell the other side" is `target: "other"`. To make a message appear to come from one person rather than out of nowhere, wrap a `target: "self"` entity action in `mxt:actor_action`.
+
+The fields are described under the [entity action](entity_action_types.md#mxt-send-message).

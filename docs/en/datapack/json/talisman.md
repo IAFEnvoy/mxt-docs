@@ -12,12 +12,10 @@ File location: `data/<namespace>/mxt/talisman/<path>.json`
 
 A talisman definition says what happens once it is inscribed onto a carrier: which abilities invoking it grants, how much aura the carrier can hold, and what every invocation pays. **A carrier can also be drawn at the talisman workstation**: a drawing recipe's top-level `talisman` field names one of these definitions by id, and that is what comes out, see [`mxt:talisman_drawing`](./talisman_drawing.md).
 
-**The effect is dispatched by `type`.** The common fields are only `name` / `description` / `type` / `condition` / `costs` (plus the carrier's own `capacity`); `type` is a **required** dispatch key, and the effect and its targets live in the fields **it dispatches to**: the four use types are `mxt:self`, `mxt:area`, `mxt:crosshair` and `mxt:thrown`, see [Use Types](#use-types). **The old `abilities` / `durability` / `consume` keys are gone**: writing them is silently ignored (the unknown-key rule), which turns that talisman into one that does nothing, see [Use Types](#use-types) for the migration.
+**The effect is dispatched by `type`.** The common fields are only `type` / `condition` / `costs` (plus the carrier's own `capacity`); `type` is a **required** dispatch key, and the effect and its targets live in the fields **it dispatches to**: the four use types are `mxt:self`, `mxt:area`, `mxt:crosshair` and `mxt:thrown`, see [Use Types](#use-types). **The old `abilities` / `durability` / `consume` keys are gone**: writing them is silently ignored (the unknown-key rule), which turns that talisman into one that does nothing, see [Use Types](#use-types) for the migration.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `talisman.mxt.<namespace>.<path>` | Optional display name. When omitted it uses the default key in the left column. |
-| `description` | Text Component | `talisman.mxt.<namespace>.<path>.description` | Optional description. When omitted it uses the default key in the left column; it is stored and read today, but nothing draws it yet. |
 | `type` | Use type (`type` dispatch) | none (**required**) | **How** this talisman is used: `mxt:self` / `mxt:area` / `mxt:crosshair` / `mxt:thrown` (`mxt:empty` is the one that does nothing), each bringing its own parameters (targets, actions, `max_use`, …), see [Use Types](#use-types). |
 | `capacity` | double | `1` | The carrier's **pour capacity multiplier**: the capacity is one invocation's aura amount × this multiplier, counted per aura and rounded up to whole units. It has to be at least 1; anything below is refused at load. |
 | `condition` | [Entity condition](../types/condition/entity_condition_types.md) | `mxt:always` | Whether this holder **may use the talisman**, unrelated to its price. It is tested against the **holder** and comes **before `costs`**: when it fails, the invocation is refused with nothing moved at all — the carrier is not spent, no wear is taken, the store is not drawn on and the holder's account is untouched. **Every inscription on one carrier has to pass**, so one of them saying "not now" refuses the whole carrier. It can also be written as an array of conditions (an implicit AND). |
@@ -153,9 +151,9 @@ The latter is planned **before** the invocation: anything that cannot be paid **
 
 ## Naming and the Item Component
 
-The display name can be written as the optional `name` field; omit it and the translation key is generated from the identifier, `talisman.mxt.<definition namespace>.<path>`: `mxt_test:flame_sigil` → `talisman.mxt.mxt_test.flame_sigil`. The optional `description` is the same, and when it is omitted it is the generated key with `.description` appended.
+This definition has no writable text field: the display name is always derived from the identifier, `talisman.mxt.<definition namespace>.<path>` (`mxt_test:flame_sigil` → `mxt.talisman.mxt_test.flame_sigil`), and the description key is the name key with `.description` appended. Give it words by translating those two keys.
 
-**A carrier's tooltip also prints a "how to use it" line**, keyed by the **use type**: `talisman_type.mxt.mxt.<type>` (`self` / `area` / `crosshair` / `thrown` / `empty`, for instance `talisman_type.mxt.mxt.thrown`), the same four-part shape as the name. **One line per distinct type on the carrier**; this mod ships all five (in its two lang files), and a type registered by somebody else simply leaves no line when it wrote none.
+**A carrier's tooltip also prints a "how to use it" line**, keyed by the **use type**: `mxt.talisman_type.mxt.<type>` (`self` / `area` / `crosshair` / `thrown` / `empty`, for instance `mxt.talisman_type.mxt.thrown`), the same four-part shape as the name. **One line per distinct type on the carrier**; this mod ships all five (in its two lang files), and a type registered by somebody else simply leaves no line when it wrote none.
 
 Example:
 

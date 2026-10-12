@@ -20,8 +20,6 @@ The filename corresponds to its ID, which is independent of the value it describ
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | Text Component | `aura.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `aura.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; it is stored and read today, but nothing draws it yet. |
 | `resource` | Value ID | **required** | The value this aura describes. |
 | `first_realm` | Realm ID | none | The first realm of the realm chain of this value; it only determines the target realm of a mortal's first breakthrough. Omitted, there is no realm chain and no cultivation. |
 | `start_exp` | `NumberProvider` | `0` | The cultivation progress a mortal needs for the first breakthrough, and at the same time the progress cap of the mortal stage; once reached it no longer increases and only a breakthrough can be attempted. |
@@ -84,4 +82,4 @@ Cultivation absorption by default only restores the value that belongs to the cu
 The chain belongs to this aura definition: every `realm_stage` points back at it with its `aura` field, and the chain's entry is given by `first_realm`, so reading realm state never has to look the value up again. `first_realm` must be a stage on that value's chain, and the server checks this while it builds the realm index. An aura without `first_realm` has no chain, and only `regen`'s natural recovery is left.
 :::
 
-`aura` is one of the 24 registries that may also carry an optional `name` / `description`; omitting them falls back to the generated key. The generation rules and how to write the language files are in [Datapack Overview](../overview.md).
+An `aura` definition stores no text: its name and description are always derived from the registered id (`aura.mxt.<definition namespace>.<path>`, the description adding `.description`), so giving this aura words means translating those two keys. The generation rules and how to write the language files are in [Datapack Overview](../overview.md).

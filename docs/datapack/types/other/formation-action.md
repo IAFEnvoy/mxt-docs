@@ -11,6 +11,8 @@ description: 阵法功能模块 mxt:formation_action_type 的全部内置模块�
 
 同一个模块可以出现多次，列表不会合并：两段参数不同的攻击模块就是两段攻击。
 
+**`interval_periods` 是全部四个会按周期跑的模块共有的字段**（`attack` / `buff` / `send_message` / `range_display`），默认 `1` 即每周期都跑，行为与不写这个字段完全一样。它数的是**阵法周期**而不是 tick：分派本来就只落在周期边界上（1 周期 = 20 tick），写 tick 数只会被静默取整到这条网格上。相位取自**世界时钟**而不是模块自己的计数器，所以同一座阵法里的每个实体、以及同一份定义的多座阵法，都**在同一拍一起跑**——把间隔调大不会让一座阵法里的几个人轮流收到消息。
+
 ```json
 {
   "actions": [
@@ -43,6 +45,7 @@ description: 阵法功能模块 mxt:formation_action_type 的全部内置模块�
 | `attribute_to_owner` | Boolean | `true` | 把**第一位阵主**（名单首位，即当初立阵的那位）记成加害者 |
 | `effects` | 数组 | `[]` | 每周期施加的状态效果，字段与 `mxt:apply_effect` 完全一致：`effect` / `duration_ticks` / `amplifier` |
 | `target_condition` | `EntityCondition` | 恒真 | 对**目标实体**的额外筛选（只打亡灵、只打玩家之类），在敌我判断之后求值 |
+| `interval_periods` | Integer `1..1200` | `1` | 每几个阵法周期打一次（1 周期 = 20 tick） |
 
 ```json
 {"type": "mxt:attack", "damage": 8, "damage_type": "minecraft:lightning_bolt"}
@@ -66,6 +69,7 @@ description: 阵法功能模块 mxt:formation_action_type 的全部内置模块�
 | `target` | Enum | `all` | 模块作用于哪些实体：`all`、`allies` 或 `owner` |
 | `aura_zone` | 灵气区域 id | 无 | 高优先级的运行时灵气覆写：替换阵地所在位置的灵气解析结果 |
 | `max_bonus` | 灵气 id 到 `NumberProvider` 的映射 | `{}` | 范围内区块每种灵气的额外容量上限 |
+| `interval_periods` | Integer `1..1200` | `1` | 每几个阵法周期重新授予一次（1 周期 = 20 tick） |
 
 ```json
 {"type": "mxt:buff", "abilities": ["example:blessing"], "target": "allies"}
@@ -80,6 +84,8 @@ description: 阵法功能模块 mxt:formation_action_type 的全部内置模块�
 `max_bonus` 只随着 `aura_zone` 的覆盖一起应用：没有 `aura_zone` 就没有地方加，该灵气区域不提供的灵气也加不上（不会凭空创造灵气）。多条加成落在同一种灵气上时取最高。
 
 属性加成不在这里找字段：被动属性是 `mxt:modifier` 技能自己的 `modifiers` 字段，授予一条 `mxt:modifier` 技能就等于授予它的属性修饰符；没有第二个入口，否则同一件事会有两套规则——包括「修饰符活过了授予它的那座阵法」这类最容易出错的部分。
+
+`interval_periods` 只让**重新授予**变稀疏，不影响**撤销**：授予本身是幂等的，已发出的技能在跳过的周期里照旧生效。离开半径与阵法拆除这两条撤销路径**不看这个字段**，立刻收回；只有「站在原地、但阵主忽然不再把你当好友」这一条要等到下一个到期的周期才收回，因为它是在重新授予那一趟里顺带判定的。
 
 ### `mxt:protection`
 
@@ -197,5 +203,25 @@ description: 阵法功能模块 mxt:formation_action_type 的全部内置模块�
 - 只发给**看得见的玩家**：半径 **+ 32 格**以内。原版的广播接口自己卡死在 32 格，所以这里按玩家逐个发送——否则半径超过 32 格的阵法会被剪掉一圈轮廓。一个点一个粒子包，所以 `points` 乘以看得见的人数就是每周期成本。
 - `ring` 画在**阵心方块的中心高度**上；`sphere` 用黄金角铺点，避免经纬网格把点挤到两极。
 - 它跑在 `TickEffects` 之后、`tick_action` 之前，因此**取消 `TickEffects` 的周期连范围一起不画**。
-- `interval_periods` 数的是**阵法周期**而不是 tick：分派只落在周期边界上。
 - 可以写多个，叠不同粒子。
+
+### `mxt:send_message`
+
+给阵法覆盖到的玩家发消息。
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `message` | 文本 | **必填** | 字符串按翻译键读，对象按完整文本组件读 |
+| `channel` | Enum | `chat` | `chat` 发到聊天栏，`action_bar` 发到物品栏上方的动作栏 |
+| `recipients` | `EntityCondition` | 恒真 | 对**每个被覆盖的实体**逐一判定，不成立就不发给他 |
+| `interval_periods` | Integer `1..1200` | `1` | 每几个阵法周期发一次（1 周期 = 20 tick） |
+
+```json
+{"type": "mxt:send_message", "message": "example.array.warning", "channel": "action_bar"}
+```
+
+按阵法周期跑，**对每一个被覆盖的实体各跑一次**，所以每人各收一条自己的消息，而不是全场广播一条。它不是送给阵主的：谁站在半径里谁收到，包括阵主自己。
+
+`recipients` 逐人求值，所以可以只提醒一部分人（只通知阵主的敌人、只通知好友、只通知某种生物）。非玩家实体收不到消息，条件对它们求值也没有意义。
+
+只影响收件人，不参与敌我判断、不改变阵法是否敌对。

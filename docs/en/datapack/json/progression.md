@@ -12,8 +12,6 @@ A `progression` is one level of a progression chain. The chain has **no identity
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `progression.mxt.<namespace>.<path>` | Display name; omitted, it is the default key in the previous column. |
-| `description` | Text Component | `progression.mxt.<namespace>.<path>.description` | Description; omitted, it is the default key in the previous column. It is stored and read, but no screen draws it. |
 | `next_level` | Next level ID | none | The next level on the chain; the highest level omits it. |
 | `mastery` | `NumberProvider` | `0` | The mastery needed to reach this level. |
 | `damage_multiplier` | Double | `1.0` | The damage multiplier this level grants. |

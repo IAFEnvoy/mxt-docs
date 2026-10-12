@@ -106,7 +106,7 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 }
 ```
 
-`cultivate_suppress` 会中止正在进行的修炼，`tribulation_modify` 把公式变量 `aura_tribulation_modifier` 注入天劫公式。`alchemy_env_bonus` 打开后，区域内的炼丹直接算满足配方的 `minimum_aura` 要求：它是开关、没有可缩放的量，所以只能顶替要求，不能把池子放大。`spirit_plant_bonus` 作用于种在**灵田**里的灵植：实际增长量是 `growth_rate × max(0, 1 + 这个值)`，只乘一次，所以这片区域里的药材长得更快，区域外不受影响。
+`cultivate_suppress` 会中止正在进行的修炼，`tribulation_modify` 把公式变量 `aura_tribulation_modifier` 注入天劫公式。`alchemy_env_bonus` 打开后，区域内的炼丹直接算满足配方的 `minimum_aura` 要求：它是开关、没有可缩放的量，所以只能顶替要求，不能把池子放大。`spirit_plant_bonus` 作用于长在区域内的灵植：实际增长量是 `growth_rate × max(0, 1 + 这个值)`，只乘一次，所以这片区域里的药材长得更快，区域外不受影响。
 
 ## 第 2 步 —— 来自方块的灵气
 
@@ -199,7 +199,7 @@ description: 逐层叠加灵气区域，用方块与物品补充灵气，用噪�
 | --- | --- |
 | `client_hud.stored_aura` | 区块库存，是一个会随修炼升降的真实数值。 |
 | `client_hud.sensed_concentration` | 当前位置的环境模板，包含波动与噪声。 |
-| 带 `"context": "mxt:environment_concentration"` / `"mxt:actual_concentration"` 的资源条 | 同样两个数字，但按资源命名，因此 `resource.mxt.example.qi` 会变成环境灵气浓度或实际灵气浓度。 |
+| 带 `"context": "mxt:environment_concentration"` / `"mxt:actual_concentration"` 的资源条 | 同样两个数字，但按资源命名，因此 `mxt.resource.example.qi` 会变成环境灵气浓度或实际灵气浓度。 |
 | 雾效 | `client_render`，按浓度缩放。 |
 | 粒子 | 模板上可选的 `particle` 对象，每 5 tick 刷新一次。 |
 

@@ -74,7 +74,7 @@ Fluctuation only affects the queried environment concentration and never rewrite
 
 `rules.cultivate_suppress` aborts cultivation that is already running. `tribulation_modify` injects the formula variable `aura_tribulation_modifier`.
 
-`spirit_plant_bonus` multiplies the growth a spirit herb plot settles once every `20` ticks: `growth.growth_rate` from [spirit_herb](./spirit_herb.md) is evaluated first, then multiplied once by `max(0, 1 + spirit_plant_bonus)`, so do not multiply it again inside the expression. The value must be finite and at least `-1`; anything outside that is a load error.
+`spirit_plant_bonus` multiplies the growth a spirit herb settles once every `20` ticks: `growth.growth_rate` from [spirit_herb](./spirit_herb.md) is evaluated first, then multiplied once by `max(0, 1 + spirit_plant_bonus)`, so do not multiply it again inside the expression. The value must be finite and at least `-1`; anything outside that is a load error.
 
 With `alchemy_env_bonus` on, a pill recipe whose position falls inside the zone **counts as satisfying** `minimum_aura` outright — it is a switch with no scalable quantity, so it can only stand in for the requirement rather than enlarge the pool, and it supplies no heat to the furnace; with it off, every entry is still compared against the recipe's own minimum.
 

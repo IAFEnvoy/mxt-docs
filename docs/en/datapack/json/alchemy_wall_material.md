@@ -6,7 +6,7 @@ aside: false
 
 # Alchemy Wall Material (alchemy_wall_material) {#alchemy_wall_material}
 
-An `alchemy_wall_material` describes **one casing block** and nothing else: a name, a description, a finite temperature limit and an optional tier. Slots, capacity and cooling rate belong to the [furnace specification](./alchemy_furnace.md) and are not written here.
+An `alchemy_wall_material` describes **one casing block** and nothing else: a finite temperature limit and an optional tier. Slots, capacity and cooling rate belong to the [furnace specification](./alchemy_furnace.md) and are not written here.
 
 A furnace's temperature limit is the **lowest** `max_temperature` among its 18 casings. When materials are mixed the weak spot decides, and hotter casings never average a weak one away. It is only **one of three sources** of the furnace's temperature ceiling: the other two are the [furnace specification](./alchemy_furnace.md)'s own optional `max_temperature` and the highest temperature the heat block gives, and the ceiling is the lowest of the three.
 
@@ -22,19 +22,16 @@ The filename corresponds to its ID. For example, `data/example/mxt/alchemy_wall_
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `alchemy_wall_material.mxt.<namespace>.<path>` | The material's display name. |
-| `description` | Text Component | the same key plus `.description` | The material's description. |
 | `quality` | Quality id | none | Optional. The tier a casing block of this material starts on. |
 | `max_temperature` | Double | **required** | This material's temperature limit; finite and greater than `0`. |
 
 ```json
 {
-  "name": "material.mxt.example.bronze",
   "max_temperature": 800
 }
 ```
 
-The example supplies its own name translation key; omitting `name` and `description` still uses the two keys generated from the entry id. The value of `max_temperature` is yours to pick — the mod ships no table of copper, iron or spirit material temperatures.
+This material has no text field: its name and description are derived from the entry id, so `example:bronze` has the name key `mxt.alchemy_wall_material.example.bronze` and the description key is that plus `.description`. The value of `max_temperature` is yours to pick — the mod ships no table of copper, iron or spirit material temperatures.
 
 `quality` is optional: casing blocks are the one kind of block every wall material shares, so a block cannot say which tier it is — only the material the stack carries can: a casing block of this material starts on that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) registry.
 

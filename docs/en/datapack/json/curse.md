@@ -11,8 +11,6 @@ A `curse` describes a lasting state that can be put on an entity: how long it la
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `curse.mxt.<namespace>.<path>` | Optional display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `curse.mxt.<namespace>.<path>.description` | Optional description. When omitted it is the default key in the previous column; today it is only stored and read, nothing draws it yet. |
 | `type` | Curse type id | **required** | For the values see [Curse Types](/en/datapack/types/other/curse). |
 | `duration_ticks` | `NumberProvider` | `0` | Duration of a timed curse; the unit is ticks. |
 | `tick_interval` | `NumberProvider` | `20` | Interval of the periodic behaviour. |

@@ -36,7 +36,7 @@ These mods are optional compatibility. The game works fine without them.
 |---|---|
 | KubeJS `26.1.2-8.0.4` | Only needed if you want to register content from scripts. See [KubeJS](./kubejs/index.md) |
 | JEI | Recipe viewer integration: shows Spirit Shaped and Spirit Shapeless crafting and their aura cost |
-| Jade | Block information integration: block aura, the Spirit Crafting Table's aura, the Display Stand's stored spirit power, and a heat block's maximum furnace temperature and heating rate |
+| Jade | Block information integration: block aura, the Spirit Crafting Table's aura, the Display Stand's stored spirit power, a spirit herb's age and maturity, and a heat block's maximum furnace temperature and heating rate |
 
 ::: info KubeJS is not a hard dependency
 

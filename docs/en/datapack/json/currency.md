@@ -169,7 +169,7 @@ The condition is written **at the top level of the file** (one file is one defin
 }
 ```
 
-A definition whose condition does not hold is as good as unwritten: that item is not currency and takes no part in exchanges, cheques or settlement. The available conditions are on the [Datapack Development Overview](../overview.md#disabling-a-definition).
+A definition whose condition does not hold is as good as unwritten: that item is not currency and takes no part in exchanges, cheques or settlement. The available conditions are on the [Datapack Development Overview](../conventions.md#disabling-a-definition).
 
 ## Validation and Loading
 

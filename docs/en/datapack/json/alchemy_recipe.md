@@ -19,8 +19,6 @@ Every file declares `"type": "mxt:alchemy"`. A file placed in `mxt/alchemy_recip
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `type` | String | **required** | Must be `mxt:alchemy`. |
-| `name` | Text Component | empty | Optional metadata. The furnace shows no recipe name and has no viewer. When omitted the key is `recipe.mxt.<namespace>.<path>`, with `/` in the path replaced by `.`. |
-| `description` | Text Component | empty | Optional metadata; the furnace does not display it. When omitted it is the name key plus `.description`. |
 | `main_requirements` | Map of medicinal property ID to [`NumberProvider`](../types/number_provider_types) | **required**, non-empty | Main-role property to positive power threshold. A constant must be positive. |
 | `auxiliary_requirements` | same as above | `{}` | Auxiliary role thresholds. May be left empty. |
 | `catalyst_requirement` | `NumberProvider` | **required** | The catalyst's harmonising power threshold. A constant must be positive. |

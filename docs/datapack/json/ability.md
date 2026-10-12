@@ -9,7 +9,7 @@ aside: false
 
 `data/<namespace>/mxt/ability/<path>.json`
 
-一条技能永远只是一个 `mxt:ability` 条目，这里就是它唯一的定义处。它的身份是自己的注册表 id：`name` / `description` 省略时，默认键按这个 id 的命名空间与路径生成，路径后面不会再挂后缀。
+一条技能永远只是一个 `mxt:ability` 条目，这里就是它唯一的定义处。它的身份是自己的注册表 id，而定义里**不存任何文本**：名字与描述永远按这个 id 现算，名字是 `ability.mxt.<命名空间>.<路径>`（注册表命名空间恒为 `mxt`，路径里的 `/` 原样保留），描述在名字键后面加 `.description`。要给这条技能配词，唯一的办法就是翻译这两个键。
 
 宿主只写它的 id 或 `#标签`。法器（[artifact](./artifact.md)）的 `abilities`、功法与符箓的 `granted_abilities`、灵根与体质、命令、脚本，无一例外都用引用，不能把技能整个抄进宿主定义：**写在宿主里的内联技能不认**，那样会让宿主那份定义整个不可解析。
 
@@ -19,8 +19,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `ability.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列那个键。 |
-| `description` | Text Component | `ability.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列那个键；今天只被存储与读取，还没有界面画它。 |
 | `type` | 技能类型 id | **必填** | 写在**顶层**（`{"type": "mxt:active", ...}`），不嵌套在 `ability` 对象里。取值见[技能类型](/datapack/types/other/ability)。 |
 | `costs` | `Cost` 列表 | `[]` | 技能执行前扣除的消耗，整份数组**全有或全无**；写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。 |
 | `cast_time` | `NumberProvider` | `0` | 施法时间。大于 `0` 时按下只登记一个到点时刻，到那一 tick 才真正跑动作字段。 |

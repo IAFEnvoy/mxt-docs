@@ -7,7 +7,7 @@ description: 读一栈物品解析出的品质与它所属的链条，比两个�
 
 品质长在**物品堆**上，所以这几个方法都点名它们作用的那一栈；`entity` 只是注册表查询的起点。写操作只在服务端生效，客户端一律返回 `null` / `false` 且不改动任何东西（`satisfies` 也在其中：客户端脚本里调用返回 `false`）。
 
-解析顺序固定三层，先命中的赢：堆上的 **`mxt:quality` 覆盖组件**（`/quality set`、一次成功的升级、锻造台结算与画符铭刻写的就是它；组件里写的那个 id 在当前包里没有对应条目时这一层等于没答）→ **这一堆携带的定义**自己声明的 `quality` → 注册表 `mxt:default_quality`。第二层的九个定义是 `technique`、`alchemy_furnace`、`alchemy_wall_material`、`spirit_root`、`physique`、`pill`、`formation`、`secret_realm`、`contract_type`——同一类定义共用一件内置物品，物品本身说不清是哪一档。`artifact` 与 `spirit_herb` 按物品认领、`talisman` 的载体装着一列符，这三者堆上没有单份定义可问，档只写在第 3 层。完整口径见[品质](/datapack/json/quality)。
+解析顺序固定三层，先命中的赢：堆上的 **`mxt:quality` 覆盖组件**（`/quality set`、一次成功的升级、锻造台结算与画符铭刻写的就是它；组件里写的那个 id 在当前包里没有对应条目时这一层等于没答）→ **这一堆携带的定义**自己声明的 `quality` → 注册表 `mxt:default_quality`。第二层的九个定义是 `technique`、`alchemy_furnace`、`alchemy_wall_material`、`spirit_root`、`physique`、`pill`、`formation`、`secret_realm`、`contract_type`——同一类定义共用一件内置物品，物品本身说不清是哪一档。`artifact` 与 `spirit_herb` 都不携带物品身份、`talisman` 的载体装着一列符，这三者堆上没有单份定义可问，解析里没有第 2 层；灵植若写了 `quality_by_age`，采收时按药龄把档写进第 1 层组件，否则落到第 3 层。完整口径见[品质](/datapack/json/quality)。
 
 ## 方法
 

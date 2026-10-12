@@ -11,8 +11,6 @@ A `cultivation` is one method of cultivation: which ambient aura it takes in, ho
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `cultivation.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `cultivation.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is only stored and read, nothing draws it. |
 | `priority` | Int | `0` | The order among several methods: the higher number wins, and an equal one falls back to registry order. It only orders the methods that **apply right now**. |
 | `start_condition` | `EntityCondition` | `mxt:always` | Condition for starting a session (can this body sit down). |
 | `cultivate_condition` | `EntityCondition` | `mxt:always` | **Whether this tick yields anything**; while it fails the session carries on and **nothing happens** (nothing paid, nothing gained, no settlement) — the moment it holds again the body settles straight away. **Almost only used for dual cultivation.** |

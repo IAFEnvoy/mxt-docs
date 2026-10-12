@@ -12,8 +12,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `technique.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `technique.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
 | `quality` | 品质 id | 无 | 可选。这门功法自己的品阶：携带这份定义的功法书读到的就是它。 |
 | `icon` | 图标引用 | 无 | 功法在界面（如功法面板）中显示的图标。 |
 | `learn_condition` | `EntityCondition` | `mxt:always` | 学习条件。 |

@@ -123,7 +123,7 @@ The item side is two **right-click to grant** items: a stack of `mxt:spirit_root
 
 ## Step 5 — Names and Loading
 
-`name` and `description` may both be omitted. When they are, the keys are generated as `spirit_root.mxt.<namespace>.<path>` and `physique.mxt.<namespace>.<path>`, with `.description` appended for the description, and a `/` in the path is kept as it is.
+The definitions have **no `name` and no `description` field**, and writing one is not read. The name and description are always derived from the registered id: the name keys are `spirit_root.mxt.<namespace>.<path>` and `physique.mxt.<namespace>.<path>`, the description keys add `.description`, and a `/` in the path is kept as it is. To give them words, write those keys into your own language file.
 
 Like every other data pack registry, these two are read and validated while the **world loads**, so `/reload` does not re-read them: load the world again after an edit, or restart the server. A definition that fails to decode keeps the world from loading — it is not "one entry short and otherwise fine".
 
@@ -155,7 +155,7 @@ The test pack ships a probe, `/mxt_test identity`, which asserts held / in effec
 | Symptom | Cause |
 | --- | --- |
 | The world will not load and a table is one entry short | `elements` is not an array, is missing, is empty, names an element that does not exist, carries a weight at or below `0`, or lists the same element twice — **the whole definition fails to decode**, and a broken definition blocks world loading. |
-| A load-time "must be a finite non-negative number" | The value of `name` / `description` / a numeric multiplier field is illegal, for example a negative multiplier. |
+| A load-time "must be a finite non-negative number" | The value of a numeric multiplier field is illegal, for example a negative multiplier. |
 | Element fields on a physique do nothing at all | A physique has only the keys in its field table. `element`, `cultivation_multiplier`, `damage_types` and the like are **silently ignored — no error, and almost nothing in the log**. A mistyped field name is never caught; that one entry simply has no effect. |
 | One ability or element vanished from an array | A bad entry inside an array such as `granted_abilities` / `conflicting_elements` is dropped with one `Ignoring invalid list element` line and the rest of the file loads normally; a **single bad id** (not an array) fails the whole definition instead. |
 | One action fails to parse | The `spirit_root` / `physique` field of the action names an id the current pack does not provide. After a definition is deleted, commands and scripts **can still remove it by the reference recorded on the body**, because the body stores the reference itself. |

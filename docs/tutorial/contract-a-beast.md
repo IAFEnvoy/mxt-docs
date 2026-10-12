@@ -31,8 +31,6 @@ description: "用一张契约类型定义去收服一只兽：谁有资格、什
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | 文本 | `contract_type.mxt.<命名空间>.<路径>` | 显示名。省略时自动用左列这个键。 |
-| `description` | 文本 | 左列键再加 `.description` | 描述。省略时自动用左列这个键。 |
 | `owner_condition` | 实体条件 | `mxt:always` | 主人这一边够不够格。 |
 | `creature_condition` | 实体条件 | `mxt:always` | 兽这一边够不够格。 |
 | `follow_action` | 实体行为，或它们的数组 | `mxt:no_op` | 当前命令是「跟随」时，这只兽每 tick 额外执行。 |
@@ -43,7 +41,7 @@ description: "用一张契约类型定义去收服一只兽：谁有资格、什
 | `max_owned` | 整数 ≥ 0 | `0` | 一位主人最多同时拥有几只；`0` 表示不限。 |
 | `recall_cooldown` | 整数 ≥ 0 | `0` | 召回冷却，单位 tick；`0` 表示不限。 |
 
-两个条件都是实体条件，一个问主人，一个问兽。名字与描述不用你手写翻译键：省略时显示名按 `contract_type.mxt.<命名空间>.<路径>` 生成，描述再往后接一段 `.description`。
+两个条件都是实体条件，一个问主人，一个问兽。定义里**没有 `name` / `description` 字段**：名字与描述一律按注册 id 现算，显示名的键是 `contract_type.mxt.<命名空间>.<路径>`，描述键再往后接一段 `.description`。想给这份契约配词，就往 `assets/<命名空间>/lang/zh_cn.json` 与 `en_us.json` 里翻译这两个键——你手写的文本没有地方可放。
 
 ## 第 2 步 —— 代价与两个上限
 

@@ -32,7 +32,7 @@ Written in **the definition's own file**: when `neoforge:conditions` does not ho
 }
 ```
 
-When the condition holds, `neoforge:conditions` is stripped before the definition decoder sees it, and the remaining fields are read as usual. The conditions available, and the price of there being no middle state, are on [Datapack Development Overview](./overview.md#disabling-a-definition).
+When the condition holds, `neoforge:conditions` is stripped before the definition decoder sees it, and the remaining fields are read as usual. The conditions available, and the price of there being no middle state, are on [Datapack Development Overview](./conventions.md#disabling-a-definition).
 
 Do not invent a `tags` key in place of the vanilla tags; tag files live under `data/<namespace>/tags/...`, and **a tag cannot switch an entry off** (tags are not bound yet when a registry entry is decoded).
 

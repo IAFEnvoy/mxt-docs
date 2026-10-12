@@ -73,7 +73,7 @@ Every registry the mod declares is listed — with its file directory, its purpo
 
 ## Reading Registries
 
-`MxtDatapackRegistries` is the supported entry point for both the server and the synchronised client copy. Every read is a plain registry read: it filters nothing. Switching a definition off is load-time work — a `neoforge:conditions` block in the definition file keeps the entry out of the registry entirely — so an entry in the registry is an entry you can use (see [Disabling a Definition](../datapack/overview.md#disabling-a-definition)).
+`MxtDatapackRegistries` is the supported entry point for both the server and the synchronised client copy. Every read is a plain registry read: it filters nothing. Switching a definition off is load-time work — a `neoforge:conditions` block in the definition file keeps the entry out of the registry entirely — so an entry in the registry is an entry you can use (see [Disabling a Definition](../datapack/conventions.md#disabling-a-definition)).
 
 | Member | Description |
 |--------|-------------|

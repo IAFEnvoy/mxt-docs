@@ -31,8 +31,6 @@ An empty object is already a valid definition - **every field is optional**:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | text | `contract_type.mxt.<namespace>.<path>` | Display name. When omitted this key is used. |
-| `description` | text | that key plus `.description` | Description. When omitted this key is used. |
 | `owner_condition` | entity condition | `mxt:always` | Whether the owner side is eligible. |
 | `creature_condition` | entity condition | `mxt:always` | Whether the beast side is eligible. |
 | `follow_action` | entity action, or an array of them | `mxt:no_op` | Run every tick while the order in force is "follow". |
@@ -43,7 +41,7 @@ An empty object is already a valid definition - **every field is optional**:
 | `max_owned` | integer ≥ 0 | `0` | How many one owner may hold at once; `0` means no limit. |
 | `recall_cooldown` | integer ≥ 0 | `0` | The recall cooldown in ticks; `0` means no limit. |
 
-Both conditions are entity conditions, one asked about the owner and one about the beast. The name and description need no translation key written by hand: the display name is generated as `contract_type.mxt.<namespace>.<path>`, and the description adds `.description` to it.
+Both conditions are entity conditions, one asked about the owner and one about the beast. The definition has **no `name` / `description` field**: the name and description are always derived from the registered id, the display name key being `contract_type.mxt.<namespace>.<path>` and the description key adding `.description` to it. To give this contract words, translate those two keys in `assets/<namespace>/lang/zh_cn.json` and `en_us.json` — there is nowhere to put text of your own.
 
 ## Step 2 — The Price and the Two Caps
 

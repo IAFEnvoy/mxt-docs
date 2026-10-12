@@ -106,7 +106,7 @@ The `rules` object adds environment policy:
 }
 ```
 
-`cultivate_suppress` aborts cultivation that is already running, and `tribulation_modify` injects the formula variable `aura_tribulation_modifier` into tribulation formulas. With `alchemy_env_bonus` on, alchemy inside the area counts as satisfying a recipe's `minimum_aura` requirement: the flag is a plain yes/no with no magnitude to scale an aura pool by, so it stands in for the requirement rather than enlarging the pool. `spirit_plant_bonus` applies to spirit herbs planted in a **spirit herb plot**: the actual growth is `growth_rate × max(0, 1 + bonus)`, multiplied in once, so herbs in this area grow faster and nowhere outside it is affected.
+`cultivate_suppress` aborts cultivation that is already running, and `tribulation_modify` injects the formula variable `aura_tribulation_modifier` into tribulation formulas. With `alchemy_env_bonus` on, alchemy inside the area counts as satisfying a recipe's `minimum_aura` requirement: the flag is a plain yes/no with no magnitude to scale an aura pool by, so it stands in for the requirement rather than enlarging the pool. `spirit_plant_bonus` applies to spirit herbs growing inside the area: the actual growth is `growth_rate × max(0, 1 + bonus)`, multiplied in once, so herbs in this area grow faster and nowhere outside it is affected.
 
 ## Step 2 — Aura From Blocks
 
@@ -199,7 +199,7 @@ The client does not draw a fuel bar, and never consumes items on its own.
 | --- | --- |
 | `client_hud.stored_aura` | The chunk inventory, as a real value that goes up and down with cultivation. |
 | `client_hud.sensed_concentration` | The environment template at the current position, including fluctuation and noise. |
-| Resource bars with `"context": "mxt:environment_concentration"` / `"mxt:actual_concentration"` | The same two numbers, but labelled after the resource, so `resource.mxt.example.qi` becomes environmental or actual aura concentration. |
+| Resource bars with `"context": "mxt:environment_concentration"` / `"mxt:actual_concentration"` | The same two numbers, but labelled after the resource, so `mxt.resource.example.qi` becomes environmental or actual aura concentration. |
 | Fog | `client_render`, scaled by concentration. |
 | Particles | The optional `particle` object on the template, refreshed every 5 ticks. |
 

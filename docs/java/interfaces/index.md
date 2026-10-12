@@ -13,7 +13,7 @@ title: 接口
 | 灵气存取 | [AuraAccess](./aura/aura-access.md)、[ItemAuraAccess](./aura/item-aura-access.md)、[UseItemAuraAccess](./aura/use-item-aura-access.md) | `com.iafenvoy.mxt.api` |
 | 生物契约 | [Contractable](./creature/contractable.md)、[ContractOperations](./creature/contract-operations.md)、[CaptureListener](./creature/capture-listener.md)、[Perchable](./creature/perchable.md) | `com.iafenvoy.mxt.api` |
 | 轮盘与按键 | [WheelMenuEntry](./wheel/wheel-menu-entry.md)、[WheelSource](./wheel/wheel-source.md)、[WheelEntryKind](./wheel/wheel-entry-kind.md)、[Togglable](./wheel/togglable.md) | 前三个在 `api`，`Togglable` 在 `data/ability` |
-| 定义与消耗 | [NamedDefinition](./definition/named-definition.md)、[Cost](./definition/cost.md)、[TooltipAppender](./definition/tooltip-appender.md) | `api`、`data/cost`、NeoForge |
+| 定义与消耗 | [Cost](./definition/cost.md)、[TooltipAppender](./definition/tooltip-appender.md) | `api`、`data/cost`、NeoForge |
 | 炼丹 | [AlchemyHeatSource](./alchemy/alchemy-heat-source.md)、[AlchemyWorkstation](./alchemy/alchemy-workstation.md) | `com.iafenvoy.mxt.api` |
 | 载具 | [MountVehicle](./mount/vehicle.md)、[MountRenderer](./mount/renderer.md) | `com.iafenvoy.mxt.api`，`MountRenderer` 在客户端 |
 

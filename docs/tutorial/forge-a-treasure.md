@@ -190,7 +190,6 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 ```json
 // data/example/mxt/quality/flawless.json
 {
-  "name": "quality.mxt.example.flawless",
   "color": "#FFAA00"
 }
 ```
@@ -271,7 +270,7 @@ description: 用锻造手法、工具绑定和一张图纸搭出锻造台的一�
 2. 把两枚铁锭和一根木棍放进输入格。左列表里出现成品图标（蓝图在列表里就是用**产出物品**命名的）；悬停它，会列出材料清单，够的显示绿色 `✔` 与"已有/需要"，不够的红色 `✖`，下方还会写步数上限。
 3. 选中蓝图，按「使用蓝图」。材料被拿走，会话开始：条上出现绿色目标带、灰色零线、红色当前值。
 4. 在右列表选中一个手法（图标就是 `icon`，悬停显示"数值影响：+2"），按「使用方法」。当前值移动，下面的"当前"一行记录最近六锤；选中手法时条上还会出现一条黄色预测线。
-5. 把当前值打进绿带，并让最后两锤是"轻敲 → 重锤"。会话会自动结算，成品落进输出格，Tooltip 里出现品质行——显示的文字就是 `flawless.json` 里 `name` 指向的内容；`name` 省略时按条目 id 自动生成 `quality.mxt.example.flawless`（写翻译键的话，记得在自己的语言文件里给它一条译文）。
+5. 把当前值打进绿带，并让最后两锤是"轻敲 → 重锤"。会话会自动结算，成品落进输出格，Tooltip 里出现品质行——显示的品质名按条目 id 生成，是 `mxt.quality.example.flawless`（给那个键在自己语言文件里写一条译文即可；`flawless.json` 里写不出名字，定义没有 `name` 字段）。
 6. 再打一件，这次故意多绕几锤，比较两次的品质。想中途放弃就按「取消」，材料按取消策略退回。
 7. `/mxt registries validate` 应当无错误，`/mxt registries list` 里能看到 `mxt:forging_method`、`mxt:forging_blueprint`、`mxt:tool_binding` 与 `mxt:blueprint_binding` 的条目数。
 

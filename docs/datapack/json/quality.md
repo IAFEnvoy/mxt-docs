@@ -1,6 +1,6 @@
 ---
 title: quality（品质）
-description: 定义一档品质的名字、颜色与三个修正，以及它在品质链上的位置、链名与升级代价。
+description: 定义一档品质的颜色与三个修正，以及它在品质链上的位置、链名与升级代价。
 aside: false
 ---
 
@@ -12,8 +12,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `quality.mxt.<命名空间>.<路径>` | 品质名称。 |
-| `description` | Text Component | `quality.mxt.<命名空间>.<路径>.description` | 品质描述，画在品质名下面。 |
 | `color` | Color | 无 | 品质颜色，写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受），一律按不透明处理。 |
 | `value_multiplier` | `Modifier` | `1` | 货币价值修正。 |
 | `forging_modifier` | `Modifier` | `1` | 锻造修正。 |
@@ -24,18 +22,18 @@ aside: false
 | `upgrade_condition` | `EntityCondition` | `mxt:always` | **升到这一档**这一步能不能走，在扣费之前判。 |
 | `quality` | Identifier | 无 | 这条链的名字，**写在入口档上**（入口档＝没有任何一档把它写成 `next` 的那一档）。链名只从入口档读一次，写在别的档上不会被当成链名。 |
 
-`name` 与 `description` 都可以省略：省略就是表格里那个按条目 id 生成的键，写了就用你给的文本（字符串当翻译键、对象当完整组件）。
+这一档叫什么由注册 id 现算：名字键是 `quality.mxt.<定义命名空间>.<路径>`，描述键在它后面加 `.description`。定义里没有可写的文本字段，要配词就翻译这两个键；描述画在品质名下面。
 
 `condition` 不满足时，解析到这一档的物品用不了：使用、攻击、主手武器的周期行为，以及它给的原版属性修正都会停下。
 
-`color` 的规矩与这两个文本字段不同：**写了就以它为准**（连 `name` 组件里自带的颜色也会被它盖过），**不写就一个字都不改**。它不是「默认白色」，没写颜色的品质照旧显示原版稀有度色。上色的地方只有四处：物品提示框的物品名那一行、提示框里「品质：<名>」那一行、`/picker` 里品质分类的条目名、锻造台蓝图 tooltip 的档位表。物品名那一行还能由玩家自己关掉：客户端配置「提示框 → 物品名跟随品质」（默认开），其余三处不受它影响。品质描述那一行始终是灰的。
+`color` 的规矩与上面那两个键不同：**写了就以它为准**（连译文文本里自带的颜色也会被它盖过），**不写就一个字都不改**。它不是「默认白色」，没写颜色的品质照旧显示原版稀有度色。上色的地方只有四处：物品提示框的物品名那一行、提示框里「品质：<名>」那一行、`/picker` 里品质分类的条目名、锻造台蓝图 tooltip 的档位表。物品名那一行还能由玩家自己关掉：客户端配置「提示框 → 物品名跟随品质」（默认开），其余三处不受它影响。品质描述那一行始终是灰的。
 
 `Modifier` 是三个可选对象，每个对象里的 `description` 与 `modifier` 也都可以省略：`modifier` 省略等于 `1`，`description` 省略**就不画那一行**（修正照样生效）。它的文案完全由数据包自己指定，没有自动生成：
 
 ```json
 {
   "value_multiplier": {
-    "description": "quality.mxt.example.refined.value_multiplier",
+    "description": "mxt.quality.example.refined.value_multiplier",
     "modifier": 1.25
   },
   "forging_modifier": {
@@ -44,7 +42,7 @@ aside: false
 }
 ```
 
-上面这份省略了 `name`、`description` 与 `forging_modifier.description`。
+上面这份只写了三个修正，`forging_modifier` 连 `description` 都省略了。
 
 `value_multiplier` 结算时按 `modifier` 乘在该物品的货币单位面值上并四舍五入到整数，因此**看得到的就是付得出的**（Tooltip 显示的也是结算值）。`modifier` 缺失、非有限或 ≤0 时按 1 处理；乘积非有限、小于 1、超出 `long` 时退回声明面值，不会凭空造出一个数据包没写过的数。
 
@@ -110,11 +108,11 @@ aside: false
 
 `spirit_root` 与 `physique` 没有自由文本的档位字段，档位就是它们这个可选的 `quality` 引用；也没有 `mxt.rarity.<值>` 这类按文本值查档位的键。列一档时显示的是那一档自己的名字。
 
-**第三层，注册表 [default_quality](./default_quality.md)**（条目用 `items` 认领物品，`quality` 写这一堆的档）。它是**第三层，也是最后一层**，恰好在这一堆**没有定义可问**的时候给出答案：裸的创造模式 / `/give` 物品，以及**按物品认领**的定义——`artifact` 与 `spirit_herb` 命中一件物品就算数，堆上没有任何装定义身份的组件。
+**第三层，注册表 [default_quality](./default_quality.md)**（条目用 `items` 认领物品，`quality` 写这一堆的档）。它是**第三层，也是最后一层**，恰好在这一堆**没有定义可问**的时候给出答案：裸的创造模式 / `/give` 物品，以及**不携带物品身份**的定义——`artifact` 命中一件物品就算数、`spirit_herb` 则由它的果实命中一件物品就算数，这两种堆上都没有任何装定义身份的组件。
 
 三个定义刻意没有 `quality` 字段：
 
-- `artifact` 与 `spirit_herb` 按物品认领（一件物品命中一份定义），堆上没有装定义身份的组件，没有可问的对象。它们的档写在 `default_quality` 里；一件物品只意味着一份定义时，这就是准确答案。
+- `artifact` 与 `spirit_herb` 都不携带物品身份（`artifact` 按物品认领、`spirit_herb` 按它的果实认领），堆上没有装定义身份的组件，没有可问的对象。它们的档写在 `default_quality` 里；一件物品只意味着一份定义时，这就是准确答案。灵植多一条路：定义写了 `quality_by_age` 时，[采收](./spirit_herb.md#age-and-quality)那一刻按药龄把档写进第 1 层组件，没写这条阶梯的草照旧兜底到 `default_quality`。
 - `talisman` 的载体组件 `mxt:talisman` 装的是一**列**铭刻，同一堆上可能有好几张符，没有单份定义可问。它的档由画符配方的 `grades[].quality` 定，铭刻时写进 `mxt:quality` 组件；写不上才兜底到 `default_quality`。
 
 **装列表的载体一律不登记**：`mxt:forging_methods`、`mxt:forging_blueprints`、`mxt:element`、`mxt:talisman`——一列东西答不出「这一堆是哪一档」。
@@ -123,20 +121,21 @@ aside: false
 
 `/quality clear` 摘掉组件之后，这一堆退回**携带的定义**那一档，再退回注册表。堆上的 `mxt:pill` 组件里那些效果字段（`on_consume`、`toxicity_gain` 之类）只改写这一堆服用时做什么，不参与定档：定档读的是它里面 `pill` 那份定义自己的 `quality`。
 
-**三个看起来像默认档、其实不是的东西：**
+**四个看起来像默认档、其实不是的东西：**
 
 - `forging_blueprint.quality_by_extra_steps[].quality` —— 锻造曲线上的**目标档**，按额外步数查出来；
 - 画符配方里的 `grades[].quality` —— 完成时命中的**目标档**，铭刻时写进组件；
+- `spirit_herb.quality_by_age[].quality` —— 采收时按**药龄**查出来的目标档，写进组件；灵植定义自己没有 `quality` 字段；
 - `quality` 条目自己的 `quality` 字段 —— 那是**链名**，写在入口档上。
 
-这三个都不参与「这一堆是哪一档」的解析。
+这四个都不参与「这一堆是哪一档」的解析。
 
 ## 按档位筛物品 {#gating}
 
 三个口子共用同一份要求，另外两处槽位仍是硬判据：`quality`（成员判定，条目 / `#品质标签` / 数组）与 `min_quality`（**至少到这一档**）。`min_quality` 按**这一档所在的那条链**比位置（与升级、`/quality chain` 同一份实现），**跨链一律答否**——不同链的序号没有可比性；两个都写就要都满足；只写 `min_quality` 时**没有档的物品答否**。两个都没写的要求在加载期被**拒绝**（空要求会静默恒真）。判据只有一处实现，三个口子只是把要求挂上去的不同方式：
 
 1. **物品条件 `mxt:item_quality`**（`quality` 与新增的可选 `min_quality`）：任何跑物品条件的地方都能用，例如货币的 `unavailable_when`、绑定表的 `conditions`；见[物品条件](/datapack/types/condition/item_condition_types)。
-2. **匹配器条目 `mxt:quality`**（`items` 必填，再加上面两个字段）：凡是用 [ItemMatcher](/datapack/types/other/item-matcher) 的地方都能用——`Cost` 的 `mxt:item`、`artifact` / `pill_binding` / `technique_binding` / `spirit_herb` 的 `items`、`mxt:item_matcher` / `mxt:item_id` / `mxt:item_tag` 条件、灵植的种子、拾取器。
+2. **匹配器条目 `mxt:quality`**（`items` 必填，再加上面两个字段）：凡是用 [ItemMatcher](/datapack/types/other/item-matcher) 的地方都能用——`Cost` 的 `mxt:item`、`artifact` / `pill_binding` / `technique_binding` 的 `items`、`spirit_herb` 的 `blocks`、`mxt:item_matcher` / `mxt:item_id` / `mxt:item_tag` 条件、灵植的种子、拾取器。
 3. **自定义材料 `mxt:quality`**（`neoforge:ingredient_type` + `items` + 上面两个字段）：**凡是用原版 `Ingredient` 的地方都能用**——原版与别的模组的配方、灵气合成、画符、`mxt:ingredient` 条件、[锻造蓝图](./forging_blueprint.md)的 `input`（那一项就是 sized ingredient），以及[画符配方](./talisman_drawing.md)的 `paper`（那一项就是 ingredient）；见[灵气合成](./spirit_crafting.md)。
 
 还有一条窄路只对"材料条目"成立：匹配器条目 [**`mxt:ingredient`**](/datapack/types/other/item-matcher#mxtingredient) 能把一整个原版材料（含 `mxt:quality`）写进任何接受 `ItemMatcher` 的地方，画符那次取纸的代价走的就是它。
@@ -153,4 +152,4 @@ aside: false
 
 ## 名称与翻译 {#translation}
 
-类别就是注册表自己的 path：`example:refined` 查 `quality.mxt.example.refined`，描述再加 `.description`（**注册表命名空间仍是 `mxt`**）。自带 `name` / `description` 的注册表里，品质是唯一会把 `description` 画出来的一张（画在品质名下面）；其余那些的 `description` 只被存储与读取，没有界面画它。JSON 里没有 `translation_key` 字段；路径里的 `/` 和其它注册表一样原样保留在键中。
+类别就是注册表自己的 path：`example:refined` 查 `mxt.quality.example.refined`，描述再加 `.description`（**注册表命名空间仍是 `mxt`**）。名字与描述都只能靠翻译这两个键，定义里没有可写的文本字段；会把描述画出来的只有三处：品质（画在品质名下面）、`contract_type`（契约卷轴的提示框）与 `pill`（认领丹药的物品提示框）；其余注册表的描述键没有任何界面或提示框去读。JSON 里没有 `translation_key` 字段；路径里的 `/` 和其它注册表一样原样保留在键中。

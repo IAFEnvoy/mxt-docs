@@ -12,8 +12,6 @@ A spirit root ties a body to one or more elements. It hands out a cultivation mu
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `spirit_root.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `spirit_root.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is stored and read, but no screen draws it. |
 | `elements` | Element and weight array | **required and non-empty** | The elements this root is bound to; several may be written. |
 | `cultivation_multiplier` | `NumberProvider` | `1` | Cultivation multiplier. |
 | `element_ability_modifier` | `NumberProvider` | `1` | Element affinity ability multiplier. |
@@ -53,4 +51,4 @@ The mod also ships a **spirit root item**, `mxt:spirit_root`: the `mxt:spirit_ro
 
 Every spirit root and physique a body already holds can be **switched off** on its own without being lost: once it is off, its elements, cultivation multiplier, granted abilities, passive attributes, damage multipliers and the `conflicting_elements` it declares all stop applying, yet it is still "held" (`mxt:has_spirit_root` / `mxt:has_physique` still answer true, and it can still be removed normally). That state is the `disabled_spirit_roots` / `disabled_physiques` in the `spirit_identity` attachment, and it is saved and synchronised along with the entity.
 
-This module has **no player-facing entry point** (no keybind and no screen): the operation is the script-side `MxtSpiritRoots.setEnabled` / `MxtPhysiques.setEnabled`, or the administrator command `/mxt spirit_root enable|disable` / `/mxt physique enable|disable`, and how it is wired up is still left to content packs or modpacks. That is a different question from taking the definition out of the data pack: the switch only governs the one entry that was switched off, and that entry is still held, while removing a definition means the whole definition is gone (write `neoforge:conditions`, see [Disabling a Definition](../overview.md#disabling-a-definition)).
+This module has **no player-facing entry point** (no keybind and no screen): the operation is the script-side `MxtSpiritRoots.setEnabled` / `MxtPhysiques.setEnabled`, or the administrator command `/mxt spirit_root enable|disable` / `/mxt physique enable|disable`, and how it is wired up is still left to content packs or modpacks. That is a different question from taking the definition out of the data pack: the switch only governs the one entry that was switched off, and that entry is still held, while removing a definition means the whole definition is gone (write `neoforge:conditions`, see [Disabling a Definition](../conventions.md#disabling-a-definition)).

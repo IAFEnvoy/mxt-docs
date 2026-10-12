@@ -26,7 +26,6 @@ A storage ability is an ordinary ability with `mxt:storage` as its `type`:
 // data/example/mxt/ability/blade_storage.json
 {
   "type": "mxt:storage",
-  "name": "Sheath Storage",
   "slots": 27,
   "cooldown": 20
 }
@@ -39,7 +38,7 @@ It reads two fields of its own:
 | `slots` | A number or a formula string | **required** | The declared slot count. |
 | `cooldown` | A number or a formula string | `0` | The cooldown after a press, in ticks. |
 
-The shared fields (`name`, `condition`, `icon` and so on) work as usual; see [Ability (ability)](../datapack/json/ability.md).
+The shared fields (`condition`, `icon` and so on — **but not `name`**: an ability's name is always derived from the registered id as `ability.mxt.<namespace>.<path>`, and only translating that key gives it a display name) work as usual; see [Ability (ability)](../datapack/json/ability.md).
 
 `slots` always settles in this order:
 

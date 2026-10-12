@@ -1,12 +1,12 @@
 ---
 title: medicinal_property（药性）
-description: 药性的身份定义：一种药用效果的名字与描述，不复用元素、灵气或资源的 ID。
+description: 药性的身份定义：一种药用效果的身份，不复用元素、灵气或资源的 ID。
 aside: false
 ---
 
 # medicinal_property（药性） {#medicinal_property}
 
-一条 `medicinal_property` 是**一种药用效果的身份**：它回答「这是哪一种药性」，不回答「有多强」。定义里只有名字和描述，没有数值、不绑物品、也不指任何元素——药力写在使用它的地方。
+一条 `medicinal_property` 是**一种药用效果的身份**：它回答「这是哪一种药性」，不回答「有多强」。定义里一个字段都没有，没有数值、不绑物品、也不指任何元素——药力写在使用它的地方。
 
 药性 id 由内容包自己提供。不要复用[元素](./element.md)、灵气或 `resource` 的 id：它们是各自的身份，药性与元素之间没有任何自动换算。
 
@@ -22,10 +22,8 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `medicinal_property.mxt.<命名空间>.<路径>` | 药性显示名。 |
-| `description` | Text Component | 同上加 `.description` | 药性描述。 |
 
-两个字段都可以省略：省略时用表格里那个按条目 id 生成的键，写了就用你给的文本（字符串当翻译键、对象当完整组件）。所以 `data/example/mxt/medicinal_property/blood_moving.json` 里写一个空对象就够：
+药性文件就是一个空对象：名字与描述都由条目 id 生成，定义里没有可写的文本字段。`data/example/mxt/medicinal_property/blood_moving.json` 的 id 是 `example:blood_moving`，它的名字键是 `mxt.medicinal_property.example.blood_moving`、描述键再加 `.description`。
 
 ```json
 {}

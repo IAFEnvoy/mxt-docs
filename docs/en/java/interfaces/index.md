@@ -14,7 +14,7 @@ Six groups by purpose, one page per interface:
 | Aura storage | [AuraAccess](./aura/aura-access.md), [ItemAuraAccess](./aura/item-aura-access.md), [UseItemAuraAccess](./aura/use-item-aura-access.md) | `com.iafenvoy.mxt.api` |
 | Creature contracts | [Contractable](./creature/contractable.md), [ContractOperations](./creature/contract-operations.md), [CaptureListener](./creature/capture-listener.md), [Perchable](./creature/perchable.md) | `com.iafenvoy.mxt.api` |
 | Wheel and keys | [WheelMenuEntry](./wheel/wheel-menu-entry.md), [WheelSource](./wheel/wheel-source.md), [WheelEntryKind](./wheel/wheel-entry-kind.md), [Togglable](./wheel/togglable.md) | the first three in `api`, `Togglable` in `data/ability` |
-| Definitions and costs | [NamedDefinition](./definition/named-definition.md), [Cost](./definition/cost.md), [TooltipAppender](./definition/tooltip-appender.md) | `api`, `data/cost`, NeoForge |
+| Definitions and costs | [Cost](./definition/cost.md), [TooltipAppender](./definition/tooltip-appender.md) | `api`, `data/cost`, NeoForge |
 | Alchemy | [AlchemyHeatSource](./alchemy/alchemy-heat-source.md), [AlchemyWorkstation](./alchemy/alchemy-workstation.md) | `com.iafenvoy.mxt.api` |
 | Mounts | [MountVehicle](./mount/vehicle.md), [MountRenderer](./mount/renderer.md) | `com.iafenvoy.mxt.api`, `MountRenderer` client side |
 

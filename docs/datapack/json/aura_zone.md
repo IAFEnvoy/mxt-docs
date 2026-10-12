@@ -74,7 +74,7 @@ aside: false
 
 `rules.cultivate_suppress` 会中止正在进行的修炼。`tribulation_modify` 注入公式变量 `aura_tribulation_modifier`。
 
-`spirit_plant_bonus` 乘进灵田里每 `20` tick 一次的增长量：[spirit_herb](./spirit_herb.md) 的 `growth.growth_rate` 先按当前公式求值，再乘一次 `max(0, 1 + spirit_plant_bonus)`，所以公式里不要再乘它。这个值必须有限且不小于 `-1`，越界是加载错误。
+`spirit_plant_bonus` 乘进灵植每 `20` tick 一次的增长量：[spirit_herb](./spirit_herb.md) 的 `growth.growth_rate` 先按当前公式求值，再乘一次 `max(0, 1 + spirit_plant_bonus)`，所以公式里不要再乘它。这个值必须有限且不小于 `-1`，越界是加载错误。
 
 `alchemy_env_bonus` 开启后，位置落在该区域内的丹方**直接视为满足** `minimum_aura`——它是开关、没有可缩放的量，所以只能顶替要求，而不是把池子放大，也不替丹炉供热；关闭时仍按配方自己的最低值逐项比较。
 

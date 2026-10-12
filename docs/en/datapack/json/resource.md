@@ -16,8 +16,6 @@ Resource files go in `data/<namespace>/mxt/resource/` inside your datapack. The 
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `resource.mxt.<namespace>.<path>` | Display name; when omitted it is the generated key in that column, when written it is your text. |
-| `description` | Text Component | `resource.mxt.<namespace>.<path>.description` | Definition description; when omitted it is the generated key in that column. Today it is only stored and read, nothing draws it yet. |
 | `default_value` | `NumberProvider` | **required** | The current value when the attachment is created. |
 | `min` | `NumberProvider` | `0` | Lower bound of the value. |
 | `max` | `NumberProvider` | **required** | Upper bound of the value. |
@@ -58,7 +56,7 @@ Use `mxt:conditional` when the maximum has to differ by player condition: branch
 
 `bars` is an inline array of `resource`, not a datapack registry of its own.
 
-`context` uses IDs from the built-in `mxt:resource_bar_context` registry. A context extracts the current value, the minimum, the maximum and the time of the last change from the entity or the client state, and builds the display name from the resource ID passed in. The five built-ins are fixed — a datapack picks one, it cannot add its own: `mxt:self_hud`, `mxt:target_overlay` and `mxt:boss_overlay` read the value stored on the entity, while `mxt:environment_concentration` and `mxt:actual_concentration` read the aura pool synced to the client instead. The two concentration contexts mean "environment template only" and "environment, stock, blocks and formations all counted"; when `resource.mxt.example.qi` reads "Spirit Qi" in your language file, for example, the two display as environment spirit qi concentration and actual spirit qi concentration.
+`context` uses IDs from the built-in `mxt:resource_bar_context` registry. A context extracts the current value, the minimum, the maximum and the time of the last change from the entity or the client state, and builds the display name from the resource ID passed in. The five built-ins are fixed — a datapack picks one, it cannot add its own: `mxt:self_hud`, `mxt:target_overlay` and `mxt:boss_overlay` read the value stored on the entity, while `mxt:environment_concentration` and `mxt:actual_concentration` read the aura pool synced to the client instead. The two concentration contexts mean "environment template only" and "environment, stock, blocks and formations all counted"; when `mxt.resource.example.qi` reads "Spirit Qi" in your language file, for example, the two display as environment spirit qi concentration and actual spirit qi concentration.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -103,8 +101,8 @@ The IDs `mxt:environment_concentration` and `mxt:actual_concentration` exist in 
 
 ::: info Display Names
 
-Datapack definitions do not write a `translation_key`; the display name is generated from the identifier as `<category>.<registry namespace>.<definition namespace>.<path>`. The category of `resource` is `resource`, and the registry namespace is always `mxt` for MiXianTu's own registries, so `example:qi` looks up `resource.mxt.example.qi`. A `/` in the path goes into the key **as written** (`example:foo/bar` gives `resource.mxt.example.foo/bar`); sorting definitions into subdirectories per category does not add a second set of translation-key rules.
+Datapack definitions do not write a `translation_key`; the display name is generated from the identifier as `<registry namespace>.<category>.<definition namespace>.<path>`. The category of `resource` is `resource`, and the registry namespace is always `mxt` for MiXianTu's own registries (so the key always starts with `mxt.`), so `example:qi` looks up `mxt.resource.example.qi`. A `/` in the path goes into the key **as written** (`example:foo/bar` gives `mxt.resource.example.foo/bar`); sorting definitions into subdirectories per category does not add a second set of translation-key rules.
 
-`resource` is one of the 24 registries that may also carry an optional `name` / `description`: written, they use your text, and only when omitted does the generated key above apply (with `.description` appended for the description). Both fields are only stored and read today; nothing draws them yet.
+A `resource` definition has no writable text field: its name and description are both derived from the registered id by the rule above (the description being the name key plus `.description`), so giving this value words means translating those two keys.
 
 :::

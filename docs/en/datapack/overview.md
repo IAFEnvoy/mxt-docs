@@ -1,6 +1,6 @@
 ---
 title: Datapack Development Overview
-description: MiXianTu data pack file layout, reference syntax, disabling a definition, registry index, loading and debugging.
+description: MiXianTu data pack file layout, registry index, loading and overriding, loading and debugging.
 ---
 
 # Datapack Development Overview
@@ -26,80 +26,13 @@ data/example/mxt/artifact/charm/ward_jade_talisman.json
 There is no hard rule for how to categorise: by purpose (`passive/`, `active/`), by school (`sword/`, `alchemy/`) or by the batch an update added are all fine. A few things to keep in mind:
 
 - **The directories are part of the ID**: `data/example/mxt/ability/sword/slash.json` has the ID `example:sword/slash`, so **moving a file to another directory changes its ID**. Other definitions, tags and saved data (the ability grant ledger, cooldowns, the ids in wheel cells) all store that ID, so settle the categories before writing content.
-- The default `name` / `description` keys carry that path too (`<category>.mxt.<namespace>.<path>`, with the `/` in the path kept as written), so folders do not introduce a second set of translation-key rules.
+- The `name` / `description` keys generated from the id carry that path too (`<category>.mxt.<namespace>.<path>`, with the `/` in the path kept as written), so folders do not introduce a second set of translation-key rules.
 - Tags have a tree of their own (`tags/mxt/<registry>/...`) and do **not** have to mirror the definition directories level for level; keeping the same habit there only makes them easier to find. The values in a tag still have to be the **full ID including the directories**.
 - The levels only affect readability and take **no part in loading or validation**: the first level under `data/<namespace>/mxt/` is always the registry name (`ability/`, `artifact/`, …), and categories can only go below it; cramming every file into one registry directory works just as well.
 
 Data packs load through the native NeoForge writable registry, and the server syncs it to the client after loading. A definition decodes read-only: do not modify the collections you get out of one at runtime.
 
-## Reference Rules
-
-- A single entry is referenced by the entry's own id; a field that accepts either an entry or a tag also takes `#tag`.
-- An optional reference may be omitted entirely, in which case the default in the field table applies. Most list and map references are tolerant: a bad entry is dropped with an `Ignoring invalid list element` warning and the rest still apply. **Cost arrays do not follow that rule**: one entry of an array such as `costs` that cannot be decoded fails the whole definition at load.
-- The registries that claim items (`artifact`, `pill_binding`, `spirit_herb`, `technique_binding`, `item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`) all take an `ItemMatcher` in their `items` field: ids, tags, wildcards, regular expressions and mixed arrays are all accepted, and the three forms and seven entry types are on [`ItemMatcher`](/en/datapack/types/shared_data_types#itemmatcher). The two that claim blocks — `block_aura` and `heat_source` — have the same shape with a `blocks` field instead.
-- When several definitions match the same item, selection goes by the `priority` each one declares, **highest first** (the field defaults to `0`), and a tie falls back to registry order. `block_aura` has **no** `priority`: when several definitions hit the same block they all apply and **add up**. Which one wins is decided by what the definitions write and has nothing to do with file names (the same direction as `priority` on `aura_zone` and `element_reaction`). **Which kind of matcher entry matched is irrelevant**: a definition that matches is ranked by the number it declares, and naming an item does not move it up.
-- The vanilla tags are the only tag system; do not define a `tags` field inside JSON.
-
-## Disabling a Definition
-
-**Disabling a definition is load-time work**: the NeoForge resource condition goes into the definition file itself, and an entry whose condition does not hold **never enters the registry**, so no service ever reads it. Every data pack registry uses the same set of conditions:
-
-```json
-{
-  "neoforge:conditions": [
-    { "type": "neoforge:never" }
-  ]
-}
-```
-
-The available conditions all live in the `neoforge:` namespace: `never` / `always` (no fields), `mod_loaded` (`modid`), `registered` (`registry`, defaulting to `minecraft:item`, plus `value`), `and` / `or` (`values`), `not` (`value`) and `feature_flags_enabled` (`flags`). A condition can be written in the file of **any** registry entry, and every data pack registry treats them the same way; one file is one definition, with no `values` wrapper at the top. When the condition holds, `neoforge:conditions` is stripped before the file is handed to the definition decoder, so the normal fields are read as usual. **A tag-based condition such as `tag_empty` cannot be used here**: tags are not bound yet at that layer of decoding and it throws outright; tag checks belong to recipes and loot tables, which load later.
-
-**A condition that does not hold is not a load error**: the loader treats the entry as skipped and leaves only a DEBUG line, `Skipping loading registry entry … as its conditions were not met`, and the world loads as usual. So when "the file is right there but the game does not have it", that DEBUG line is the only clue — the default log level does not show it.
-
-The price is that "gone" means gone: an entry whose condition fails is **the same as a definition that was never written**, and a reference pointing at it fails to decode along with it, so there is no middle state where the definition stays around but does not take effect. For a file you can copy outright, see [Datapack Examples](/en/datapack/examples).
-
-> Spirit roots and physiques have a separate **toggle** (the `disabled_spirit_roots` / `disabled_physiques` in the `spirit_identity` attachment): switching one off means "still held, but inert". Operate it with the scripts `MxtSpiritRoots.setEnabled` / `MxtPhysiques.setEnabled`, or with the administrator commands `/mxt spirit_root enable|disable` and `/mxt physique enable|disable`; the mod ships no player-facing screen for it. It governs whether the body should use that one entry, which is a different question from taking the definition out of the data pack. Quality order is declared by the `quality` tiers themselves (each one's `quality` and `next`) and does not depend on tag order.
-
-### The Pass-Through Tag
-
-The mod also ships one tag that sits on a **vanilla registry**, so its path looks different — `tags/damage_type`, not `tags/mxt/...`:
-
-```text
-data/mxt/tags/damage_type/no_bonus.json
-```
-
-A damage type listed in `mxt:no_bonus` takes no part in damage bonus settlement: no progression-level or affinity multiplier, no physique multiplier, no `overcomes`/`adapted_to` relation read, and no element buildup either. The number is handed to vanilla as it arrived, and vanilla's own mitigation (armour, enchantments, resistance, absorption, invulnerability frames) still applies. By default it holds two: the void damage `minecraft:out_of_world`, and `mxt:lifespan`, which the mod uses for a lifespan running out; a content pack can append at the same path (`replace: false`) or replace it outright (`replace: true`). See [The damage system](/en/technical/damage).
-
-### The Mod's Own Grouping Tags
-
-The mod also ships a few **grouping tags** for its own items and blocks, at the vanilla path `data/mxt/tags/<registry>/<name>.json`; a content pack appends to them with `replace: false`:
-
-| Tag | Kind | What it holds |
-| --- | --- | --- |
-| `#mxt:spirit_stones` | item | The four spirit stones, lesser to supreme: `mxt:spirit_stone`, `mxt:medium_spirit_stone`, `mxt:high_spirit_stone` and `mxt:supreme_spirit_stone`. |
-| `#mxt:coins` | item | The six coins: copper, iron, gold, diamond, emerald and netherite (`mxt:copper_coin` onwards). |
-| `#mxt:workstations` | item + block | The blocks a player operates: the exchange station, cheque table, trade station, system station, spirit crafting table, forging table and talisman workstation. |
-| `#mxt:display_stands` | item + block | The six wooden display stands. |
-
-These are **grouping only** - nothing in the mod reads them - so they are there for recipe ingredients, claiming tables and conditions to reference (an ingredient can simply say `"#mxt:coins"`). A few other tags do carry meaning (`#mxt:talisman_paper`, `#mxt:brush_pigment`, `#mxt:back_equipable` / `#mxt:belt_equipable`); what they are for is on their own pages.
-
-## Numeric Fields
-
-A number can be written as a constant, an expression string or a number provider object:
-
-```json
-{
-  "damage": 8.0,
-  "speed": "2 + level * 0.1",
-  "amount": {"type": "mxt:constant", "value": 10}
-}
-```
-
-Expressions use exp4j. Variables are read on demand by the built-in variable table out of the objects the evaluation context carries (caster, target, resources, random source), and `params` can override or add variables. A formula problem that can be decided at load time (an empty expression, a syntax error, an invalid `params` and so on) is a decode error: the loader collects every failing entry and lists them together before failing the load. A variable name the context cannot provide is only found at evaluation — a development environment prints the full ERROR log, production prints one WARN line per distinct message, and both carry on with `0`. For the full fields and value ranges, see [Number Provider Types](/en/datapack/types/number_provider_types).
-
-## Actions and Conditions
-
-Behaviours are uniformly called `action` and are split by target into entity, item, block, bi-entity and so on. When several steps are needed, use meta actions such as sequence/choice/if_else. A `condition` restricts abilities, bound items, cultivation, realms and recipes. An array of actions or conditions is a shorthand meaning "run all of them in order".
+The rules shared by every definition are on [Datapack Conventions](/en/datapack/conventions): how to write a reference, how tags work, where names and descriptions come from, what happens to a field you got wrong, and how to write a number.
 
 ## Registry Index
 
@@ -147,13 +80,8 @@ flowchart TD
 
 - File conflicts follow Minecraft data pack priority: a higher priority data pack overrides the same path from a lower priority data pack.
 - When a vanilla tag uses `replace: false`, values are appended in data pack merge order; apart from quality ordering tags, gameplay does not depend on tag value order.
-- Data packs are read-only, and a definition has no generic `schema_version`, `enabled` or `tags` field; "should this one enter the registry right now" is answered at load time by `neoforge:conditions`.
-- The display name of a data-driven definition generates its translation key automatically from the identifier: `<category>.<registry namespace>.<namespace>.<path>`. The category defaults to the registry's own path, and the **registry namespace is always `mxt` for MiXianTu's own registries** (their keys are all written `mxt:<path>`), so `mxt:fire` in `aura` reads `aura.mxt.mxt.fire`, `example:qi` in `resource` reads `resource.mxt.example.qi`, and `mxt_test:flame_sigil` in `talisman` reads `talisman.mxt.mxt_test.flame_sigil`. The category is the registry's own path with no exception table (`example:refined` in `mxt:quality` reads `quality.mxt.example.refined`). A `/` in the path goes into the key **as written** and is not turned into `.` (`example:foo/bar` produces `resource.mxt.example.foo/bar`), so sorting into subdirectories by category does not introduce a second set of translation-key rules. JSON has no `translation_key` field; supply the matching translation in `assets/<namespace>/lang/zh_cn.json` and `en_us.json`.
-- The definitions of these 24 registries may also carry an optional `name` and `description` (written like any other component field: a bare string is a translation key, an object is a full component): `resource`, `aura`, `realm_stage`, `element`, `spirit_root`, `physique`, `ability`, `curse`, `technique`, `progression`, `cultivation`, `artifact`, `medicinal_property`, `spirit_herb`, `alchemy_furnace`, `alchemy_wall_material`, `pill`, `pill_binding`, `formation`, `tribulation`, `secret_realm`, `contract_type`, `talisman`, `quality`. Writing one uses your own text; omitting one falls back to the generated key above — an omitted `description` is the generated key plus `.description`. The point of the pair is that a pack can **translate the generated key or write its own text** (and so avoid a name clash); **`description` is only stored and read, and nothing draws it in a screen or tooltip except `quality` (the line describing the quality)**. Every other registry has the generated key only.
-- A `realm_stage` that declares its `minor_stages` as an integer names the sub-stages with the registry namespace too: `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>` (the index starts at `0`).
-- Each data pack registry's screen title has its own fixed key, `mxt.registry.<registry path>` (such as `mxt.registry.aura` and `mxt.registry.quality`), supplied by this mod's own language files; a data pack only has to provide the key above for its own definitions.
-- When a required single entry reference does not exist, the whole data pack load fails; optional references and tolerant list references are handled by their own rules.
-- These registries keep no old snapshot, so a definition that fails to decode stops the world from loading outright: fix that file before entering again.
+
+Where a name and description come from, how `neoforge:conditions` works and what a mistyped field does are on [Datapack Conventions](/en/datapack/conventions).
 
 One operational way to put the rule: **an old and a new definition of the same id never coexist**. The copy in the higher priority pack replaces the copy in the lower priority pack outright, without merging fields.
 

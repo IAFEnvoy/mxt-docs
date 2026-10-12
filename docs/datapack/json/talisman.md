@@ -11,12 +11,10 @@ aside: false
 
 一张符箓的定义写的是：铭刻到载体上之后，激发它**做什么、对谁做**、载体能存下多少灵气、每次发动要付什么。**载体也可以由画符工作站画出来**：符方 `mxt:talisman_drawing` 在顶层用 `talisman` 字段按 id 点名这里的一份定义，画出来的就是它，见 [`mxt:talisman_drawing`](./talisman_drawing.md)。
 
-**效果由 `type` 分派。** 公共字段只有 `name` / `description` / `type` / `condition` / `costs`（外加载体自己的 `capacity`）；`type` 是**必填**的分派键，效果与目标写在**它分派出来的字段**里：四种使用类型是 `mxt:self`（自己身上使用）、`mxt:area`（范围使用）、`mxt:crosshair`（准星对准使用）与 `mxt:thrown`（丢掷使用），见[使用类型](#usage-types)。**旧的 `abilities` / `durability` / `consume` 三个键已作废**：写了会被静默忽略（按未知键口径），那条符就成了没有效果的符，迁移见[使用类型](#usage-types)。
+**效果由 `type` 分派。** 公共字段只有 `type` / `condition` / `costs`（外加载体自己的 `capacity`）；`type` 是**必填**的分派键，效果与目标写在**它分派出来的字段**里：四种使用类型是 `mxt:self`（自己身上使用）、`mxt:area`（范围使用）、`mxt:crosshair`（准星对准使用）与 `mxt:thrown`（丢掷使用），见[使用类型](#usage-types)。**旧的 `abilities` / `durability` / `consume` 三个键已作废**：写了会被静默忽略（按未知键口径），那条符就成了没有效果的符，迁移见[使用类型](#usage-types)。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `talisman.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `talisman.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `type` | 使用类型（`type` 分派） | 无（**必填**） | 这一条符**怎么用**：`mxt:self` / `mxt:area` / `mxt:crosshair` / `mxt:thrown`（`mxt:empty` 是什么都不做的那一个），各自带自己的参数（目标、动作、`max_use`…），见[使用类型](#usage-types)。 |
 | `capacity` | double | `1` | 载体的**灌注容量倍率**：容量 ＝ 一次发动的灵气用量 × 这个倍率，按灵气分别算、向上取整到整单位。必须 ≥ 1，小于 1 在加载期被拒。 |
 | `condition` | [实体条件](../types/condition/entity_condition_types.md) | `mxt:always` | 这张符**能不能被持有者使用**，与价格无关。对**持有者**判定，并且**排在 `costs` 之前**：不满足就拒绝这次激发，此时什么都没动——载体不消耗、耐久不扣、存量不减、持有者的账也没动。同一张载体上**每一条铭刻的 `condition` 都要通过**，一条说"现在不行"就整张拒绝。也可以写成条件数组（隐式 AND）。 |
@@ -152,9 +150,9 @@ aside: false
 
 ## 命名与物品组件
 
-显示名称可以写成可选的 `name` 字段，省略时由标识符生成翻译键 `talisman.mxt.<定义命名空间>.<路径>`：`mxt_test:flame_sigil` → `talisman.mxt.mxt_test.flame_sigil`。可选的 `description` 同理，省略时是生成键再接 `.description`。
+这份定义里没有可写的文本字段：显示名由标识符现算，`talisman.mxt.<定义命名空间>.<路径>`（`mxt_test:flame_sigil` → `mxt.talisman.mxt_test.flame_sigil`），描述键是名字键再接 `.description`。要给它配词就翻译这两个键。
 
-**载体 tooltip 里还会印一行"怎么用"**，键按**使用类型**给：`talisman_type.mxt.mxt.<类型>`（`self` / `area` / `crosshair` / `thrown` / `empty`，例如 `talisman_type.mxt.mxt.thrown`），与名字同一套四段式。**同一张载体上同一个类型只印一次**；本模组自带这五条（在两份 lang 里），第三方注册的类型没写这一条就不会留下裸键。
+**载体 tooltip 里还会印一行"怎么用"**，键按**使用类型**给：`mxt.talisman_type.mxt.<类型>`（`self` / `area` / `crosshair` / `thrown` / `empty`，例如 `mxt.talisman_type.mxt.thrown`），与名字同一套四段式。**同一张载体上同一个类型只印一次**；本模组自带这五条（在两份 lang 里），第三方注册的类型没写这一条就不会留下裸键。
 
 示例：
 

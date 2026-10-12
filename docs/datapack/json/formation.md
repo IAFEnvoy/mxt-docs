@@ -11,8 +11,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `formation.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `formation.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `quality` | 品质 id | 无 | 可选。携带这座阵法的阵盘起始的档位。 |
 | `structure_template` | 结构模板 ID | 见下 | 原版结构模板，阵心即模板原点。与 `structure` 二选一（`structure_check: "structure"` 时必须**恰好**写一个）。 |
 | `structure_check` | `structure` / `always` | `structure` | 立阵时是否校验结构。`always` 表示**这座阵法哪里都能立**，此时 `structure_template` 与 `structure` 都不会被读取，写了会被静默忽略（与未知键同一口径）。 |

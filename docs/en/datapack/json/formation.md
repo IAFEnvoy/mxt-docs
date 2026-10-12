@@ -12,8 +12,6 @@ A `formation` defines one array: its structure, radius, resource costs, lifecycl
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `formation.mxt.<namespace>.<path>` | Optional display name. When omitted, the default key in the previous column is used. |
-| `description` | Text Component | `formation.mxt.<namespace>.<path>.description` | Optional description. When omitted, the default key in the previous column is used; it is stored and read today, but nothing draws it yet. |
 | `quality` | Quality id | none | Optional. The tier a plate carrying this array starts on. |
 | `structure_template` | Structure template ID | see below | A vanilla structure template; the controller is the template's origin. One of the two structure fields — with `structure_check: "structure"` **exactly one** of them has to be written. |
 | `structure_check` | `structure` / `always` | `structure` | Whether the structure is checked when the array is raised. `always` means **this array can be raised anywhere**, and then neither `structure_template` nor `structure` is read — writing one is silently ignored (the same rule as an unknown key). |

@@ -14,8 +14,6 @@ A `contract_type` describes one contract from the moment it is signed to the mom
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `contract_type.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `contract_type.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; a contract scroll's tooltip shows it, and an untranslated default key is left out. |
 | `quality` | Quality id | none | Optional. The tier a scroll of this contract starts on. |
 | `owner_condition` | `EntityCondition` | `mxt:always` | The owner condition. |
 | `creature_condition` | `EntityCondition` | `mxt:always` | The spirit beast condition, checked after eligibility. |

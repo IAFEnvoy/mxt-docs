@@ -190,7 +190,6 @@ Add the finish pattern and the quality ladder to the same blueprint:
 ```json
 // data/example/mxt/quality/flawless.json
 {
-  "name": "quality.mxt.example.flawless",
   "color": "#FFAA00"
 }
 ```
@@ -271,7 +270,7 @@ If those two items are not registered yet, either use vanilla items in the defin
 2. Put two iron ingots and a stick into the input slots. The left list now shows the result item's icon — a blueprint is **named after what it produces** in that list. Hover it: the material list appears, with a green `✔` and a have/need count for everything you hold, a red `✖` otherwise, and the step limit underneath.
 3. Pick the blueprint and press "use blueprint". The materials are taken and the session starts: the meter gains a green target band, a grey zero mark and a red current value.
 4. Pick a method in the right list (the icon is its `icon`; hovering shows "value change: +2") and press "use method". The value moves and the "current" row underneath records the last six strikes; with a method picked, a yellow predicted mark also appears on the meter.
-5. Push the value into the green band with the last two strikes being light-then-heavy. The session settles itself, the piece lands in the output slot, and its tooltip gains a quality line — the text it shows is whatever `name` in `flawless.json` points at; omit `name` and it is generated from the entry id as `quality.mxt.example.flawless` (if you write a translation key, remember to give it an entry in your own language file).
+5. Push the value into the green band with the last two strikes being light-then-heavy. The session settles itself, the piece lands in the output slot, and its tooltip gains a quality line — the quality name it shows is generated from the entry id, `mxt.quality.example.flawless` (give that key a translation in your own language file; `flawless.json` cannot carry a name, since the definition has no `name` field).
 6. Forge a second one, deliberately taking a few extra strikes, and compare the two qualities. Press "cancel" in the middle of a session to see the materials come back through the cancellation policy.
 7. `/mxt registries validate` should report no errors, and `/mxt registries list` should show the entry counts of `mxt:forging_method`, `mxt:forging_blueprint`, `mxt:tool_binding` and `mxt:blueprint_binding`.
 

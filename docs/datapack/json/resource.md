@@ -16,8 +16,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | 文本组件 | `resource.mxt.<命名空间>.<路径>` | 显示名；省略时用左列的生成键，写了就用你给的文本。 |
-| `description` | 文本组件 | `resource.mxt.<命名空间>.<路径>.description` | 定义描述；省略时用左列的生成键。目前只被存储与读取，还没有界面绘制它。 |
 | `default_value` | `NumberProvider` | **必填** | 新建附件时的当前值。 |
 | `min` | `NumberProvider` | `0` | 数值下限。 |
 | `max` | `NumberProvider` | **必填** | 数值上限。 |
@@ -58,7 +56,7 @@ aside: false
 
 `bars` 是 `resource` 的内联数组，不是独立的数据包注册表。
 
-`context` 使用固有注册表 `mxt:resource_bar_context` 里的 ID。上下文对象从实体或客户端状态里提取当前值、最小值、最大值和最近变更时间，并用传入的资源 ID 生成显示名。内置五项固定，数据包只能选，不能自己加：`mxt:self_hud`、`mxt:target_overlay`、`mxt:boss_overlay` 读实体上存下来的数值，`mxt:environment_concentration`、`mxt:actual_concentration` 改读客户端同步过来的灵气池。两种浓度上下文分别是"只算环境模板"与"环境、库存、方块、阵法全都算上"；例如语言文件里 `resource.mxt.example.qi` 写的是「灵气」时，两条会分别显示成「环境灵气浓度」与「实际灵气浓度」。
+`context` 使用固有注册表 `mxt:resource_bar_context` 里的 ID。上下文对象从实体或客户端状态里提取当前值、最小值、最大值和最近变更时间，并用传入的资源 ID 生成显示名。内置五项固定，数据包只能选，不能自己加：`mxt:self_hud`、`mxt:target_overlay`、`mxt:boss_overlay` 读实体上存下来的数值，`mxt:environment_concentration`、`mxt:actual_concentration` 改读客户端同步过来的灵气池。两种浓度上下文分别是"只算环境模板"与"环境、库存、方块、阵法全都算上"；例如语言文件里 `mxt.resource.example.qi` 写的是「灵气」时，两条会分别显示成「环境灵气浓度」与「实际灵气浓度」。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
@@ -103,8 +101,8 @@ aside: false
 
 ::: info 显示名
 
-数据包定义不写 `translation_key`，显示名由标识符自动生成：`<类别>.<注册表命名空间>.<定义命名空间>.<路径>`。`resource` 的类别就是 `resource`、注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`，所以 `example:qi` 查 `resource.mxt.example.qi`。路径里的 `/` **原样**进键（`example:foo/bar` 得到 `resource.mxt.example.foo/bar`），按类别分子文件夹不会多出第二套翻译键规则。
+数据包定义不写 `translation_key`，显示名由标识符自动生成：`<注册表命名空间>.<类别>.<定义命名空间>.<路径>`。`resource` 的类别就是 `resource`、注册表命名空间对 MiXianTu 自己的注册表恒为 `mxt`（所以键总以 `mxt.` 开头），`example:qi` 查 `mxt.resource.example.qi`。路径里的 `/` **原样**进键（`example:foo/bar` 得到 `mxt.resource.example.foo/bar`），按类别分子文件夹不会多出第二套翻译键规则。
 
-`resource` 是可以自带可选 `name` / `description` 的 24 张表之一，写了就用你的文本，省略才用上面的生成键（`description` 再加 `.description`）；这两个字段目前只被存储与读取，还没有地方绘制它们。
+`resource` 定义里没有可写的文本字段：名字与描述都按上面的规则从注册 id 现算（描述就是名字键再加 `.description`），要给这个数值配词就翻译那两个键。
 
 :::

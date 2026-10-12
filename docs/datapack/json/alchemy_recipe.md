@@ -19,8 +19,6 @@ aside: false
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `type` | String | **必填** | 固定 `mxt:alchemy`。 |
-| `name` | 文本组件 | 空 | 可选元数据。丹炉不显示丹方名，也没有查看器。省略时的键是 `recipe.mxt.<命名空间>.<路径>`，路径里的 `/` 改成 `.`。 |
-| `description` | 文本组件 | 空 | 可选元数据，丹炉不展示。省略时在名字键后加 `.description`。 |
 | `main_requirements` | 药性 id 到 [`NumberProvider`](../types/number_provider_types) 的映射 | **必填**，非空 | 主药药性到正药力阈值。常量必须为正。 |
 | `auxiliary_requirements` | 同上 | `{}` | 辅药阈值。可以留空。 |
 | `catalyst_requirement` | `NumberProvider` | **必填** | 药引的调和药力阈值。常量必须为正。 |

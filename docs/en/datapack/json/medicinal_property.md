@@ -1,12 +1,12 @@
 ---
 title: Medicinal Property (medicinal_property)
-description: A medicinal identity carrying a name and a description for one medicinal effect, with no reuse of element, aura or resource ids.
+description: A medicinal identity for one medicinal effect, with no reuse of element, aura or resource ids.
 aside: false
 ---
 
 # Medicinal Property (medicinal_property) {#medicinal_property}
 
-A `medicinal_property` is the **identity of one medicinal effect**: it answers "which property is this", not "how strong is it". The definition holds a name and a description and nothing else — no number, no item binding, no element. Potency is written wherever the property is used.
+A `medicinal_property` is the **identity of one medicinal effect**: it answers "which property is this", not "how strong is it". The definition has no fields at all — no number, no item binding, no element. Potency is written wherever the property is used.
 
 The ids come from your content pack. Do not reuse the id of an [element](./element.md), an aura or a `resource`: each is its own identity, and nothing converts between a property and an element.
 
@@ -22,10 +22,8 @@ The filename corresponds to its ID. For example, `data/example/mxt/medicinal_pro
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `medicinal_property.mxt.<namespace>.<path>` | The property's display name. |
-| `description` | Text Component | the same key plus `.description` | The property's description. |
 
-Both fields may be omitted: omitting one uses the key generated from the entry id in the table above, writing one uses your own text (a bare string is a translation key, an object is a full component). So an empty object is enough in `data/example/mxt/medicinal_property/blood_moving.json`:
+The file is an empty object: the name and description are both generated from the entry id, and the definition has no writable text field. `data/example/mxt/medicinal_property/blood_moving.json` has the id `example:blood_moving`, so its name key is `mxt.medicinal_property.example.blood_moving` and its description key is that plus `.description`.
 
 ```json
 {}

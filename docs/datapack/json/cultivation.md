@@ -12,8 +12,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `cultivation.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `cultivation.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
 | `priority` | Int | `0` | 多条法门并存时的先后：数值大者先，相同则按注册表顺序。它只在**此刻适用的**法门里排序。 |
 | `start_condition` | `EntityCondition` | `mxt:always` | 开始修炼条件：能不能坐下。 |
 | `cultivate_condition` | `EntityCondition` | `mxt:always` | **这一拍能不能拿到成果**；不成立时照常修炼、**不中止**，只是这一拍空过（不扣钱、不给收获、不算结算），条件一恢复立刻出成果。**基本只用于双修判定**。 |

@@ -81,7 +81,7 @@ MXT_EN_DOCS=/path/to/old-docs MXT_ZH_DOCS=/path/to/MiXianTu/docs pnpm run migrat
 
 | 不要写 | 因为 | 要写的是 |
 | --- | --- | --- |
-| Java 类名（`MxtEntityActions`、`ArtifactDescription`、`DataStorageCollector`、`AutoIgnoreListCodec`、`FriendService`…） | 读者不认识，也不影响他写 JSON | 这个 `type` / 字段的 ID、默认值、边界 |
+| Java 类名（`MxtEntityActions`、`ArtifactDescription`、`DataStorageCollector`、`TolerantListCodec`、`FriendService`…） | 读者不认识，也不影响他写 JSON | 这个 `type` / 字段的 ID、默认值、边界 |
 | 方法名与内部过程（`createComponents`、`isActive`、`refreshDimensions`、`AbilityEffect.run`…） | 同上 | 什么时候生效、什么时候不生效 |
 | 内部类型名（`Holder<aura>`、`MapCodec`、`RegistryFixedCodec`、`DataStorage`…） | 读者写的是 JSON，不是 Java | "写灵气 id 或 `#标签`"、"写一个数字" |
 | 只能从 Java 扩展的注册表 | 数据包够不到 | 除非本页就是 Java 章节 |

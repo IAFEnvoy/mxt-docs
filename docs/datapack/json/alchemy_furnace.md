@@ -22,8 +22,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `alchemy_furnace.mxt.<命名空间>.<路径>` | 炉型显示名。 |
-| `description` | Text Component | 同上加 `.description` | 炉型描述。 |
 | `quality` | 品质 id | 无 | 可选。按这份规格造出来的丹炉起始的档位。 |
 | `main_slots` | Integer | **必填** | 主药格数，`1..2`。 |
 | `auxiliary_slots` | Integer | `0` | 辅药格数，`0..2`。 |

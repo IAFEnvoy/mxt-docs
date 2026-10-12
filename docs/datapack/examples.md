@@ -32,7 +32,7 @@ data/example/mxt/aura/qi.json
 }
 ```
 
-条件成立时 `neoforge:conditions` 会在交给定义解码之前被剥掉，其余字段照常读。可用条件与「没有中间状态」的代价见[数据包开发总览](./overview.md#停用一条定义)。
+条件成立时 `neoforge:conditions` 会在交给定义解码之前被剥掉，其余字段照常读。可用条件与「没有中间状态」的代价见[数据包开发总览](./conventions.md#停用一条定义)。
 
 不要自定义 `tags` 键来代替原版标签；标签文件位于 `data/<namespace>/tags/...`，而**标签不能用来停用条目**（注册表解码时标签还没绑定）。
 

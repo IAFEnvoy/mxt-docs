@@ -60,7 +60,7 @@ Explicitly passing a registry accessor (**use these on the client**):
 | `holders(Provider access, key)` / `holders(RegistryAccess access, key)` | Iterates the whole registry | |
 | `get(Provider access, key, Identifier id)` | Gets a value | Same as above |
 
-**This layer filters nothing.** Whether an entry is in the registry is the whole answer, and switching a definition off is load-time work (`neoforge:conditions`, see [Disabling a Definition](../datapack/overview.md#disabling-a-definition)): an entry a condition blocks is simply not in the registry. So a holder you read is a holder you may act on, and there is no such state as "I read a definition that was switched off".
+**This layer filters nothing.** Whether an entry is in the registry is the whole answer, and switching a definition off is load-time work (`neoforge:conditions`, see [Disabling a Definition](../datapack/conventions.md#disabling-a-definition)): an entry a condition blocks is simply not in the registry. So a holder you read is a holder you may act on, and there is no such state as "I read a definition that was switched off".
 
 Tags:
 
@@ -85,20 +85,21 @@ Key points:
 
 ### `DefinitionText` {#definitiontext}
 
-Package `com.iafenvoy.mxt.util`. Turns a definition into a display name; the key is `<category>.<registry namespace>.<definition namespace>.<path>`, where `category` is the registry id's path.
+Package `com.iafenvoy.mxt.util`. Turns a definition into a display name; the key is `<registry namespace>.<category>.<definition namespace>.<path>`, where `category` is the registry id's path.
 
 | Method | Purpose | Notes |
 | --- | --- | --- |
-| `name(Holder<?> holder, String category)` | Gets the display name | **The entry point recommended inside the mod**: when the definition implements `NamedDefinition` its own `name` is read first, otherwise the key is derived from the holder's key |
-| `name(Holder<?> holder)` / `name(ResourceKey<?> key)` | Same as above | category is derived from the registry / the key is used directly |
+| `name(Holder<?> holder)` / `name(ResourceKey<?> key)` | Gets the display name | **The entry point recommended inside the mod**: the category is answered by the registry itself (the path of `key.registry()`), so callers pass no category string |
 | `name(Identifier id, String category)` | For when all you have is a bare id | **Hard-assumes the `mxt` namespace**; do not use this overload for a non-`mxt` definition |
+| `description(Holder<?> holder)` / `description(ResourceKey<?> key)` | Gets the description | The key is the name key plus `.description`; **this is the description's only exit** |
+| `minorStage(Holder<?> holder, int index)` / `minorStage(ResourceKey<?> key, int index)` | Gets a minor stage's name | The key is this stage's name key plus `.minor_stage.<index>`, the index starting at `0` |
+| `derived(Holder<?> holder, String suffix)` / `derived(ResourceKey<?> key, String suffix)` | The name key plus one suffix | `description` and `minorStage` both go through it, as does any other text belonging to a definition |
 | `category(Identifier registry)` | Gets the category of a registry | It is its path |
 | `key(ResourceKey<?>)` / `key(Identifier registry, Identifier id)` | Builds a text key from the entry / registry+definition | |
-| `key(String category, String registryNamespace, Identifier id)` | The low-level concatenation | **The only exit for building a definition key**; `ContextNameCodec`'s default value goes through it too |
-| `defaultText(String category, ResourceKey<?> entry, String suffix)` | The fallback text when a definition writes no `name` / `description` | **The only exit for fallback text**; `suffix` of `""` is the name, `".description"` is the description |
+| `key(String category, String registryNamespace, Identifier id)` | The low-level concatenation | **The only exit for building a definition key** |
 | `resolved(Component text)` | Whether this text is "real text" or "an untranslated bare key" | Reads the client language file; a display-layer judgement |
 
-Key points: **do not assemble a second set of name keys anywhere else**; an untranslated key renders as the key itself (not an empty string), and `resolved(...)` is there to decide exactly that.
+Key points: **do not assemble a second set of name keys anywhere else**; a definition has **no text field at all**, so its name and description are always derived from the registered id and the only way a pack gives a definition words is by translating the generated key. An untranslated key renders as the key itself (not an empty string), and `resolved(...)` is there to decide exactly that — **always pass a description through it before drawing it**.
 
 ### `TooltipText` {#tooltiptext}
 

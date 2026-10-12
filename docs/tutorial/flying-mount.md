@@ -69,7 +69,6 @@ description: "把一件物品做成飞行法器：载具定义、御器之术、
 // data/example/mxt/ability/azure_sword_flight.json
 {
   "type": "mxt:flight_control",
-  "name": "御器之术",
   "hand": "either",
   "speed_multiplier": 1.0,
   "costs": [{ "id": "example:qi", "amount": 5 }]

@@ -1,12 +1,12 @@
 ---
 title: spirit_herb（灵植）
-description: 把已有物品声明成灵植：药性药力、寒热与药龄，以及可选的单格培育。
+description: 把已有方块声明成灵植：药性药力、寒热与药龄，以及它的果实与生长时钟。
 aside: false
 ---
 
 # spirit_herb（灵植） {#spirit_herb}
 
-`spirit_herb` 把一件**已有物品**标记成灵植，给它药性药力、寒热偏向，还可以给它一套培育方式。它不注册任何新物品：草本身由内容包或别的模组提供。**定义里没有 `quality` 字段**：灵植按**物品**认领（`items` 就是那套 `ItemMatcher`），堆上不装定义身份组件，没有可以问的对象，所以这株草的档写在注册表 [default_quality](./default_quality.md) 里，按物品 id 或 `#标签` 给。
+`spirit_herb` 把一些**已有方块**标记成灵植，给它药性药力、寒热偏向，指定它的**果实**，并给它一套生长时钟。它不注册任何方块、也不注册任何物品：草与果实都由内容包或别的模组提供。**定义里没有 `quality` 字段**：灵植定义本身不携带物品身份，堆上不装定义身份组件，没有可以问的对象，所以这株草的档默认由注册表 [default_quality](./default_quality.md) 按果实物品 id 或 `#标签` 兜底；要按药龄定档就写 `quality_by_age`，采收时会把那一档写进组件（见[药龄与品质](#age-and-quality)）。
 
 ## 文件位置
 
@@ -18,80 +18,134 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | 文本组件 | `spirit_herb.mxt.<命名空间>.<路径>` | 显示名。 |
-| `description` | 文本组件 | 同上加 `.description` | 描述。 |
-| `items` | `ItemMatcher` | **必填** | 绑定现有物品，不创建新的灵植物品。多条绑定时按 `priority` 取一条，不把药力相加。 |
-| `priority` | Int | `0` | 多份灵草定义匹配同一件物品时的先后：数值大者先（见 [匹配器](../types/shared_data_types.md#itemmatcher)）；相同则按注册表顺序。 |
-| `default_age` | Integer | `0` | 非负。堆上没有 `mxt:herb_age` 组件时用它。 |
-| `element_tags` | 元素 id 或 `#标签` 的数组 | `[]` | 元素归属，**不是药性**。写的是元素注册表；可被 `mxt:herb_tag` 的 `element` 匹配。 |
-| `material_tags` | Identifier[] | `[]` | 材料分类，由 `mxt:herb_tag` 的 `material` 匹配。 |
+| `blocks` | 方块 id 或 `#方块标签` 的数组 | **必填**，非空 | 这条草长成哪些方块。不注册新方块。 |
+| `priority` | `Integer` | `0` | 多条定义命中同一个方块时的先后。 |
+| `default_age` | `Integer` | `0` | 果实堆上没有 `mxt:herb_age` 组件时的药龄。非负。 |
+| `quality_by_age` | `Object[]` | `[]` | 药龄到品质的阶梯，见[药龄与品质](#age-and-quality)。 |
+| `element_tags` | 元素 id 或 `#标签` 的数组 | `[]` | 元素归属，**不是药性**。 |
+| `material_tags` | `Identifier[]` | `[]` | 材料分类。 |
 | `main_effects` | 药性 id 到 `NumberProvider` 的映射 | `{}` | 作为主药时每件提供的药力。 |
 | `auxiliary_effects` | 同上 | `{}` | 作为辅药时每件提供的药力。 |
-| `catalyst_power` | `NumberProvider` | `0` | 作为药引时每件的调和药力，非负。 |
-| `thermal_bias` | Double | `0` | 有限数，取值 `[-1,1]`。负为寒、正为热，与火或水元素不是一回事。 |
-| `growth` | 对象 | 无 | 省略则不可种植，但仍能入药。 |
+| `catalyst_power` | `NumberProvider` | `0` | 作为药引时每件的调和药力。非负。 |
+| `thermal_bias` | `Double` | `0` | 寒热偏向，有限数且在 `[-1,1]`。 |
+| `growth` | `Object` | 无 | 生长与果实，见下表。省略则这块方块不长药龄、也没有果实，但仍然算这条草的方块。 |
 
-`items` 用的是各定义共用的物品匹配器：单个物品 ID、单个 `#命名空间:标签`，或两者混写的数组；数组项也可以写成由固有注册表 `item_matcher_entry_type` 分派的带 `type` 对象，见[共享数据类型](../types/shared_data_types.md#itemmatcher)。`element_tags` 与 `material_tags` 是这株草自己的属性，不是物品的属性，所以内容包可以写「任意火属性灵草」，而不必知道之后有哪些物品被绑到那条草上。
-
-## 药龄
-
-药龄是这株草额外的元数据，存在物品组件 **`mxt:herb_age`** 里，是一个非负整数。读取顺序只有一条：堆上有组件就用组件的值，没有就用定义里的 `default_age`。
-
-堆本身不会增龄：背包、容器和地上都不自己长岁数。不同药龄的堆按原版组件规则各自成堆，不合堆、不平均、不刷新。
-
-药龄是**公式输入**，不是第二套倍率：`main_effects` / `auxiliary_effects` / `catalyst_power` 求值时，当前药龄可以从局部变量 `herb_age` 读到，想让百年老药更值钱就把增益写进表达式，例如 `"3 * (1 + herb_age / 100)"`。
-
-## `growth`（培育）
+### `growth`
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `seeds` | `ItemMatcher` | **必填**，非空 | 可作为种苗的已有物品。 |
-| `mature_age` | Integer | **必填** | 正整数。达到后可以采收，也可以继续养。 |
-| `max_age` | Integer | **必填** | 正整数，且 ≥ `mature_age`。达到后停止花费。 |
-| `growth_rate` | `NumberProvider` | **必填** | 每 `20` 个该植物实际加载 tick 增加的药龄，非负。 |
+| `mature_age` | `Integer` | **必填** | 正整数。达到后可以采收，也可以继续养。 |
+| `max_age` | `Integer` | **必填** | 正整数，且 ≥ `mature_age`。达到后停止生长。 |
+| `growth_rate` | `NumberProvider` | **必填** | 每 `20` 个该植物实际加载 tick 增加的药龄。非负。 |
 | `condition` | `BlockCondition` | `mxt:always` | 光照、群系、邻接、`aura_range` 等。 |
-| `costs` | [`Cost`](../types/shared_data_types.md#cost) 数组 | `[]` | 只收 `mxt:aura` 条目，从灵田所在地的场地灵气池付。 |
-| `harvest` | `ItemStackTemplate` | **必填** | 采收产出的物品，必须能解析回这条灵植。数量和组件由数据提供。 |
-| `texture` | Identifier | **必填** | 交叉草叶贴图。不为每种植物注册方块。 |
+| `costs` | `Cost[]` | `[]` | 只收 `mxt:aura` 条目，从植株所在地的场地灵气池付。 |
+| `drops` | 物品 id 或 `#物品标签` 的数组 | **必填**，非空 | 这株草的**果实**：破坏时只有匹配它的掉落物会被写上药龄。 |
+| `wild_age` | `NumberProvider` | `0` | 自然生成植株被第一次读取时掷出的初始药龄。 |
 
-种苗与物品绑定是两份列表：`growth.seeds` 里的东西不必是这条灵植自己绑定或采收的物品。`harvest` 必须能解析回这条灵植，否则加载后报错。
+`blocks` 接受单个方块 ID、单个 `#命名空间:标签`，或两者混写的数组。`priority` 数值大者先，相同则按注册表顺序；**同一个方块被两条同优先级定义认领、或同一个果实被两条同优先级定义认领都是加载错误**——方块决定「这一格长的是哪种草」、果实决定「这一堆是哪株草的产物」，两者都不能靠注册表顺序裁决。
 
-## 灵田与生长
+`element_tags` 与 `material_tags` 是这株草自己的属性，不是果实的属性，所以内容包可以写「任意火属性灵草」，而不必知道之后有哪些物品被绑到那条草上。两者分别由 `mxt:herb_tag` 的 `element` 与 `material` 匹配。
 
-灵田是方块 `mxt:spirit_herb_plot`，一格一株，没有培育界面。
+`thermal_bias` 的负为寒、正为热，与火或水元素不是一回事。
 
-持可作为种苗的物品右键空灵田，检查位置与交互权限后消耗 `1` 件种苗。新种植从药龄 `0` 开始，不继承种苗上原有的药龄；同一格重复右键不能叠种。不能种植的材料或受保护的位置不消耗种苗。
+`blocks` 与 `growth.drops` 是两份列表：长成什么样与结出什么可以完全无关。**果实是谁**由 `drops` 说了算——那是果实被认回「哪株草的产物」的通道。**没写 `growth` 的草没有果实**，于是它退回按「自己认领的方块对应的物品」被认出来：不这样，这种只入药的草的药力字段就永远没有任何物品能触发。写了 `growth` 的草**不会**再按方块匹配，所以同一堆不会同时属于两条定义。
 
-每 `20` 个已加载 tick 结算一次：定义仍在注册表中、未到 `max_age`、`condition` 成立、增长量有效，然后整组支付 `costs`。付不出就暂停，不扣部分账单，也不死苗；区块卸载与停服不补算。
+## 药龄
 
-此次增长量是 **`growth_rate` 求值后再乘 `max(0, 1 + spirit_plant_bonus)`**，管线只乘这一次，公式里不要再乘它。药龄在 `max_age` 处封顶。
+药龄是这株草果实的额外元数据，存在物品组件 **`mxt:herb_age`** 里，是一个非负整数。读取顺序只有一条：堆上有组件就用组件的值，没有就用定义里的 `default_age`。
 
-空手右键未成熟的灵田会显示药龄、成熟要求和暂停原因。成熟后空手右键采收：清空植株，给出 `harvest`（药龄组件为当前进度向下取整）和原种苗 `1` 件；背包装不下的剩余物只掉落一次。潜行空手拔除只返还原种苗。普通破坏时按同一套掉落：成熟给出收获物与原种苗，未成熟只返还种苗。定义解析不出时停止成长，仍可取回保存的种苗。
+堆本身不会增龄：背包、容器和地上都不自己长岁数。不同药龄的堆按原版组件规则各自成堆，不合堆、不平均、不刷新。
+
+药龄是**公式输入**，不是第二套倍率：`main_effects` / `auxiliary_effects` / `catalyst_power` 求值时，当前药龄可以从局部变量 `herb_age` 读到，想让百年老药更值钱就把增益写进表达式，例如 `"3 * (1 + herb_age / 100)"`。地里长的公式读同一个变量，值是**这株植物当下**的药龄（参见[生长](#growth-and-planting)）。
+
+## 药龄与品质 {#age-and-quality}
+
+`quality_by_age` 是一条药龄到品质的阶梯，用来让老药更值钱。破坏成熟植株时按当时的药龄向下取整查这条阶梯，命中的那一档写进 `mxt:quality` 组件，于是这一堆的档由第 1 层给出，[品质](./quality.md#resolution)的三层解析照旧。低于最低一档、或整条阶梯没写时什么都不写，这一堆仍由 `default_quality` 兜底。
+
+阶梯只在**采收那一刻**求值：`/give` 出来、只在定义里带 `default_age` 的堆从来没长在地里，不会被补档。阶梯必须按 `min_age` 升序且不重复，写反或写重都在加载期报错。
+
+```json
+"quality_by_age": [
+  { "min_age": 100, "quality": "example:spirit" },
+  { "min_age": 500, "quality": "example:immortal" }
+]
+```
+
+## 生长 {#growth-and-planting}
+
+这一节讲的是**任何被 `blocks` 认领的方块都会得到**的行为，与方块自己怎么实现无关：它不需要实现任何接口，也不需要写任何 Java。
+
+### 药龄怎么记
+
+药龄不记在方块上，记在**区块附件** `mxt:herb_chunk` 里：一行 = `坐标 → {药龄, gameTime}`。
+
+- **药龄**是这株草真正长到的岁数。它是**存下来的状态**，不是每次读取现推出来的——这样连读多少次答案都一样，Jade 每帧都会读它。
+- **gameTime**是上次结算到的那一刻，也就是「世界活了多久」。它跟着存档走，且**只在加载时前进**：区块卸载、停服、`/tick freeze`、单机暂停期间都不涨——这正是「只在加载期间生长」想要的语义，所以离线不需要任何补偿逻辑。读的时候 `当前 gameTime − 这个数` 就是这株草还欠着的那段时间，算完多少期就把这个数推进多少期，所以时间既不会被扣两次，也不会凭空丢掉。
+- **负数**表示「自然生成、还没被人碰过」：掷出的岁数停在药龄那一格，负数只是个「还没定档」的记号，第一次读取时把它转成真正的行。
+- 附件**只在服务端**（不同步给客户端），外观走方块自己的 blockstate 或渲染。
+
+### 放下就是种植
+
+被认领的方块**一落到世界里就开一行**，药龄 `0`、gameTime 是当时那一刻。没有播种交互、没有种苗、也没有原版的生长模拟——种下去这件事的全部含义就是「这一格有了一株草，从此刻开始算药龄」，而它是玩家放的、发射器放的还是别的模组放的都一样。
+
+同一格重复放下不会叠出第二株：一行只记一个坐标。方块被换掉（不再是这条草的方块）时那一行在下一次结算就被丢掉。
+
+### 每 20 tick 结算
+
+每 `20` 个该区块**实际加载**的 tick 结算一次，逐条记录走：定义还在、未到 `max_age`、`condition` 成立、增长量有效，然后整组支付 `costs`。付不出就暂停，不扣部分账单，也不死苗。
+
+此次增长量是 **`growth_rate` 求值后再乘 `max(0, 1 + spirit_plant_bonus)`**，管线只乘这一次，公式里不要再乘它。求值时读到的 `herb_age` 是**这次结算前**的药龄。药龄在 `max_age` 处封顶，到顶后**连 `costs` 也不再扣**。
+
+结算失败（条件不成立、灵气不足、`growth_rate ≤ 0`）**只把时钟往前推、不动药龄**：下一次条件恢复时立刻继续长，不会把暂停期间的量攒起来一次兑现。
+
+### 自然生成的植株
+
+自然生成（或用 `/setblock`、结构、别的模组）摆出来的植株**一开始没有记录**，所以它没有「被放下」的那一刻。**第一次有人读取它的药龄时**（装了 Jade 看一眼、或任何 `ageAt` 调用）它按下面这个规则定下起点：
+
+```
+初始药龄 = min(max_age, roll(wild_age) + 从 gameTime 0 到现在的增长)
+```
+
+基准是 **gameTime 0（世界创建那一刻）**，也就是「这片野地从开天辟地起就在长」——所以老存档里自然生成的药草很老。这段补算**逐期推进**（每期 `20` tick，每期用当时的药龄求值 `growth_rate`，与在线结算同一条公式，`"2 + herb_age"` 这类写法含义不变），并且**封顶 1 年**，取的是寿元配置里的 `ticks_per_year`（默认 `24000`，见服务端配置「寿元」页）；老服上几千万 tick 也不会让一次读取跑上千万次求值。
+
+`wild_age` 只在这株草不是被放下的时候用：求值时没有基准药龄可读，所以只写常量或带随机数的表达式（如 `{"type":"mxt:uniform","min":1,"max":3}`）。
+
+补算的结果会**写进区块记录**，这株草从此刻起就是一棵普通植株：照 [`每 20 tick 结算`](#每-20-tick-结算) 那条路走，条件、`growth_rate`、`costs` 全都一样，**灵气也照扣**。`wild_age` 只决定第一次读取那一刻的起点。没被读过的野生植株不写记录、不扣灵气，与它刚生成时一样。
+
+> 因为这件事发生在**读取**时，看一眼野生药草就会让它开始按上面的规则生长并扣灵气。没被看过的区块一个字节都不会写。
+
+### 采收
+
+**破坏方块**时，框架挂上 `BlockDropsEvent`，把这一株当下的药龄**写到所有匹配 `growth.drops` 的掉落物上**（药龄组件为当前药龄向下取整，并按 `quality_by_age` 写上品质档）。不匹配 `drops` 的掉落物一个字节都不动，所以一块方块顺手掉出来的别的东西不会被误标。植物的记录同时被清掉：草已经没了，那个时钟再没有描述的对象。
+
+**没有任何右键交互**：成熟与否不改变掉落的内容（掉什么由方块自己的战利品表决定），框架只负责给果实写上药龄。想按成熟度给不同产物，就自己写方块的战利品表，或者让 `drops` 收窄到只有成熟时才会掉的那件物品。
+
+**定义查不到时**（数据包删掉了这条草）：**留着记录**而不是枯萎——下一次结算时那一行的方块已经不被任何草认领，于是那一行被丢掉。
 
 ## 示例
 
 ```json
 {
-  "items": ["minecraft:red_mushroom", "#mxt_test:spirit_herbs"],
+  "blocks": ["example:spirit_soil", "#example:herb_blocks"],
   "default_age": 100,
   "element_tags": ["example:fire"],
   "material_tags": ["example:herb"],
   "main_effects": { "example:nourish": "3 * (1 + herb_age / 100)" },
   "thermal_bias": 1,
   "growth": {
-    "seeds": "minecraft:beetroot_seeds",
     "mature_age": 100,
     "max_age": 200,
     "growth_rate": 25,
     "costs": [{ "type": "mxt:aura", "aura": "example:spirit_power", "amount": 1 }],
-    "harvest": { "id": "minecraft:red_mushroom", "count": 1 },
-    "texture": "example:block/herb/fire_ginseng"
+    "drops": "minecraft:red_mushroom",
+    "wild_age": { "type": "mxt:uniform", "min": 1, "max": 3 }
   }
 }
 ```
 
 ## 与其他系统的关系
 
-- 炼丹：灵植是[丹方](./alchemy_recipe.md)的材料，`main_effects` / `auxiliary_effects` / `catalyst_power` 就是主药、辅药与药引读到的药力；药性本身由[药性](./medicinal_property.md)定义。
-- 匹配：`mxt:herb_tag` 是物品匹配器的一个条目类型，按 `element` 或 `material` 认出「这一株是不是那种草」，所以能写进任何接受 `ItemMatcher` 的地方。两个字段至少要写一个，写了的每个字段都必须在这株草上成立。
-- 品质：灵植定义**不声明档位**——灵植按物品认领，堆上没有装定义身份的组件可问，所以这株草的档由 [default_quality](./default_quality.md) 按物品 id 或 `#标签` 给，见[品质是哪一档](./quality.md#resolution)。
+- 炼丹：灵植的**果实**是[丹方](./alchemy_recipe.md)的材料，`main_effects` / `auxiliary_effects` / `catalyst_power` 就是主药、辅药与药引读到的药力；药性本身由[药性](./medicinal_property.md)定义。
+- 匹配：`mxt:herb_tag` 是物品匹配器的一个条目类型，按 `element` 或 `material` 认出「这一堆是不是那种草的产物」，所以能写进任何接受 `ItemMatcher` 的地方。两个字段至少要写一个，写了的每个字段都必须在这株草上成立。
+- 品质：灵植定义**不声明 `quality` 字段**——它不携带物品身份，堆上没有装定义身份组件可问，所以这株草的档默认由 [default_quality](./default_quality.md) 按果实物品 id 或 `#标签` 给；写了 `quality_by_age` 的草由采收按药龄写第 1 层，见[药龄与品质](#age-and-quality)与[品质是哪一档](./quality.md#resolution)。
+- Jade：装了 Jade 时看着一株草会显示它的名字、药龄与成熟状态。

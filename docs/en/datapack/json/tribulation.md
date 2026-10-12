@@ -13,8 +13,6 @@ A tribulation is: the gate that starts it, the beats of its timeline, the diffic
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `tribulation.mxt.<namespace>.<path>` | Optional display name. When omitted, the default key in the left column is used. |
-| `description` | Text Component | `tribulation.mxt.<namespace>.<path>.description` | Optional description. When omitted, the default key in the left column is used; it is stored and read, but nothing draws it yet. |
 | `condition` | `EntityCondition` | `mxt:always` | Start condition, evaluated **once** when the tribulation is started; failing it means this attempt does not start. |
 | `timeline` | array | **required** | The timeline the tribulation consumes, at least one beat. |
 | `difficulty_scale` | `NumberProvider` | `1` | Difficulty multiplier, applied to every wait length. |

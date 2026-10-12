@@ -69,7 +69,6 @@ Four rules are worth remembering first:
 // data/example/mxt/ability/azure_sword_flight.json
 {
   "type": "mxt:flight_control",
-  "name": "Flying Art",
   "hand": "either",
   "speed_multiplier": 1.0,
   "costs": [{ "id": "example:qi", "amount": 5 }]

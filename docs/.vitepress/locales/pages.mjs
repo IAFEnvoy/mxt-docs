@@ -150,6 +150,7 @@ export const sections = [
     text: { zh: '数据包', en: 'Datapack' },
     items: [
       { page: 'datapack/overview', zh: '总览', en: 'Overview' },
+      { page: 'datapack/conventions', zh: '约定', en: 'Conventions' },
       { page: 'datapack/examples', zh: '示例', en: 'Examples' },
       { page: 'datapack/loot-and-criteria', zh: '战利品与进度条件', en: 'Loot and Advancement Criteria' },
       {
@@ -261,6 +262,7 @@ export const sections = [
           { page: 'datapack/json/physique', zh: 'physique（体质）', en: 'physique' },
           { page: 'datapack/json/pill', zh: 'pill（丹药）', en: 'pill' },
           { page: 'datapack/json/pill_binding', zh: 'pill_binding（丹药绑定）', en: 'pill_binding' },
+          { page: 'datapack/json/progression', zh: 'progression（进度链）', en: 'progression' },
           { page: 'datapack/json/quality', zh: 'quality（品质）', en: 'quality' },
           {
             page: 'datapack/json/secret_realm',
@@ -282,7 +284,6 @@ export const sections = [
               { page: 'datapack/types/other/resource-value-provider', zh: 'resource_value_provider_type（资源数值来源）', en: 'Resource Value Providers (resource_value_provider_type)' }
             ]
           },
-          { page: 'datapack/json/progression', zh: 'progression（进度链）', en: 'progression' },
           { page: 'datapack/json/spirit_herb', zh: 'spirit_herb（灵植）', en: 'spirit_herb' },
           { page: 'datapack/json/spirit_root', zh: 'spirit_root（灵根）', en: 'spirit_root' },
           { page: 'datapack/json/talisman', zh: 'talisman（符箓）', en: 'talisman' },
@@ -388,7 +389,6 @@ export const sections = [
           {
             text: { zh: '定义与消耗', en: 'Definitions and Costs' },
             items: [
-              { page: 'java/interfaces/definition/named-definition', zh: 'NamedDefinition', en: 'NamedDefinition' },
               { page: 'java/interfaces/definition/cost', zh: 'Cost', en: 'Cost' },
               { page: 'java/interfaces/definition/tooltip-appender', zh: 'TooltipAppender', en: 'TooltipAppender' }
             ]

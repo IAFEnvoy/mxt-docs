@@ -12,8 +12,6 @@ A technique is something that can be learned. Once learned it stays in effect: `
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | Text Component | `technique.mxt.<namespace>.<path>` | Display name. When omitted it is the default key in the previous column. |
-| `description` | Text Component | `technique.mxt.<namespace>.<path>.description` | Description. When omitted it is the default key in the previous column; it is only stored and read, nothing draws it yet. |
 | `quality` | Quality id | none | Optional. This technique's own grade: the manual carrying this definition reads at it. |
 | `icon` | Icon reference | none | The icon the technique shows in interfaces such as the technique panel. |
 | `learn_condition` | `EntityCondition` | `mxt:always` | Learning condition. |

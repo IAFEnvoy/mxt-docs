@@ -16,8 +16,6 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `secret_realm.mxt.<命名空间>.<路径>` | 可选显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `secret_realm.mxt.<命名空间>.<路径>.description` | 可选描述。省略时用左列的默认键；目前只被存储与读取，还没有界面绘制它。 |
 | `quality` | 品质 id | 无 | 可选。进入这座秘境的令牌起始的档位。 |
 | `generation` | 生成参数 | **必填** | 实例维度怎么造出来，见下。 |
 | `seed` | Long | `0` | `0` 表示每份实例随机一个种子；非 0 时所有实例共用。 |
@@ -126,7 +124,7 @@ aside: false
     { "random_center": [64.0, 64.0], "random_radius": 24.0, "weight": 1 }
   ],
   "enter_condition": { "type": "mxt:has_realm", "aura": "example:qi" },
-  "enter_denied_message": "secret_realm.mxt.example.too_weak",
+  "enter_denied_message": "mxt.secret_realm.example.too_weak",
   "enter_action": { "type": "mxt:apply_effect", "effect": "minecraft:night_vision", "duration_ticks": 12000 },
   "exit_action": { "type": "mxt:heal", "amount": 4 }
 }

@@ -12,15 +12,13 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `name` | Text Component | `realm_stage.mxt.<命名空间>.<路径>` | 显示名。省略时用左列的默认键。 |
-| `description` | Text Component | `realm_stage.mxt.<命名空间>.<路径>.description` | 描述。省略时用左列的默认键；只有存储与读取，没有界面画它。 |
 | `aura` | 灵气 id | **必填** | 这一档所属的灵气链。 |
 | `aura_share_weight` | `NumberProvider` | `1` | `aura_zone.distribution` 为 `realm_weighted` 时参与同区块灵气分配的权重。 |
 | `cultivate_condition` | `EntityCondition` | `mxt:always` | 该境界允许修炼的环境条件。 |
 | `next_realm` | 境界 id | 无 | 链上的下一档，最多一个。 |
 | `breakthrough_exp` | `NumberProvider` | `0` | 突破到下一档所需的最小修为计数。 |
 | `max_experience` | `NumberProvider` | `Double.MAX_VALUE` | 前往下一档前允许持有的最大修为计数。 |
-| `minor_stages` | 文本组件数组或整数 | `[]` | 子境界名，或子境界的重数。 |
+| `minor_stages` | Integer | `0` | 子境界的**重数**，范围 `0..1024`；名字一律由本境界的名字键生成。 |
 | `breakthrough` | 条件组对象 | 空对象 | 达到最小修为后检查的突破条件。 |
 | `auto_breakthrough` | `Boolean` | `false` | 修炼模式运行时是否自动尝试突破。 |
 | `passive_modifiers` | 属性修正条目数组 | `[]` | 本档提供的原版属性修正。 |
@@ -47,11 +45,11 @@ aside: false
 
 `lifespan` 只在成功突破到这一档的那一次加，而且只加一次。它是**增量**：后一档写得更小只是加得更少，不会把已经拿到的寿元收回去。写死常量时必须有限且非负，否则加载期直接拒绝；写成公式则到突破那一刻才判定，求值不是有限值或为负时记一条警告、什么都不加。写 `0`（或公式算出 `0`）＝这一档不延寿，**不会**因此把身体判成"寿元已尽"。详见[寿元](/player-guide/lifespan)。
 
-`minor_stages` 写数组就是这些名字（字符串当翻译键、对象当完整组件）；写一个整数就是这么多重，名字自动生成为 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`（下标从 `0` 起，上限 `1024`）。子境界名用在三处：信息面板在境界名后带上当前这一重、公式变量 `minor_stage`、以及 `minor_stage_abilities` 的门槛下标。
+`minor_stages` 只是一个**数量**：写几就是这一档有几重子境界，默认 `0`，取值 `0..1024`。每一重的名字**没有书写途径**，一律按本境界的名字键生成：`realm_stage.mxt.<定义命名空间>.<路径>.minor_stage.<下标>`，下标从 `0` 起（`qi_refining` 声明 `9` 就是 `.minor_stage.0` 到 `.minor_stage.8`）。想给它们配词就翻译这些键。同理，这一档自己的名字键是 `realm_stage.mxt.<定义命名空间>.<路径>`、描述键再加 `.description`，定义里没有可写的文本字段。子境界名用在三处：信息面板在境界名后带上当前这一重、公式变量 `minor_stage`、以及 `minor_stage_abilities` 的门槛下标。
 
 `breakthrough` 是一个条件组，不是单个条件。它读三个键：`conditions`（条件数组，默认空，全部满足才算过）、`triggers`（触发数组，默认空）与 `action`（可选实体行为）。`conditions` 在达到突破阶段时立即求值；`triggers` 要到达到突破阶段之后才注册成运行时订阅，匹配到事件再尝试突破。订阅不写进存档，存档或注册表加载后由修炼状态重建。
 
-`minor_stage_abilities` 的条目形如 `{ "stage": 2, "ability": ["example:qi_sense"] }`：`stage` 是 `minor_stages` 的 **0 起下标**（与公式变量 `minor_stage` 同一套编号），`ability` 是能力 id / `#标签` 列表，省略＝这一层不解锁任何东西。判定是**累计**的：层数 ≥ `stage` 即生效；**解锁过就永久保留**，突破离开这个境界、进度归零都不会收回去。加载期校验：`stage` 非负、必须落在本境界 `minor_stages` 的范围内、同一个 `stage` 不能写两次。
+`minor_stage_abilities` 的条目形如 `{ "stage": 2, "ability": ["example:qi_sense"] }`：`stage` 是 `minor_stages` 的 **0 起下标**（与公式变量 `minor_stage` 同一套编号），`ability` 是能力 id / `#标签` 列表，省略＝这一层不解锁任何东西。判定是**累计**的：层数 ≥ `stage` 即生效；**解锁过就永久保留**，突破离开这个境界、进度归零都不会收回去。加载期校验：`stage` 非负、必须小于本境界的 `minor_stages`、同一个 `stage` 不能写两次。
 
 ```json
 // data/example/mxt/realm_stage/foundation.json
@@ -84,15 +82,9 @@ aside: false
 }
 ```
 
-上面这份用整数写法声明了九重，名字自动生成为 `realm_stage.mxt.example.foundation.minor_stage.0` 到 `…minor_stage.8`。写到数组里时可以混用翻译键与完整组件，例如：
+上面这份声明了九重，名字自动生成为 `mxt.realm_stage.example.foundation.minor_stage.0` 到 `…minor_stage.8`；把它们写进自己的语言文件，信息面板就会在境界名后带上当前那一重。
 
-```json
-{
-  "minor_stages": ["example:layer_1", {"text": "三重", "color": "gold"}]
-}
-```
-
-子境界本身不改任何阈值，只回答「现在算第几重」：本境界的 `breakthrough_exp` 求值后均匀切成条目数那么多段，修为进度落在第几段就是第几个子境界（`0` 是第一个；例如 9 个子境界、`breakthrough_exp` 为 `900`，则 `0`~`100` 是第一个、`minor_stage` 为 `0`）。进度可以超过 `breakthrough_exp`（上限是 `max_experience`），超过后停在最后一重。`breakthrough_exp` 求值为 `0` 或负数、本境界没写 `minor_stages`、以及玩家还没有任何境界时，公式变量 `minor_stage` 读出 `NaN`（凡人读 `realm` 仍是 `0`，两者口径不同）。段宽随 `breakthrough_exp` 的公式一起变，写成公式时段宽要到运行时才定下来。
+子境界本身不改任何阈值，只回答「现在算第几重」：本境界的 `breakthrough_exp` 求值后均匀切成 `minor_stages` 那么多段，修为进度落在第几段就是第几个子境界（`0` 是第一个；例如 9 个子境界、`breakthrough_exp` 为 `900`，则 `0`~`100` 是第一个、`minor_stage` 为 `0`）。进度可以超过 `breakthrough_exp`（上限是 `max_experience`），超过后停在最后一重。`breakthrough_exp` 求值为 `0` 或负数、本境界没写 `minor_stages`（或写 `0`）、以及玩家还没有任何境界时，公式变量 `minor_stage` 读出 `NaN`（凡人读 `realm` 仍是 `0`，两者口径不同）。段宽随 `breakthrough_exp` 的公式一起变，写成公式时段宽要到运行时才定下来。
 
 **按子境界解锁**（`minor_stage_abilities`）与**条件式门槛**（实体条件 `mxt:realm` 的 `min_minor_stage`）读的是同一份记录：身体在**每个境界上达到过的最高层数**，存在 `spirit_identity` 附件里，**只增不减**。这就是"解锁过就永久保留"的载体，也是 `min_minor_stage` 在离开该境界后仍然成立的原因。记录在每次修为增加落到盘上、以及突破成功之后各刷新一次（`/realm set` 也刷），所以它不会落后于实际到过的层数；没到过的境界读作"没有记录"，任何 `min_minor_stage` 都不满足。
 

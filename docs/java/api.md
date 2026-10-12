@@ -60,7 +60,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 | `holders(Provider access, key)` / `holders(RegistryAccess access, key)` | 遍历整表 | |
 | `get(Provider access, key, Identifier id)` | 取值 | 同上 |
 
-**这一层不过滤任何东西**：条目在不在注册表里就是全部答案，而"停用一条定义"是加载期的事（`neoforge:conditions`，见[停用一条定义](/datapack/overview#停用一条定义)），被条件挡掉的条目根本不在表里。所以读了 holder 就能直接动用，没有"读到了一条被关掉的定义"这种状态。
+**这一层不过滤任何东西**：条目在不在注册表里就是全部答案，而"停用一条定义"是加载期的事（`neoforge:conditions`，见[停用一条定义](/datapack/conventions#停用一条定义)），被条件挡掉的条目根本不在表里。所以读了 holder 就能直接动用，没有"读到了一条被关掉的定义"这种状态。
 
 标签查询：
 
@@ -89,16 +89,17 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 
 | 方法 | 作用 | 备注 |
 | --- | --- | --- |
-| `name(Holder<?> holder, String category)` | 取显示名 | **本体内部推荐入口**：定义实现了 `NamedDefinition` 就优先读它自带的 `name`，否则按 holder 的 key 推键 |
-| `name(Holder<?> holder)` / `name(ResourceKey<?> key)` | 同上 | category 从注册表推 / 直接用 key |
+| `name(Holder<?> holder)` / `name(ResourceKey<?> key)` | 取显示名 | **本体内部推荐入口**：类别由注册表自己答（`key.registry()` 的 path），调用方不传类别串 |
 | `name(Identifier id, String category)` | 手里只有一个裸 id 时 | **硬假定 `mxt` 命名空间**，非 `mxt` 的定义别用这个重载 |
+| `description(Holder<?> holder)` / `description(ResourceKey<?> key)` | 取描述 | 键是名字键加 `.description`；**描述只有这一个出口** |
+| `minorStage(Holder<?> holder, int index)` / `minorStage(ResourceKey<?> key, int index)` | 取子境界名 | 键是本境界名字键加 `.minor_stage.<下标>`，下标从 `0` 起 |
+| `derived(Holder<?> holder, String suffix)` / `derived(ResourceKey<?> key, String suffix)` | 名字键再接一个后缀 | `description` 与 `minorStage` 都走它；别的"属于某个定义的文本"也走它 |
 | `category(Identifier registry)` | 取某个注册表的 category | 就是它的 path |
 | `key(ResourceKey<?>)` / `key(Identifier registry, Identifier id)` | 由条目 / 注册表+定义生成文本键 | |
-| `key(String category, String registryNamespace, Identifier id)` | 底层拼接 | **拼定义键的唯一出口**，`ContextNameCodec` 的默认值也走它 |
-| `defaultText(String category, ResourceKey<?> entry, String suffix)` | 定义没写 `name` / `description` 时的回退文本 | **回退文本的唯一出口**；`suffix` 传 `""` 是名字、传 `".description"` 是描述 |
+| `key(String category, String registryNamespace, Identifier id)` | 底层拼接 | **拼定义键的唯一出口** |
 | `resolved(Component text)` | 这段文本是"真文本"还是"没被翻译的裸键" | 读客户端语言文件，属显示层判断 |
 
-要点：**别在别处再拼一套名字键**；键没被翻译时渲染出来就是键本身（不是空串），`resolved(...)` 就是用来判这一点的。
+要点：**别在别处再拼一套名字键**；定义里**一个文本字段都没有**，名字与描述永远按注册 id 现算，包唯一能给定义配词的办法就是翻译生成的键。键没被翻译时渲染出来就是键本身（不是空串），`resolved(...)` 就是用来判这一点的——**印描述之前一律先过它**。
 
 ### `TooltipText` {#tooltiptext}
 
