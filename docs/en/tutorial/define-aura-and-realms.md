@@ -29,7 +29,7 @@ resource  example:qi          the bar fills; the overflow becomes progress
 realm_stage chain             progress + conditions + costs → next realm
 ```
 
-A player who has not entered a chain yet is **Mortal**. The Mortal state has no definition of its own: it is described by the aura definition, through `start_exp` (the progress needed, and the hard cap) and `first_realm` (the stage that the first breakthrough targets).
+A player who has not entered a chain yet is **Mortal**. The Mortal state has no definition of its own and no threshold of its own: it reads the stage `first_realm` names, using that stage's `breakthrough_exp` / `max_experience` as its own gate and cap.
 
 ## What You Are Building
 
@@ -86,8 +86,7 @@ A `resource` is only a stored number with bounds and a bar; an `aura` gives that
   "resource": "example:qi",
   "regen": "0.05 + realm_rank * 0.05",
   "aura_type": "example:common",
-  "first_realm": "example:qi_condensation",
-  "start_exp": 100
+  "first_realm": "example:qi_condensation"
 }
 ```
 
@@ -104,7 +103,6 @@ A `resource` is only a stored number with bounds and a bar; an `aura` gives that
 | `regen` | A slow trickle so the pool refills outside meditation. |
 | `aura_type` | The element this aura names; the environment and aura fuel use it for type checks, and it is shown next to the name by `/mxt aura query`. |
 | `first_realm` | Where the first breakthrough goes. Without it, a Mortal can never leave the Mortal state. |
-| `start_exp` | The cultivation progress a Mortal needs, and the cap they cannot pass until they break through. |
 
 The aura fields used elsewhere in this tutorial are `cultivation_to_resource` and `resource_to_cultivation` (conversions between progress and the stored number), `burst_amount` (the value of one spirit burst ray), `start_cultivate_conditions` (checked before cultivation may start) and `show_cultivation_info` (whether the character panel shows the realm and progress). The full list is in [Aura](../datapack/json/aura.md).
 
@@ -179,12 +177,18 @@ Each `realm_stage` file is one stage. A stage names exactly one aura, and `next_
 }
 ```
 
-Reading the three files together:
+::: warning Breaking from A to B reads B's JSON
+Everything one breakthrough reads is written **on B**: the threshold `breakthrough_exp`, the cap `max_experience`, the conditions `breakthrough`, the costs `costs`, the automatic switch `auto_breakthrough` and the lifespan `lifespan`. Writing those same fields on A has no effect on that step at all, so when you add a stage, **write its own gate on it instead of going back to edit the stage below**.
+:::
 
-- `breakthrough_exp` is the progress required to **leave** this stage, and `max_experience` is the progress cap while you are in it. They must not cross: a constant `breakthrough_exp` greater than a constant `max_experience` is rejected at load time.
-- The optional `minor_stages` is only a **count**: an integer N means "N layers" (`0` by default, range `0..1024`), and there is **no way to write the names** — each layer's name is always generated from this stage's name key as `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`, counting from `0`. The old array-of-names form is no longer accepted (the type mismatch fails the whole definition's decode), so rewrite it as an integer. It is read in three places: the information panel prints the current one after the realm name, formulas gain a 0-based `minor_stage`, and `minor_stage_abilities` uses that index to unlock abilities by layer (cumulative, and an unlock is permanent). The cut is an even split of this stage's `breakthrough_exp`, and it changes no threshold, cost or settlement.
-- `costs` are paid on a successful breakthrough; `breakthrough.conditions` are checked alongside the progress. Both belong to the stage you are leaving — except for the very first step, where the threshold comes from the aura's `start_exp` and the conditions come from the target's `breakthrough`.
-- `auto_breakthrough` defaults to `false`: the player reaches the threshold and waits. Set it to `true` if you want cultivation mode to attempt the breakthrough on its own.
+Reading the three files together — every line below is the copy read for the step from the stage below into this one:
+
+- `breakthrough_exp` is the progress required to break through to this stage, and `max_experience` is the progress cap before breaking through to it. They must not cross: a constant `breakthrough_exp` greater than a constant `max_experience` is rejected at load time.
+- So the `800` in `qi_condensation.json` means "a mortal needs 800 to break through to qi condensation", and the `2000` in `foundation.json` means "qi condensation needs 2000 to break through to foundation".
+- `costs` and `breakthrough.conditions` are written on **the stage the breakthrough arrives at** too: `costs` are paid by the one breaking through, and `conditions` are checked alongside the progress. The `200` qi on the foundation stage is what breaking through to foundation costs, not what leaving qi condensation costs.
+- A mortal has no stage below, so it reads the first realm's copy: the mortal gate of `800` and the cap of `1600` both come from the `qi_condensation` stage, and there is nowhere else to write a mortal threshold.
+- The optional `minor_stages` is only a **count**: an integer N means "N layers" (`0` by default, range `0..1024`), and there is **no way to write the names** — each layer's name is always generated from this stage's name key as `realm_stage.mxt.<namespace>.<path>.minor_stage.<index>`, counting from `0`. Write it as an integer; an array of names fails the whole definition's decode. It is read in three places: the information panel prints the current one after the realm name, formulas gain a 0-based `minor_stage`, and `minor_stage_abilities` uses that index to unlock abilities by layer (cumulative, and an unlock is permanent). The count comes from the stage **you stand on**, while the even split uses the `breakthrough_exp` of the stage **being climbed towards**; it changes no threshold, cost or settlement.
+- `auto_breakthrough` defaults to `false`: the player reaches the threshold and waits. Set it to `true` if you want cultivation mode to attempt the breakthrough on its own. `true` on `foundation` means "breaking through to foundation may happen automatically".
 - `passive_modifiers` are vanilla attribute modifiers granted while the stage is held. `value` is an optional formula, and an entry that declares it is recalculated every tick.
 - The last stage simply has no `next_realm`, so the chain ends there.
 
@@ -286,8 +290,8 @@ Then, in game:
 
 1. Press the cultivate key (`C` by default) somewhere in the Overworld. The bar appears in the left column and starts filling.
 2. Keep cultivating until the bar is full; from then on the overflow becomes cultivation progress. `/mxt cultivate status` and `/mxt attachment status` show the current progress.
-3. At `100` progress — the aura's `start_exp` — the Mortal stage is capped and a breakthrough becomes possible. Because `auto_breakthrough` is `false`, trigger it yourself with `/mxt breakthrough example:qi` (it needs the `gamemaster` permission), or set `auto_breakthrough: true` and let cultivation do it.
-4. On success you are in Qi Condensation: `/mxt attachment status` shows the new realm, the `50 + realm_rank * 50` maximum is larger, and the `+2 max health` modifier is applied.
+3. At `800` progress — the target stage `qi_condensation`'s `breakthrough_exp` — a breakthrough becomes possible (progress may still climb to that stage's `max_experience` of `1600`, but crossing the line is enough to attempt it). Because the target stage's `auto_breakthrough` is `false`, trigger it yourself with `/mxt breakthrough example:qi` (it needs the `gamemaster` permission), or set `auto_breakthrough: true` on it and let cultivation do it.
+4. On success you are in Qi Condensation: `/mxt attachment status` shows the new realm, the `realm_rank` term of the `50 + realm_rank * 50` maximum moves from a mortal's `0` to `1` (so the maximum rises by `50`), and the `+2 max health` modifier is applied.
 5. Climb to Foundation Establishment the same way. You will need `200` qi in the pool at the same time, because that stage's `breakthrough.conditions` ask for it, and `200` qi will be spent by `costs`.
 
 ::: tip Faster testing
@@ -304,8 +308,8 @@ Then, in game:
 | Cultivation never starts | The action's `start_condition` or `tick_condition` is not satisfied — write a `mxt:aura_range` or a biome condition for the place you want, because there is no aura-kind vocabulary to match against. |
 | The bar never grows | The shared aura pool cannot pay `aura_costs` (it does not hold enough, or other cultivators in the chunk take their share), or `use_condition` is false. |
 | The world refuses to load | A definition failed to decode: a required holder points at an ID that does not exist, or a field has the wrong shape. The whole load fails, not just the file. |
-| `breakthrough_exp` greater than `max_experience` | The stage cannot be left; the codec rejects this at load time when both are constants. |
-| The realm condition never passes | `mxt:realm` compares against the *current* stage; use `"comparison": "at_least"` when you meant "this or later". |
+| `breakthrough_exp` greater than `max_experience` | This stage can never be broken through to; the codec rejects it at load time when both are constants. Write the gate on the **current** stage (the one the breakthrough arrives at), not on the stage below. |
+| The realm condition never passes | `breakthrough` lives on the target stage, but it is evaluated while the body still stands on the stage below, and `mxt:realm` compares what you currently stand in — so naming that target stage inside its own conditions can never pass (the mortal step is the one exception). Name the stage below, or use `"comparison": ">="`, or check a value. |
 
 ## Next
 

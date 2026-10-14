@@ -21,8 +21,7 @@ The filename corresponds to its ID, which is independent of the value it describ
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `resource` | Value ID | **required** | The value this aura describes. |
-| `first_realm` | Realm ID | none | The first realm of the realm chain of this value; it only determines the target realm of a mortal's first breakthrough. Omitted, there is no realm chain and no cultivation. |
-| `start_exp` | `NumberProvider` | `0` | The cultivation progress a mortal needs for the first breakthrough, and at the same time the progress cap of the mortal stage; once reached it no longer increases and only a breakthrough can be attempted. |
+| `first_realm` | Realm ID | none | The first realm of the realm chain of this value; it determines the target realm of a mortal's first breakthrough, and the mortal stage's threshold and cap are read from that stage's own `breakthrough_exp` / `max_experience`. Omitted, there is no realm chain and no cultivation. |
 | `start_cultivate_conditions` | `CultivateConditions` | empty object | Conditions checked when a mortal starts cultivating and before the first breakthrough, useful for conflict or identity restrictions. All definitions that carry a `first_realm` have to be satisfied before cultivation can start. |
 | `cultivation_to_resource` | Object | `multiplier=1,max_per_tick=1` | Draws value recovery out of the cultivation progress counter. |
 | `resource_to_cultivation` | Object | `multiplier=1,max_per_tick=1` | Converts the value back into cultivation progress, only in cultivation mode. |
@@ -63,7 +62,6 @@ The two fields of `cultivation_to_resource` and `resource_to_cultivation` are:
 {
   "resource": "example:qi",
   "first_realm": "example:foundation",
-  "start_exp": 100,
   "regen": 0.25,
   "aura_type": "example:common",
   "burst_amount": 10,

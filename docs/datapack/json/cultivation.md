@@ -72,9 +72,9 @@ aside: false
 
 ## 灵气定义与修炼行为的分工
 
-灵气身份与修炼行为都不在这个文件里：它们在 [aura](./aura.md) 定义上，一个数值最多一条（一对一，只引用一个 `resource`）。境界入口 `first_realm`、凡人门槛 `start_exp`、开始修炼的条件 `start_cultivate_conditions`、自然恢复 `regen`、灵气标记 `aura_type`、灵力爆发的每发数值 `burst_amount`、修为与数值之间的两个换算方向、`use_condition` 与 `show_cultivation_info` 全都写在 `aura` 上；`resource` 只负责存储数值与资源条。逐字段见 [aura](./aura.md)。
+灵气身份与修炼行为都不在这个文件里：它们在 [aura](./aura.md) 定义上，一个数值最多一条（一对一，只引用一个 `resource`）。境界入口 `first_realm`、开始修炼的条件 `start_cultivate_conditions`、自然恢复 `regen`、灵气标记 `aura_type`、灵力爆发的每发数值 `burst_amount`、修为与数值之间的两个换算方向、`use_condition` 与 `show_cultivation_info` 全都写在 `aura` 上；`resource` 只负责存储数值与资源条。逐字段见 [aura](./aura.md)。
 
-境界链也属于 `aura` 定义：每条 `realm_stage` 用 `aura` 指回定义，定义再用 `first_realm` 指链上的第一个境界，阶段之间由 `next_realm` 串成一条只能向前的线性链；一个定义一条链，玩家可以同时持有多条链。一个阶段的 `breakthrough_exp`、`max_experience` 与 `breakthrough` 描述从这一阶段走到下一阶段的界限，可选的 `auto_breakthrough` 决定修炼时是否自动尝试突破（默认关）。凡人拿定义里的 `start_exp` 同时当首次突破阈值与上限，`first_realm` 只决定首次突破的目标境界；`start_cultivate_conditions` 在开始修炼与首次突破前各检查一次。`use_condition` 只决定资源条显不显示、能不能主动消耗，**不挡修炼、环境吸收、自然恢复与突破**。功法没有启用开关，学过的就全部生效。
+境界链也属于 `aura` 定义：每条 `realm_stage` 用 `aura` 指回定义，定义再用 `first_realm` 指链上的第一个境界，阶段之间由 `next_realm` 串成一条只能向前的线性链；一个定义一条链，玩家可以同时持有多条链。**从上一个境界突破到当前境界的条件全写在当前境界这一档上**：本档的 `breakthrough_exp`、`max_experience`、`breakthrough` 与 `costs` 描述的就是这一步，可选的 `auto_breakthrough` 决定修炼时是否自动尝试这一步（默认关）。凡人没有上一个境界，读的同样是目标首境界那一份，`first_realm` 只决定首次突破的目标境界；`start_cultivate_conditions` 在开始修炼与首次突破前各检查一次。`use_condition` 只决定资源条显不显示、能不能主动消耗，**不挡修炼、环境吸收、自然恢复与突破**。功法没有启用开关，学过的就全部生效。
 
 `regen` 是还没被修炼行为接管时的每 tick 自然恢复；修炼吸收默认只回复**当前境界**对应的那个数值，本境界的 `cultivate_condition` 还能再限制一次"这里能不能修炼"，与法门自己的 `start_condition` / `tick_condition` 是两侧。
 
@@ -83,7 +83,6 @@ aside: false
 {
   "resource": "example:qi",
   "first_realm": "example:foundation",
-  "start_exp": 100,
   "start_cultivate_conditions": { "conditions": [] },
   "use_condition": {
     "type": "mxt:has_realm",

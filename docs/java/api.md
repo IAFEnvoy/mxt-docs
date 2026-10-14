@@ -287,7 +287,6 @@ public interface QualityProvider {
 | `formulaContext(CultivationAttachment spirit, Holder<Resource> resource, FormulaContext base)` | 给公式挂上这条数值的上下文 | **只读友好**：修炼附件由调用方自己传（读出来用 `getExistingData`） |
 | `formulaContext(LivingEntity entity, Holder<Resource> resource, FormulaContext base)` | 从实体取修炼状态再挂 | **会创建附件**（内部走 `getData(MxtAttachments.CULTIVATION)`），只读场景别用这个重载 |
 | `resolveBounds(Resource definition, FormulaContext context)` | 求 `min` / `max` | 任一非有限或 `min > max` → `Optional.empty()`；要自己做只读检查就用它，别另写一套钳制 |
-| `realmRank(CultivationAttachment spirit, Holder<Aura> aura)` | 该实体在**这条 aura 链**上的境界序号 | 凡人给该链的首境界序号；链上没有首境界、或当前阶段不在链上给 `-1` |
 
 结果类型：`Result(valid, changed, value)`——**失败时 `value` 是 `NaN`，必须先看 `valid()` 再看数**；以及 `Bounds(min, max)`。
 
@@ -336,6 +335,21 @@ public interface QualityProvider {
 - `INVALID_FORMULA` 同时兼任"一切非资源不足的扣费失败"的归一化出口；`failedResource` 只在扣费阶段资源不足时非空。
 - `Failure.DISABLED` 只有脚本桥会产出（`MxtKubeJsApi.tryBreakthrough` 在灵气 id 解析不到时），`attempt` 自己不产出它。
 - `Failure.MAX_PROGRESS` 已于 2026-09-25 **删除**（它是一条走不到的分支）：进度上限不可能成为拒绝突破的理由——`threshold()` 要求某一段的 `max_experience ≥ breakthrough_exp`，所以进度被顶在 `max_experience` 时必然已经满足 `progress ≥ breakthrough_exp`，此时只会因条件、代价或取消而失败。内联的 `Failure` 分支若写了它，编译期就会报错。
+
+### `CultivationRanks` {#cultivationranks}
+
+包 `com.iafenvoy.mxt.runtime.cultivation`。回答"这个身体在**这条 aura 链**上排第几"，是链序号的唯一出口。
+
+| 方法 | 作用 | 备注 |
+| --- | --- | --- |
+| `realmRank(CultivationAttachment spirit, Holder<Aura> aura)` | 该实体在**这条 aura 链**上的境界序号，**凡人算作 `0`、首境界是 `1`，往上递增** | 当前阶段不在链上给 `-1`；链上没有首境界（或那条首境界没被链走到）也给 `-1`，**不是 `0`**，否则破链的头会排在凡人之上 |
+
+要点：
+
+- 序号**把凡人算进来**，所以凡人不是"首境界"的别名：`0` 与 `1` 是两个不同的数，公式能分辨"还没进任何一个大境界"和"在第一重的开头"。
+- 排名只来自那份共享索引（`DatapackCache`）走出来的链：索引里没有这条链就给 `-1`——链本身没走通（断链、分叉、成环）与索引还没建立（世界尚未加载，或刚退出世界）都是这一种。
+- 凡人那一支**不查索引**：没进过任何大境界是身体自己的事实，与链有没有被索引无关，所以只要这个灵气声明了 `first_realm` 就是 `0`（没声明 `first_realm` 则无处可去，给 `-1`）。
+- 链内比较（`DatapackCache.isRealmAtLeast`）用的是**未经这层偏移**的原始下标，两侧同时比较，所以加不加这个 `1` 结论相同。
 
 ### `LifeSpanService` {#lifespanservice}
 

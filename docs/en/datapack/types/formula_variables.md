@@ -84,16 +84,16 @@ On the client only the attributes that the client receives are readable; an attr
 
 ## Resource Variables
 
-Formulas evaluated for one value — `resource.max`, `resource.bars`, and the fields of its [aura definition](../json/aura.md) such as `regen`, the conversions and `start_exp`, plus resource costs, realm stages and breakthrough thresholds — carry the cultivation state of that value as well:
+Formulas evaluated for one value — `resource.max`, `resource.bars`, and the fields of its [aura definition](../json/aura.md) such as `regen` and the conversions, plus resource costs, realm stages and breakthrough thresholds — carry the cultivation state of that value as well:
 
 | Variable | Description |
 |----------|-------------|
-| `realm` | Rank of the current realm in this resource's chain; `0` when the chain does not match |
+| `realm` | Rank of the current realm in this resource's chain, **counting a mortal as `0` so the first realm is `1` and each stage above it follows**; also `0` when the current stage is not on the chain |
 | `realm_rank` | Same value as `realm` |
 | `level` | Same value as `realm`, kept as a shorthand for realm formulas |
 | `absorbed_aura` | Accumulated cultivation progress of this resource; `0` when the chain does not match |
 | `cultivation_progress` | Same value as `absorbed_aura` |
-| `minor_stage` | 0-based index of the sub-stage this progress sits in, cut evenly out of the current realm's `breakthrough_exp`; `NaN` when that realm names no sub-stages, or when there is no realm yet |
+| `minor_stage` | 0-based index of the sub-stage this progress sits in, cut evenly out of the **target** stage's `breakthrough_exp` (the count comes from the current stage); `NaN` when that realm names no sub-stages, when there is no realm yet, or when the chain has run out |
 
 A value's `max` and its aura definition's `regen` can therefore write:
 

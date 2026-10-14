@@ -6,7 +6,7 @@ title: 命令
 
 所有命令都挂在 `/mxt` 根节点下：本模组自己的注册表、资源、修炼、世界状态与管理员工具都在这里。命令是框架的诊断与管理工具，玩法本身由数据包驱动。
 
-面向玩家的部分命令同时注册了顶层别名，所以 `/aura` 和 `/mxt aura` 是同一棵树。每个别名都能单独关掉，关掉只移除顶层写法，`/mxt` 下的入口始终完整，见[服务端配置](./config.md#命令别名)。别名一共 19 个：`ability`、`aura`、`contract`、`curse`、`display`、`flight`、`formation`、`friend`、`lifespan`、`lightning`、`physique`、`picker`、`quality`、`realm`、`spirit_root`、`talisman`、`technique`、`trade`、`tribulation`。
+面向玩家的部分命令同时注册了顶层别名，所以 `/aura` 和 `/mxt aura` 是同一棵树。每个别名都能单独关掉，关掉只移除顶层写法，`/mxt` 下的入口始终完整，见[服务端配置](./config.md#命令别名)。别名一共 25 个：`ability`、`aura`、`breakthrough`、`contract`、`cultivate`、`curse`、`display`、`flight`、`formation`、`friend`、`lifespan`、`lightning`、`physique`、`picker`、`quality`、`realm`、`resource`、`rift`、`secret_realm`、`spirit_root`、`talisman`、`technique`、`trade`、`tribulation`、`triggers`。
 
 **有两条命令不走 `/mxt`：`/hud` 与 `/wheel`**。它们注册在客户端自己的命令表里，只在聊天栏里手打有效、不需要权限，也不发往服务端。
 
@@ -23,6 +23,7 @@ title: 命令
 - [/ability](/player-guide/commands/ability)
 - [/aura](/player-guide/commands/aura)
 - [/contract](/player-guide/commands/contract)
+- [/cultivate](/player-guide/commands/cultivate)
 - [/curse](/player-guide/commands/curse)
 - [/display](/player-guide/commands/display)
 - [/flight](/player-guide/commands/flight)
@@ -35,6 +36,7 @@ title: 命令
 - [/picker](/player-guide/commands/picker)
 - [/quality](/player-guide/commands/quality)
 - [/realm](/player-guide/commands/realm)
+- [/resource](/player-guide/commands/resource)
 - [/spirit_root](/player-guide/commands/spirit_root)
 - [/talisman](/player-guide/commands/talisman)
 - [/technique](/player-guide/commands/technique)
@@ -44,7 +46,7 @@ title: 命令
 
 ## 权限
 
-需要管理员权限的命令在命令树中校验 `gamemaster` 权限：`/mxt resource <id> set`、`/mxt breakthrough`、`/mxt secret_realm`（整棵子树：`list` / `info` / `enter` / `exit` / `destroy`）、`/mxt rift`（整棵子树：`info` / `target` / `color` / `place` / `bind`）、`/mxt soul reclaim`、`/mxt trigger publish`、`/realm set`、`/lifespan get <targets>` / `set` / `add` / `reincarnate`、`/aura cache clear`、`/ability cast` / `grant` / `revoke`、`/contract bind` / `break` / `recall` / `behavior`、`/curse apply` / `remove` / `cleanse`、`/flight`（整棵子树，目前只有 `fill`）、`/formation bind` 与 `/formation owners add|remove`、`/spirit_root` 与 `/physique` 的 `grant` / `remove` / `enable` / `disable`、`/quality get <target>` / `set` / `clear` / `upgrade`、`/technique repair`（含 `dry-run`）/ `drop`，以及 `/lightning`、`/talisman`、`/tribulation` 的每一个节点。`/picker` 另外还要求 `gamemaster` 权限、由玩家执行且处于创造模式。
+需要管理员权限的命令在命令树中校验 `gamemaster` 权限：`/resource <id> set`、`/mxt breakthrough`、`/mxt secret_realm`（整棵子树：`list` / `info` / `enter` / `exit` / `destroy`）、`/mxt rift`（整棵子树：`info` / `target` / `color` / `place` / `bind`）、`/mxt soul reclaim`、`/mxt trigger publish`、`/cultivate select`、`/realm set`、`/lifespan get <targets>` / `set` / `add` / `reincarnate`、`/aura cache clear`、`/ability cast` / `grant` / `revoke`、`/contract bind` / `break` / `recall` / `behavior`、`/curse apply` / `remove` / `cleanse`、`/flight`（整棵子树，目前只有 `fill`）、`/formation bind` 与 `/formation owners add|remove`、`/spirit_root` 与 `/physique` 的 `grant` / `remove` / `enable` / `disable`、`/quality get <target>` / `set` / `clear` / `upgrade`、`/technique repair`（含 `dry-run`）/ `drop`，以及 `/lightning`、`/talisman`、`/tribulation` 的每一个节点。`/picker` 另外还要求 `gamemaster` 权限、由玩家执行且处于创造模式。
 
 其余命令没有权限要求——纯查询的节点如 `/mxt curse list`、`/ability list`、`/mxt trigger list` 都在其中——但其中几条在命令树上就要求由玩家执行（`/friend` 整棵子树就是如此），不填目标时也要用到自己：从控制台跑它们会被拒，或者干脆没有结果。
 

@@ -105,7 +105,7 @@ Resource bars and the aura concentration bar are driven by server-synced state; 
 | **Client Settings → Resource Bars → Show Names** | Shows the name next to each resource bar. |
 | **Client Settings → Resource Bars → Icon Layout** | Draws the icons on "Two Sides" (default) or in the "Center". |
 
-Bars are labelled by their context, for example Stored aura, Sensed concentration, and environmental or actual concentration of a resource. A bar can also be drawn for a target or a boss. To inspect raw values instead, use `/mxt resourcebar` and `/mxt aura query` — see [Commands](./commands.md).
+Bars are labelled by their context, for example Stored aura, Sensed concentration, and environmental or actual concentration of a resource. A bar can also be drawn for a target or a boss. To inspect raw values instead, use `/resource` and `/mxt aura query` — see [Commands](./commands.md).
 
 ## Character Information Panel
 

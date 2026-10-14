@@ -120,19 +120,21 @@ Checks whether the entity currently holds the given [physique](../../json/physiq
 
 ### `mxt:realm`
 
-Compares the entity's [realm stage](../../json/realm_stage.md) against `realm`.
+Compares the entity's [realm stage](../../json/realm_stage.md) against `realm`. It **only asks about the chain `realm` itself belongs to**: two stages on that one chain compare by in-chain index, and a realm of any other aura never satisfies it.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `realm` | Realm stage | **required** | The realm to compare against. |
-| `comparison?` | `exact` / `at_least` / `at_most` | `exact` | How to compare. |
+| `realm` | Realm stage | **required** | The realm to compare against, and the chain the question is about. |
+| `comparison?` | `==` / `!=` / `<` / `<=` / `>` / `>=` | `==` | How to compare, by in-chain index. |
 | `min_minor_stage?` | Integer | Any | Requires the highest minor stage reached in that realm to be at least this, `0`-based. |
 
 ```json
-{"type": "mxt:realm", "realm": "example:foundation", "comparison": "at_least"}
+{"type": "mxt:realm", "realm": "example:foundation", "comparison": ">="}
 ```
 
-`min_minor_stage` uses the same numbering as the `minor_stage` formula variable. It reads the **minor-stage record that only ever grows**, so a gate such as "has reached minor stage 500 of qi refining" still holds after breaking through; pair it with `comparison: "exact"` to mean "is currently inside that minor stage".
+**A body that has not entered that chain yet counts as standing on its first realm** (that is, a mortal): so naming the first realm passes for a mortal too, and a lower bound such as `>=` holds the same way; once the body has entered the chain, what is compared is really the stage it currently stands on.
+
+`min_minor_stage` uses the same numbering as the `minor_stage` formula variable. It reads the **minor-stage record that only ever grows**, so a gate such as "has reached minor stage 500 of qi refining" still holds after breaking through; pair it with `comparison: "=="` to mean "is currently inside that minor stage".
 
 ### `mxt:has_realm`
 
@@ -203,11 +205,11 @@ Checks how far a progression the body holds has climbed.
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `level` | Progression level ID | **required** | Names one level. |
-| `comparison?` | `exact` / `at_least` / `at_most` | `exact` | How to compare, by the in-chain index the server cached. |
+| `comparison?` | `==` / `!=` / `<` / `<=` / `>` / `>=` | `==` | How to compare, by the in-chain index the server cached. |
 | `owner?` | Owner definition ID, or an array | Every progression the body holds | Narrows the question to certain owners. |
 
 ```json
-{"type": "mxt:progression", "level": "example:stage_three", "comparison": "at_least", "owner": "example:azure_sword"}
+{"type": "mxt:progression", "level": "example:stage_three", "comparison": ">=", "owner": "example:azure_sword"}
 ```
 
 Without `owner` every progression the body holds is asked and one hit is enough. It takes owner definition IDs only — one or an array — and does not accept a `#` tag. It reads **the level the body reached**, which is the owner's `default_level` while it never advanced; an owner without a `default_level`, or one whose chain the cache could not index, never answers true.

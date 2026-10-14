@@ -287,7 +287,6 @@ Package `com.iafenvoy.mxt.runtime.resource`. Applies the bounds of a `resource` 
 | `formulaContext(CultivationAttachment spirit, Holder<Resource> resource, FormulaContext base)` | Attaches this value's context to a formula | **Read-friendly**: the cultivation attachment is passed in by the caller (read it with `getExistingData`) |
 | `formulaContext(LivingEntity entity, Holder<Resource> resource, FormulaContext base)` | Takes the cultivation state from the entity and attaches it | **Creates an attachment** (internally `getData(MxtAttachments.CULTIVATION)`), so do not use this overload in a read-only place |
 | `resolveBounds(Resource definition, FormulaContext context)` | Resolves `min` / `max` | Any non-finite value or `min > max` → `Optional.empty()`; use it when you want a read-only check of your own instead of writing another clamping routine |
-| `realmRank(CultivationAttachment spirit, Holder<Aura> aura)` | This entity's realm index **on this aura chain** | A mortal gets that chain's first realm index; no first realm on the chain, or a current stage not on it, gives `-1` |
 
 Result types: `Result(valid, changed, value)` — **on failure `value` is `NaN`, so read `valid()` before the number**; and `Bounds(min, max)`.
 
@@ -336,6 +335,21 @@ Key points:
 - `INVALID_FORMULA` doubles as the normalised exit for "every cost failure that is not insufficient resources"; `failedResource` is only non-empty when resources were short during the payment stage.
 - `Failure.DISABLED` is produced only by the script bridge (`MxtKubeJsApi.tryBreakthrough`, when the aura id does not resolve) — `attempt` itself never produces it.
 - `Failure.MAX_PROGRESS` was **removed** on 2026-09-25 (it was provably unreachable): the progress ceiling can never be the reason a breakthrough is refused — `threshold()` requires a stage's `max_experience ≥ breakthrough_exp`, so progress being pinned at `max_experience` already satisfies `progress ≥ breakthrough_exp`, and the attempt can then only fail on conditions, cost or cancellation. An inline `Failure` branch that still writes it fails to compile.
+
+### `CultivationRanks` {#cultivationranks}
+
+Package `com.iafenvoy.mxt.runtime.cultivation`. Answers *which position this body holds on this aura chain* — the single exit for a chain rank.
+
+| Method | Purpose | Notes |
+| --- | --- | --- |
+| `realmRank(CultivationAttachment spirit, Holder<Aura> aura)` | This entity's realm index **on this aura chain**, **counting a mortal as `0` so the first realm is `1` and each stage above it follows** | A current stage that is not on the chain gives `-1`; no first realm on the chain (or a first realm the walk never reached) also gives `-1`, **never `0`**, or a broken chain's head would outrank a mortal |
+
+Key points:
+
+- The index **counts the mortal state**, so a mortal is not an alias for the first realm: `0` and `1` are two different numbers, and a formula can tell "not in any realm yet" from "at the start of the first minor stage".
+- A rank comes only from a chain the shared index (`DatapackCache`) walked; a chain the index does not hold gives `-1` — both a chain the walk could not complete (a broken link, a fork, a loop) and an index that does not exist yet (no world loaded, or just after leaving one).
+- The mortal branch **does not consult the index**: never having entered a realm is a fact about the body, not about whether the chain got indexed, so it is `0` whenever the aura declares a `first_realm` (with no `first_realm` there is nowhere to be, so it gives `-1`).
+- In-chain comparisons (`DatapackCache.isRealmAtLeast`) use the **raw, unshifted** index on both sides, so the comparison gives the same answer with or without this `1`.
 
 ### `LifeSpanService` {#lifespanservice}
 

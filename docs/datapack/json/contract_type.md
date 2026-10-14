@@ -50,7 +50,7 @@ aside: false
 ```json
 // data/example/mxt/contract_type/familiar.json
 {
-  "owner_condition": { "type": "mxt:realm", "realm": "example:foundation", "comparison": "at_least" },
+  "owner_condition": { "type": "mxt:realm", "realm": "example:foundation", "comparison": ">=" },
   "creature_condition": { "type": "mxt:health", "comparison": ">=", "compare_to": 20 },
   "follow_action": { "type": "mxt:no_op" },
   "combat_action": { "type": "mxt:no_op" },

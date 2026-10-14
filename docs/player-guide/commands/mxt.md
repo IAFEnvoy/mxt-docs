@@ -9,11 +9,8 @@ title: /mxt
 | `/mxt registries list` | 列出动态注册表及条目数量。 |
 | `/mxt registries validate` | 校验数据包定义，并把本次构建**发现的全部问题一次列出**：每条都带出错的文件路径；没有问题时报告注册表与条目数量。 |
 | `/mxt attachment status` | 查看自身附件数量和修炼数据。 |
-| `/mxt resource <id>` | 查询资源值。 |
-| `/mxt resource <id> set <value>` | 设置资源值。 |
-| `/mxt resourcebar [resource] [index]` | 查看资源条的原始当前值、上下限、未截断百分比、上下文、位置和顺序；不填参数时列出全部资源条。 |
-| `/mxt cultivate status` | 查看修炼状态。 |
-| `/mxt cultivate select <action>` | 手动点名一条法门（`mxt:cultivation` 的条目）**立刻开练**：正在修另一条就先停掉它，但仍要满足那条法门此刻的适用条件，不适用就拒绝、正在跑的那条不受影响。它只管这一次，下次按修炼键仍然由"适用 + `priority`"决定。需要 gamemaster 权限。 |
+| `/mxt resource`、`/mxt resource <id>`、`/mxt resource <id> bar [index]`、`/mxt resource <id> set <value>` | 资源账户：列出全部[资源条](/player-guide/commands/resource)或读一份数值、看它的条、改写它。见 [`/resource`](/player-guide/commands/resource)。 |
+| `/mxt cultivate status`、`/mxt cultivate select <action>` | 修炼状态与手动点名一条法门。见 [`/cultivate`](/player-guide/commands/cultivate)。 |
 | `/mxt breakthrough <aura>` | 尝试突破到这门**灵气**（`mxt:aura` 条目，补全给的就是它）所通往的境界。缺哪一种修炼资源由境界自己声明，失败时会点名。 |
 | `/mxt realm set <realm>`、`/mxt realm chain <realm>` | 设置自己的线性境界；`chain` 打印这一档所在的整条境界链。见 [`/realm`](/player-guide/commands/realm)。 |
 | `/mxt lifespan get`、`/mxt lifespan set`、`/mxt lifespan add`、`/mxt lifespan reincarnate` | 读与改写寿元账本，并让目标当场转世（写节点与 `reincarnate` 需要 gamemaster 权限）。见 [`/lifespan`](/player-guide/commands/lifespan)。 |

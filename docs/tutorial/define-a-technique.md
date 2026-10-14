@@ -92,11 +92,11 @@ description: "把进度链、熟练度数值与功法定义拼成一条会自己
   "mastery_resource": "example:azure_mastery",
   "configuration": {
     "example:azure_breath_2": {
-      "condition": {"type": "mxt:realm", "realm": "example:foundation", "comparison": "at_least"},
+      "condition": {"type": "mxt:realm", "realm": "example:foundation", "comparison": ">="},
       "ability": "example:qi_recovery"
     },
     "example:azure_breath_3": {
-      "condition": {"type": "mxt:realm", "realm": "example:core_formation", "comparison": "at_least"}
+      "condition": {"type": "mxt:realm", "realm": "example:core_formation", "comparison": ">="}
     }
   }
 }

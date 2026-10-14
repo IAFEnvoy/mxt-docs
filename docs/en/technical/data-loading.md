@@ -91,7 +91,7 @@ flowchart TD
 
 Every problem carries a path like `data/<namespace>/mxt/<table>/<entry>`, they are collected and logged in one go, and **loading is not aborted**: a problematic entry is simply not indexed while the definitions around it keep working. Problems a single entry has with itself (an illegal value, an empty list) were already refused while decoding and never reach this step.
 
-**Attachments are outside the reload.** Entity, chunk and level attachments are decoded once, at **world load**; `/reload` does not decode them again. So "the body holds a holder the current pack no longer provides" is a normal state: to ask whether it still exists, look the id up in the registry rather than treating the holder in hand as proof.
+**Attachments are outside the reload.** Entity, chunk and level attachments are decoded once, at **world load**; `/reload` does not decode them again. So "the body holds a holder the current pack no longer provides" is a normal state: to ask whether it still exists, look the id up in the registry rather than treating the holder in hand as proof. For which attachments exist and what each hangs on, see [Attachments](/en/technical/attachments).
 
 ## How components and bindings resolve
 

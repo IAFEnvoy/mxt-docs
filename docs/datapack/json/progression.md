@@ -28,7 +28,7 @@ aside: false
 
 包改了某个所有者的入口等级之后，身体里那条再也走不到的记录会在**实体加入世界时**、玩家登录时与数据包重载时被清掉（重载扫的是全部已加载实体，生物没有"登录"这回事），该所有者退回它自己的入口等级；这道检查不在每次读取时跑，每清一条会在日志里打一条 `WARN`（带所有者与等级 id）。
 
-**读当前等级**用实体条件 `mxt:progression`（见 [实体条件类型](../types/condition/entity_condition_types.md)）：`level` 点名一级，`comparison` 取 `exact`（默认）、`at_least` 或 `at_most`（与 `mxt:realm` 同一套取值，比较的是链内序号），可选的 `owner` 把问题限定到某些所有者——它写所有者定义的 id，可以写一个或一串，省略就问这个身体持有的每一种进度，任一命中即成立。它读的是持有者**到达过的那一级**（没有晋升过就是所有者的 `default_level`），所以 `at_least` 一旦成立就不会因为之后的变化变回假；没有 `default_level`、或链顺序没能重建出来的所有者永远答否。
+**读当前等级**用实体条件 `mxt:progression`（见 [实体条件类型](../types/condition/entity_condition_types.md)）：`level` 点名一级，`comparison` 取 `==`（默认）、`!=`、`<`、`<=`、`>` 或 `>=`（与 `mxt:realm` 同一套取值，比较的是链内序号），可选的 `owner` 把问题限定到某些所有者——它写所有者定义的 id，可以写一个或一串，省略就问这个身体持有的每一种进度，任一命中即成立。它读的是持有者**到达过的那一级**（没有晋升过就是所有者的 `default_level`），所以 `>=` 一旦成立就不会因为之后的变化变回假；没有 `default_level`、或链顺序没能重建出来的所有者永远答否。
 
 ```json
 // data/example/mxt/progression/sword_art_1.json

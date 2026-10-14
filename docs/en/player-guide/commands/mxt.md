@@ -9,11 +9,8 @@ title: /mxt
 | `/mxt registries list` | Lists the dynamic registries and their entry counts. |
 | `/mxt registries validate` | Validates the datapack definitions and lists **every** problem the last build found at once, each with the file it comes from; with no problems it reports the registry and entry counts. |
 | `/mxt attachment status` | Shows your own attachment counts and cultivation data: resources, abilities, cooldowns, curses, spirit roots and physiques. |
-| `/mxt resource <id>` | Queries a resource value. |
-| `/mxt resource <id> set <value>` | Sets a resource value. |
-| `/mxt resourcebar [resource] [index]` | Shows a resource bar's raw current value, minimum, maximum, untruncated percentage, context, anchor and order; without arguments it lists every resource bar. |
-| `/mxt cultivate status` | Shows the cultivation state: the active cultivation behaviour, the progress stored per aura and the next cultivation tick. |
-| `/mxt cultivate select <action>` | Names one cultivation method (an entry of `mxt:cultivation`) and **starts it right away**: the one already running is stopped first, but the named method still has to apply right now — a pick that does not is refused and the running session is left alone. It covers this one start only; the next press of the cultivation key picks by "applies + `priority`" again. Requires the `gamemaster` permission. |
+| `/mxt resource`, `/mxt resource <id>`, `/mxt resource <id> bar [index]`, `/mxt resource <id> set <value>` | Resource accounts: list every [resource bar](/en/player-guide/commands/resource) or read one value, inspect its bars, rewrite it. See [`/resource`](/en/player-guide/commands/resource). |
+| `/mxt cultivate status`, `/mxt cultivate select <action>` | The cultivation state and a manual pick of one method. See [`/cultivate`](/en/player-guide/commands/cultivate). |
 | `/mxt breakthrough <aura>` | Attempts a breakthrough into the realm that the given aura leads to. |
 | `/mxt realm set <realm>`, `/mxt realm chain <realm>` | Sets your own linear realm; `chain` prints the whole realm chain that stage is on. See [`/realm`](/en/player-guide/commands/realm). |
 | `/mxt lifespan get`, `/mxt lifespan set`, `/mxt lifespan add`, `/mxt lifespan reincarnate` | Reads and rewrites the lifespan ledger and makes a target be reborn on the spot (the write nodes and `reincarnate` need the `gamemaster` permission). See [`/lifespan`](/en/player-guide/commands/lifespan). |

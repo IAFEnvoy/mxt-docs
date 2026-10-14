@@ -120,19 +120,21 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 
 ### `mxt:realm`
 
-把实体的[境界阶段](../../json/realm_stage.md)与 `realm` 比较。
+把实体的[境界阶段](../../json/realm_stage.md)与 `realm` 比较。**只问 `realm` 自己所属的那条境界链**：同一链上的两个阶段按链内序号比，别的灵气的境界一律不成立。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `realm` | 境界阶段 | **必填** | 比较的基准境界。 |
-| `comparison?` | `exact` / `at_least` / `at_most` | `exact` | 怎么比。 |
+| `realm` | 境界阶段 | **必填** | 比较的基准境界，同时指出问的是哪条链。 |
+| `comparison?` | `==` / `!=` / `<` / `<=` / `>` / `>=` | `==` | 怎么比，按链内序号。 |
 | `min_minor_stage?` | Integer | 不限 | 要求在该境界上达到过的最高层数不小于它，`0` 起。 |
 
 ```json
-{"type": "mxt:realm", "realm": "example:foundation", "comparison": "at_least"}
+{"type": "mxt:realm", "realm": "example:foundation", "comparison": ">="}
 ```
 
-`min_minor_stage` 与公式变量 `minor_stage` 是同一套编号。它读的是**只增不减的层数记录**，所以"炼气期层数达到过 500"这类门槛在突破离开之后仍然成立；想表达"此刻就在这一层的窗口里"就配 `comparison: "exact"`。
+**还没进入这条链的身体算站在它的首境界上**（也就是凡人）：所以点名首境界时凡人也成立，`>=` 之类的下界同样成立；一旦身体进入了链，比的才真正是当下所在的那一档。
+
+`min_minor_stage` 与公式变量 `minor_stage` 是同一套编号。它读的是**只增不减的层数记录**，所以"炼气期层数达到过 500"这类门槛在突破离开之后仍然成立；想表达"此刻就在这一层的窗口里"就配 `comparison: "=="`。
 
 ### `mxt:has_realm`
 
@@ -203,11 +205,11 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `level` | 进度等级 id | **必填** | 点名一级。 |
-| `comparison?` | `exact` / `at_least` / `at_most` | `exact` | 怎么比，比较走缓存索引出来的链内序号。 |
+| `comparison?` | `==` / `!=` / `<` / `<=` / `>` / `>=` | `==` | 怎么比，比较走缓存索引出来的链内序号。 |
 | `owner?` | 所有者定义 id，可写数组 | 这个身体持有的每一种进度 | 把问题限定到某些所有者。 |
 
 ```json
-{"type": "mxt:progression", "level": "example:stage_three", "comparison": "at_least", "owner": "example:azure_sword"}
+{"type": "mxt:progression", "level": "example:stage_three", "comparison": ">=", "owner": "example:azure_sword"}
 ```
 
 不写 `owner` 就问这个身体持有的每一种进度，任一命中即成立。它只收所有者定义的 id（单个或数组），不收 `#标签`。读的是**身体到达过的那一级**，没有晋升过就是所有者的 `default_level`；没有 `default_level`、或缓存没能索引出这条链的所有者永远答否。

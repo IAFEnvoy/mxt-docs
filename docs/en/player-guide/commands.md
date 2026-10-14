@@ -7,7 +7,7 @@ description: Every command MiXianTu adds, with its effect, its permission requir
 
 Every command MiXianTu adds hangs under the `/mxt` root: its own registries, resources, cultivation, world state and operator tooling. The player-facing subtrees are also registered as top-level aliases, so `/aura` and `/mxt aura` are the same tree, `/formation` and `/mxt formation`, and so on. Commands are diagnostic and administrative helpers for the framework; the gameplay itself is driven by datapacks.
 
-Each alias can be switched off on its own, which removes only its top-level spelling; the `/mxt` entries stay complete, so a configuration mistake can never make a command unreachable. See [Server Configuration](./config.md#command-aliases). There are nineteen aliases in all: `ability`, `aura`, `contract`, `curse`, `display`, `flight`, `formation`, `friend`, `lifespan`, `lightning`, `physique`, `picker`, `quality`, `realm`, `spirit_root`, `talisman`, `technique`, `trade` and `tribulation`.
+Each alias can be switched off on its own, which removes only its top-level spelling; the `/mxt` entries stay complete, so a configuration mistake can never make a command unreachable. See [Server Configuration](./config.md#command-aliases). There are twenty-five aliases in all: `ability`, `aura`, `breakthrough`, `contract`, `cultivate`, `curse`, `display`, `flight`, `formation`, `friend`, `lifespan`, `lightning`, `physique`, `picker`, `quality`, `realm`, `resource`, `rift`, `secret_realm`, `spirit_root`, `talisman`, `technique`, `trade`, `tribulation` and `triggers`.
 
 **Two commands live outside `/mxt`: `/hud` and `/wheel`**. They are registered with the client's own dispatcher, so they only work when typed into chat by hand, they need no permission, and nothing is sent to the server.
 
@@ -24,6 +24,7 @@ Each alias can be switched off on its own, which removes only its top-level spel
 - [/ability](/en/player-guide/commands/ability)
 - [/aura](/en/player-guide/commands/aura)
 - [/contract](/en/player-guide/commands/contract)
+- [/cultivate](/en/player-guide/commands/cultivate)
 - [/curse](/en/player-guide/commands/curse)
 - [/display](/en/player-guide/commands/display)
 - [/flight](/en/player-guide/commands/flight)
@@ -36,6 +37,7 @@ Each alias can be switched off on its own, which removes only its top-level spel
 - [/picker](/en/player-guide/commands/picker)
 - [/quality](/en/player-guide/commands/quality)
 - [/realm](/en/player-guide/commands/realm)
+- [/resource](/en/player-guide/commands/resource)
 - [/spirit_root](/en/player-guide/commands/spirit_root)
 - [/talisman](/en/player-guide/commands/talisman)
 - [/technique](/en/player-guide/commands/technique)
@@ -45,7 +47,7 @@ Each alias can be switched off on its own, which removes only its top-level spel
 
 ## Permissions
 
-Commands that need administrator rights validate the `gamemaster` permission in the command tree: `/mxt resource <id> set`, `/mxt breakthrough`, the whole `/mxt secret_realm` subtree (`list`, `info`, `enter`, `exit`, `destroy`), the whole `/mxt rift` subtree (`info`, `target`, `color`, `place`, `bind`), `/mxt soul reclaim`, `/mxt trigger publish`, `/realm set`, `/lifespan get <targets>` / `set` / `add` / `reincarnate`, `/aura cache clear`, `/ability cast` / `grant` / `revoke`, `/contract bind` / `break` / `recall` / `behavior`, `/curse apply` / `remove` / `cleanse`, `/flight` (the whole subtree, which holds only `fill` today), `/formation bind` and `/formation owners add|remove`, `grant` / `remove` / `enable` / `disable` on `/spirit_root` and `/physique`, `/quality get <target>` / `set` / `clear` / `upgrade`, `/technique repair` (with its `dry-run`) / `drop`, and every node of `/lightning`, `/talisman` and `/tribulation`. `/picker` additionally requires the `gamemaster` permission, an executing player and creative mode.
+Commands that need administrator rights validate the `gamemaster` permission in the command tree: `/resource <id> set`, `/mxt breakthrough`, the whole `/mxt secret_realm` subtree (`list`, `info`, `enter`, `exit`, `destroy`), the whole `/mxt rift` subtree (`info`, `target`, `color`, `place`, `bind`), `/mxt soul reclaim`, `/mxt trigger publish`, `/cultivate select`, `/realm set`, `/lifespan get <targets>` / `set` / `add` / `reincarnate`, `/aura cache clear`, `/ability cast` / `grant` / `revoke`, `/contract bind` / `break` / `recall` / `behavior`, `/curse apply` / `remove` / `cleanse`, `/flight` (the whole subtree, which holds only `fill` today), `/formation bind` and `/formation owners add|remove`, `grant` / `remove` / `enable` / `disable` on `/spirit_root` and `/physique`, `/quality get <target>` / `set` / `clear` / `upgrade`, `/technique repair` (with its `dry-run`) / `drop`, and every node of `/lightning`, `/talisman` and `/tribulation`. `/picker` additionally requires the `gamemaster` permission, an executing player and creative mode.
 
 The remaining commands have no permission requirement — the read-only nodes such as `/mxt curse list`, `/ability list` and `/mxt trigger list` are among them — but several of them require an executing player right in the command tree (`/friend`'s whole subtree does), and those that default to the caller need one as well: run from the console they are refused outright, or simply return no result.
 

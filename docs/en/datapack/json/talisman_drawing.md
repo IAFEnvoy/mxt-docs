@@ -88,7 +88,7 @@ The screen's slot accepts paper only (the `mxt:talisman_paper` tag, which this m
 ```json
 {
   "type": "mxt:talisman_drawing",
-  "unlock_condition": { "type": "mxt:realm", "realm": "example:foundation", "comparison": "at_least" },
+  "unlock_condition": { "type": "mxt:realm", "realm": "example:foundation", "comparison": ">=" },
   "talisman": "example:fire_talisman",
   "paper": {
     "neoforge:ingredient_type": "mxt:quality",

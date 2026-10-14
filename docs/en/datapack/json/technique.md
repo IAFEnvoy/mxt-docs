@@ -84,12 +84,12 @@ A technique with `configuration` but no `mastery_resource` never advances on its
       "ability": "example:azure_bolt"
     },
     "example:azure_breath_2": {
-      "condition": { "type": "mxt:realm", "realm": "example:foundation", "comparison": "at_least" },
+      "condition": { "type": "mxt:realm", "realm": "example:foundation", "comparison": ">=" },
       "ability": ["example:azure_bolt", "#example:azure_mastery"]
     },
     "example:azure_breath_3": {
       "condition": [
-        { "type": "mxt:realm", "realm": "example:core_formation", "comparison": "at_least" },
+        { "type": "mxt:realm", "realm": "example:core_formation", "comparison": ">=" },
         { "type": "mxt:health", "comparison": ">=", "compare_to": 20 }
       ]
     }

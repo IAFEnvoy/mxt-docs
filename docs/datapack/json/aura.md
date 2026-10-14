@@ -21,8 +21,7 @@ aside: false
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `resource` | 数值 id | **必填** | 这条灵气描述的那个数值。 |
-| `first_realm` | 境界 id | 无 | 该数值对应境界链的首个境界；只用来确定凡人首次突破的目标境界。省略则没有境界链，不能修炼。 |
-| `start_exp` | `NumberProvider` | `0` | 凡人首次突破所需修为，同时是凡人阶段的修为上限；达到后不再增加，只能尝试突破。 |
+| `first_realm` | 境界 id | 无 | 该数值对应境界链的首个境界；只用来确定凡人首次突破的目标境界，凡人阶段的阈值与上限也读这一档自己的 `breakthrough_exp` / `max_experience`。省略则没有境界链，不能修炼。 |
 | `start_cultivate_conditions` | `CultivateConditions` | 空对象 | 凡人开始修炼及首次突破前检查的条件，可用于冲突或身份限制。所有带 `first_realm` 的定义均满足后才能开始修炼。 |
 | `cultivation_to_resource` | 对象 | `multiplier=1,max_per_tick=1` | 从修为计数抽取数值回复。 |
 | `resource_to_cultivation` | 对象 | `multiplier=1,max_per_tick=1` | 仅修炼模式下把数值转回修为。 |
@@ -63,7 +62,6 @@ aside: false
 {
   "resource": "example:qi",
   "first_realm": "example:foundation",
-  "start_exp": 100,
   "regen": 0.25,
   "aura_type": "example:common",
   "burst_amount": 10,

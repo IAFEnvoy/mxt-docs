@@ -5,7 +5,7 @@ description: How the lifespan ledger is written, how the server settles it, what
 
 # Lifespan
 
-**A lifespan is a ledger kept on each body**, holding two numbers: how many ticks of life are left and the ceiling this life was granted, both in ticks (24000 ticks is one game day) and both stored in the `spirit_stats` attachment. **Every number in the ledger comes from a data pack, a command or the server config** — the mod hard-codes no world-view value of its own — and the server config decides how the line runs. The whole system is **off by default**, so upgrading changes nothing.
+**A lifespan is a ledger kept on each body**, holding two numbers: how many ticks of life are left and the ceiling this life was granted, both in ticks (24000 ticks is one game day) and both stored in the `lifespan` attachment. **Every number in the ledger comes from a data pack, a command or the server config** — the mod hard-codes no world-view value of its own — and the server config decides how the line runs. The whole system is **off by default**, so upgrading changes nothing.
 
 ## Where the numbers come from
 

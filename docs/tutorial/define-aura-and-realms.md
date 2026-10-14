@@ -29,7 +29,7 @@ resource  example:qi          the bar fills; the overflow becomes progress
 realm_stage chain             progress + conditions + costs → next realm
 ```
 
-还没有进入境界链的玩家是**凡人**。凡人状态没有自己的定义：它由 aura 定义描述，通过 `start_exp`（所需的修为，同时也是硬上限）和 `first_realm`（首次突破的目标境界）。
+还没有进入境界链的玩家是**凡人**。凡人状态没有自己的定义，也没有自己的阈值：它读的是 `first_realm` 指向的那一档，用那一档的 `breakthrough_exp` / `max_experience` 当自己的门槛与上限。
 
 ## 你要搭建什么
 
@@ -86,8 +86,7 @@ realm_stage chain             progress + conditions + costs → next realm
   "resource": "example:qi",
   "regen": "0.05 + realm_rank * 0.05",
   "aura_type": "example:common",
-  "first_realm": "example:qi_condensation",
-  "start_exp": 100
+  "first_realm": "example:qi_condensation"
 }
 ```
 
@@ -104,7 +103,6 @@ realm_stage chain             progress + conditions + costs → next realm
 | `regen` | 缓慢的细流，让池子在打坐之外也能回填。 |
 | `aura_type` | 该灵气所指的元素；环境与灵气燃料用它做类型判定，`/mxt aura query` 会把它显示在名字旁边。 |
 | `first_realm` | 首次突破的目标。没有它，凡人永远离不开凡人状态。 |
-| `start_exp` | 凡人所需的修为进度，也是他们突破前无法越过的上限。 |
 
 本篇教程其他地方用到的 aura 字段还有 `cultivation_to_resource` 与 `resource_to_cultivation`（修为与存储数值之间的换算）、`burst_amount`（一发灵力射线的数值）、`start_cultivate_conditions`（开始修炼前检查）和 `show_cultivation_info`（角色信息面板是否显示境界与修为进度）。完整列表见 [aura（灵气）](../datapack/json/aura.md)。
 
@@ -179,12 +177,18 @@ realm_stage chain             progress + conditions + costs → next realm
 }
 ```
 
-把三个文件放在一起读：
+::: warning 从 A 突破到 B，读的是 B 的 JSON
+一步突破要读的东西**全写在 B 那一档上**：门槛 `breakthrough_exp`、上限 `max_experience`、条件 `breakthrough`、消耗 `costs`、自动开关 `auto_breakthrough`、寿元 `lifespan`。这些字段写在 A 上对这一步没有任何影响，所以新增一档时**写新档自己的门槛，别回头去改上一档**。
+:::
 
-- `breakthrough_exp` 是**离开**该阶段所需的修为，`max_experience` 是你身处其中时的修为上限。两者不能交叉：常量 `breakthrough_exp` 大于常量 `max_experience` 会在加载期被拒绝。
-- 可选的 `minor_stages` 只是一个**数量**：写一个整数 N 就是「这么多重」（默认 `0`，范围 `0..1024`），**没有写名字的途径**——每一重的名字一律按本境界的名字键生成，为 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`，下标从 `0` 起。老包里写成名字数组的形式不再接受（类型不符会让整份定义解码失败），要改写成整数。它影响三处：信息面板在境界名后写出当前这一重、公式里多一个从 `0` 起的 `minor_stage`、以及 `minor_stage_abilities` 用这个下标按层解锁能力（累计，解锁过就永久保留）。切分是把本阶段的 `breakthrough_exp` 均分，不改变阈值、消耗或任何结算。
-- `costs` 在突破成功时支付；`breakthrough.conditions` 与修为一起检查。两者都属于你正要离开的那个阶段——只有最开始的一步例外，那时阈值来自 aura 的 `start_exp`，条件来自目标阶段的 `breakthrough`。
-- `auto_breakthrough` 默认为 `false`：玩家到达阈值后要自己等。想让修炼模式自行尝试突破就设为 `true`。
+把三个文件放在一起读，下面每一条都是"从上一档突破到本档"时读的那一份：
+
+- `breakthrough_exp` 是突破到本档所需的修为，`max_experience` 是突破到本档前允许持有的修为上限。两者不能交叉：常量 `breakthrough_exp` 大于常量 `max_experience` 会在加载期被拒绝。
+- 于是 `qi_condensation.json` 里那个 `800` 是"凡人突破到炼气期要 800"，`foundation.json` 里的 `2000` 是"炼气期突破到筑基要 2000"。
+- `costs` 与 `breakthrough.conditions` 也写在**突破的终点那一档**：`costs` 从突破者身上扣、`conditions` 与修为一起检查。所以筑基那一档的 `200` 点灵气是"突破到筑基要付的"，而不是"从炼气期出发要付的"。
+- 凡人没有上一档，所以读的是首境界那一份：凡人阶段的 `800` 门槛与 `1600` 上限都来自 `qi_condensation` 这一档，别的地方没有可写的凡人阈值。
+- 可选的 `minor_stages` 只是一个**数量**：写一个整数 N 就是「这么多重」（默认 `0`，范围 `0..1024`），**没有写名字的途径**——每一重的名字一律按本境界的名字键生成，为 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`，下标从 `0` 起。要改写成整数，写成名字数组会让整份定义解码失败。它影响三处：信息面板在境界名后写出当前这一重、公式里多一个从 `0` 起的 `minor_stage`、以及 `minor_stage_abilities` 用这个下标按层解锁能力（累计，解锁过就永久保留）。重数取自**你此刻站着的这一档**，切分用的是**正爬向的那一档**的 `breakthrough_exp`，不改变阈值、消耗或任何结算。
+- `auto_breakthrough` 默认为 `false`：玩家到达阈值后要自己等。想让修炼模式自行尝试突破就设为 `true`。`foundation` 写 `true` 表示"突破到筑基可以自动"。
 - `passive_modifiers` 是在该阶段被持有期间授予的原版属性修正。`value` 是可选的公式，声明了它的条目每 tick 重新计算。
 - 最后一个阶段只是没有 `next_realm`，链条就在这里结束。
 
@@ -286,8 +290,8 @@ realm_stage chain             progress + conditions + costs → next realm
 
 1. 在主世界某处按下修炼按键（默认 `C`）。资源条出现在左列并开始填充。
 2. 继续修炼直到条满；从那时起溢出量成为修为。`/mxt cultivate status` 与 `/mxt attachment status` 会显示当前进度。
-3. 修为到 `100`——aura 的 `start_exp`——时，凡人阶段就封顶了，突破成为可能。因为 `auto_breakthrough` 是 `false`，你自己用 `/mxt breakthrough example:qi` 触发（需要 `gamemaster` 权限），或者设 `auto_breakthrough: true` 让修炼自己完成。
-4. 成功后你就处于炼气期：`/mxt attachment status` 显示新境界，`50 + realm_rank * 50` 的上限变大，`+2 max health` 修正也被应用。
+3. 修为到 `800`——目标档 `qi_condensation` 的 `breakthrough_exp`——时突破就成为可能了（进度还能继续涨到那一档的 `max_experience` `1600`，但过线即可尝试）。因为目标档的 `auto_breakthrough` 是 `false`，你自己用 `/mxt breakthrough example:qi` 触发（需要 `gamemaster` 权限），或者给它设 `auto_breakthrough: true` 让修炼自己完成。
+4. 成功后你就处于炼气期：`/mxt attachment status` 显示新境界，`50 + realm_rank * 50` 的上限里 `realm_rank` 一项从凡人时的 `0` 变成 `1`（上限因此抬高 `50`），`+2 max health` 修正也被应用。
 5. 用同样的方式爬到筑基。你需要池子里同时有 `200` 点灵气，因为那个阶段的 `breakthrough.conditions` 要求它，而 `costs` 会花掉 `200` 点灵气。
 
 ::: tip 更快地测试
@@ -304,8 +308,8 @@ realm_stage chain             progress + conditions + costs → next realm
 | 修炼从不开始 | 行为的 `start_condition` 或 `tick_condition` 不满足——为你想要的地点写一个 `mxt:aura_range` 或群系条件，因为没有可匹配的“灵气种类”词汇。 |
 | 资源条从不增长 | 共享灵气池付不出 `aura_costs`（池子本身不够，或那份被同区块的其他修炼者分掉），或者 `use_condition` 为假。 |
 | 世界拒绝加载 | 有定义解码失败：某个必填 Holder 指向不存在的 ID，或某个字段形状不对。整次加载都会失败，而不只是那个文件。 |
-| `breakthrough_exp` 大于 `max_experience` | 该阶段无法离开；两者都是常量时，Codec 会在加载期拒绝。 |
-| 境界条件从不通过 | `mxt:realm` 比较的是**当前**阶段；你本意是“本级或更后”时，用 `"comparison": "at_least"`。 |
+| `breakthrough_exp` 大于 `max_experience` | 这一档无法被突破到；两者都是常量时，Codec 会在加载期拒绝。门槛要写在**当前档**（突破的终点）上，别写到上一档。 |
+| 境界条件从不通过 | `breakthrough` 写在目标档上、求值时身体还在上一档；`mxt:realm` 比的又是当下所在，所以在目标档自己的条件里点名它自己永远过不了（凡人是唯一例外）。要么点名下面那一档，要么用 `"comparison": ">="` 或改查数值。 |
 
 ## 接下来
 
