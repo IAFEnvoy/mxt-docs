@@ -11,7 +11,7 @@ description: 所有定义共用的那部分规则——引用写法、标签、�
 
 - 单个条目引用写条目自己的 id；条目或标签都收的字段可以直接写 `#标签`。
 - 必填的单个条目引用指向一个当前包不提供的条目时，**整个数据包加载失败**；可选引用可以整个省略，省略时用字段表里那个默认值；容错列表与映射里解不出来的条目按下面的口径丢掉。
-- 按物品认领的注册表（`artifact`、`pill_binding`、`technique_binding`、`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`）都用 `items` 字段收 `ItemMatcher`：ID、标签、通配符、正则和混合数组都收，三种写法与七种条目类型见 [`ItemMatcher`](/datapack/types/shared_data_types#itemmatcher)。按方块认领的 `block_aura`、`heat_source` 与 `spirit_herb` 同形，字段叫 `blocks`。
+- 按物品认领的注册表（`artifact`、`pill_binding`、`technique_binding`、`item_aura`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`）都用 `items` 字段收 `ItemMatcher`：ID、标签、通配符、正则和混合数组都收，三种写法与七种条目类型见 [`ItemMatcher`](/datapack/types/shared_data_types#itemmatcher)；`currency` 是例外，字段叫 `item`。按方块认领的 `block_aura`、`heat_source` 与 `spirit_herb` 同形，字段叫 `blocks`。
 - 多个定义同时匹配一件物品时，按各自声明的 `priority` **从高到低**选择（字段默认 `0`），同分回落到注册表顺序。`block_aura` **没有** `priority`，多条定义命中同一个方块时都生效、相加。「谁赢」由定义写了什么决定、与文件名无关（与 `aura_zone`、`element_reaction` 的 `priority` 同一个方向）。**这与匹配条目是哪一种无关**：一条定义只要命中就按它自己声明的那个数参与排序，点名物品并不会让它更靠前。
 - 原版标签是唯一的标签系统；不要在 JSON 里重复定义 `tags` 字段。
 

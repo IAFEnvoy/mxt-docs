@@ -14,6 +14,8 @@ A technique is something that can be learned. Once learned it stays in effect: `
 | --- | --- | --- | --- |
 | `quality` | Quality id | none | Optional. This technique's own grade: the manual carrying this definition reads at it. |
 | `icon` | Icon reference | none | The icon the technique shows in interfaces such as the technique panel. |
+| `primary_color` | `RGBColor` | `#0E54A0` | The colour of the **built-in technique book** `mxt:technique_book`'s first texture layer (the book body), written as `#RRGGBB` (an integer or an `[r,g,b]` float array is accepted too, always opaque). |
+| `secondary_color` | `RGBColor` | `#E4E8EB` | The colour of the same book's second texture layer (the mark on its cover), written the same way. |
 | `learn_condition` | `EntityCondition` | `mxt:always` | Learning condition. |
 | `exclusive_tags` | Identifier array | `[]` | Mutual exclusion tags for this technique. |
 | `cultivation_modifier` | `NumberProvider` | `1` | Cultivation multiplier. |
@@ -33,7 +35,11 @@ Each `configuration` entry describes one level:
 
 These three fields are shared by techniques and creature profiles; there is no entry field only a spirit beast has. `action` runs once on entering that level: a natural promotion and an administrative level write both count as entering, and it runs **first** while the `mxt:progression_level` signal is published **after**, so whatever reacts sees a body that has already changed; an array of actions runs in order.
 
-`quality` names a tier in `mxt:quality` and may be left out. Every technique shares one carrier item, `mxt:cultivation_jade_slip`, so the item itself cannot say which tier it is — only the definition the stack carries can: a manual carrying this definition reads at that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) registry.
+`quality` names a tier in `mxt:quality` and may be left out. Every technique shares one carrier item, `mxt:technique_book`, so the item itself cannot say which tier it is — only the definition the stack carries can: a manual carrying this definition reads at that tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) registry.
+
+`primary_color` and `secondary_color` tint the **mod's own technique book** only: that book's model has two texture layers, the first painted with `primary_color` and the second with `secondary_color`, so writing two colours is all a pack needs to change how it looks. A stack with no `mxt:technique` component (the blank book in the creative tab), or one naming a technique the loaded packs no longer provide, keeps the two defaults above; an item a binding claims keeps its own texture.
+
+**Right-clicking a manual reads it**: the mod prints any text written on the book and then the technique's name and description (the description comes from the generated `<technique key>.description` and is skipped when the pack translated none). A binding with a `learn_time` still only teaches at the end of the hold; the click itself just reads the book out.
 
 `passive_modifiers` uses vanilla AttributeModifiers; `value` is an optional dynamic formula.
 

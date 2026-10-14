@@ -89,7 +89,7 @@ Which **state kinds** an ability can store is decided by its `type`; a datapack 
 
 State lives in the ability's own attachment, one per ability. It is saved with the world and synced to clients. Each record is addressed by **two dimensions**: the ability's own id plus the state kind. Two different ability ids never affect each other, and neither do two entities holding the same ability. One address holds exactly one record, and writing replaces it.
 
-Content supplies those two dimensions as `family` and `id` (`family` is the registry the host lives in, which today means `mxt:ability`). Six state kinds are writable, and each one's declaration fields and state fields are on [Data Storage](/en/datapack/types/other/data-storage).
+Content addresses those dimensions with the ability's own `id` (this store belongs to the ability and is keyed by the ability id). Six state kinds are writable, and each one's declaration fields and state fields are on [Data Storage](/en/datapack/types/other/data-storage).
 
 **Only a kind the host declared can be written**, and revoking an ability's last grant source clears the state under it - only the cooldown stays and keeps running (see [Ability Casting](/en/technical/ability)). The declaration table, the action and the conditions that write and read it, and how cooldown and charges behave are on [Ability Casting](/en/technical/ability). Which types declare which kinds is on [Ability Types](/en/datapack/types/other/ability).
 

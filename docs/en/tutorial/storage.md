@@ -146,7 +146,7 @@ Abilities and artifacts are definitions in data pack registries, so load the wor
 | `"slots": 60` only produces 54 slots | Expected. Rows are capped at six, so the capacity is capped at 54 slots. **No error.** |
 | The `mxt:storage` component is refused at decode time | Two records inside it carry the same `id` and the same type. One `id` is one box; writing it twice is not "the last one wins". |
 | Storing anything makes the whole packet fail to encode | A `contents` entry is `minecraft:air`. An empty cell is an empty stack, nothing else. |
-| `mxt:modify_storage` with `{"type":"mxt:container"}` puts nothing into the box | That action writes state on the entity, while the window reads the component on the item stack. There is no bridge between the two. **No error, no effect.** |
+| `mxt:modify_ability_storage` with `{"type":"mxt:container"}` puts nothing into the box | That action writes state on the entity, while the window reads the component on the item stack. There is no bridge between the two. **No error, no effect.** |
 | Keys such as `storage_slots` or `components` on a storage ability do nothing | There are no such keys; an unknown key is silently ignored. **No error.** |
 
 ## Next
@@ -157,4 +157,4 @@ Abilities and artifacts are definitions in data pack registries, so load the wor
 - [Artifact (artifact)](../datapack/json/artifact.md) — the full field list for `items` / `abilities` / `require_owner` / `curios_equipable`, plus the tooltip rules.
 - [Curios Slots](../player-guide/curios-slots.md) — which slots take artifacts that declare `curios_equipable`.
 - [Wheel, Resource Bars and Aura HUD](../player-guide/keys-and-hud.md) — how the main wheel and the derived pages read what your gear gives you.
-- [Entity Action Types](../datapack/types/action/entity_action_types.md) — which store `mxt:modify_storage` writes to.
+- [Entity Action Types](../datapack/types/action/entity_action_types.md) — which store `mxt:modify_ability_storage` writes to.

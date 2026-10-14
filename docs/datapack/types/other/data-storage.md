@@ -1,13 +1,13 @@
 ---
 title: data_storage_type（数据存储）
-description: mxt:data_storage_type 的各项：六种内容可写状态、容器与默认状态的声明字段与状态字段，以及 family + id 的地址写法。
+description: mxt:data_storage_type 的各项：六种内容可写状态、容器与默认状态的声明字段与状态字段，以及按技能自己的 id 寻址的写法。
 ---
 
 # data_storage_type（数据存储）
 
 技能运行期留下的状态按**种类**存，每份值顶层的 `type` 取自注册表 `mxt:data_storage_type`。种类决定这份值存什么，字段分两半：**声明字段**是这个种类在宿主上被声明时定下的参数，**状态字段**是写值的一方填进去的当前值。
 
-内容写入用实体行为 [`mxt:modify_storage`](../action/entity_action_types)，读取用六个 `mxt:storage_toggle` / `mxt:storage_timer` / `mxt:storage_resource` / `mxt:storage_target` / `mxt:storage_charges` / `mxt:storage_cooldown` 实体条件。这些条件各自的字段、判定与什么时候被读，见[技能施放](/technical/ability)。只有宿主**声明过**的种类写得进也读得到；哪个技能类型声明哪些种类见[技能类型](./ability)。
+内容写入用实体行为 [`mxt:modify_ability_storage`](../action/entity_action_types)，读取用六个 `mxt:ability_storage_toggle` / `mxt:ability_storage_timer` / `mxt:ability_storage_resource` / `mxt:ability_storage_target` / `mxt:ability_storage_charges` / `mxt:ability_storage_cooldown` 实体条件。这些条件各自的字段、判定与什么时候被读，见[技能施放](/technical/ability)。只有宿主**声明过**的种类写得进也读得到；哪个技能类型声明哪些种类见[技能类型](./ability)。这套存储是**技能专用**的：别的模块要用数据存储，就自己写一份行为与条件，不共用这一套。
 
 ## `data_storage_type`
 
@@ -145,21 +145,19 @@ description: mxt:data_storage_type 的各项：六种内容可写状态、容器
 
 ## 地址
 
-数据包侧用两个字段寻址：
+数据包侧只写技能自己的 id：
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `family` | 注册表 id | **必填** | 宿主所在的数据包注册表 |
-| `id` | 标识符 | **必填** | 宿主自身 |
+| `id` | 标识符 | **必填** | 技能自身的 id |
 
-今天 `family` 只有 `mxt:ability`，`id` 就是技能自己的 id。**一对地址只有一条记录**，写入是整份替换：同一个宿主加同一种类写两次，第二条换掉第一条；同一个宿主上每种种类最多一条，因为种类本身就是槽位，不给槽位起名字，所以一个技能不可能同时存两份 `mxt:charges`。
+**一条地址只有一条记录**，写入是整份替换：同一技能加同一种类写两次，第二条换掉第一条；同一技能上每种种类最多一条，因为种类本身就是槽位，不给槽位起名字，所以一个技能不可能同时存两份 `mxt:charges`。
 
-`mxt:storage_cooldown` 是读取那一侧的例外：每次付款都会写冷却，所以走付款闸门的技能都能被它读出来。
+`mxt:ability_storage_cooldown` 是读取那一侧的例外：每次付款都会写冷却，所以走付款闸门的技能都能被它读出来。
 
 ```json
 {
-  "type": "mxt:modify_storage",
-  "family": "mxt:ability",
+  "type": "mxt:modify_ability_storage",
   "id": "example:iron_palm",
   "value": {"type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 2}
 }

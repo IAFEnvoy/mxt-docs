@@ -685,78 +685,72 @@ Tests a bi-entity condition against the vehicle at the root of the entity's ridi
 
 ## Storage
 
-The six `mxt:storage_*` conditions read a state value the host declares, addressed as `family` plus `id`. `family` names the data pack registry the host lives in and `id` is the host; apart from `mxt:storage_cooldown` they all require the host to have **declared** that kind, and a host that did not is `false`. What each kind may store is on [Ability Casting](/en/technical/ability).
+The six `mxt:ability_storage_*` conditions read a state value the ability declares, addressed by the ability's own `id`; apart from `mxt:ability_storage_cooldown` they all require the ability to have **declared** that kind, and an ability that did not is `false`. What each kind may store is on [Ability Casting](/en/technical/ability). This set is **ability-specific**: a module that wants DataStorage writes a condition of its own.
 
-### `mxt:storage_toggle`
+### `mxt:ability_storage_toggle`
 
 Reads an [`mxt:toggle`](/en/technical/ability) value.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `family` | Registry name | **required** | The data pack registry the host lives in. |
-| `id` | Host id | **required** | The host. |
+| `id` | Ability id | **required** | The ability itself. |
 | `expected?` | Boolean | `true` | The switch state expected. |
 
 True when the stored `state` equals `expected`; a state that was never written reads as that kind's `default` (`false` unless declared otherwise).
 
-### `mxt:storage_timer`
+### `mxt:ability_storage_timer`
 
 Reads an [`mxt:timer`](/en/technical/ability) value.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `family` | Registry name | **required** | The data pack registry the host lives in. |
-| `id` | Host id | **required** | The host. |
+| `id` | Ability id | **required** | The ability itself. |
 | `remaining?` | `{min?, max?}` | None | Window over the ticks left, never negative. |
 | `ended?` | Boolean | None | Asks whether `ends_at` has passed. |
 
 A timer with no `ends_at` is not running, so it has nothing left and counts as ended.
 
-### `mxt:storage_resource`
+### `mxt:ability_storage_resource`
 
 Reads an [`mxt:resource`](/en/technical/ability) value.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `family` | Registry name | **required** | The data pack registry the host lives in. |
-| `id` | Host id | **required** | The host. |
+| `id` | Ability id | **required** | The ability itself. |
 | `amount?` | `{min?, max?}` | None | Window over the amount. |
 
 A stored record without an `amount` counts as `0`, and omitting `amount` only asks whether a value of that kind is stored.
 
-### `mxt:storage_target`
+### `mxt:ability_storage_target`
 
 Reads an [`mxt:target_lock`](/en/technical/ability) value.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `family` | Registry name | **required** | The data pack registry the host lives in. |
-| `id` | Host id | **required** | The host. |
+| `id` | Ability id | **required** | The ability itself. |
 | `locked?` | Boolean | `true` | Asks whether a target UUID is stored. |
 | `max_distance?` | Double | None | An extra maximum distance requirement. |
 
 `max_distance` additionally requires the UUID to parse and to resolve to an entity in the actor's dimension within that distance. A malformed UUID, a missing entity or a negative distance is `false`.
 
-### `mxt:storage_charges`
+### `mxt:ability_storage_charges`
 
 Reads an [`mxt:charges`](/en/technical/ability) value.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `family` | Registry name | **required** | The data pack registry the host lives in. |
-| `id` | Host id | **required** | The host. |
+| `id` | Ability id | **required** | The ability itself. |
 | `remaining?` | `{min?, max?}` | None | Window over the uses left. |
 
 A charge pool that was never spent keeps no count and reads as the declaration's `maximum`.
 
-### `mxt:storage_cooldown`
+### `mxt:ability_storage_cooldown`
 
 Reads an [`mxt:cooldown`](/en/technical/ability) value.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `family` | Registry name | **required** | The data pack registry the host lives in. |
-| `id` | Host id | **required** | The host. |
+| `id` | Ability id | **required** | The ability itself. |
 | `remaining?` | `{min?, max?}` | None | Window over the ticks left. |
 | `ready?` | Boolean | None | Asks whether the cooldown has finished. |
 

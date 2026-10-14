@@ -20,7 +20,7 @@ description: 多个注册表共用的复杂值：Cost、AuraGain、AttributeEntr
 | 注册表条目引用 | `"example:resource"` | 指向注册表的一个条目，写条目自己的 id。 |
 | 标签引用 | `"#example:fire"` | 原版标签，`#` 不能省略。 |
 | 条目或标签 | 字符串或字符串数组 | 单个 id、单个 `#标签`，或两者混在一个数组里。 |
-| `ItemMatcher` | ID、标签或混合数组 | 所有按物品认领的注册表（`artifact`、`pill_binding`、`technique_binding`、`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`）的 `items` 字段；匹配现有物品，不创建物品。 |
+| `ItemMatcher` | ID、标签或混合数组 | 所有按物品认领的注册表（`artifact`、`pill_binding`、`technique_binding`、`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`）的认领字段（`currency` 用 `item`，其余用 `items`）；匹配现有物品，不创建物品。 |
 | `Text Component` | 字符串或文本对象 | 支持翻译键字符串和原版文本组件。 |
 | `RGBColor` | `"#RRGGBB"` | 颜色，用原版十六进制写法：`#RRGGBB`（整数与 `[r,g,b]` 浮点数组也接受）。**值域是 RGB、没有 alpha**，写下的颜色一律按不透明处理——要透明度的字段自己另开键（雷的 `alpha` 是发光强度，不是颜色透明度）。 |
 | `ItemStackTemplate` | `{"id":"minecraft:stone"}` 或 `"minecraft:stone"` | 物品堆模板：可只写裸物品 ID，也可写对象（`id` 必填，可带 `count` 与 `components`）。数据包注册表**早于物品组件绑定**解析，所以数据包定义里的物品堆一律用它。 |
@@ -167,7 +167,7 @@ description: 多个注册表共用的复杂值：Cost、AuraGain、AttributeEntr
 
 ### `ItemMatcher`
 
-按物品认领的注册表——`artifact`、`pill_binding`、`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`——都用 `items` 字段收下面三种写法（`technique_binding` 的 `items` 是可选的第二条路，见[功法绑定](../json/technique_binding.md)）。三张按方块认领的注册表（`block_aura`、`heat_source`、`spirit_herb`）形状相同，只是字段叫 `blocks`。写法与文件路径见[数据包开发总览](../overview.md)。
+按物品认领的注册表——`artifact`、`pill_binding`、`item_aura`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`——都用 `items` 字段收下面三种写法（`technique_binding` 的 `items` 是可选的第二条路，见[功法绑定](../json/technique_binding.md)；`currency` 是例外，字段叫 `item`）。三张按方块认领的注册表（`block_aura`、`heat_source`、`spirit_herb`）形状相同，只是字段叫 `blocks`。写法与文件路径见[数据包开发总览](../overview.md)。
 
 ```json
 "items": "minecraft:apple"

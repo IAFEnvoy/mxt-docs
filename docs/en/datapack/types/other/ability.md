@@ -80,7 +80,7 @@ Every other type reads **none of it**: `mxt:word` carries a terminal payload of 
 
 ## State Kinds
 
-Which state kinds an ability can store is decided by its `type`; a data pack does not declare it. This table decides whether `mxt:modify_storage` and the six `mxt:storage_*` conditions accept a value:
+Which state kinds an ability can store is decided by its `type`; a data pack does not declare it. This table decides whether `mxt:modify_ability_storage` and the six `mxt:ability_storage_*` conditions accept a value:
 
 | `type` | Declared state kinds |
 | --- | --- |

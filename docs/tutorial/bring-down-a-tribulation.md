@@ -192,7 +192,7 @@ description: 写一场由突破启动的天劫：启动闸门、前摇与倒计�
 | `difficulty_scale` 写了 `0` 或负数 | 加载期**不报错**，但等待时长会算出 `-1`：时间线里只要有 `mxt:idle`，启动就会被拒（`invalid_entry`）；只有 `mxt:action` 的时间线则会"看起来成功"地瞬间跑完。 |
 | 公式里写裸 `level` 得到 `0` | 天劫公式跑在实体上下文里，`level`/`realm_rank` 这类需要资源上下文的变量在这里读不到。要用施法者的原版经验等级就写 `caster_level`。 |
 | 时间线改了但进行中的天劫没变 | 时间线在启动时就复制进了附件，`/reload` 只影响下一场。 |
-| 用 `mxt:modify_storage` 写 `mxt:entry_began` / `mxt:idle_countdown` 什么也没发生 | 这两个种类归天劫自己的时间线状态用，没有任何技能类型声明它们，所以 `mxt:modify_storage` 写不进去，日志里只有一条 WARN。 |
+| 用 `mxt:modify_ability_storage` 写 `mxt:entry_began` / `mxt:idle_countdown` 什么也没发生 | 这两个种类归天劫自己的时间线状态用，没有任何技能类型声明它们，所以 `mxt:modify_ability_storage` 写不进去，日志里只有一条 WARN。 |
 | 天空不变暗 | `darken_sky` 写了 `false`，或者附近没有正在渡劫的**玩家**——变暗与倒计时都读玩家身上那份附件：自己的天劫永远算，别人的只在 160 格内算，挂在生物身上的天劫不参与。 |
 
 ## 接下来

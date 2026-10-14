@@ -15,10 +15,10 @@ File location: `data/<namespace>/mxt/technique_binding/<path>.json`
 | `technique` | `technique` id | **required** | The technique this declaration describes. One declaration per technique is enough. |
 | `items` | item ID, `#tag` or a mixed array | `[]` | **Optional**: these items count as a manual for this technique even while carrying no component; see [ItemMatcher](/en/datapack/types/shared_data_types#itemmatcher). When omitted, the declaration can only be reached by technique id. |
 | `priority` | Int | `0` | When two declarations both claim one item, the larger number wins. |
-| `carrier_item` | item ID | `mxt:cultivation_jade_slip` | The item the mod uses when it **generates** a carrier for this technique (`/picker mxt:technique` uses it). A single item ID — item tags, wildcards and arrays are not accepted. **When the declaration's `items` names concrete items, the picker hands those items out directly and generates no carrier.** |
+| `carrier_item` | item ID | `mxt:technique_book` | The item the mod uses when it **generates** a carrier for this technique (`/picker mxt:technique` uses it). A single item ID — item tags, wildcards and arrays are not accepted. **When the declaration's `items` names concrete items, the picker hands those items out directly and generates no carrier.** |
 | `conditions` | `EntityCondition[]` | `[]` | Conditions checked before learning; inline conditions or described condition objects both work. |
 | `learn_time` | Integer | `0` | The **hold** length in ticks, range `0..72000`. `0` learns on the first right-click. |
-| `hold_animation` | String | `block` | The pose played while holding. Only meaningful when `learn_time` is written. Values below. |
+| `hold_animation` | String | `eat` | The pose played while holding. Only meaningful when `learn_time` is written. Values below. |
 | `hold_sound` | sound event ID (`sound_event` registry) | `minecraft:item.book.page_turn` | The sound played while holding. Only meaningful when `learn_time` is written; **every player nearby hears it**. |
 
 ::: warning `items` means "a manual even without the component"
@@ -30,10 +30,10 @@ A declaration's `items` makes that stack a manual for this technique **without a
 **Which stack teaches which technique follows the component first.** The order is: **① the `mxt:technique` component on the stack** (its value is a technique definition id) — it is the stack's identity; **② with no component**, whichever `technique_binding` has an `items` that claims the stack, whose `technique` names the technique that stack teaches. With neither, the stack is not a manual and right-clicking it does nothing.
 
 ```mcfunction
-give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
+give @s mxt:technique_book[mxt:technique="example:azure_breath"]
 ```
 
-An item can therefore be a manual for a technique **without carrying any component** — as long as some declaration's `items` names it; the same item carrying the component still reads the technique the component names. Conversely, the same item with neither a component nor any `items` claiming it — a `mxt:cultivation_jade_slip` taken out of the creative inventory, for instance — **teaches nothing and shows no technique in its tooltip**.
+An item can therefore be a manual for a technique **without carrying any component** — as long as some declaration's `items` names it; the same item carrying the component still reads the technique the component names. Conversely, the same item with neither a component nor any `items` claiming it — a `mxt:technique_book` taken out of the creative inventory, for instance — **teaches nothing and shows no technique in its tooltip**.
 
 The component is **stack data**, so items that generate naturally in the world never carry it by themselves. Any route that can write onto a stack works just as well:
 
@@ -43,13 +43,13 @@ The component is **stack data**, so items that generate naturally in the world n
 
 ## The Carrier the Mod Generates {#carrier}
 
-The mod walks the `mxt:technique` registry and **generates one carrier per technique**; the generated item is the one named by `carrier_item` in that technique's declaration, and **absent means the jade slip** `mxt:cultivation_jade_slip`. The `/picker mxt:technique` category of the item picker is that entry point; **the creative tab generates no carriers**. `carrier_item` is the item this generation uses only while the declaration claims no items of its own: when the declaration's `items` names concrete items, the picker hands those items out directly — **nothing is generated, and no component is written onto them**.
+The mod walks the `mxt:technique` registry and **generates one carrier per technique**; the generated item is the one named by `carrier_item` in that technique's declaration, and **absent means the technique book** `mxt:technique_book`. The `/picker mxt:technique` category of the item picker is that entry point; **the creative tab generates no carriers**. `carrier_item` is the item this generation uses only while the declaration claims no items of its own: when the declaration's `items` names concrete items, the picker hands those items out directly — **nothing is generated, and no component is written onto them**.
 
 To use an item of your own as a manual, both routes work: write `carrier_item: "namespace:item"` and let the picker generate that stack with the `mxt:technique` component already on it; or, more directly, put the item into the declaration's `items`, and that stack is the manual **without any component**.
 
 How long a read takes, which pose it plays and which sound it makes come from the **declaration**; a stack that should read differently writes the `mxt:technique_reading` component (same keys as the table above, all optional, overriding the declaration **field by field**). Which quality ladder this family sits on is not decided here: the ladder's name is written on the `quality` entry itself — on the entry tier — and the runtime carries it along `next` to every tier above it.
 
-**A technique can have no declaration at all.** Declarations are matched by technique id, and a technique with no `technique_binding` file is still read, with the defaults: learn on the first right-click, default pose and sound, no quality chain, no conditions, the jade slip as carrier. Such a technique can still be learned through the component — it just reads in the plainest possible way.
+**A technique can have no declaration at all.** Declarations are matched by technique id, and a technique with no `technique_binding` file is still read, with the defaults: learn on the first right-click, default pose and sound, no quality chain, no conditions, the technique book as carrier. Such a technique can still be learned through the component — it just reads in the plainest possible way.
 
 ## Holding and Judgement
 
@@ -83,7 +83,9 @@ Releasing the item early is not a read (the count never finished and no learn ch
 
 | Value | Pose |
 | --- | --- |
-| `block` (default) | Held up in front, as if reading it |
+| `eat` (default) | Raised to the mouth, as if reading off the page (vanilla's eating motion). First person shows the item lift and jiggle; third person is the plain hold |
+| `drink` | The same motion as `eat` |
+| `block` | Held up in front, as if reading it |
 | `brush` | The vanilla brush pose |
 | `bundle` | The vanilla bundle pose |
 | `toot_horn` | The vanilla goat horn pose |
@@ -92,8 +94,10 @@ Releasing the item early is not a read (the count never finished and no learn ch
 These values are refused with a load-time error:
 
 - `spyglass`: vanilla equates that pose with scoping, and that check **forces the field of view to 0.1** and switches to low mouse sensitivity — both in code we cannot change. Vanilla also skips rendering the whole hand (item included) while scoping, so a "pose only, side effects suppressed" version would show nothing.
-- `eat`, `drink`, `spear`: these three bring their own arm transform, so vanilla skips the step that would raise the item, and these items have no matching arm model.
-- `bow`, `trident`, `crossbow`: these scale the pose by how far the item is charged, which makes reading look like drawing a bow that is not there.
+- `spear`: it brings its own arm transform, so vanilla skips the step that would raise the item, and these items have no matching arm model.
+- `bow`, `trident`, `crossbow`: these scale the pose by how far the item is charged, and a reading has no charge to show, so it would look like drawing a bow that is not there; `crossbow` has a second problem on top of that — the first-person renderer has **no case for it at all**, so first person shows no motion whatsoever.
+
+**The built-in technique book `mxt:technique_book` has its pose pinned**: it always reads with the default `eat`, and nothing a declaration writes changes that — the pose belongs to that shared item, not to a technique. A declaration's own `hold_animation` reaches only the items that declaration names (`carrier_item`, or the item its `items` claims, which normally brings its own model). An `mxt:technique_reading` component cannot change the built-in book's pose either.
 
 ## Example
 
@@ -108,14 +112,14 @@ A technique that uses an item of the content pack as its carrier:
 }
 ```
 
-The same technique, held for three seconds with a brush pose, using the content pack's own item as a manual **without any component**:
+The same technique, held for three seconds with a bundle pose, using the content pack's own item as a manual **without any component**:
 
 ```json
 {
   "technique": "mxt_test:azure_water_manual",
   "items": "mxt_test:azure_water_manual",
   "learn_time": 60,
-  "hold_animation": "brush",
+  "hold_animation": "bundle",
   "conditions": [{"type": "mxt:always"}]
 }
 ```

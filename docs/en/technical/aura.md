@@ -102,7 +102,7 @@ new AuraPool(initial * fluctuation, value.max().resolve(initial), value.regenPer
 ```
 
 - `amount` first goes through a `/10 - 5` shift and scale (`amount` defaults to `0`, so an undeclared aura is simply zero), then a 2D value noise is added.
-- **Fluctuation only scales `amount`**: `maximum` resolves `max` from the **unscaled** `initial` (with the default `InitialMultiplier(1)` the ceiling is the local initial value).
+- **Fluctuation only scales `amount`**: `maximum` resolves `max` from the **unscaled** `initial` (with the default `mxt:initial_multiplier` at a multiplier of `1`, the ceiling is the local initial value).
 - Cycles: a day cycle of `24000` ticks and a moon cycle of `192000`, `1 + amplitude * sin(...)` floored at 0; `static` or disabled reads `1.0`.
 - `AuraPool` requires finite, non-negative values with `maximum` allowed to be `+∞`, and clamps `amount` to `maximum` whenever the maximum is finite — so regeneration never crosses the ceiling while an unlimited pool has no ceiling at all.
 

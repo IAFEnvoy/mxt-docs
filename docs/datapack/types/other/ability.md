@@ -80,7 +80,7 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 
 ## 状态种类
 
-技能能存哪些状态由它的 `type` 决定，数据包不声明。这张表决定 `mxt:modify_storage` 与六个 `mxt:storage_*` 条件认不认某个值：
+技能能存哪些状态由它的 `type` 决定，数据包不声明。这张表决定 `mxt:modify_ability_storage` 与六个 `mxt:ability_storage_*` 条件认不认某个值：
 
 | `type` | 声明的状态种类 |
 | --- | --- |

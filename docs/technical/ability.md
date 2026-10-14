@@ -40,7 +40,7 @@ description: 一次施放要过哪些闸门、按键型与直接施放的区别�
 
 附件里每条记录按两个维度寻址：**技能自己的 id** 加 **状态种类**。不同技能 id 互不影响，同一个技能在两个人身上也互不影响。
 
-数据包侧的地址写成两个字段：`family` 是宿主所在的注册表（今天只有 `mxt:ability`），`id` 是宿主自身。
+数据包侧的地址只写一个字段：`id` 就是技能自己的 id。这套存储是**技能专用**的。
 
 一对地址只有一条记录，写入是替换。同一技能 id 加同一种类写两次，第二条换掉第一条。
 
@@ -67,7 +67,7 @@ description: 一次施放要过哪些闸门、按键型与直接施放的区别�
 
 冷却长度只来自技能自己的 `cooldown` 字段，写进 `mxt:cooldown` 状态。`mxt:cooldown` 自己没有长度字段。
 
-内容写它要当心：`mxt:modify_storage` 写进去的 `duration` **真的会拦住施放**，开始时刻按写入那一刻算。没带 `duration` 的存值读作零长度冷却，也就是没在冷却。
+内容写它要当心：`mxt:modify_ability_storage` 写进去的 `duration` **真的会拦住施放**，开始时刻按写入那一刻算。没带 `duration` 的存值读作零长度冷却，也就是没在冷却。
 
 `mxt:interval`、`mxt:modifier`、`mxt:mount`、`mxt:upkeep`、`mxt:empty` 被强制施放时才会写一次。
 
@@ -85,18 +85,17 @@ description: 一次施放要过哪些闸门、按键型与直接施放的区别�
 
 ## 写状态
 
-用实体行为 `mxt:modify_storage`：
+用实体行为 `mxt:modify_ability_storage`：
 
 ```json
 {
-  "type": "mxt:modify_storage",
-  "family": "mxt:ability",
+  "type": "mxt:modify_ability_storage",
   "id": "example:iron_palm",
   "value": {"type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 2}
 }
 ```
 
-`value` 是一整份写入，按它自己的 `type` 分派解析。`family` 点了没接存储的注册表、或者宿主没声明过这个种类，写入都被拒绝并各记一条警告。
+`value` 是一整份写入，按它自己的 `type` 分派解析。`id` 找不到对应技能、或者技能没声明过这个种类，写入都被拒绝并各记一条警告。
 
 `mxt:cast_deadline`、`mxt:channel_pulse`、`mxt:aura_pulse` 这三个游标与技能状态共用同一套寻址，但没有任何类型声明它们，所以写不进去。天劫的 `mxt:entry_began`、`mxt:idle_countdown`、`mxt:wait_countdown` 住在天劫自己的单槽里，也不走这套按 id 寻址的存储。
 
@@ -106,14 +105,14 @@ description: 一次施放要过哪些闸门、按键型与直接施放的区别�
 
 | 条件 | 字段 | 说明 |
 | --- | --- | --- |
-| `mxt:storage_toggle` | `expected`（默认 `true`） | 读 `state`，没写过时读作 `default` |
-| `mxt:storage_timer` | `remaining`（`{min?, max?}` 窗口）、`ended` | 没有 `ends_at` 的计时没在跑，剩余按 `0`、`ended` 为真 |
-| `mxt:storage_resource` | `amount`（窗口） | 不给窗口就只问存没存过 |
-| `mxt:storage_target` | `locked`（默认 `true`）、`max_distance` | `max_distance` 额外要求那个 UUID 还能在施动者所在维度里找到、且在距离内 |
-| `mxt:storage_charges` | `remaining`（窗口） | 从没花过就读作满，也就是声明的 `maximum` |
-| `mxt:storage_cooldown` | `remaining`（窗口）、`ready` | 长度读 `duration`、起点读 `started_at`；从没写过就是没在冷却，剩余 `0`、`ready` 为真 |
+| `mxt:ability_storage_toggle` | `expected`（默认 `true`） | 读 `state`，没写过时读作 `default` |
+| `mxt:ability_storage_timer` | `remaining`（`{min?, max?}` 窗口）、`ended` | 没有 `ends_at` 的计时没在跑，剩余按 `0`、`ended` 为真 |
+| `mxt:ability_storage_resource` | `amount`（窗口） | 不给窗口就只问存没存过 |
+| `mxt:ability_storage_target` | `locked`（默认 `true`）、`max_distance` | `max_distance` 额外要求那个 UUID 还能在施动者所在维度里找到、且在距离内 |
+| `mxt:ability_storage_charges` | `remaining`（窗口） | 从没花过就读作满，也就是声明的 `maximum` |
+| `mxt:ability_storage_cooldown` | `remaining`（窗口）、`ready` | 长度读 `duration`、起点读 `started_at`；从没写过就是没在冷却，剩余 `0`、`ready` 为真 |
 
-除 `mxt:storage_cooldown` 之外，其余五个只认宿主**声明过**的种类，写入也照这条规则。`mxt:storage_cooldown` 不要求宿主声明 `mxt:cooldown`：每次付款都会写这个值，所以凡是走付款闸门的技能都能被它读出来。
+除 `mxt:ability_storage_cooldown` 之外，其余五个只认宿主**声明过**的种类，写入也照这条规则。`mxt:ability_storage_cooldown` 不要求宿主声明 `mxt:cooldown`：每次付款都会写这个值，所以凡是走付款闸门的技能都能被它读出来。
 
 物品宿主上的 `mxt:container` 不在这六个条件的寻址范围里。
 

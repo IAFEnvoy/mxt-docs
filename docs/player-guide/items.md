@@ -52,7 +52,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | --- | --- |
 | 基础材料 | `mxt:spirit_iron_ingot`、`mxt:spirit_iron_nugget`、`mxt:spirit_wood`、`mxt:spirit_wood_core`、`mxt:cinnabar`、`mxt:alchemy_dregs`、`mxt:impurity` |
 | 空白载体 | `mxt:spirit_ring`、`mxt:spirit_stone_bag` |
-| 身份与记录 | `mxt:wooden_token`、`mxt:stone_token`、`mxt:cultivation_jade_slip`、`mxt:blank_talisman` |
+| 身份与记录 | `mxt:wooden_token`、`mxt:stone_token`、`mxt:blank_talisman` |
 | 固定道具 | `mxt:contract_scroll`、`mxt:recall_talisman`、`mxt:beast_taming_bell` |
 
 ## 统一功能载体
@@ -69,6 +69,8 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 奖励箱 | `mxt:reward_box` | `mxt:reward_box` | 保存一张掉落物表的 id；右键按这张表抽一次，抽到的东西直接进背包。这次抽取的位置是玩家脚下、上下文里带着开箱的玩家（`luck` 也算进去），所以按运气或按开箱者判的条件照常生效；一次消耗 1 个箱子，**创造模式不消耗**。没绑表、或当前数据包没有这张表时拒绝打开并给出提示，不会白吃掉箱子。 |
 | 裂隙（方块物品） | `mxt:rift` | `mxt:rift` | 摆放裂隙方块；堆叠上带组件时按组件里的目标与颜色摆。整套机制见[裂隙](./rift.md)。 |
 | 灵力容器 | `mxt:spirit_vessel` | `mxt:resource_capacity`、`mxt:resource_container` | 保存任意 `resource`，每种资源各自一份上限（上限表里没写的资源存不进）；**按住右键**把它倒进持有者账户（每 tick 每种资源 1 单位），**没有模式**、也没有"存入"的右键；往里灌靠展示架的灵力射线，或者**把它拿在主手发射灵力**（那一次灵力直接充进容器，不射出射线）。 |
+| 功法书 | `mxt:technique_book` | `mxt:technique` | 保存一份 `technique` 定义；**右键把它读进聊天栏**——先印书上写的文本（与玉简共用 `minecraft:writable_book_content`），再印功法名与描述（描述取生成键的翻译，包没翻译就不印）。声明了 `learn_time` 的绑定仍然是长按读完才学会；创造栏里的空书没有组件，右键会说它没写明是哪一门功法。 |
+| 玉简 | `mxt:jade_slip` | `minecraft:writable_book_content` | 存的是若干页文字，直接复用原版书写书的页组件，本模组没有为它另开一个组件。**右键把内容读到聊天栏**，一页发一行；没写字的玉简给一句提示。文字由数据包或命令（`mxt:merge_components`）写进这个组件，本体只负责读出来。 |
 | 木/石令牌 | `mxt:wooden_token`、`mxt:stone_token` | `mxt:token` | 统一承载 `kind`、`value`、`owner`，供秘境和交易等权限系统共用。**在铁砧里给它改名即认主**：`owner` 记成改名那个玩家的 UUID，原来记着的主人会被覆盖；`owner` 不进提示框（提示框只印 `kind` 与 `value`）。 |
 | 鉴定镜 | `mxt:identification_mirror` | 消费 `mxt:identification` | 统一解析带有鉴定组件的物品；具体待鉴定物品由内容包或其他模组提供。 |
 | 灵根 | `mxt:spirit_root` | `mxt:spirit_root` | 保存一份 `spirit_root` 定义；右键获得这条灵根（"已持有"与元素互斥照旧被拒，见 [spirit_root](/datapack/json/spirit_root#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
@@ -121,10 +123,10 @@ give @s mxt:spirit_vessel[mxt:resource_capacity={"mxt_test:qi":1000.0},mxt:resou
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
 give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
 give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
-give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
+give @s mxt:technique_book[mxt:technique="mxt_test:azure_water_manual"]
 ```
 
-最后一行是**手册**的做法：堆上带 `mxt:technique` 组件时，这一叠才教那门功法；不带组件、也没有任何声明的 `items` 认领的玉简什么都不教、Tooltip 里也不显示功法。功法声明（`technique_binding`）只决定**怎么读**，以及 `/picker mxt:technique` 替它生成的载体用哪个物品（**创造模式物品栏不生成载体**）；把物品写进声明的 `items` 也可以让那一叠不带组件就当手册，见[功法绑定](/datapack/json/technique_binding)。
+最后一行是**手册**的做法：堆上带 `mxt:technique` 组件时，这一叠才教那门功法；不带组件、也没有任何声明的 `items` 认领的功法书什么都不教、Tooltip 里也不显示功法。功法声明（`technique_binding`）只决定**怎么读**，以及 `/picker mxt:technique` 替它生成的载体用哪个物品（**创造模式物品栏不生成载体**）；把物品写进声明的 `items` 也可以让那一叠不带组件就当手册，见[功法绑定](/datapack/json/technique_binding)。
 
 倒数第二、第三行是**灵根物品**与**体质物品**的做法：组件里写定义 ID，右键即授予（灵根被拒的理由是"已持有 / 元素互斥"，体质是"已持有 / 条件不满足 / 互斥标签冲突"），成功消耗 1 个、**创造模式不消耗**，见 [spirit_root](/datapack/json/spirit_root#holding) 与 [physique](/datapack/json/physique#holding)。
 

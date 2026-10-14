@@ -14,10 +14,10 @@ aside: false
 | `technique` | `technique` id | **必填** | 这份声明描述哪一条功法。一条功法用一条即可。 |
 | `items` | 物品 id、`#标签` 或混合数组 | `[]` | **可选**：这些物品不带任何组件也算这门功法的手册，见[匹配器](/datapack/types/shared_data_types#itemmatcher)。省略时这份声明只能按功法 id 被读到。 |
 | `priority` | Int | `0` | 两条声明都认领同一件物品时数值大者先。 |
-| `carrier_item` | 物品 id | `mxt:cultivation_jade_slip` | 本体替这门功法**生成**载体物品时使用哪个物品（`/picker mxt:technique` 用它）。单个物品 id，不支持物品标签、通配符或数组。**声明的 `items` 里点名了具体物品时，选择器直接给那件物品、不再生成载体。** |
+| `carrier_item` | 物品 id | `mxt:technique_book` | 本体替这门功法**生成**载体物品时使用哪个物品（`/picker mxt:technique` 用它）。单个物品 id，不支持物品标签、通配符或数组。**声明的 `items` 里点名了具体物品时，选择器直接给那件物品、不再生成载体。** |
 | `conditions` | `EntityCondition[]` | `[]` | 学习前条件；支持内联条件或带描述的条件对象。 |
 | `learn_time` | Integer | `0` | 需要**长按**的时长，单位 tick，范围 `0..72000`。`0` 表示右键立刻学会。 |
-| `hold_animation` | String | `block` | 长按时播放的动作。仅在写了 `learn_time` 时有意义。取值见下表。 |
+| `hold_animation` | String | `eat` | 长按时播放的动作。仅在写了 `learn_time` 时有意义。取值见下表。 |
 | `hold_sound` | 音效 id（`sound_event` 注册表） | `minecraft:item.book.page_turn` | 长按时播放的音效。仅在写了 `learn_time` 时有意义；**附近所有玩家都能听到**。 |
 
 ::: warning `items` 是「不带组件也算手册」的声明
@@ -29,10 +29,10 @@ aside: false
 **哪一叠教哪门功法，堆上的组件优先。** 顺序是：**① 堆上的 `mxt:technique` 组件**（值是功法定义 id）——它是「这一叠教哪门功法」的身份；**② 没有组件时**，看哪条 `technique_binding` 的 `items` 认领了这一叠，它 `technique` 写的就是这一叠教的功法。两者都没有，这一叠就不是手册，右键什么也不会发生。
 
 ```mcfunction
-give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
+give @s mxt:technique_book[mxt:technique="example:azure_breath"]
 ```
 
-所以一件物品可以**不带任何组件**地当某门功法的手册——只要那条声明的 `items` 点名了它；带着组件的同一物品也照旧读组件说的那一门。反过来，既没有组件、也没有任何 `items` 认领的同一物品（例如创造模式物品栏里拿出来的 `mxt:cultivation_jade_slip`）**什么都不教、Tooltip 里也不显示功法**。
+所以一件物品可以**不带任何组件**地当某门功法的手册——只要那条声明的 `items` 点名了它；带着组件的同一物品也照旧读组件说的那一门。反过来，既没有组件、也没有任何 `items` 认领的同一物品（例如创造模式物品栏里拿出来的 `mxt:technique_book`）**什么都不教、Tooltip 里也不显示功法**。
 
 组件是**堆数据**，所以世界里自然生成的物品不会自动带上它。任何能写到堆上的途径都同样成立：
 
@@ -42,13 +42,13 @@ give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 
 ## 本体替功法生成的载体 {#carrier}
 
-本体按 `mxt:technique` 注册表**为每条功法生成一份载体**，生成用的物品就是这条功法声明里 `carrier_item` 指定的那个，**不写就是玉简** `mxt:cultivation_jade_slip`。物品选择器的 `/picker mxt:technique` 分类就是这个入口；**创造模式物品栏不生成载体**。`carrier_item` 只在声明没有认领任何物品时才是这套生成用的物品：声明的 `items` 里点名了具体物品时，选择器直接给那件物品、**不再生成，也不往它身上写组件**。
+本体按 `mxt:technique` 注册表**为每条功法生成一份载体**，生成用的物品就是这条功法声明里 `carrier_item` 指定的那个，**不写就是功法书** `mxt:technique_book`。物品选择器的 `/picker mxt:technique` 分类就是这个入口；**创造模式物品栏不生成载体**。`carrier_item` 只在声明没有认领任何物品时才是这套生成用的物品：声明的 `items` 里点名了具体物品时，选择器直接给那件物品、**不再生成，也不往它身上写组件**。
 
 内容包想用自己的物品当手册，两条路都行：写 `carrier_item: "命名空间:物品"`，让选择器生成那一叠已经带好 `mxt:technique` 组件的载体；或者更直接，把物品写进声明的 `items`，那一叠**不带组件**就是手册。
 
 读多久、什么姿势、什么声音由**声明**给；某几堆想读得不一样就写 `mxt:technique_reading` 组件（键与上表同名、全部可选，按**字段**覆盖声明）。这一族物品读哪条品质链不由这张表决定：链名写在 `quality` 条目自己身上，而且写在入口档上，运行时再沿 `next` 传给它上面的每一档。
 
-**一条功法可以没有定义。** 声明按功法 id 匹配，找不到就按默认值读：右键即学、默认姿势与音效、无品质链、无条件、载体是玉简。也就是说没有任何 `technique_binding` 文件的功法照样能通过组件学习，只是读起来是最朴素的那一种。
+**一条功法可以没有定义。** 声明按功法 id 匹配，找不到就按默认值读：右键即学、默认姿势与音效、无品质链、无条件、载体是功法书。也就是说没有任何 `technique_binding` 文件的功法照样能通过组件学习，只是读起来是最朴素的那一种。
 
 ## 长按与判定
 
@@ -82,7 +82,9 @@ give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 
 | 取值 | 表现 |
 | --- | --- |
-| `block`（默认） | 举在身前，像捧起来看 |
+| `eat`（默认） | 举到嘴边，像就着书页读（原版吃东西那套动作）。第一人称能看见物品抬起来抖动，第三人称只是普通持有姿势 |
+| `drink` | 与 `eat` 是同一套动作 |
+| `block` | 举在身前，像捧起来看 |
 | `brush` | 原版刷子的动作 |
 | `bundle` | 原版收纳袋的动作 |
 | `toot_horn` | 原版山羊角的动作 |
@@ -91,8 +93,10 @@ give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 以下取值会被拒绝并在加载时直接报错：
 
 - `spyglass`：原版把这个姿势直接等同于「正在用望远镜」，而那个判定会**强制把视场角锁到 0.1**、并切换到低鼠标灵敏度，这两处都改不到。而且原版在望远镜状态下会把整只手（连同物品）整个跳过不渲染，所以「只取姿势、屏蔽副作用」的版本会什么都不显示。
-- `eat`、`drink`、`spear`：这三个自带手臂变换的覆盖，原版会因此跳过本该把物品举起来的那一步，而这些物品并没有配套的手臂模型。
-- `bow`、`trident`、`crossbow`：这三个会按「已蓄力多少」来缩放姿势，用它们会让阅读看起来像在拉一张并不存在的弓。
+- `spear`：自带手臂变换的覆盖，原版会因此跳过本该把物品举起来的那一步，而这类物品并没有配套的手臂模型。
+- `bow`、`trident`、`crossbow`：这三个会按「已蓄力多少」来缩放姿势，而阅读没有蓄力可言，看起来会像在拉一张并不存在的弓；`crossbow` 还多一层问题——第一人称渲染器里**根本没有这个分支**，所以第一人称什么动作都看不到。
+
+**内置功法书 `mxt:technique_book` 的姿势是钉死的**：它永远用默认的 `eat`，声明里写什么都不生效——姿势属于这件共用物品，而不是某一门功法。声明自己的 `hold_animation` 只对它**自己点名的物品**生效（`carrier_item`，或被 `items` 认领的那件，通常带自己的模型）。`mxt:technique_reading` 组件对内置功法书同样改不动姿势。
 
 ## 示例
 
@@ -107,14 +111,14 @@ give @s mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 }
 ```
 
-同样一门功法，要求长按三秒、用刷子的姿势，并让内容包自己的物品**不带组件**就当手册：
+同样一门功法，要求长按三秒、用收纳袋的姿势，并让内容包自己的物品**不带组件**就当手册：
 
 ```json
 {
   "technique": "mxt_test:azure_water_manual",
   "items": "mxt_test:azure_water_manual",
   "learn_time": 60,
-  "hold_animation": "brush",
+  "hold_animation": "bundle",
   "conditions": [{"type": "mxt:always"}]
 }
 ```

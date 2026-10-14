@@ -1,13 +1,13 @@
 ---
 title: Data Storage (data_storage_type)
-description: Every entry of mxt:data_storage_type — the declaration and state fields of the six kinds content can write, of the container and of the default kind, plus the family + id addressing.
+description: Every entry of mxt:data_storage_type — the declaration and state fields of the six kinds content can write, of the container and of the default kind, plus the addressing by the ability's own id.
 ---
 
 # Data Storage (data_storage_type)
 
 State an ability leaves behind at runtime is stored by **kind**, and the top-level `type` of each value comes from the `mxt:data_storage_type` registry. The kind decides what that value stores, and its fields come in two halves: **declaration fields** are the parameters fixed when the kind is declared on a host, and **state fields** are the current values filled in by whoever writes the value.
 
-Content writes with the [`mxt:modify_storage`](../action/entity_action_types) entity action and reads with the six `mxt:storage_toggle` / `mxt:storage_timer` / `mxt:storage_resource` / `mxt:storage_target` / `mxt:storage_charges` / `mxt:storage_cooldown` entity conditions. For the fields, the checks and the moments each condition is read, see [Ability Casting](/en/technical/ability). Only a kind the host has **declared** can be written and read; for which ability type declares which kinds, see [Ability Types](./ability).
+Content writes with the [`mxt:modify_ability_storage`](../action/entity_action_types) entity action and reads with the six `mxt:ability_storage_toggle` / `mxt:ability_storage_timer` / `mxt:ability_storage_resource` / `mxt:ability_storage_target` / `mxt:ability_storage_charges` / `mxt:ability_storage_cooldown` entity conditions. For the fields, the checks and the moments each condition is read, see [Ability Casting](/en/technical/ability). Only a kind the host has **declared** can be written and read; for which ability type declares which kinds, see [Ability Types](./ability). This store is **ability-specific**: a module that wants DataStorage writes an action and a condition of its own instead of sharing these.
 
 ## `data_storage_type`
 
@@ -145,21 +145,19 @@ It says this host keeps no state of its own: it has neither declaration fields n
 
 ## Address
 
-A data pack addresses a value with two fields:
+A data pack addresses a value by the ability's own id:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `family` | Registry ID | **required** | The data pack registry the host lives in |
-| `id` | Identifier | **required** | The host itself |
+| `id` | Identifier | **required** | The ability's own id |
 
-Today `family` is only ever `mxt:ability`, and `id` is the ability's own id. **One address holds one record**, and a write replaces it whole: writing the same host and the same kind twice makes the second replace the first; a host holds at most one record per kind, because the kind itself is the slot and slots are not named, so one ability cannot hold two `mxt:charges` at once.
+**One address holds one record**, and a write replaces it whole: writing the same ability and the same kind twice makes the second replace the first; an ability holds at most one record per kind, because the kind itself is the slot and slots are not named, so one ability cannot hold two `mxt:charges` at once.
 
-`mxt:storage_cooldown` is the exception on the reading side: every payment writes a cooldown, so any ability that goes through the payment gate can be read by it.
+`mxt:ability_storage_cooldown` is the exception on the reading side: every payment writes a cooldown, so any ability that goes through the payment gate can be read by it.
 
 ```json
 {
-  "type": "mxt:modify_storage",
-  "family": "mxt:ability",
+  "type": "mxt:modify_ability_storage",
   "id": "example:iron_palm",
   "value": {"type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 2}
 }

@@ -45,7 +45,7 @@ data/example/mxt/artifact/charm/ward_jade_talisman.json
 | 炼丹与灵植 | `medicinal_property`、`spirit_herb`、`alchemy_furnace`、`alchemy_wall_material`、`heat_source` |
 | 经济与内容 | `forging_method`、`forging_blueprint`、`creature_profile`、`contract_type` |
 
-**七张物品键的注册表**（`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`）按 `items` 认领物品，**两张方块键的**（`block_aura`、`heat_source`）按 `blocks` 认领方块；文件、字段形状与加载规则与其余注册表完全一致，见 [JSON 数据格式](/datapack/json/index)。
+**七张物品键的注册表**（`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`）里，`currency` 用 `item` 认领物品、其余六张用 `items`，**两张方块键的**（`block_aura`、`heat_source`）按 `blocks` 认领方块；文件、字段形状与加载规则与其余注册表完全一致，见 [JSON 数据格式](/datapack/json/index)。
 
 丹方不是注册表：它是原版配方类型 `mxt:alchemy`，文件放在 `data/<命名空间>/recipe/` 下，字段见[炼丹配方](/datapack/json/alchemy_recipe)。
 

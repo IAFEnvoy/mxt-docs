@@ -12,7 +12,7 @@ description: 源码级说明：数据包注册表怎么分成内容层与绑定�
 | 类 | 职责 |
 | --- | --- |
 | `registry.MxtResourceKeys` | 每张表的 `ResourceKey`，与注册表实例、注册事件分开，好让 codec 与运行时服务不必依赖注册类。 |
-| `registry.MxtDatapackRegistries` | 40 张数据包注册表的登记与统一读取入口，其中九张按 `items`（物品键）或 `blocks`（方块键）认领条目。**不持有任何快照**，重载与同步都交给原版注册表系统。 |
+| `registry.MxtDatapackRegistries` | 40 张数据包注册表的登记与统一读取入口，其中九张按物品键（`items`，`currency` 用 `item`）或方块键（`blocks`）认领条目。**不持有任何快照**，重载与同步都交给原版注册表系统。 |
 | `registry.MxtRegistries` | 固有注册表的 `DeferredRegister`：`type` 那一层的分派（行为、条件、消耗、技能类型……）。 |
 | `registry.MxtDataComponents` | 物品数据组件的登记：每个组件同时声明持久化 codec 与网络 codec。 |
 | `runtime.ServerCache` | 世界加载与 `/reload` 之后的唯一重建点：跨条目索引 + 校验报告。 |
@@ -33,7 +33,7 @@ description: 源码级说明：数据包注册表怎么分成内容层与绑定�
 | 绑定层 | `item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`、`pill_binding`、`technique_binding` | "这件**已经有**的物品，在本模组里还算什么"，以及要往上接哪些规则。 |
 | 绑定层 | `item_aura`、`currency`、`default_quality`（物品键）、`block_aura`、`heat_source`（方块键） | "**这一个**条目带什么值"：物品或方块自己带着的那份值。 |
 
-绑定层这些表写法一致：一份文件一条定义，文件在 `data/<命名空间>/mxt/<表>/<条目>.json`，条目用 `items`（物品键）或 `blocks`（方块键）认领物品与方块，`priority` 决定多条同时命中时谁赢——数值大者胜，同分回落注册表顺序（`block_aura` 没有这个字段：多条命中同一个方块时全部生效、相加）。它们都**从不定义物品本身**：物理物品由原版、模组或 KubeJS 注册，绑定层只往上接规则——`ItemStack` 里**从来不存一份逻辑物品定义**，只存组件。
+绑定层这些表写法一致：一份文件一条定义，文件在 `data/<命名空间>/mxt/<表>/<条目>.json`，条目按物品键（`items`，`currency` 用 `item`）或方块键（`blocks`）认领物品与方块，`priority` 决定多条同时命中时谁赢——数值大者胜，同分回落注册表顺序（`block_aura` 没有这个字段：多条命中同一个方块时全部生效、相加）。它们都**从不定义物品本身**：物理物品由原版、模组或 KubeJS 注册，绑定层只往上接规则——`ItemStack` 里**从来不存一份逻辑物品定义**，只存组件。
 
 内容层与绑定层的区别不是"读不读物品"（内容层那两张表也按匹配器认领物品），而是**定义的是东西还是规则**：`artifact` 说"这几件物品是法器、它有这些能力"，`weapon_binding` 说"这件物品挥出去时多跑一段行为"。所以同一个物品可以同时被一个 `artifact` 认领、被一个 `weapon_binding` 接上武器规则、再被一个 `item_binding` 接上一段使用后行为。
 
@@ -97,7 +97,7 @@ flowchart TD
 
 一次操作里"这一堆适用哪些声明"只解析一次：`ItemBindingService.resolve(access, stack)` 给出一个 `ResolvedBindings` 快照（物品 / 武器 / 丹药 / 功法四份 `Optional`），后面几步共用它。**空堆直接返回四份空**——通配匹配器否则会认领一件不存在的东西。
 
-**匹配规则只有一套**（`ItemMatcher`）：声明的条目**任意一条命中**就算命中；多条同时命中时，`priority` **最大**的那条胜，**同分回落注册表顺序**。`block_aura` 是例外：它根本没有 `priority` 字段，命中同一个方块的多条定义**全部生效、相加**。除此之外，绑定层两张表、内容层两张认领表与那九张按条目认领的注册表，判先后用的是同一套语义。
+**匹配规则只有一套**（`ItemMatcher`）：声明的条目**任意一条命中**就算命中；多条同时命中时，`priority` **最大**的那条胜，**同分回落注册表顺序**。`block_aura` 是例外：它根本没有 `priority` 字段，命中同一个方块的多条定义**全部生效、相加**。除此之外，绑定层两张表、内容层两张认领表与那九张按条目认领的注册表（`currency` 在其中按 `item` 认领），判先后用的是同一套语义。
 
 **组件压过声明**，三处合并各管一段：
 

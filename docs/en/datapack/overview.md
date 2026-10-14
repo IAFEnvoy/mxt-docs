@@ -45,7 +45,7 @@ The rules shared by every definition are on [Datapack Conventions](/en/datapack/
 | Alchemy and herbs | `medicinal_property`, `spirit_herb`, `alchemy_furnace`, `alchemy_wall_material`, `heat_source` |
 | Economy and content | `forging_method`, `forging_blueprint`, `creature_profile`, `contract_type` |
 
-**Seven item-keyed registries** (`item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`) claim items through `items`, and **two block-keyed ones** (`block_aura`, `heat_source`) claim blocks through `blocks`; their file layout, field shape and loading rules are exactly those of every other registry, see [JSON Data Formats](/en/datapack/json/index).
+**Seven item-keyed registries** (`item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`): all of them except `currency` claim items through `items` (`currency` uses `item`), and **two block-keyed ones** (`block_aura`, `heat_source`) claim blocks through `blocks`; their file layout, field shape and loading rules are exactly those of every other registry, see [JSON Data Formats](/en/datapack/json/index).
 
 An alchemy recipe is not a registry: `mxt:alchemy` is a vanilla recipe type whose files live under `data/<namespace>/recipe/`, see [Alchemy Recipe](/en/datapack/json/alchemy_recipe).
 

@@ -39,7 +39,6 @@ Blank carriers, identity items and fixed props are ordinary items as well. Block
 |---|---|---|
 | Blank carrier | Spirit Ring | `mxt:spirit_ring` |
 | Blank carrier | Spirit Stone Bag | `mxt:spirit_stone_bag` |
-| Identity and record | Cultivation Jade Slip | `mxt:cultivation_jade_slip` |
 | Identity and record | Blank Talisman | `mxt:blank_talisman` |
 | Fixed prop | Recall Talisman | `mxt:recall_talisman` |
 
@@ -57,6 +56,8 @@ The items below are backed by a unified server-side implementation shipped with 
 | Reward Box | `mxt:reward_box` | `mxt:reward_box` | Stores the id of a loot table; right-click rolls that table once and puts what it rolls straight into the inventory. The roll happens where the player stands, with the player as its context and luck included, so conditions reading either work as they do for any other gift. One box is one roll, and **creative mode keeps the box**. A box with no table bound, or one naming a table the loaded packs do not provide, refuses with a message instead of eating the box. |
 | Rift (block item) | `mxt:rift` | `mxt:rift` | Places rift blocks; a stack carrying the component places a rift with that destination and colour. The whole mechanic is on the [Rifts](./rift.md) page. |
 | Spirit Vessel | `mxt:spirit_vessel` | `mxt:resource_capacity`, `mxt:resource_container` | Stores any `resource`, with a capacity of its own per resource (a resource the cap map does not name cannot be stored at all). **Hold right-click** to pour it into the holder's account, one unit of each resource a tick; there is **no mode** and no storing click. Filling it takes a display stand's spirit-power ray, or **firing spirit power with it in the main hand** — that firing is charged into the vessel instead of launching a ray. |
+| Technique Book | `mxt:technique_book` | `mxt:technique` | Stores a `technique` definition; **right-click reads it into the chat log** — first any text written on the book (the jade slip's `minecraft:writable_book_content`), then the technique's name and, when the pack translated one, its description. A binding with a `learn_time` still only teaches at the end of the hold, and the blank book in the creative tab carries no component and says it names no technique. |
+| Jade Slip | `mxt:jade_slip` | `minecraft:writable_book_content` | Holds pages of text, reusing vanilla's writable-book page component rather than a component of the mod's own. **Right-click reads it into the chat log**, one page per line; a slip with nothing written says so. The text is written into that component by a datapack or command (`mxt:merge_components`), and the mod only reads it back. |
 | Wooden Token / Stone Token | `mxt:wooden_token`, `mxt:stone_token` | `mxt:token` | Carry `kind`, `value` and `owner` together for the secret realm and trade permission systems. **Renaming one in an anvil claims it**: `owner` becomes the UUID of the player who renamed it, overwriting whoever it named before, and `owner` never reaches the tooltip (which prints `kind` and `value` only). |
 | Identification Mirror | `mxt:identification_mirror` | consumes `mxt:identification` | Resolves items that carry an identification component in a unified way; the items to identify come from content packs or other mods. |
 | Spirit Root | `mxt:spirit_root` | `mxt:spirit_root` | Stores a `spirit_root` definition; right-click to gain that root ("already held" and element conflicts are refused as usual, see [spirit_root](/en/datapack/json/spirit_root#holding)), spending one item on success and **none in creative mode**. |
@@ -87,10 +88,10 @@ give @s mxt:spirit_vessel[mxt:resource_capacity={"mxt_test:qi":1000.0},mxt:resou
 give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
 give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
 give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
-give @s mxt:cultivation_jade_slip[mxt:technique="mxt_test:azure_water_manual"]
+give @s mxt:technique_book[mxt:technique="mxt_test:azure_water_manual"]
 ```
 
-The last line is how a **manual** is made: a stack teaches a technique only while it carries the `mxt:technique` component, and a jade slip with neither that component nor any declaration's `items` claiming it teaches nothing and shows no technique in its tooltip. The declaration (`technique_binding`) only decides how the technique is **read** and which item `/picker mxt:technique` generates as its carrier (**the creative tab does not generate carriers**); writing the item into the declaration's `items` also makes a stack a manual with no component at all. See [Technique Binding](../datapack/json/technique_binding.md).
+The last line is how a **manual** is made: a stack teaches a technique only while it carries the `mxt:technique` component, and a technique book with neither that component nor any declaration's `items` claiming it teaches nothing and shows no technique in its tooltip. The declaration (`technique_binding`) only decides how the technique is **read** and which item `/picker mxt:technique` generates as its carrier (**the creative tab does not generate carriers**); writing the item into the declaration's `items` also makes a stack a manual with no component at all. See [Technique Binding](../datapack/json/technique_binding.md).
 
 The second and third lines from the bottom are how a **spirit root item** and a **physique item** are made: the component names the definition ID, and right-clicking grants it (a spirit root is refused over "already held / element conflict", a physique over "already held / unmet condition / exclusive-tag conflict"), spending one item on success and **none in creative mode**. See [spirit_root](../datapack/json/spirit_root.md#holding) and [physique](../datapack/json/physique.md#holding).
 

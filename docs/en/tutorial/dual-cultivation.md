@@ -98,7 +98,7 @@ The tag file goes at `data/example/tags/block/meditation_seats.json` and lists t
 The test asks whether the stack in hand is a technique manual, so both bodies need one in the main hand. A manual's identity is the `mxt:technique` component on the stack, no dedicated item required — the technique the pack already has is enough:
 
 ```mcfunction
-give @p mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
+give @p mxt:technique_book[mxt:technique="example:azure_breath"]
 ```
 
 To pin it to "the manual of that one technique", give the technique a [technique binding](../datapack/json/technique_binding.md), put a dedicated carrier into its `items` (or `carrier_item`), and swap the inner item condition for one that names the item:
@@ -131,7 +131,7 @@ Two ready-made outlets, both in the same definition:
 | Symptom | Cause |
 | --- | --- |
 | Neither body can get in, and the actionbar says no method is available | "My partner is cultivating" was written into `start_condition` or `cultivate_condition`. It can only live in `tick_condition`. |
-| A manual is held but the test still fails | `mxt:main_hand_item` only reads the main hand; also, a manual's identity is the `mxt:technique` component on the stack, and a jade slip without it is just a jade slip. |
+| A manual is held but the test still fails | `mxt:main_hand_item` only reads the main hand; also, a manual's identity is the `mxt:technique` component on the stack, and a technique book without it is just a book. |
 | Results keep coming after walking away | The test was written into `tick_condition` only, which decides whether to stop rather than whether to yield; or `range` is far too large. |
 | The other body is not cultivating, yet the pair still matches | The test asks what the other body holds, not whether it is cultivating. Add `mxt:cultivating` to `tick_condition` to require both to be seated. |
 | Standing together but the method is never picked | `range` is a sphere around the asking body and is capped at `32`; and with `count`'s `max` at `1`, one extra body beside you already fails it. |

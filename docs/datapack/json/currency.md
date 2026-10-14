@@ -28,20 +28,19 @@ data/<namespace>/mxt/currency/<条目>.json
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `items` | 物品条目 | 无 | 这条定义认领哪些物品：单个物品 id、`#物品标签`，或它们的数组；数组里还可以是带 `type` 的匹配器条目，写法见 [`ItemMatcher`](../types/shared_data_types.md#itemmatcher)。 |
-| `item` | 物品 id | 无 | 只认领一件物品时的简写，等价于 `items` 里写一个物品 id。 |
+| `item` | 物品条目 | 无 | 这条定义认领哪些物品：单个物品 id、`#物品标签`，或它们的数组；数组里还可以是带 `type` 的匹配器条目，写法见 [`ItemMatcher`](../types/shared_data_types.md#itemmatcher)。 |
 | `value` | Long | **必填** | 单件面值，必须大于 `0`。 |
 | `unavailable_when` | `ItemCondition` 数组 | `[]` | 每条把一件物品条件和一个原因绑在一起；条件成立时这一栈的货币价值读作 `0`，并显示对应原因。 |
 | `exchanges` | 兑换项数组 | **必填** | 单向兑换选项，可以写成空数组。 |
 | `priority` | Int | `0` | 同一件物品被多条定义命中时的先后：数值大者先；**同分回落到注册表顺序**。 |
 
-`items` 与 `item` 至少要写一个：两个都没写、或者 `value` 不是正数，这条定义在加载期被拒绝。
+`item` 必须写：没写、或者 `value` 不是正数，这条定义在加载期被拒绝。
 
-同一件物品被多条定义命中时只有 `priority` 最大的那条生效，字段默认 `0`；只有 `priority` 相同的两条才回落到注册表顺序：`value` 与 `exchanges` 都按它读，输的那条既不算价值，也不提供兑换。**这与 `items` 里写的是物品还是标签无关**。
+同一件物品被多条定义命中时只有 `priority` 最大的那条生效，字段默认 `0`；只有 `priority` 相同的两条才回落到注册表顺序：`value` 与 `exchanges` 都按它读，输的那条既不算价值，也不提供兑换。**这与 `item` 里写的是物品还是标签无关**。
 
 ### `unavailable_when`
 
-每项由一个已有的物品条件和一段原因文本组成。`reason` 可以写翻译键字符串，也可以写原版文本组件对象。需要玩家上下文的场景（支票台、兑换站与提示框）拿当前操作玩家来判条件；没有实体上下文的纯服务端查询不会擅自猜条件结果。
+每项由一个已有的物品条件和一段原因文本组成。`description` 可以写翻译键字符串，也可以写原版文本组件对象。需要玩家上下文的场景（支票台、兑换站与提示框）拿当前操作玩家来判条件；没有实体上下文的纯服务端查询不会擅自猜条件结果。
 
 `data/example/mxt/currency/spirit_stone.json`：
 
@@ -52,7 +51,7 @@ data/<namespace>/mxt/currency/<条目>.json
   "unavailable_when": [
     {
       "condition": {"type": "mxt:spirit_storage_not_full"},
-      "reason": "tooltip.mxt.currency_spirit_not_full"
+      "description": "tooltip.mxt.currency_spirit_not_full"
     }
   ],
   "exchanges": []
@@ -88,13 +87,13 @@ data/<namespace>/mxt/currency/<条目>.json
 
 ```json
 {
-  "items": ["minecraft:iron_nugget", "#example:nuggets"],
+  "item": ["minecraft:iron_nugget", "#example:nuggets"],
   "value": 1,
   "exchanges": []
 }
 ```
 
-`data/example/mxt/currency/iron_coin.json`，用 `item` 简写并给出两条兑换：
+`data/example/mxt/currency/iron_coin.json`，认领一件物品并给出两条兑换：
 
 ```json
 {
@@ -122,7 +121,7 @@ data/<namespace>/mxt/currency/<条目>.json
 
 ```json
 {
-  "items": "#minecraft:emeralds",
+  "item": "#minecraft:emeralds",
   "value": 100,
   "exchanges": [
     {
@@ -173,8 +172,8 @@ data/<namespace>/mxt/currency/<条目>.json
 
 ## 校验与加载
 
-- `items` 里只能写已经注册的物品 id 与 `#物品标签`；带 `type` 的匹配器条目按 [`ItemMatcher`](../types/shared_data_types.md#itemmatcher) 的形状写。
-- `items` 与 `item` 至少要写一个，`value` 必须大于 `0`，否则这条定义加载失败。
+- `item` 里只能写已经注册的物品 id 与 `#物品标签`；带 `type` 的匹配器条目按 [`ItemMatcher`](../types/shared_data_types.md#itemmatcher) 的形状写。
+- `item` 必须写，`value` 必须大于 `0`，否则这条定义加载失败。
 - `unavailable_when` 中任一条件成立时，这一栈不参与货币结算，价值读作 `0`。
 - `exchanges` 必须存在；没有兑换时写 `[]`。
 - 同一件物品被多条定义命中时只有 `priority` 最大的那条生效，同分回落到注册表顺序：`value` 与 `exchanges` 都按它读。

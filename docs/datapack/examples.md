@@ -38,7 +38,7 @@ data/example/mxt/aura/qi.json
 
 ## 灵气、元素与通用绑定示例
 
-这些示例把常见系统串成一个最小闭环：资源、境界、灵气环境、修炼行为和物品燃料都来自数据包；能拿在手里的物品仍然由 KubeJS 或其他模组注册，数据包只负责用定义认领它们。物品键的注册表（`item_aura`、`item_binding` 等）按 `items` 认领物品，方块键的（`block_aura`、`heat_source`）按 `blocks` 认领方块，文件都在内容包自己的 `data/<命名空间>/mxt/<注册表>/` 下。
+这些示例把常见系统串成一个最小闭环：资源、境界、灵气环境、修炼行为和物品燃料都来自数据包；能拿在手里的物品仍然由 KubeJS 或其他模组注册，数据包只负责用定义认领它们。物品键的注册表（`item_aura`、`item_binding` 等）按 `items` 认领物品（`currency` 用 `item`），方块键的（`block_aura`、`heat_source`）按 `blocks` 认领方块，文件都在内容包自己的 `data/<命名空间>/mxt/<注册表>/` 下。
 
 资源定义。`max` 是表达式，`bars` 里的一条给这个资源加了界面上的条；`renderer` 用 `mxt:boss_bar` 的图集，`bar_index` 选图集里的第几格。
 

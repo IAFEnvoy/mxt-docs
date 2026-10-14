@@ -40,7 +40,7 @@ State lives in **the ability's own attachment**, one per ability. The attachment
 
 Each record inside it is addressed by two dimensions: **the ability's own id** plus **the state kind**. Two different ability ids never affect each other, and neither do two entities holding the same ability.
 
-On the datapack side an address is written as two fields: `family` is the registry the host lives in (today only `mxt:ability`), and `id` is the host itself.
+On the datapack side an address is written as one field: `id` is the ability's own id. This store is **ability-specific**: a module that wants DataStorage writes its own action and condition.
 
 One address holds exactly one record, and a write replaces it whole: write the same ability id and the same kind twice and the second replaces the first.
 
@@ -67,7 +67,7 @@ The default `mxt:active_state` is not one of the six: it records the result of t
 
 The cooldown length comes only from the ability's own `cooldown` field, and is written into the `mxt:cooldown` state. `mxt:cooldown` has no length field of its own.
 
-Content writing it has to be careful: a `duration` written through `mxt:modify_storage` **really does gate the cast**, and the start is counted from the moment of that write. A stored value without a `duration` reads as a zero-length cooldown, that is, as not cooling down.
+Content writing it has to be careful: a `duration` written through `mxt:modify_ability_storage` **really does gate the cast**, and the start is counted from the moment of that write. A stored value without a `duration` reads as a zero-length cooldown, that is, as not cooling down.
 
 `mxt:interval`, `mxt:modifier`, `mxt:mount`, `mxt:upkeep` and `mxt:empty` write one only when they are force-cast.
 
@@ -85,35 +85,34 @@ Revoking an ability's last grant source clears the state under it, **except the 
 
 ## Writing state
 
-Use the `mxt:modify_storage` entity action:
+Use the `mxt:modify_ability_storage` entity action:
 
 ```json
 {
-  "type": "mxt:modify_storage",
-  "family": "mxt:ability",
+  "type": "mxt:modify_ability_storage",
   "id": "example:iron_palm",
   "value": {"type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 2}
 }
 ```
 
-`value` is a complete storage object written as a whole, parsed by its own `type` dispatch. A `family` naming a registry that has no storage, or a kind the host never declared, refuses the write and logs one warning for each.
+`value` is a complete storage object written as a whole, parsed by its own `type` dispatch. An `id` that names no ability, or a kind the ability never declared, refuses the write and logs one warning for each.
 
 The three cursors `mxt:cast_deadline`, `mxt:channel_pulse` and `mxt:aura_pulse` share this addressing with ability state, but no type declares them, so they cannot be written. A tribulation's `mxt:entry_began`, `mxt:idle_countdown` and `mxt:wait_countdown` live in the tribulation's own single slot, and do not go through this id-addressed store either.
 
 ## Reading state
 
-State is read with six entity conditions, addressed exactly like `mxt:modify_storage`:
+State is read with six entity conditions, addressed exactly like `mxt:modify_ability_storage`:
 
 | Condition | Fields | Description |
 | --- | --- | --- |
-| `mxt:storage_toggle` | `expected` (default `true`) | Reads `state`, and a value that was never written reads as `default` |
-| `mxt:storage_timer` | `remaining` (a `{min?, max?}` window), `ended` | A timer without `ends_at` is not running, so `remaining` counts as `0` and `ended` is true |
-| `mxt:storage_resource` | `amount` (a window) | Without a window it only asks whether anything was ever stored |
-| `mxt:storage_target` | `locked` (default `true`), `max_distance` | `max_distance` additionally requires that UUID to still be found in the actor's dimension and within range |
-| `mxt:storage_charges` | `remaining` (a window) | Never having spent one reads as full, that is the declared `maximum` |
-| `mxt:storage_cooldown` | `remaining` (a window), `ready` | The length comes from `duration` and the start from `started_at`; never having written one means not cooling down, so `remaining` is `0` and `ready` is true |
+| `mxt:ability_storage_toggle` | `expected` (default `true`) | Reads `state`, and a value that was never written reads as `default` |
+| `mxt:ability_storage_timer` | `remaining` (a `{min?, max?}` window), `ended` | A timer without `ends_at` is not running, so `remaining` counts as `0` and `ended` is true |
+| `mxt:ability_storage_resource` | `amount` (a window) | Without a window it only asks whether anything was ever stored |
+| `mxt:ability_storage_target` | `locked` (default `true`), `max_distance` | `max_distance` additionally requires that UUID to still be found in the actor's dimension and within range |
+| `mxt:ability_storage_charges` | `remaining` (a window) | Never having spent one reads as full, that is the declared `maximum` |
+| `mxt:ability_storage_cooldown` | `remaining` (a window), `ready` | The length comes from `duration` and the start from `started_at`; never having written one means not cooling down, so `remaining` is `0` and `ready` is true |
 
-Apart from `mxt:storage_cooldown`, the other five only see kinds the host **declared**, and a write follows the same rule. `mxt:storage_cooldown` does not require the host to declare `mxt:cooldown`: every payment writes that value, so any ability that goes through the payment gate can be read by it.
+Apart from `mxt:ability_storage_cooldown`, the other five only see kinds the host **declared**, and a write follows the same rule. `mxt:ability_storage_cooldown` does not require the host to declare `mxt:cooldown`: every payment writes that value, so any ability that goes through the payment gate can be read by it.
 
 `mxt:container` on an item host is outside what those six conditions address.
 

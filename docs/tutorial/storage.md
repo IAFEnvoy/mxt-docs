@@ -146,7 +146,7 @@ description: "给一件物品挂一条储物技能：格数怎么算、箱子存
 | 写 `"slots": 60`，装出来只有 54 格 | 正常。行数最多 6，容量也就最多 54 格。**不报错**。 |
 | 物品上的 `mxt:storage` 解码被直接拒绝 | 组件里两条记录的 `id` 与类型都相同。一个 `id` 就是一只箱子，写两遍不是「后者覆盖前者」。 |
 | 一放东西就报整包编码失败 | `contents` 里写了 `minecraft:air`。空的那一格只能写空堆。 |
-| 用 `mxt:modify_storage` 写 `{"type":"mxt:container"}`，箱子里什么也没多 | 那个行为写的是实体身上的状态，窗口读的是物品堆上的组件，两者之间没有桥。**不报错，也没有效果**。 |
+| 用 `mxt:modify_ability_storage` 写 `{"type":"mxt:container"}`，箱子里什么也没多 | 那个行为写的是实体身上的状态，窗口读的是物品堆上的组件，两者之间没有桥。**不报错，也没有效果**。 |
 | 储物技能里写 `storage_slots`、`components` 这类键毫无作用 | 没有这些键，未知键被静默忽略。**不报错**。 |
 
 ## 接下来
@@ -157,4 +157,4 @@ description: "给一件物品挂一条储物技能：格数怎么算、箱子存
 - [artifact（法器）](../datapack/json/artifact.md) —— `items` / `abilities` / `require_owner` / `curios_equipable` 的完整字段表与提示框口径。
 - [Curios 槽位](../player-guide/curios-slots.md) —— 哪几个槽位收 `curios_equipable` 的法器。
 - [轮盘、资源条与灵气 HUD](../player-guide/keys-and-hud.md) —— 主盘与从盘怎么读装备给的技能。
-- [实体行为类型](../datapack/types/action/entity_action_types.md) —— `mxt:modify_storage` 写的是哪一份存储。
+- [实体行为类型](../datapack/types/action/entity_action_types.md) —— `mxt:modify_ability_storage` 写的是哪一份存储。

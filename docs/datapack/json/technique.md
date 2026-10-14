@@ -14,6 +14,8 @@ aside: false
 | --- | --- | --- | --- |
 | `quality` | 品质 id | 无 | 可选。这门功法自己的品阶：携带这份定义的功法书读到的就是它。 |
 | `icon` | 图标引用 | 无 | 功法在界面（如功法面板）中显示的图标。 |
+| `primary_color` | `RGBColor` | `#0E54A0` | **内置功法书** `mxt:technique_book` 第一层贴图（书身）的颜色，写 `#RRGGBB`（整数或 `[r,g,b]` 浮点数组也接受，一律按不透明处理）。 |
+| `secondary_color` | `RGBColor` | `#E4E8EB` | 同一本书第二层贴图（书面上那个标记）的颜色，写法同上。 |
 | `learn_condition` | `EntityCondition` | `mxt:always` | 学习条件。 |
 | `exclusive_tags` | Identifier 数组 | `[]` | 功法互斥标签。 |
 | `cultivation_modifier` | `NumberProvider` | `1` | 修炼倍率。 |
@@ -33,7 +35,11 @@ aside: false
 
 这三个字段功法与生物档案共用，没有灵宠专用的条目字段。`action` 在进入那一级时跑一次：自然晋升与管理员的等级写入都算进入，它**先**跑、`mxt:progression_level` 信号**后**发，所以反应方看到的是已经变过的身体；写数组就是按顺序执行。
 
-`quality` 引用 `mxt:quality` 里的一档，可以省略。所有功法共用一件载体物品 `mxt:cultivation_jade_slip`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出：携带这份定义的功法书按它读档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到注册表 [default_quality](./default_quality.md)。
+`quality` 引用 `mxt:quality` 里的一档，可以省略。所有功法共用一件载体物品 `mxt:technique_book`，物品本身说不清是哪一档，只有堆上携带的这份定义报得出：携带这份定义的功法书按它读档。堆上写了自己的 `mxt:quality` 组件时以组件为准；这份定义没写 `quality` 时这一层不作答，继续落到注册表 [default_quality](./default_quality.md)。
+
+`primary_color` 与 `secondary_color` 只染**本体那件功法书**：这本书的模型分两层贴图，第一层用 `primary_color`、第二层用 `secondary_color`，所以内容包写两个颜色就能换掉这本书的样子。堆上没有 `mxt:technique` 组件（创造栏里的空功法书），或它点名的那条功法已经不在注册表里，就用上面那两个默认色；被绑定认领的物品照旧用它们自己的贴图。
+
+**右键一本功法书就是读它**：本体先印书上写的文本（如果有），再印这门功法的名字与它的描述——描述取自生成键 `<功法键>.description`，包没翻译就不印。声明了 `learn_time` 的绑定照旧是长按读完才学会，右键那一下只负责把书读出来。
 
 `passive_modifiers` 用原版 AttributeModifier，`value` 为可选的动态公式。
 

@@ -9,14 +9,13 @@ A currency definition is one file at `data/<namespace>/mxt/currency/<path>.json`
 
 | Field | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `items` | Item entry | none | Which items it claims: a single item id, a `#item tag`, or an array of them. |
-| `item` | Item id | none | The shorthand for claiming exactly one item; it is the same as one item id inside `items`. |
+| `item` | Item entry | none | Which items it claims: a single item id, a `#item tag`, or an array of them. |
 | `value` | Long | **required** | The denomination of one item, and it has to be above `0`. |
 | `unavailable_when` | `ItemCondition` array | `[]` | While a condition holds, this stack reads as worth `0` and shows the paired reason. |
 | `exchanges` | Exchange array | **required** | One-way exchange entries; an empty array is allowed. |
 | `priority` | Int | `0` | Ordering when several definitions claim one item: the higher number wins, and a tie falls back to registry order. |
 
-At least one of `items` and `item` has to be written, `value` has to be positive and `exchanges` has to exist (write `[]` when there are none), or the definition is refused at load. The full field list is in [Currency](../datapack/json/currency.md).
+`item` has to be written, `value` has to be positive and `exchanges` has to exist (write `[]` when there are none), or the definition is refused at load. The full field list is in [Currency](../datapack/json/currency.md).
 
 ## What You Are Building
 
@@ -43,7 +42,7 @@ StartupEvents.registry('item', event => {
 
 **Why that is enough.** A currency value is not a property of the item but of the definition in the registry: the item only has to exist, and the number is written in `spirit_coin.json`. The same `kubejs:spirit_coin` can therefore be worth `1` in one pack and `100` in another without a line of code changing.
 
-## Step 2 — Claiming Items: `item`, `items` and the Tie Rule
+## Step 2 — Claiming Items: `item` and the Tie Rule
 
 ```json
 // data/example/mxt/currency/spirit_coin.json
@@ -58,7 +57,7 @@ StartupEvents.registry('item', event => {
 
 Look at the claiming line first:
 
-- `item` is the shorthand for "exactly one item" and it means the same as `items: ["kubejs:spirit_coin"]`. To claim a family of items, switch to `items`, which is written like every other table that claims items: `["kubejs:spirit_coin", "#example:coins"]`.
+- `item` takes a **matcher**: a single item id, a `#item tag`, or an array of either, written like every other table that claims items. To claim a family of items write `["kubejs:spirit_coin", "#example:coins"]`.
 - Do not drop the namespace: an item a script registers without one lives under `kubejs`, and writing `example:spirit_coin` claims nothing.
 - What a definition claims is a **matcher**, so tags and items mix freely; a single unknown item id fails the data pack load, while an unknown id inside an array only logs a line and drops that entry, leaving the rest of the file loaded.
 
@@ -91,7 +90,7 @@ A tier multiplies the denomination: the quality's own `value_multiplier` is appl
   "unavailable_when": [
     {
       "condition": {"type": "mxt:relative_durability", "comparison": "<=", "compare_to": 0},
-      "reason": "tooltip.example.spirit_coin_worn"
+      "description": "tooltip.example.spirit_coin_worn"
     }
   ],
   "exchanges": []
@@ -101,7 +100,7 @@ A tier multiplies the denomination: the quality's own `value_multiplier` is appl
 | Field | Type | What it does |
 | --- | --- | --- |
 | `condition` | Item condition | While it holds, this stack reads as `0`; the types are in [Item Conditions](../datapack/types/condition/item_condition_types.md). |
-| `reason` | Text | The reason shown to the player, as a translation key or a vanilla text component object. |
+| `description` | Text | The reason shown to the player, as a translation key or a vanilla text component object. |
 
 Three semantics to remember:
 
@@ -196,13 +195,13 @@ Currency is a data pack registry, read when the **world loads**, and `/reload` d
 
 | Symptom | Cause |
 | --- | --- |
-| The world refuses to load with a codec error | Neither `items` nor `item` was written, `value` is not positive, or `exchanges` is missing entirely — all three are refused at load. |
+| The world refuses to load with a codec error | `item` was not written, `value` is not positive, or `exchanges` is missing entirely — all three are refused at load. |
 | No value line in the tooltip | This definition does not claim that item, or it does but a definition with a higher `priority` outranks it (the winner is what counts). |
 | The number in the tooltip differs from `value` | That line shows the **settled** value: the quality's own `value_multiplier` multiplies the denomination. |
 | The item will not go into the Exchange Station's input slot | This definition's `exchanges` is an empty array (legal, but not an exchange input), or its `unavailable_when` holds right now. |
 | An option is selected but no result ever appears | The input slot holds fewer than that entry's `cost`; `cost` counts items, not denominations. |
 | The reverse exchange does not exist | Exchanges are one-way: the reverse entry has to be written in the **target currency's own** `exchanges`. |
-| Editing the JSON changes nothing | Data pack registries are read when the world loads and `/reload` does not read them again; and an unknown item id in `items` fails the whole load. |
+| Editing the JSON changes nothing | Data pack registries are read when the world loads and `/reload` does not read them again; and an unknown item id in `item` fails the whole load. |
 | Writing `value_multiplier` in the currency definition does nothing | `value_multiplier` is a **quality** field, not a currency one; currency has `value` and nothing else for the amount. |
 
 ## Next

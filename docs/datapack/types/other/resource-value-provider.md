@@ -7,7 +7,7 @@ description: 资源数值来源族 resource_value_provider_type 的八种来源�
 
 资源数值来源为一条数值解析出一个数字：当前值、定义上限、恢复速度、距离上限还差多少，以及两种灵气浓度。它不写在资源条里，而是由脚本求值——把对象交给 `MxtValues.evaluateResource(entity, resource, definition)`，`mxt:js` 的回调用 `MxtValues.resourceValue(id, callback)` 注册，见 [KubeJS API 参考](../../../kubejs/api/values.md)。
 
-这一族由模组注册，数据包只能选用，不能新增。
+这一族由模组注册，`type` id 固定，数据包只能选用、无法新增；只有 Java 代码或 KubeJS 桥接能引入自定义来源。
 
 ### `mxt:current`
 

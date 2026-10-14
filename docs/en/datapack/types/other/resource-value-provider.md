@@ -7,7 +7,7 @@ description: The eight sources of the resource_value_provider_type family, their
 
 A value provider resolves one number for a value: the current value, the defined maximum, the regeneration speed, how far it is from the maximum, and the two aura concentrations. It is not written in a resource bar — scripts evaluate it: hand the object to `MxtValues.evaluateResource(entity, resource, definition)`, and register the callback of `mxt:js` with `MxtValues.resourceValue(id, callback)`, see the [KubeJS API reference](../../../kubejs/api/values.md).
 
-This family is registered by the mod; a data pack picks one, it cannot add a new one.
+This family is registered by the mod, so its `type` ids are fixed: a data pack picks one and cannot add a new one. Only Java code or the KubeJS bridge can introduce a custom one.
 
 ### `mxt:current`
 

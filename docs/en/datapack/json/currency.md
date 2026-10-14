@@ -28,20 +28,19 @@ Like every other datapack registry it is read **while the world loads**, and `/r
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | Item entries | none | Which items this definition claims: a single item id, a `#`-prefixed item tag, or an array of either; the array may also hold `type`-carrying matcher entries, written as on the [`ItemMatcher`](../types/shared_data_types.md#itemmatcher) page. |
-| `item` | Item id | none | Shorthand for claiming exactly one item; equivalent to writing one item id in `items`. |
+| `item` | Item entries | none | Which items this definition claims: a single item id, a `#`-prefixed item tag, or an array of either; the array may also hold `type`-carrying matcher entries, written as on the [`ItemMatcher`](../types/shared_data_types.md#itemmatcher) page. |
 | `value` | Long | **required** | Denomination of one item; must be greater than `0`. |
 | `unavailable_when` | `ItemCondition` array | `[]` | Each entry binds one item condition to one reason; while the condition holds, the currency value of this stack reads as `0` and the matching reason is shown. |
 | `exchanges` | Exchange entry array | **required** | One-way exchange options; may be written as an empty array. |
 | `priority` | Int | `0` | Order between several definitions hitting one item: the larger number wins, and **a tie falls back to registry order**. |
 
-At least one of `items` and `item` has to be written: a definition with neither, or with a `value` that is not positive, is refused at load time.
+`item` has to be written: a definition without it, or with a `value` that is not positive, is refused at load time.
 
-When several definitions hit one item, only the one with the highest `priority` wins (the field defaults to `0`); only two definitions with the same `priority` fall back to registry order, and both `value` and `exchanges` are read from it — the losing one contributes neither a value nor any exchange. **Whether `items` names an item or a tag is irrelevant**.
+When several definitions hit one item, only the one with the highest `priority` wins (the field defaults to `0`); only two definitions with the same `priority` fall back to registry order, and both `value` and `exchanges` are read from it — the losing one contributes neither a value nor any exchange. **Whether `item` names an item or a tag is irrelevant**.
 
 ### `unavailable_when`
 
-Each entry pairs an existing item condition with a piece of reason text. `reason` may be a translation-key string or a vanilla text component object. Places that have a player at hand (the Cheque Table, the Exchange Station and tooltips) evaluate the condition with the current player; a pure server-side query with no entity context does not guess at the condition result.
+Each entry pairs an existing item condition with a piece of reason text. `description` may be a translation-key string or a vanilla text component object. Places that have a player at hand (the Cheque Table, the Exchange Station and tooltips) evaluate the condition with the current player; a pure server-side query with no entity context does not guess at the condition result.
 
 `data/example/mxt/currency/spirit_stone.json`:
 
@@ -52,7 +51,7 @@ Each entry pairs an existing item condition with a piece of reason text. `reason
   "unavailable_when": [
     {
       "condition": {"type": "mxt:spirit_storage_not_full"},
-      "reason": "tooltip.mxt.currency_spirit_not_full"
+      "description": "tooltip.mxt.currency_spirit_not_full"
     }
   ],
   "exchanges": []
@@ -88,13 +87,13 @@ An `exchanges` array only describes turning **this** currency into something els
 
 ```json
 {
-  "items": ["minecraft:iron_nugget", "#example:nuggets"],
+  "item": ["minecraft:iron_nugget", "#example:nuggets"],
   "value": 1,
   "exchanges": []
 }
 ```
 
-`data/example/mxt/currency/iron_coin.json`, using the `item` shorthand and offering two exchanges:
+`data/example/mxt/currency/iron_coin.json`, claiming one item and offering two exchanges:
 
 ```json
 {
@@ -122,7 +121,7 @@ A tag with a component-carrying output:
 
 ```json
 {
-  "items": "#minecraft:emeralds",
+  "item": "#minecraft:emeralds",
   "value": 100,
   "exchanges": [
     {
@@ -173,8 +172,8 @@ A definition whose condition does not hold is as good as unwritten: that item is
 
 ## Validation and Loading
 
-- `items` may only name item ids that are already registered, plus `#item tags`; a matcher entry carrying a `type` is written as on the [`ItemMatcher`](../types/shared_data_types.md#itemmatcher) page.
-- At least one of `items` and `item` has to be written and `value` must be greater than `0`; otherwise the definition fails to load.
+- `item` may only name item ids that are already registered, plus `#item tags`; a matcher entry carrying a `type` is written as on the [`ItemMatcher`](../types/shared_data_types.md#itemmatcher) page.
+- `item` has to be written and `value` must be greater than `0`; otherwise the definition fails to load.
 - While any condition in `unavailable_when` holds, that stack takes no part in currency settlement and its value reads as `0`.
 - `exchanges` must be present; write `[]` when no exchange is offered.
 - When several definitions hit one item, only the one with the highest `priority` wins, and a tie falls back to registry order: both its `value` and its `exchanges` are read.

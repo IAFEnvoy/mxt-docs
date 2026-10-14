@@ -54,7 +54,7 @@ title: 动态注册表
 | `heat_source` | `mxt/heat_source` | 供热方块的温度与升温速度。 |
 | `incomplete` | `mxt/incomplete` | 给一件物品打「未完成」标记：客户端在槽位里画一个警告角标。 |
 
-`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding` 七张按 `items` 认领物品，`block_aura` 与 `heat_source` 两张按 `blocks` 认领方块；形状与其余注册表一致，文件路径见[数据包开发总览](../overview.md)。
+`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding` 七张按物品键认领物品（`currency` 用 `item`，其余六张用 `items`），`block_aura` 与 `heat_source` 两张按 `blocks` 认领方块；形状与其余注册表一致，文件路径见[数据包开发总览](../overview.md)。
 
 ## 固有类型分派
 

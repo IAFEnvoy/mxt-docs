@@ -9,14 +9,13 @@ description: "给一件已有物品一个面值与一组单向兑换：谁认领
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `items` | 物品条目 | 无 | 认领哪些物品：单个物品 id、`#物品标签`，或它们的数组。 |
-| `item` | 物品 id | 无 | 只认领一件物品时的简写，等价于 `items` 里写一个物品 id。 |
+| `item` | 物品条目 | 无 | 认领哪些物品：单个物品 id、`#物品标签`，或它们的数组。 |
 | `value` | Long | **必填** | 单件面值，必须大于 `0`。 |
 | `unavailable_when` | `ItemCondition` 数组 | `[]` | 条件成立时这一叠的价值读作 `0`，并显示对应原因。 |
 | `exchanges` | 兑换项数组 | **必填** | 单向兑换选项，可以写成空数组。 |
 | `priority` | Int | `0` | 同一件物品被多条定义命中时的先后：数值大者先，同分回落到注册表顺序。 |
 
-`items` 与 `item` 至少要写一个，`value` 必须是正数，`exchanges` 必须存在（没有兑换就写 `[]`），否则这条定义在加载期被拒绝。完整字段表见 [currency（货币）](../datapack/json/currency.md)。
+`item` 必须写，`value` 必须是正数，`exchanges` 必须存在（没有兑换就写 `[]`），否则这条定义在加载期被拒绝。完整字段表见 [currency（货币）](../datapack/json/currency.md)。
 
 ## 你要搭建什么
 
@@ -43,7 +42,7 @@ StartupEvents.registry('item', event => {
 
 **为什么这么写就够。** 货币值不是物品的属性，而是注册表里那条定义的属性：物品只需要存在，值写在 `spirit_coin.json` 里。所以同一件 `kubejs:spirit_coin` 可以在不同包里值 1 或值 100，代码一行不改。
 
-## 第 2 步 —— 认领物品：`item`、`items` 与平手规则
+## 第 2 步 —— 认领物品：`item` 与平手规则
 
 ```json
 // data/example/mxt/currency/spirit_coin.json
@@ -58,7 +57,7 @@ StartupEvents.registry('item', event => {
 
 先只看认领的那一行：
 
-- `item` 是"只认领一件物品"的简写，它推出的就是 `items: ["kubejs:spirit_coin"]`。要认领一族物品就换成 `items`，写法与别的按物品认领的表相同：`["kubejs:spirit_coin", "#example:coins"]`。
+- `item` 收的是一个**匹配器**：可以写单个物品 id、`#物品标签`，或它们的数组，写法与别的按物品认领的表相同。要认领一族物品就写 `["kubejs:spirit_coin", "#example:coins"]`。
 - 命名空间别漏：脚本没写命名空间注册的物品在 `kubejs` 下，写成 `example:spirit_coin` 会认领不到任何东西。
 - 一条定义认领的物品用的是**匹配器**，所以标签与物品混写没问题；单个未知的物品 id 会让数据包加载失败，写在数组里的未知 id 只记一行日志后丢掉那一项，文件其余部分照常加载。
 
@@ -91,7 +90,7 @@ StartupEvents.registry('item', event => {
   "unavailable_when": [
     {
       "condition": {"type": "mxt:relative_durability", "comparison": "<=", "compare_to": 0},
-      "reason": "tooltip.example.spirit_coin_worn"
+      "description": "tooltip.example.spirit_coin_worn"
     }
   ],
   "exchanges": []
@@ -101,7 +100,7 @@ StartupEvents.registry('item', event => {
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `condition` | 物品条件 | 成立时这一叠读作 `0`；类型见[物品条件](../datapack/types/condition/item_condition_types.md)。 |
-| `reason` | 文本 | 显示给玩家的原因，翻译键或原版文本组件对象都行。 |
+| `description` | 文本 | 显示给玩家的原因，翻译键或原版文本组件对象都行。 |
 
 三条要记住的语义：
 
@@ -196,13 +195,13 @@ StartupEvents.registry('item', event => {
 
 | 现象 | 原因 |
 | --- | --- |
-| 世界带着 Codec 错误拒绝加载 | `items` 与 `item` 都没写、`value` 不是正数、或 `exchanges` 整个漏了——三者都是加载期拒绝。 |
+| 世界带着 Codec 错误拒绝加载 | `item` 没写、`value` 不是正数、或 `exchanges` 整个漏了——三者都是加载期拒绝。 |
 | 提示框里没有价值那一行 | 这条定义没认领这件物品；或者认领到了但被另一条 `priority` 更高的定义顶掉（赢的那条说了算）。 |
 | 提示框里的数字与 `value` 不一样 | 上面那行显示的是**结算后**的价值：品质自己的 `value_multiplier` 会乘在面值上。 |
 | 物品放不进兑换站的输入槽 | 这条定义的 `exchanges` 是空数组（空数组合法，但不算兑换输入），或者它的 `unavailable_when` 此刻成立。 |
 | 选了条目却一直没有结果 | 输入槽里的数量还没到那一条的 `cost`；`cost` 数的是件数，不是面值。 |
 | 反向兑换不存在 | 兑换是单向的：反向那一条必须写在**目标货币自己的** `exchanges` 里。 |
-| 改了 JSON 却什么也没变 | 数据包注册表在世界加载时读，`/reload` 不重读；`items` 里写了不存在的物品 id 则会让整次加载失败。 |
+| 改了 JSON 却什么也没变 | 数据包注册表在世界加载时读，`/reload` 不重读；`item` 里写了不存在的物品 id 则会让整次加载失败。 |
 | 写了 `value_multiplier` 在货币定义里没反应 | `value_multiplier` 是**品质**的字段，不是货币的字段；货币这边只有 `value`。 |
 
 ## 接下来

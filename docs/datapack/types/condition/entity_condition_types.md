@@ -685,78 +685,72 @@ description: 模组注册的全部内置实体条件类型，以及每种类型�
 
 ## 存储
 
-六个 `mxt:storage_*` 条件读的是宿主声明的状态值，地址都是 `family` + `id`。`family` 指出宿主所在的数据包注册表，`id` 是宿主；除 `mxt:storage_cooldown` 之外都要求宿主**声明过**那种种类，没声明就判断为 `false`。种类可存什么见[技能施放](/technical/ability)。
+六个 `mxt:ability_storage_*` 条件读的是技能声明的状态值，地址就是技能自己的 `id`；除 `mxt:ability_storage_cooldown` 之外都要求技能**声明过**那种种类，没声明就判断为 `false`。种类可存什么见[技能施放](/technical/ability)。这一套是**技能专用**的：别的模块要用数据存储，就自己写一份条件。
 
-### `mxt:storage_toggle`
+### `mxt:ability_storage_toggle`
 
 读取一个 [`mxt:toggle`](/technical/ability) 值。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `family` | 注册表名 | **必填** | 宿主所在的数据包注册表。 |
-| `id` | 宿主 id | **必填** | 宿主。 |
+| `id` | 技能 id | **必填** | 技能自身。 |
 | `expected?` | Boolean | `true` | 期望的开关状态。 |
 
 当存储的 `state` 等于 `expected` 时为真；从未写入过时读作该种类的 `default`（缺省 `false`）。
 
-### `mxt:storage_timer`
+### `mxt:ability_storage_timer`
 
 读取一个 [`mxt:timer`](/technical/ability) 值。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `family` | 注册表名 | **必填** | 宿主所在的数据包注册表。 |
-| `id` | 宿主 id | **必填** | 宿主。 |
+| `id` | 技能 id | **必填** | 技能自身。 |
 | `remaining?` | `{min?, max?}` | 无 | 剩余 tick 数窗口，不会为负。 |
 | `ended?` | Boolean | 无 | 问 `ends_at` 是否已过。 |
 
 没有 `ends_at` 的计时没有在运行，因此没有剩余，算作已结束。
 
-### `mxt:storage_resource`
+### `mxt:ability_storage_resource`
 
 读取一个 [`mxt:resource`](/technical/ability) 值。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `family` | 注册表名 | **必填** | 宿主所在的数据包注册表。 |
-| `id` | 宿主 id | **必填** | 宿主。 |
+| `id` | 技能 id | **必填** | 技能自身。 |
 | `amount?` | `{min?, max?}` | 无 | 数量窗口。 |
 
 存下来的记录没有 `amount` 时按 `0` 计，而省略 `amount` 只问是否存有该类值。
 
-### `mxt:storage_target`
+### `mxt:ability_storage_target`
 
 读取一个 [`mxt:target_lock`](/technical/ability) 值。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `family` | 注册表名 | **必填** | 宿主所在的数据包注册表。 |
-| `id` | 宿主 id | **必填** | 宿主。 |
+| `id` | 技能 id | **必填** | 技能自身。 |
 | `locked?` | Boolean | `true` | 问是否存有目标 UUID。 |
 | `max_distance?` | Double | 无 | 额外要求的最大距离。 |
 
 `max_distance` 额外要求该 UUID 能解析出来，并且能在施动者所在维度中按该距离找到对应实体。UUID 格式错误、实体不存在或距离为负数都算 `false`。
 
-### `mxt:storage_charges`
+### `mxt:ability_storage_charges`
 
 读取一个 [`mxt:charges`](/technical/ability) 值。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `family` | 注册表名 | **必填** | 宿主所在的数据包注册表。 |
-| `id` | 宿主 id | **必填** | 宿主。 |
+| `id` | 技能 id | **必填** | 技能自身。 |
 | `remaining?` | `{min?, max?}` | 无 | 剩余可用次数窗口。 |
 
 从未消耗过的次数池不会记下计数，读作声明里的 `maximum`。
 
-### `mxt:storage_cooldown`
+### `mxt:ability_storage_cooldown`
 
 读取一个 [`mxt:cooldown`](/technical/ability) 值。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `family` | 注册表名 | **必填** | 宿主所在的数据包注册表。 |
-| `id` | 宿主 id | **必填** | 宿主。 |
+| `id` | 技能 id | **必填** | 技能自身。 |
 | `remaining?` | `{min?, max?}` | 无 | 剩余 tick 数窗口。 |
 | `ready?` | Boolean | 无 | 问冷却是否已完成。 |
 

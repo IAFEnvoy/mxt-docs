@@ -102,7 +102,7 @@ new AuraPool(initial * fluctuation, value.max().resolve(initial), value.regenPer
 ```
 
 - `amount` 先做一次 `/10 - 5` 的平移与缩放（`amount` 默认 `0`，所以没有声明的地方就是 0），再加二维 value noise。
-- **波动只缩放 `amount`**：`maximum` 用的是**未缩放**的 `initial` 去解析 `max`（默认 `InitialMultiplier(1)`，即上限就是该处的初始值）。
+- **波动只缩放 `amount`**：`maximum` 用的是**未缩放**的 `initial` 去解析 `max`（默认 `mxt:initial_multiplier`、倍率 `1`，即上限就是该处的初始值）。
 - 波动周期：日循环 `24000` 刻、月循环 `192000` 刻，`1 + amplitude * sin(...)`，下限 0；`static` 或不启用就是 1.0。
 - `AuraPool` 的约束是「有限且非负，`maximum` 允许 `+∞`」；`amount` 只要 `maximum` 有限就会被钳到 `maximum`，所以再生不会越过上限，而上限为无穷的池没有上界。
 

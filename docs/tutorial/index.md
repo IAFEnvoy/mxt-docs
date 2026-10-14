@@ -125,7 +125,7 @@ data/example/
 ## 约定
 
 - **命名空间。** 所有示例都使用 `example`。把它改成你自己整合包或内容包的 ID，并保持文件的 ID 与它们之间的引用同步。
-- **文件位置。** 数据包文件放在 `data/<namespace>/mxt/<注册表>/<path>.json` 下；标签放在 `data/<namespace>/tags/...` 下。一份文件就是一个定义，条目 id 是 `<namespace>:<路径>`，文件顶层没有 `values`。九张按物品或方块认领的表也一样：`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding` 在定义里用 `items` 认领物品，`block_aura`、`heat_source` 用 `blocks` 认领方块，所以内容包用 `example` 命名空间时文件就放在 `data/example/mxt/<表>/<名字>.json`。内容一多就按类别分进子文件夹（目录是 ID 的一部分），写法见[数据包开发总览](../datapack/overview.md)。完整列表见 [动态注册表](../datapack/json/index.md)。
+- **文件位置。** 数据包文件放在 `data/<namespace>/mxt/<注册表>/<path>.json` 下；标签放在 `data/<namespace>/tags/...` 下。一份文件就是一个定义，条目 id 是 `<namespace>:<路径>`，文件顶层没有 `values`。九张按物品或方块认领的表也一样：`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding` 在定义里认领物品（`currency` 用 `item`，其余用 `items`），`block_aura`、`heat_source` 用 `blocks` 认领方块，所以内容包用 `example` 命名空间时文件就放在 `data/example/mxt/<表>/<名字>.json`。内容一多就按类别分进子文件夹（目录是 ID 的一部分），写法见[数据包开发总览](../datapack/overview.md)。完整列表见 [动态注册表](../datapack/json/index.md)。
 - **生效方式。** MiXianTu 的 40 张数据包注册表都是 Minecraft 在**世界加载时**读取的，所以 `/reload` 不会重新读取。修改数据包文件后，请退回标题界面重新打开世界（或重启服务器）。`/reload` 只会刷新配方、战利品表、进度、函数和 KubeJS 服务端脚本。用 KubeJS 注册新物品或方块同样需要重启游戏。
 - **坏文件会挡住世界。** 没有上一份快照可以退回：只要有定义解码失败，世界就会一直加载不了，直到该文件被修好。日志会给出文件名和 Codec 错误，所以要留一份正在编辑的文件的最后可用副本。
 - **校验。** `/mxt registries validate` 报告注册表数量、条目总数以及校验是否通过，`/mxt registries list` 打印每个注册表 ID 及其条目数量，九张按物品或方块认领的表也在里面。其余命令列在[命令](../player-guide/commands.md)里。

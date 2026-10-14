@@ -98,7 +98,7 @@ description: "在修炼行为上写一条只有身边有人时才出成果的法
 判据问的是"主手持有的是否功法手册"，所以双方主手都得拿一本。手册的身份是堆上的 `mxt:technique` 组件，不需要专用物品——用包里已有的那门功法即可：
 
 ```mcfunction
-give @p mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
+give @p mxt:technique_book[mxt:technique="example:azure_breath"]
 ```
 
 要精确到"必须是同一门功法的手册"，给这门功法一条[功法绑定](../datapack/json/technique_binding.md)，把专属载体写进它的 `items`（或 `carrier_item`），再把内层物品条件换成点名物品的写法：
@@ -131,7 +131,7 @@ give @p mxt:cultivation_jade_slip[mxt:technique="example:azure_breath"]
 | 现象 | 原因 |
 | --- | --- |
 | 两个人都进不去，提示没有可用的法门 | 把"对方也在修炼"写进了 `start_condition` 或 `cultivate_condition`。它只可能写在 `tick_condition` 里。 |
-| 手里有手册，判据还是不成立 | `mxt:main_hand_item` 只看主手；另外手册的身份是堆上的 `mxt:technique` 组件，不带组件的玉简只是一块玉简。 |
+| 手里有手册，判据还是不成立 | `mxt:main_hand_item` 只看主手；另外手册的身份是堆上的 `mxt:technique` 组件，不带组件的功法书只是一本书。 |
 | 走远了照样有成果 | 判据只写在 `tick_condition` 里——那只管停不停，不管给不给；也可能是 `range` 开得太大。 |
 | 对方明明没在修，两人挨着也算 | 判据问的是"手上拿着什么"而不是"在不在修"。要求双方都入定就把 `mxt:cultivating` 加进 `tick_condition`。 |
 | 站在一起却挑不到这条法门 | `range` 是以自己为球心的球形半径，上限 `32`；`count` 的 `max` 写成 `1` 时，旁边多一个人就不成立。 |

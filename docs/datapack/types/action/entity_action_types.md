@@ -456,26 +456,24 @@ description: 模组注册的全部内置实体行为类型，以及每种类型�
 
 三个分量都必须求值为有限值，否则一点推力都不加。
 
-### `mxt:modify_storage`
+### `mxt:modify_ability_storage`
 
-写入某个宿主的一种已声明存储类型。
+写入某个技能的一种已声明存储类型。
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `family` | 注册表 id | **必填** | 宿主所在的数据包注册表。 |
-| `id` | 标识符 | **必填** | 宿主自身。 |
+| `id` | 标识符 | **必填** | 技能自身的 id。 |
 | `value` | 存储对象 | **必填** | 完整的存储对象。 |
 
 ```json
 {
-  "type": "mxt:modify_storage",
-  "family": "mxt:ability",
+  "type": "mxt:modify_ability_storage",
   "id": "example:sword_focus",
   "value": { "type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 1 }
 }
 ```
 
-宿主没有声明的类型以及运行期自身的游标都会被拒绝。只在服务端写；`family` 不是会保存存储的宿主家族、或宿主没声明 `value` 的这个类型时，记一条警告后什么都不写。
+技能没有声明的类型以及运行期自身的游标都会被拒绝。只在服务端写；`id` 找不到对应技能、或技能没声明 `value` 的这个类型时，记一条警告后什么都不写。
 
 ### `mxt:spawn_entity`
 

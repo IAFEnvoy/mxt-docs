@@ -55,7 +55,7 @@ The table below lists the mod's 41 datapack registries. In the field tables, "De
 | `heat_source` | `mxt/heat_source` | How hot and how fast a block heats a furnace. |
 | `incomplete` | `mxt/incomplete` | Marks an item as unfinished: the client draws a warning badge on its slot. |
 
-Seven of these — `item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding` and `blueprint_binding` — claim items through `items`, while `block_aura` and `heat_source` claim blocks through `blocks`; their shape is that of every other registry, and the file layout is on the [Datapack Development Overview](../overview.md).
+Seven of these — `item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding` and `blueprint_binding` — claim items (`currency` through `item`, the other six through `items`), while `block_aura` and `heat_source` claim blocks through `blocks`; their shape is that of every other registry, and the file layout is on the [Datapack Development Overview](../overview.md).
 
 ## Built-in Type Dispatch
 

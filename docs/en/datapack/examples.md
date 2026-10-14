@@ -38,7 +38,7 @@ Do not invent a `tags` key in place of the vanilla tags; tag files live under `d
 
 ## Aura, Elements and Common Bindings
 
-These examples chain the common systems into one minimal loop: resources, realms, the aura environment, cultivation actions and item fuel all come from the data pack; the items you can actually hold are still registered by KubeJS or another mod, and the data pack only claims them with definitions. The item-keyed registries (`item_aura`, `item_binding` and the rest) claim items through `items`, the block-keyed ones (`block_aura`, `heat_source`) claim blocks through `blocks`, and their files live under the content pack's own `data/<namespace>/mxt/<registry>/`.
+These examples chain the common systems into one minimal loop: resources, realms, the aura environment, cultivation actions and item fuel all come from the data pack; the items you can actually hold are still registered by KubeJS or another mod, and the data pack only claims them with definitions. The item-keyed registries (`item_aura`, `item_binding` and the rest) claim items through `items` (`currency` through `item`), the block-keyed ones (`block_aura`, `heat_source`) claim blocks through `blocks`, and their files live under the content pack's own `data/<namespace>/mxt/<registry>/`.
 
 Resource definition. `max` is an expression, one entry in `bars` adds an on-screen bar for this resource, `renderer` uses the `mxt:boss_bar` atlas, and `bar_index` picks which cell of that atlas.
 

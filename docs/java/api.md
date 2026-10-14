@@ -42,7 +42,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 
 包 `com.iafenvoy.mxt.registry`。40 张原生数据包注册表的声明与统一读取入口，`/reload` 重建与客户端同步都交给原版注册表系统，这个类**不持有任何快照**。
 
-九张物品/方块表（`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`、`block_aura`、`heat_source`）也在这里：它们就是普通的数据包注册表，物品键的按 `items` 认领条目、方块键的按 `blocks` 认领条目，读法与下面完全一样，没有第二套入口。要按物品堆查"哪条定义适用于它"用 `ItemMatcher.find(...)`。字段与文件位置见[注册表总览](/datapack/json/index)。
+九张物品/方块表（`item_aura`、`currency`、`default_quality`、`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding`、`block_aura`、`heat_source`）也在这里：它们就是普通的数据包注册表，物品键的按 `items` 认领条目（`currency` 用 `item`）、方块键的按 `blocks` 认领条目，读法与下面完全一样，没有第二套入口。要按物品堆查"哪条定义适用于它"用 `ItemMatcher.find(...)`。字段与文件位置见[注册表总览](/datapack/json/index)。
 
 按 id / holder 取值（读服务端注册表）：
 
@@ -161,7 +161,7 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 
 包 `com.iafenvoy.mxt.data`。**读**那条「表 → 可选项」目录的入口：`/picker` 界面与别的模组都走它。每一项是一行 `PickerItem(stack, names)`：`stack` 是要画的堆，`names` 是这一行能被哪些名字搜到。它只读——不往物品上写东西，也不判定谁能拿。
 
-分类就是一张注册表：`ItemPickerManager.categories()` 按登记顺序给出 `ResourceKey<Registry<?>>` 列表，命令与开屏包用的分类 id 就是 `key.identifier()`。行怎么来由那张注册表自己的 provider 决定——物品形状的表（`item_aura`、`currency`、`default_quality`、各种 binding…）一行是它 `items` 认领到的那件物品，方块形状的表（`block_aura`、`heat_source`）一行是它 `blocks` 认领到的那个方块，行名用条目自己的名字（定义写了 `name` 就读它，否则按 id 推翻译键）。所以 `CreativeTabHelper` 的重载只收注册表 key，没有分类对象那一套。
+分类就是一张注册表：`ItemPickerManager.categories()` 按登记顺序给出 `ResourceKey<Registry<?>>` 列表，命令与开屏包用的分类 id 就是 `key.identifier()`。行怎么来由那张注册表自己的 provider 决定——物品形状的表（`item_aura`、`currency`、`default_quality`、各种 binding…）一行是它认领到的那件物品（`currency` 看 `item`，其余看 `items`），方块形状的表（`block_aura`、`heat_source`）一行是它 `blocks` 认领到的那个方块，行名用条目自己的名字（定义写了 `name` 就读它，否则按 id 推翻译键）。所以 `CreativeTabHelper` 的重载只收注册表 key，没有分类对象那一套。
 
 匹配条目里**只有物品与标签能直接点名物品**，其余条目会拿**每一件已注册物品**试一遍（通配符、正则、整份材料、`mxt:spirit_storage` 这类都能这样出行）；**只有读堆数据的那几种**（`mxt:quality` 的档位、`mxt:technique` 组件、按药性筛的灵草）对裸物品答否，因此不出行。
 
@@ -544,7 +544,7 @@ public interface QualityProvider {
 
 `ExchangeOffer(output, cost)` 是一条报价：`output()` 返回的是**拷贝**，可以直接改而不污染别的报价。
 
-`CurrencyValue.UnavailableWhen(ItemCondition condition, Component reason)` **不是枚举**，是一个 record——"有哪些取值"由数据包的 `unavailable_when` 列表决定，`reason` 是给玩家看的可翻译文本而不是错误码。
+`CurrencyValue.unavailableWhen` 是一列 `DescribedEntry<ItemCondition>`（形状与绑定表的 `conditions` 同一个）**不是枚举**——"有哪些取值"由数据包的 `unavailable_when` 列表决定，那段 `description` 是给玩家看的可翻译文本而不是错误码。
 
 要点：
 

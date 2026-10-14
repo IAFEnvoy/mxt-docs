@@ -192,7 +192,7 @@ Reopen the world first (datapack registries are read while the **world loads**, 
 | `difficulty_scale` of `0` or a negative number | Not a load error, but waits resolve to `-1`: with any `mxt:idle` present the start is refused (`invalid_entry`); a timeline of only `mxt:action` beats instead "succeeds" instantly. |
 | A formula using bare `level` gives `0` | Tribulation formulas run in an entity context, where `level` / `realm_rank` (which need a resource context) are unavailable. Use `caster_level` for the caster's vanilla experience level. |
 | A timeline edit does not change a run in progress | The timeline is copied into the attachment when the run starts, so `/reload` only affects the next one. |
-| Writing `mxt:entry_began` / `mxt:idle_countdown` with `mxt:modify_storage` does nothing | Those two kinds belong to the tribulation's own timeline state and no ability type declares them, so `mxt:modify_storage` cannot write them; only a WARN is logged. |
+| Writing `mxt:entry_began` / `mxt:idle_countdown` with `mxt:modify_ability_storage` does nothing | Those two kinds belong to the tribulation's own timeline state and no ability type declares them, so `mxt:modify_ability_storage` cannot write them; only a WARN is logged. |
 | The sky does not darken | `darken_sky` is written as `false`, or no **player** nearby is running a tribulation — both the darkening and the countdown read the attachment on players: your own run always counts, another player's counts within 160 blocks, and a tribulation on a mob takes no part. |
 
 ## Next

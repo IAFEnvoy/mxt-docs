@@ -42,7 +42,7 @@ Three things up front:
 
 Package `com.iafenvoy.mxt.registry`. The declarations of the 40 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
 
-The nine item/block tables (`item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`, `block_aura`, `heat_source`) are here too: they are ordinary datapack registries, the item-keyed ones claim their entries through `items` and the block-keyed ones through `blocks`, and they are read exactly like everything below. To ask "which definition applies to this stack", use `ItemMatcher.find(...)`. Fields and file locations are in [Registry Overview](/en/datapack/json/index).
+The nine item/block tables (`item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`, `block_aura`, `heat_source`) are here too: they are ordinary datapack registries, the item-keyed ones claim their entries through `items` (`currency` through `item`) and the block-keyed ones through `blocks`, and they are read exactly like everything below. To ask "which definition applies to this stack", use `ItemMatcher.find(...)`. Fields and file locations are in [Registry Overview](/en/datapack/json/index).
 
 Reading a value by id / holder (it reads the **server** registry):
 
@@ -161,7 +161,7 @@ Key points:
 
 Package `com.iafenvoy.mxt.data`. The **read** side of the "table → selectable rows" catalogue: `/picker` and other mods both go through it. Each entry is one `PickerItem(stack, names)` row: `stack` is what is drawn, `names` are the names that row can be searched by. It is read-only — it writes nothing onto items and decides nothing about who may take them.
 
-A category is just a registry: `ItemPickerManager.categories()` gives the `ResourceKey<Registry<?>>` list in registration order, and the category id the command and the open packet use is `key.identifier()`. Where the rows come from is decided by that registry's own provider — an item-shaped table (`item_aura`, `currency`, `default_quality`, the various bindings…) keeps one row per item its `items` claims, a block-shaped table (`block_aura`, `heat_source`) one row per block its `blocks` claims, and a row is named by the entry's own name (its `name` if the definition writes one, otherwise a translation key derived from the id). That is why every `CreativeTabHelper` overload takes a registry key and there is no category object.
+A category is just a registry: `ItemPickerManager.categories()` gives the `ResourceKey<Registry<?>>` list in registration order, and the category id the command and the open packet use is `key.identifier()`. Where the rows come from is decided by that registry's own provider — an item-shaped table (`item_aura`, `currency`, `default_quality`, the various bindings…) keeps one row per item it claims (`currency` through `item`, the rest through `items`), a block-shaped table (`block_aura`, `heat_source`) one row per block its `blocks` claims, and a row is named by the entry's own name (its `name` if the definition writes one, otherwise a translation key derived from the id). That is why every `CreativeTabHelper` overload takes a registry key and there is no category object.
 
 Among matcher entries **only an item and a tag name their items outright**; every other entry is asked of **each registered item** instead (wildcards, regexes, a whole ingredient and capabilities such as `mxt:spirit_storage` all produce rows that way), and only the entries that read stack data (a `mxt:quality` tier, the `mxt:technique` component, a spirit herb filtered by its properties) answer no for a bare stack and therefore add no row.
 
@@ -544,7 +544,7 @@ Package `com.iafenvoy.mxt.runtime.economy`. The **server-side read API** for ite
 
 `ExchangeOffer(output, cost)` is one quote: `output()` returns a **copy**, so it can be modified without polluting another quote.
 
-`CurrencyValue.UnavailableWhen(ItemCondition condition, Component reason)` **is not an enum** but a record — "which values exist" is decided by the datapack's `unavailable_when` list, and `reason` is translatable text meant for the player rather than an error code.
+`CurrencyValue.unavailableWhen` is a list of `DescribedEntry<ItemCondition>` (the same shape as a binding's `conditions`) and **is not an enum** — "which values exist" is decided by the datapack's `unavailable_when` list, and that `description` is translatable text meant for the player rather than an error code.
 
 Key points:
 
