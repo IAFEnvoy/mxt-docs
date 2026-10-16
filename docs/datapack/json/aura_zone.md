@@ -224,7 +224,7 @@ aside: false
 
 ## 阵法联动
 
-阵法定义可以带一个 `mxt:buff` 功能模块，在其中增加 `aura_zone`：
+阵法定义可以带一个 `mxt:aura` 功能模块来覆写阵地所在的区域：
 
 ```json
 {
@@ -232,7 +232,7 @@ aside: false
   "radius": 8,
   "actions": [
     {
-      "type": "mxt:buff",
+      "type": "mxt:aura",
       "max_bonus": { "example:spirit_power": 50 },
       "aura_zone": "example:spirit_gathering"
     }

@@ -462,18 +462,18 @@ description: 模组注册的全部内置实体行为类型，以及每种类型�
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `id` | 标识符 | **必填** | 技能自身的 id。 |
+| `ability` | 标识符 | **必填** | 技能自身的 id。 |
 | `value` | 存储对象 | **必填** | 完整的存储对象。 |
 
 ```json
 {
   "type": "mxt:modify_ability_storage",
-  "id": "example:sword_focus",
+  "ability": "example:sword_focus",
   "value": { "type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 1 }
 }
 ```
 
-技能没有声明的类型以及运行期自身的游标都会被拒绝。只在服务端写；`id` 找不到对应技能、或技能没声明 `value` 的这个类型时，记一条警告后什么都不写。
+技能没有声明的类型以及运行期自身的游标都会被拒绝。只在服务端写；`ability` 找不到对应技能、或技能没声明 `value` 的这个类型时，记一条警告后什么都不写。
 
 ### `mxt:spawn_entity`
 

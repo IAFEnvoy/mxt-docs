@@ -8,7 +8,7 @@ aside: false
 
 File location: `data/<namespace>/mxt/formation/<path>.json`
 
-A `formation` defines one array: its structure, radius, resource costs, lifecycle behaviour, and **what it does** (the function modules in `actions`). A running array can also provide a temporary aura override and an aura maximum bonus.
+A `formation` defines one array: its structure, radius, resource costs, and **what it does** (the function modules in `actions`). Activation, every period and dismantling are modules too, and so is the runtime aura override with its capacity bonus (`mxt:aura`).
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -21,13 +21,7 @@ A `formation` defines one array: its structure, radius, resource costs, lifecycl
 | `maintenance_costs` | Array, entries on [`Cost`](../types/shared_data_types.md#cost) | `[]` | Paid once per maintenance period; **the aura supplied by blocks inside the array and the array's own store offset it, in that order, and the owner pays the shortfall**, and the array fails when the payment cannot be made — a zero shortfall keeps it running with the owner offline. `mxt:item` and `mxt:js` can never be paid here. |
 | `storage` | Storage declaration | none (disabled) | The array's own store: `capacity` (a map from aura ID to a number, **required**) says how much of each aura it may hold. It stores the surplus its own ley line supplies, and the paying order becomes ley line → store → owner. A generic field, so any array may write it. |
 | `actions` | Array | `[]` | **What this array does**: the list of function modules, see [Formation modules](#formation-modules). |
-| `spare_friends` | boolean | `false` | The **friend-or-foe switch**: whether the per-entity work reaches everyone inside the covered range, or goes through a friend-or-foe decision first (friends, and anything it cannot identify, are then unaffected). It only picks "everyone" or "identified", and **does not mean the array is an attacking one** — that is what `actions` says, see "Friend or foe". |
-| `activate_action` | Block Action | `mxt:no_op` | The activation block behaviour. |
-| `tick_action` | Block Action | `mxt:no_op` | The periodic block behaviour, with a **Level** context. |
-| `deactivate_action` | Block Action | `mxt:no_op` | The removal block behaviour, with a **Level** context. |
-| `entity_tick_action` | Entity Action | `mxt:no_op` | Run for **every** entity inside the radius each period. |
-| `entity_enter_action` | Entity Action | `mxt:no_op` | Run when an entity enters the radius. |
-| `entity_exit_action` | Entity Action | `mxt:no_op` | Run when an entity leaves the radius, or when the array is dismantled. |
+| `spare_friends` | boolean | `false` | The **friend-or-foe switch**: whether the per-entity beats reach everyone inside the covered range, or go through a friend-or-foe decision first (friends, and anything it cannot identify, are then unaffected). It only picks "everyone" or "identified", and **does not mean the array is an attacking one** — that is what `actions` says, see "Friend or foe". |
 
 `quality` is optional: plates are the one item every array shares, so the item itself cannot say which tier it is — only the array the stack carries can: a plate carrying this array starts on that tier. The tier is read off **the array stored on the plate**, not off anything filtered through the plate's allow list: an array outside the plate's allow list, one whose activation would be refused, still names its tier. An `mxt:quality` component on the stack wins; with no `quality` here this layer answers nothing and resolution continues to the [default_quality](./default_quality.md) registry.
 
@@ -35,7 +29,7 @@ A `formation` defines one array: its structure, radius, resource costs, lifecycl
 
 ## Formation modules (`actions`) {#formation-modules}
 
-`actions` answers "what this array **does**". It is a list of modules; each entry picks one kind of function with `type` and carries only the fields it needs — structure, radius, costs and the lifecycle hooks stay at the top level, while the parameters of a function go inside the module.
+`actions` answers "what this array **does**". It is a list of modules; each entry picks one kind of function with `type` and carries only the fields it needs — structure, radius, costs and `spare_friends` stay at the top level, while **activation, every period and dismantling are written here too** (`mxt:activate` / `mxt:tick` / `mxt:inactivate`, each with one block action and one entity action).
 
 ```json
 {
@@ -52,12 +46,12 @@ A `formation` defines one array: its structure, radius, resource costs, lifecycl
 Rules:
 
 - **The same type may appear more than once** and the list is not merged — two attack modules with different numbers are two strikes.
-- **Modules and the generic hooks stack**: each period **runs the modules first and `entity_tick_action` after them**, so a custom hook reads the state the modules left behind. A module that acts on the array itself (currently only `mxt:range_display`) works the same way and runs before `tick_action`.
-- **A module only runs for the entities the array covers**, and who is covered is decided by the top-level `spare_friends`: write it and the generic hooks and every module act on non-friends only; leave it out and everything inside the radius is covered.
+- **The execution order is the list order**, and there is no second order: write a module after another to read what that one left behind.
+- **The per-entity passes only reach the entities the array covers**, and who is covered is decided by the top-level `spare_friends`: write it and the per-entity beats act on non-friends only; leave it out and everything inside the radius is covered. The beats that act on the array itself are not affected by that switch.
 - **A misspelled `type` fails the load** rather than degrading to "does nothing" — nearly every module field is optional, so a silent fallback would turn a typo into an array that just stands there.
-- The built-ins are `mxt:attack`, `mxt:buff`, `mxt:protection`, `mxt:range_display`, and `mxt:none` (an empty module, and also the default entry of the dispatch table).
+- The built-ins are `mxt:attack`, `mxt:buff`, `mxt:aura`, `mxt:protection`, `mxt:particle`, `mxt:send_message`, `mxt:empty` (an empty module, and also the default entry of the dispatch table), and the three generic beats `mxt:activate`, `mxt:tick` and `mxt:inactivate`.
 
-**The fields each module reads, with their defaults and decision rules, are on [Formation module types](/en/datapack/types/other/formation-action)** — one module per section. This page keeps only the `actions` field itself and the semantics of the array as a whole.
+**Which beats each module answers, the fields it reads, their defaults and their decision rules are on [Formation module types](/en/datapack/types/other/formation-action)** — one module per section. This page keeps only the `actions` field itself and the semantics of the array as a whole.
 
 ## Structure: one of the two
 
@@ -92,9 +86,9 @@ Rules:
   >
   > **48×48×48 is the structure block's own limit, not the array's.** Both axis constants are `48` and are only used to clamp when the structure block reads its own NBT; the underlying structure template format (reading `size` from NBT) has no size limit at all, and a structure block in LOAD mode loading a larger template **adopts the template's size** rather than clamping it to 48. So a template above 48³ cannot be made by **hand selection** with the structure block, but a file produced by an external tool and verified with `/place template` (which has no size check either) can be referenced by an array as usual — the problem is only "how to produce the file", not loading it.
 
-## The context of per-entity behaviour
+## The context of the per-entity beats
 
-`entity_tick_action` / `entity_enter_action` / `entity_exit_action` run once per entity and can read:
+A module's **per-entity** pass (`activate` / `tick` / `interval` / `inactivate`) runs once per entity and can read:
 
 | Name | Where | Meaning |
 | --- | --- | --- |
@@ -103,7 +97,7 @@ Rules:
 | `formation_x` / `formation_y` / `formation_z` | Formula explicit value | The controller's coordinates, ready to feed to `mxt:teleport`. |
 | The array's carrier | Context data | Records "which array, the owner list, where the controller is", consumed by `mxt:formation_owner` and `mxt:formation_ally`. |
 
-The context of `tick_action` / `deactivate_action` is **`Level`**, with only the `zero` and `random` variables — **do not write formulas that depend on entity state in them**.
+**The array's own pass has a `Level` context**, with only the `zero` and `random` variables — **do not write formulas that depend on entity state in it**. All three beats (`activate` / `tick` / `inactivate`) follow that one rule for their block action, with no exception.
 
 ## Array owners
 
@@ -118,25 +112,30 @@ The payer is the **first** name on the list (with a single owner, the only owner
 
 ## Friend or foe (ally protection)
 
-The top-level `spare_friends` is a **switch** and answers one thing only: whether this array's per-entity work goes to **everyone inside the covered range**, or through a **friend-or-foe decision** first (friends, and anything it cannot identify, are then unaffected). It **does not mean this array is an attacking one** — whether an array attacks or supports is what its `actions` say: one with `mxt:attack` hits people, one with `mxt:buff` gives buffs. The switch and the nature each mind their own end and neither infers the other.
+The top-level `spare_friends` is a **switch** and answers one thing only: whether this array's per-entity beats go to **everyone inside the covered range**, or through a **friend-or-foe decision** first (friends, and anything it cannot identify, are then unaffected). It **does not mean this array is an attacking one** — whether an array attacks or supports is what its `actions` say: one with `mxt:attack` hits people, one with `mxt:buff` gives buffs. The switch and the nature each mind their own end and neither infers the other.
 
 - **Left out (the default) means it applies to everyone**, owners and friends included. To make an attacking array spare your own side you have to write `"spare_friends": true` explicitly; forgetting it means a punch in the owner's face, and that is deliberate — the runtime does not guess the pack's intent.
-- **Once written**: friends and owners are unaffected by any per-entity work, strangers are affected as usual, and **anything that cannot be identified is let through too**.
+- **Once written**: friends and owners are unaffected by any per-entity beat, strangers are affected as usual, and **anything that cannot be identified is let through too**.
 
 - **Who counts as an ally** is answered by the friend system: it fires a friend-relation event first (other mods may answer, and the event carries the owner's **UUID**, so a source whose data lives on the server — team members and allies with FTB Teams installed, say — **can answer even while the owner is offline**), and only when nobody answers does it read the owner's own friend list. With several owners on the list, it **asks each one in turn**: **any one** of them recognising you makes you an ally (one saying no while the rest say nothing still means no). **The owner himself counts too** — in the friend decision "you are your own friend", so an array that declares the switch will not hurt the person who raised it, and no `mxt:formation_owner` condition is needed.
 - **When the owner cannot be resolved (offline, not loaded) it still asks by id first** (every name on the list): the event carries the owner's UUID, so a source such as FTB Teams still answers; the built-in friend system also keeps an offline mirror cache, and an owner who has logged in once still has an answer available. Only when **not one name on the list** can identify the entity (no owner record at all, or neither an entity nor a mirror that has seen this player, and no source that knows the pair) does an array that declares the switch **hold fire**: it does nothing to any entity, rather than "act on everyone". The list hangs on the player entity, and "hit everyone" would hit exactly the people this switch exists to protect, while "pick a few to spare" can only be a guess — when it cannot tell friend from foe, it does not open fire. Holding fire also means the abilities it granted are released (an exempted entity never enters the present set, see the next point). For an array that should "hit anyway while the owner is away" there are two routes: leave `spare_friends` out and write the decision yourself with `mxt:formation_ally` (it is always `false` outside an array or with no owner, so the "hit" branch is taken), or turn the server setting off.
-- An exempted entity **never enters the array's present set**, and so gets no `entity_enter_action` / `entity_exit_action`. The upside is that the abilities an array granted are released when the exemption takes effect; the cost is that **a change in friendship produces one "leave and enter again"**, so `entity_enter_action` still has to be idempotent.
+- An exempted entity **never enters the array's present set**, and so gets no `mxt:activate` / `mxt:inactivate` per-entity half. The upside is that the abilities an array granted are released when the exemption takes effect; the cost is that **a change in friendship produces one "leave and enter again"**, so the arriving half still has to be idempotent.
 - The server setting "Formations → Friend or Foe" (**on** by default) is the master switch: with it off, `spare_friends` might as well not exist and an array applies to everyone (the owner included). Being on by default changes no pack — `spare_friends` defaults to `false`.
 
 A pack can also decide for itself instead of relying on the automatic filter. `mxt:formation_ally` is an **entity condition** and answers, in an array context, "is this entity a friend of an owner" — **any one** owner recognising it is enough (it is always `false` when nobody on the list can answer; an owner who is merely offline is still asked by UUID through the event, down the same pipeline as every other decision). Judging each behaviour separately expresses what a single switch cannot — hurting enemies and healing allies from one array, for instance:
 
 ```json
-"entity_tick_action": {
-  "type": "mxt:if_else",
-  "condition": { "type": "mxt:formation_ally" },
-  "if_action": { "type": "mxt:heal", "amount": 1 },
-  "else_action": { "type": "mxt:damage", "amount": 2 }
-}
+"actions": [
+  {
+    "type": "mxt:tick",
+    "entity_action": {
+      "type": "mxt:if_else",
+      "condition": { "type": "mxt:formation_ally" },
+      "if_action": { "type": "mxt:heal", "amount": 1 },
+      "else_action": { "type": "mxt:damage", "amount": 2 }
+    }
+  }
+]
 ```
 
 The trade-off between the two routes:
@@ -159,7 +158,7 @@ Everything runs on a **20 tick** period, and one period fires three events in or
 | Event | Cancellable | Meaning |
 | --- | --- | --- |
 | `Tick` | ❌ | The upkeep has been settled. **Observation point**: hook here when something has to happen in every period that was paid for. |
-| `TickEffects` | ✅ | Blocks only `tick_action` and the per-entity behaviour. Cancelling **does not refund** — the array is still up and still being maintained. |
+| `TickEffects` | ✅ | Blocks only the periodic beat (the `tick` and `interval` beats, and the per-entity pass). `activate` / `inactivate` are not affected. Cancelling **does not refund** — the array is still up and still being maintained. |
 | `UpkeepFailed` | ✅ | The upkeep cannot be paid. Cancelling = nothing is paid and nothing is done this period, but the array **stays**; only without a cancellation is it dismantled. |
 
 The reason for splitting them: paying and cancelling have to be two different things. By the time `Tick` fires the money is already spent, and if it could be cancelled, "cancel" would mean both "nothing happens" and "the payer is still charged" in one sentence — an unconditional cancelling listener could drain the payer for no effect at all.
@@ -168,11 +167,11 @@ The reason for splitting them: paying and cancelling have to be two different th
 
 - The range is a **sphere**, not a box: the corners of a box would not take effect.
 - Everything runs on a **20 tick** period, which is also the granularity of entering and leaving: crossing an array within 20 ticks is not observed.
-- Unloading and loading a chunk produces one false "leave and enter", and after a server restart every entity inside is treated as newly arrived. So `entity_enter_action` **has to be idempotent**.
+- Unloading and loading a chunk produces one false "leave and enter", and after a server restart every entity inside is treated as newly arrived. So the per-entity half of `mxt:activate` **has to be idempotent**.
 
 ## Releasing the abilities an array granted
 
-The `source` of `mxt:grant_ability` should be the `mxt:formation/<namespace>/<path>` that matches the `formation`'s own id. The base reconciles that source and revokes all of its grants when an entity leaves, when the array is dismantled, and when a player leaves the array — otherwise the abilities stay on the entity forever (the ability record is a persistent attachment, and the context of `deactivate_action` cannot see entities). Not following the convention is not an error, it only loses the automatic cleanup.
+The `source` of `mxt:grant_ability` should be the `mxt:formation/<namespace>/<path>` that matches the `formation`'s own id. The base reconciles that source and revokes all of its grants when an entity leaves, when the array is dismantled, and when a player leaves the array — otherwise the abilities stay on the entity forever (the ability record is a persistent attachment, and the block action of `mxt:inactivate` cannot see entities). Not following the convention is not an error, it only loses the automatic cleanup.
 
 **That source belongs to the definition, not to one instance**: before revoking, the base asks whether any other instance of the same definition still covers the entity, so two arrays of one definition never take each other's grants away; the grants are only released once no instance reaches it any more (or all of them are gone). Another dimension does not count as covering.
 
@@ -239,14 +238,14 @@ A few boundaries:
 
 ## Aura overrides
 
-`aura_zone` is a field of the `mxt:buff` module and makes this array **replace** the aura resolved at the array's position (at a higher priority than biome / dimension / artificial regions):
+`aura_zone` on the `mxt:aura` module makes this array **replace** the aura resolved at the array's position (at a higher priority than biome / dimension / artificial regions):
 
 - The override is published through a cancellable aura override event — cancel it and the static result returns, with the array still standing.
 - The override is only in force **while the array is registered**, and dismantling falls back to the static resolution at once.
 - Aura answers are **memoised per tick**, so an array activated within one tick only affects aura queries on the next tick.
 - When they overlap, the **nearest array that declares an `aura_zone`** wins; an array that declares no zone (a terrain warding array, say) does not block the override of the cultivation array beside it.
 
-`max_bonus` is also a `mxt:buff` field and adds a ceiling to aura pools, with one coupling that has to be known: **it is only applied together with the override of `aura_zone`**. The bonus goes on the resources provided by "the zone selected after the override", so:
+`max_bonus` on the same module adds a ceiling to aura pools, with one coupling that has to be known: **it is only applied together with the override of `aura_zone`**. The bonus goes on the resources provided by "the zone selected after the override", so:
 
 - No `aura_zone` → no override → `max_bonus` has nowhere to go.
 - An `aura_zone` whose zone does not provide some aura → no bonus can be added to that aura (it does not conjure aura out of nothing).

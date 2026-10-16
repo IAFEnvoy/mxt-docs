@@ -7,31 +7,49 @@ description: Every built-in module of mxt:formation_action_type, with its fields
 
 ## `formation_action_type`
 
-The `actions` array of a [formation](../../json/formation.md) holds these function modules. Each entry picks a module by writing its ID in `type` and carries only the fields it needs — structure, radius, costs and lifecycle hooks stay at the top level of the formation. A datapack only picks an existing module and never adds one; an unknown `type` fails the load rather than degrading into doing nothing.
+The `actions` array of a [formation](../../json/formation.md) holds these function modules. Each entry picks a module by writing its ID in `type` and carries only the fields it needs — structure, radius, costs and `spare_friends` stay at the top level of the formation. A datapack only picks an existing module and never adds one; an unknown `type` fails the load rather than degrading into doing nothing.
 
-The same module may appear more than once, and the list is not merged: two attack modules with different parameters are two strikes.
+The same module may appear more than once, and the list is not merged: two attack modules with different parameters are two strikes. **The execution order is the list order**, and there is no second order.
 
-**`interval_periods` is a field shared by all four modules that run on a period** (`attack` / `buff` / `send_message` / `range_display`); it defaults to `1`, meaning every period, which behaves exactly as not writing the field at all. It counts **formation periods** rather than ticks: dispatch only ever lands on a period boundary (1 period = 20 ticks), so a tick count would be silently rounded to that grid. The phase comes from the **world clock** rather than a counter kept per module, so every entity inside one formation — and every formation running one definition — runs **on the same beat**; a larger interval never makes the people inside one formation receive a message in turn.
+### The four beats
+
+Every module is offered four beats, and which of them it answers is its own choice (not answering one means not writing that method):
+
+| Beat | The array itself | Per entity |
+| --- | --- | --- |
+| `activate` | once, after a successful activation and the index write | when an entity enters the radius (including everything already inside on the first period) |
+| `tick` | once every upkeep period | once per covered entity, every upkeep period |
+| `interval` | the same, but only on the beats this module's `interval_ticks` is due for | the same |
+| `inactivate` | once, when the formation is dismantled | when an entity leaves the radius, or when the formation is dismantled |
+
+`tick` and `interval` cover exactly the same ground and differ only in throttling: write `mxt:tick` to run on the upkeep period, and one of the modules that carries its own `interval_ticks` for any other rhythm. **Both sides have to be recognised by the module**: a module that only works on entities (`mxt:attack` / `mxt:buff` / `mxt:send_message`) does nothing on the array's own pass, and one that only works on the array (`mxt:particle`) does nothing on the per-entity pass.
+
+**`interval_ticks` is a field shared by all four throttled modules** (`attack` / `buff` / `send_message` / `particle`); its unit is **ticks**, it must be a **multiple of 10** (any other value fails the whole definition), and it runs from `10` to `24000`. A formation takes a beat every **10 ticks**, while the upkeep bill, `mxt:tick` and the enter/exit check are counted in the **20-tick** upkeep period — a display being allowed to refresh faster than the array pays is exactly why this field exists. The phase comes from the **world clock** rather than a counter kept per module, so every entity inside one formation — and every formation running one definition — runs **on the same beat**; a larger interval never makes the people inside one formation receive a message in turn.
+
+### The context
+
+The array's own passes know nothing but **`Level`**, so their formulas only have `zero` and `random`. The per-entity passes are evaluated against that entity and additionally carry `formation_radius` / `distance` / `formation_x` / `formation_y` / `formation_z`, and can read the formation carrier (which `mxt:formation_owner` and `mxt:formation_ally` consume).
 
 ```json
 {
   "actions": [
     {"type": "mxt:protection", "delegate_to_claims": true},
-    {"type": "mxt:range_display", "particle": {"type": "minecraft:end_rod"}, "shape": "ring"}
+    {"type": "mxt:aura", "aura_zone": "example:fireland"},
+    {"type": "mxt:particle", "shape": "mxt:five"}
   ]
 }
 ```
 
-### `mxt:none`
+### `mxt:empty`
 
 An empty module that does nothing. It is also the default entry of this dispatch table, and writing it is the same as not writing it.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| — | — | — | No fields. |
+| — | — | — | No fields, and no beat answered. |
 
 ```json
-{"type": "mxt:none"}
+{"type": "mxt:empty"}
 ```
 
 ### `mxt:attack`
@@ -45,7 +63,7 @@ Attacks entities inside the radius.
 | `attribute_to_owner` | Boolean | `true` | Credits the **first owner** (the head of the list, the one who raised the formation) as the attacker |
 | `effects` | Array | `[]` | Status effects applied each period; the fields are exactly those of `mxt:apply_effect`: `effect` / `duration_ticks` / `amplifier` |
 | `target_condition` | `EntityCondition` | always true | An extra filter on the **target entity** (undead only, players only, …), evaluated after the friend-or-foe decision |
-| `interval_periods` | Integer `1..1200` | `1` | How often to strike, in formation periods (1 period = 20 ticks) |
+| `interval_ticks` | Integer, a multiple of 10, `10..24000` | `20` | How often to strike, in ticks (`20` = one upkeep period) |
 
 ```json
 {"type": "mxt:attack", "damage": 8, "damage_type": "minecraft:lightning_bolt"}
@@ -61,15 +79,13 @@ When the damage resolves to a non-finite value or one ≤ 0 the hit is not struc
 
 ### `mxt:buff`
 
-Grants abilities to entities inside the radius, overrides the aura zone of the area and raises aura capacity.
+Grants abilities to entities inside the radius.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `abilities` | List of ability IDs or `#tags` | `[]` | Abilities granted to matching entities |
 | `target` | Enum | `all` | Which entities the module applies to: `all`, `allies` or `owner` |
-| `aura_zone` | Aura zone ID | none | A high-priority runtime aura override that replaces the aura resolved at the formation's position |
-| `max_bonus` | Map from aura ID to `NumberProvider` | `{}` | Extra aura capacity per aura, for the chunks in range |
-| `interval_periods` | Integer `1..1200` | `1` | How often to re-grant, in formation periods (1 period = 20 ticks) |
+| `interval_ticks` | Integer, a multiple of 10, `10..24000` | `20` | How often to re-grant, in ticks |
 
 ```json
 {"type": "mxt:buff", "abilities": ["example:blessing"], "target": "allies"}
@@ -79,13 +95,30 @@ A granted ability is revoked automatically when the entity leaves the radius, wh
 
 The three `target` settings are one rule at three widths: `all` filters nothing; `allies` requires the friend check to answer `true` — the check asks **every** owner on the list, any one of them recognising you is enough, and **an owner counts as a friend of themselves**, so `allies` includes the whole list; when it cannot identify, it gives nothing. `owner` only reads the UUID list and is a narrower way of writing the same thing.
 
-`aura_zone` outranks the biome / dimension / artificial regions, and the override is only in force while the formation is registered; for the full rules see "Aura overrides" on the [formation](../../json/formation.md) page.
-
-`max_bonus` is only applied together with the `aura_zone` override: with no `aura_zone` there is nowhere to add it, and an aura the zone does not provide cannot be raised either (it does not conjure aura out of nothing). When several bonuses land on the same aura, the highest wins.
-
 Attribute bonuses do not look for a field here: passive attributes are the `modifiers` field of the `mxt:modifier` ability itself, so granting an `mxt:modifier` ability is the same as granting its attribute modifiers; there is no second entry point, or the same thing would have two sets of rules — including the easiest part to get wrong, "a modifier outliving the formation that granted it".
 
-`interval_periods` only makes the **re-granting** sparser and does not affect **revoking**: granting is idempotent, so an ability already handed out stays in force through the periods that are skipped. Leaving the radius and dismantling the formation are the two revoke paths that **ignore this field** and take effect at once; only "standing still while an owner stops treating you as a friend" waits for the next due period, because that one is decided in passing during the re-granting pass.
+Overriding the aura of the formation's ground is not here either; that is the separate `mxt:aura`.
+
+`interval_ticks` only makes the **re-granting** sparser and does not affect **revoking**: granting is idempotent, so an ability already handed out stays in force through the beats that are skipped. Leaving the radius and dismantling the formation are the two revoke paths that **ignore this field** and take effect at once; only "standing still while an owner stops treating you as a friend" waits for the next due beat, because that one is decided in passing during the re-granting pass.
+
+### `mxt:aura`
+
+Replaces the aura resolved at the formation's own position and raises its ceiling. It **answers no beat** — it is a declaration, and the aura query reads it directly.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `aura_zone` | Aura zone ID | **required** | A high-priority runtime aura override that replaces the aura resolved at the formation's position |
+| `max_bonus` | Map from aura ID to `NumberProvider` | `{}` | Extra capacity per aura, for the zone the override selected |
+
+```json
+{"type": "mxt:aura", "aura_zone": "example:fireland", "max_bonus": {"mxt:common": 50}}
+```
+
+`aura_zone` outranks the biome / dimension / artificial regions, and the override is only in force while the formation is registered; for the full rules see "Aura overrides" on the [formation](../../json/formation.md) page.
+
+`max_bonus` is only applied together with the override: with no override there is nowhere to add it, and an aura the zone does not provide cannot be raised either (it does not conjure aura out of nothing). When several bonuses land on the same aura, the highest wins.
+
+That is why `aura_zone` is **required**: a module writing only `max_bonus` would never have anything to apply to, so it is refused as a mistake.
 
 ### `mxt:protection`
 
@@ -183,27 +216,32 @@ A protecting formation is a claim of jurisdiction, not just a building: being al
 
 **Projectiles.** `attack_entity` blocks melee swings (the event the game fires on the **attacker's** side), so an arrow shot from inside the formation does not count as "the attacker is attacking right now" when it lands, and is not blocked.
 
-### `mxt:range_display`
+### `mxt:particle`
 
-Draws the radius outline with particles.
+Draws a formation's figure with particles: the figure is one [`formation_shape`](../../json/formation_shape.md) definition, and both the outer ring and the star inside it are strokes of it.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `particle` | Particle options | **required** | Particle drawn along the outline |
-| `shape` | Enum | `ring` | Outline shape: `ring` is a horizontal circle at the controller's height (a ground line), `sphere` covers the whole sphere |
-| `points` | Integer `1..512` | `32` | How many points to draw each period |
-| `interval_periods` | Integer `1..1200` | `1` | How often to draw, in formation periods (1 period = 20 ticks) |
+| `shape` | Figure id | **required** | Which figure to draw, naming a [`formation_shape`](../../json/formation_shape.md). The mod ships `mxt:five` (ring plus pentagram), `mxt:six` (ring plus two triangles) and `mxt:eight` (ring plus two squares). |
+| `duration_ticks` | Integer `0..24000` | `0` | How many ticks the figure takes to draw itself from the moment the array was raised; `0` skips the animation and the first order already carries the whole figure |
+| `interval_ticks` | Integer, a multiple of 10, `10..24000` | `10` | How often a keep-alive is sent, in ticks (the default is every beat). It only decides how often the server confirms "still drawing" and re-aligns the progress, **not how smooth the picture is** |
 
 ```json
-{"type": "mxt:range_display", "particle": {"type": "minecraft:end_rod"}, "shape": "ring"}
+{"type": "mxt:particle", "shape": "mxt:five"}
 ```
 
-A formation's range is a sphere, and nothing in the world says where it ends — the structure only marks the controller. This module draws that line. It only acts on the formation itself: it affects no entity, does not make the formation hostile, and takes no part in the friend-or-foe decision; a formation that does not write this module costs nothing at all.
+**The figure's coordinates, where its strokes start, their colour, their density and their window are all on the figure's own page**: coordinates are in units of the array's radius, direction 0 is due east, and every stroke is cut at its own length and its own `start` / `end` window. Colour, `spacing` and `size` are written on the stroke, and this module knows about none of them. What it decides is how that figure is drawn:
 
-- It is only sent to **players who can see it**: within the radius **+ 32 blocks**. Vanilla's broadcast call is pinned at 32 blocks, so this sends per player instead — otherwise a formation with a radius above 32 would have a ring of its outline cut off. One particle packet per point, so `points` times the number of players who can see it is the cost per period.
-- `ring` is drawn at the **centre height of the controller block**; `sphere` lays points out by the golden angle, so a latitude/longitude grid does not bunch them up at the poles.
-- It runs after `TickEffects` and before `tick_action`, so **cancelling the period of `TickEffects` stops the range from being drawn along with it**.
-- Several may be written to layer different particles.
+`duration_ticks` makes the figure grow out of the controller: progress is "ticks since the array was raised divided by `duration_ticks`" and stops changing at 1. **The clock that draws it belongs to the client**: each beat the server sends one "still drawing" order carrying the progress so far and the time left, and the client lays out the part that already exists at once and grows the rest on its own timer. The figure therefore moves at the client's frame rate and no value of `interval_ticks` makes it stutter; walking up late, logging in mid-draw-in, or picking the orders back up after a local hitch all show the **correct progress** rather than a replay. `0` means no animation. Raising the array again restarts the timing; a formation read back from an older save counts as already drawn.
+
+- It is only sent to **players who can see it**: within the radius **+ 32 blocks**. Vanilla's broadcast call is pinned at 32 blocks, so this sends per player instead — otherwise a formation with a radius above 32 would have a ring of its outline cut off. **One packet per player per beat**: the packet carries only the figure's id and the client reads its own copy of the definition, so a dense figure costs nothing extra on this wire.
+- The client **adds only the piece that has just grown** on each of its ticks and re-lays the whole figure every 10 ticks (dust lives longer than that, so the older part never goes out first): a `duration_ticks` draw-in lays out about one figure's worth of points in total, so being smooth costs nothing extra.
+- Once the keep-alives stop, so does the drawing: that covers an array being taken down and a player walking out of range. The window is twice `interval_ticks` (at least 30 and at most 200 client ticks), and the dust already placed fades on its own — taking an array down is "stop drawing, then fade", not a snap.
+- It draws `minecraft:dust`, which is **not culled by the 32-block distance check or by the particle setting**, so the far half of a large ring is drawn too.
+- It is drawn **0.1 blocks above the bottom of the controller block**, flat on the ground. How dense the line is and how big its dusts are is up to each stroke's own `spacing` and `size`; scale those up together for a large radius.
+- It only acts on the formation itself: it affects no entity, does not make the formation hostile, and takes no part in the friend-or-foe decision; a formation that does not write this module costs nothing at all.
+- It runs before the per-entity passes, so **cancelling that beat of `TickEffects` stops the range from being drawn along with it**.
+- Several may be written to layer different colours.
 
 ### `mxt:send_message`
 
@@ -214,14 +252,55 @@ Sends a message to the players a formation covers.
 | `message` | Text | **required** | A string is read as a translation key, an object as a full text component |
 | `channel` | Enum | `chat` | `chat` puts it in the chat log, `action_bar` above the hotbar |
 | `recipients` | `EntityCondition` | always true | Asked **per covered entity**; when it does not hold, that entity is not told |
-| `interval_periods` | Integer `1..1200` | `1` | How often to send, in formation periods (1 period = 20 ticks) |
+| `interval_ticks` | Integer, a multiple of 10, `10..24000` | `20` | How often to send, in ticks |
 
 ```json
 {"type": "mxt:send_message", "message": "example.array.warning", "channel": "action_bar"}
 ```
 
-It runs on the formation period and **runs once per covered entity**, so each person gets their own message rather than the whole area getting one broadcast. It is not addressed to the owner: whoever stands inside the radius receives it, the owner included.
+It runs on the upkeep period (20 ticks) and **runs once per covered entity**, so each person gets their own message rather than the whole area getting one broadcast. It is not addressed to the owner: whoever stands inside the radius receives it, the owner included.
 
 `recipients` is evaluated per person, so only some of them can be warned (only the owner's enemies, only friends, only one kind of creature). Non-player entities receive nothing, and asking the condition about them means nothing.
 
 It only affects the recipients: it takes no part in the friend-or-foe decision and does not change whether the formation is hostile.
+
+### `mxt:activate`
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `block_action` | Block action | `mxt:no_op` | Run once on the array itself after a successful activation, with a **Level** context |
+| `entity_action` | Entity action | `mxt:no_op` | Run once on an entity when it enters the radius |
+
+```json
+{"type": "mxt:activate", "entity_action": {"type": "mxt:apply_effect", "effect": "minecraft:glowing", "duration_ticks": 200}}
+```
+
+`entity_action` also runs for the entities that were **already inside when the formation was raised** (there is no "who was inside last period" record yet), so it has to be idempotent: unloading and loading a chunk, or restarting the server, makes it run again.
+
+Writing only one of the two fields is fine, and writing neither is the same as `mxt:empty`.
+
+### `mxt:tick`
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `block_action` | Block action | `mxt:no_op` | Run once on the array itself every period, with a **Level** context |
+| `entity_action` | Entity action | `mxt:no_op` | Run once per **every** covered entity inside the radius each period |
+
+```json
+{"type": "mxt:tick", "block_action": {"type": "mxt:no_op"}}
+```
+
+This is the **upkeep period** setting (20 ticks) and does not throttle itself; for any other rhythm use one of the four modules that carry their own `interval_ticks`: `mxt:attack` / `mxt:buff` / `mxt:send_message` / `mxt:particle`.
+
+### `mxt:inactivate`
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `block_action` | Block action | `mxt:no_op` | Run once on the array itself when it is dismantled, with a **Level** context |
+| `entity_action` | Entity action | `mxt:no_op` | Run once on an entity when it leaves the radius, or when the formation is dismantled |
+
+```json
+{"type": "mxt:inactivate", "block_action": {"type": "mxt:no_op"}}
+```
+
+When a formation is dismantled, **every entity it was tracking runs first** (its `entity_action` and the release of what it was granted), and only then does `block_action` run — a block action cannot see entities, so that is the only order available.

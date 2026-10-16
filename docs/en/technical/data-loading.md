@@ -44,7 +44,7 @@ What each binding-layer table adds:
 | `item_binding` | Actions after finishing an item, conditions, what the item is made of | `LivingEntityUseItemEvent.Finish` |
 | `weapon_binding` | Attack / use / per-tick actions, plus `attributes` written into the stack's `ATTRIBUTE_MODIFIERS` | On attack, on use, refreshed every tick |
 | `pill_binding` | Which pill this item family is, plus its own use cap and cooldown | On a dose (gate and count) |
-| `technique_binding` | Which technique the item teaches, and how long, in what pose and behind which conditions it is read | When a technique is read |
+| `technique_binding` | Which technique the item counts as a manual of, and the conditions that gate learning it | When a technique is read |
 | `tool_binding` | Which forging methods the tool unlocks | Forging |
 | `blueprint_binding` | Which forging blueprints the item provides | Forging |
 

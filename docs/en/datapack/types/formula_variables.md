@@ -147,8 +147,8 @@ An ability with the `mxt:triggered` type is evaluated when its trigger fires, an
 | Variable | Provided by | Description |
 |----------|-------------|-------------|
 | `damage` | Contract combat actions | Damage the contracted spirit beast just dealt |
-| `formation_radius` | Formation `entity_tick_action` | Radius of the active formation |
-| `distance` | Formation `entity_tick_action` | Distance in blocks between the formation centre and the entity |
+| `formation_radius` | A formation's per-entity beats | Radius of the active formation |
+| `distance` | A formation's per-entity beats | Distance in blocks between the formation centre and the entity |
 | `aura_tribulation_modifier` | Tribulation timeline | Local aura influence, taken from the `tribulation_modify` rule of the aura zone and sampled once when each timeline entry begins |
 
 ### Secret Realm Values
@@ -206,9 +206,9 @@ Which variables a formula can read is decided by the objects the caller puts int
 | Spirit herb potency (`main_effects`, `auxiliary_effects`, `catalyst_power`) | The stack itself, plus whatever context the caller supplies | The local `herb_age`; the entity family when the context carries an entity |
 | Spirit herb growth (`growth_rate`, `condition`, `costs`) | The Level the plant stands in | The local `herb_age` (**the plant's own** age, not the stack's), plus whatever a Level-only context can read |
 | A pill recipe's own formula fields (thresholds, temperature, duration, environment gate) | the player starting the batch, plus the core tier's position | The entity family; `furnace_rank` (where the core tier sits on its own ladder, reading `0` when no core is in hand) |
-| Forging, formations, contracts, creature profiles, secret realms, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for `entity_tick_action`; + the secret realm family inside an instance) |
+| Forging, formations, contracts, creature profiles, secret realms, artifacts | the player, owner or creature | Entity family (+ `formation_radius` / `distance` for a formation's per-entity beats; + the secret realm family inside an instance) |
 | Tribulation timeline entry duration and conditions | caster | Entity family + `aura_tribulation_modifier` |
-| Formulas evaluated from a Level alone instead of an entity: formation `tick_action` and `deactivate_action`, formation aura bonus, spirit crafting table costs, KubeJS block actions and conditions | nothing | `zero`, `random` only |
+| Formulas evaluated from a Level alone instead of an entity: a formation's own passes (the block action of `mxt:activate` / `mxt:tick` / `mxt:inactivate`), spirit crafting table costs, KubeJS block actions and conditions | nothing | `zero`, `random` only |
 | Client-side previews that use an empty context: item and weapon tooltips, item-aura capacity, currency value checks | nothing | `zero`, `random` only |
 
 ::: info Empty contexts are common

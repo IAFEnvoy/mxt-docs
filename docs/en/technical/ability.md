@@ -90,12 +90,12 @@ Use the `mxt:modify_ability_storage` entity action:
 ```json
 {
   "type": "mxt:modify_ability_storage",
-  "id": "example:iron_palm",
+  "ability": "example:iron_palm",
   "value": {"type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 2}
 }
 ```
 
-`value` is a complete storage object written as a whole, parsed by its own `type` dispatch. An `id` that names no ability, or a kind the ability never declared, refuses the write and logs one warning for each.
+`value` is a complete storage object written as a whole, parsed by its own `type` dispatch. An `ability` that names no ability, or a kind the ability never declared, refuses the write and logs one warning for each.
 
 The three cursors `mxt:cast_deadline`, `mxt:channel_pulse` and `mxt:aura_pulse` share this addressing with ability state, but no type declares them, so they cannot be written. A tribulation's `mxt:entry_began`, `mxt:idle_countdown` and `mxt:wait_countdown` live in the tribulation's own single slot, and do not go through this id-addressed store either.
 

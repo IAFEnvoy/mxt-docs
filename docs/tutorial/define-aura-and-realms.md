@@ -271,7 +271,7 @@ realm_stage chain             progress + conditions + costs → next realm
 
 规则始终是 `<registry namespace>.<category>.<namespace>.<path>`，其中 category 是注册表自己的 path，而**注册表命名空间恒为 `mxt`**（所以键总以 `mxt.` 开头），`resource` 里的 `example:qi` 是 `mxt.resource.example.qi`，同一个 ID 在 `aura` 里则是 `mxt.aura.example.qi`。含有 `/` 的 path 会保留斜杠：`example:realm/qi` 是 `mxt.realm_stage.example.realm/qi`。没有键的定义依然可用；游戏只会显示原始键名。
 
-描述用的是**名字键再接 `.description`**：`quality` 里 `mxt_test:poor` 的名字键是 `mxt.quality.mxt_test.poor`、描述键是 `mxt.quality.mxt_test.poor.description`；`realm_stage` 的子境界名键是 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`。**描述只有三处会画出来**：`quality`（品质名下面那一行）、`contract_type`（契约卷轴的提示框）与 `pill`（认领丹药的物品提示框），而且只在这个键被翻译时才画；其余注册表的描述键没有任何界面或提示框去读，属于「生成了但没人画」。
+描述用的是**名字键再接 `.description`**：`quality` 里 `mxt_test:poor` 的名字键是 `mxt.quality.mxt_test.poor`、描述键是 `mxt.quality.mxt_test.poor.description`；`realm_stage` 的子境界名键是 `realm_stage.mxt.<命名空间>.<路径>.minor_stage.<下标>`。**会把描述画出来的是 `quality`（品质名下面那一行）、`contract_type`（契约卷轴的提示框）、`pill`（认领丹药的物品提示框）与 `technique`（手册的提示框，以及被读时聊天栏那一行）**，而且只在这个键被翻译时才画；其余注册表的描述键没有任何界面或提示框去读，属于「生成了但没人画」。
 
 ## 在游戏里验证
 

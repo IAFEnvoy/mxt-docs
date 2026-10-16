@@ -44,7 +44,7 @@ description: 源码级说明：数据包注册表怎么分成内容层与绑定�
 | `item_binding` | 用完一件物品后的行为数组、条件、物品的构成元素 | `LivingEntityUseItemEvent.Finish` |
 | `weapon_binding` | 攻击 / 右键 / 每 tick 的行为、`attributes`（写进堆的 `ATTRIBUTE_MODIFIERS`） | 攻击、右键、每 tick 刷新 |
 | `pill_binding` | 这一族物品是哪一份丹药，以及它自己的服用次数上限与冷却 | 服丹时（闸门与计次） |
-| `technique_binding` | 这件物品教哪门功法，以及读它的时长、姿势与门槛 | 读功法 |
+| `technique_binding` | 这件物品算哪门功法的手册，以及学习前的条件 | 读功法 |
 | `tool_binding` | 这件工具解锁哪些锻打方式 | 锻造 |
 | `blueprint_binding` | 这件图纸提供哪些锻造蓝图 | 锻造 |
 

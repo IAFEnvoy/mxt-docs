@@ -90,12 +90,12 @@ description: 一次施放要过哪些闸门、按键型与直接施放的区别�
 ```json
 {
   "type": "mxt:modify_ability_storage",
-  "id": "example:iron_palm",
+  "ability": "example:iron_palm",
   "value": {"type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 2}
 }
 ```
 
-`value` 是一整份写入，按它自己的 `type` 分派解析。`id` 找不到对应技能、或者技能没声明过这个种类，写入都被拒绝并各记一条警告。
+`value` 是一整份写入，按它自己的 `type` 分派解析。`ability` 找不到对应技能、或者技能没声明过这个种类，写入都被拒绝并各记一条警告。
 
 `mxt:cast_deadline`、`mxt:channel_pulse`、`mxt:aura_pulse` 这三个游标与技能状态共用同一套寻址，但没有任何类型声明它们，所以写不进去。天劫的 `mxt:entry_began`、`mxt:idle_countdown`、`mxt:wait_countdown` 住在天劫自己的单槽里，也不走这套按 id 寻址的存储。
 

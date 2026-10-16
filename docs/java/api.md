@@ -469,12 +469,12 @@ public interface QualityProvider {
 
 ### `FormationActionType` 与 `MxtFormationActionTypes` {#formationactiontype}
 
-阵法的框架（结构、半径、消耗）在 `Formation` 上，"这个阵法干什么"由它的 `actions` 列表决定，而列表里每一项就是一个**功能模块**。
+阵法框架（结构、半径、消耗）在 `Formation` 上，"这个阵法干什么"由它的 `actions` 列表决定，而列表里每一项就是一个**功能模块**。
 
-- `FormationActionType`（`com.iafenvoy.mxt.data.formation`）是模块的形状：一个 `codec()`，加一个按 JSON 的 `"type"` 字段分派的 `CODEC`（必须是 `Codec` 而不是 `MapCodec`，因为阵法持有的是模块**列表**）。
-- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `none`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那 40 张数据包注册表里**。
-- 于是：**数据包能自由新增 `mxt:formation` 条目（模块组合与参数），但新增不了模块类型**。多加一种模块 = 一条记录 + 一次 `DeferredRegister` 注册，运行时按记录类型分派，`data` 包因此不碰世界。
-- 现在合法 `type` 只有 5 个，都登记在 `MxtFormationActionTypes`：`mxt:none`（`NONE`，也是分派表默认项）、`mxt:attack`（`ATTACK`）、`mxt:buff`（`BUFF`）、`mxt:protection`（`PROTECTION`）、`mxt:range_display`（`RANGE_DISPLAY`）。
+- `FormationActionType`（`com.iafenvoy.mxt.data.formation`）是模块的形状：一个 `codec()`，加一个按 JSON 的 `"type"` 字段分派的 `CODEC`（必须是 `Codec` 而不是 `MapCodec`，因为阵法持有的是模块**列表**），外加四个可选的节拍方法 `activate` / `tick` / `interval` / `inactivate`——激活、每个周期与拆除这三个时刻现在也是模块。
+- 分派表 `mxt:formation_action_type` 是**固有注册表**（默认项 `empty`），经 `NewRegistryEvent` 在代码里静态注册，**不在 `MxtDatapackRegistries` 那批数据包注册表里**。
+- 于是：**数据包能自由新增 `mxt:formation` 条目（模块组合与参数），但新增不了模块类型**。多加一种模块 = 一条记录 + 一次 `DeferredRegister` 注册，模块自己实现那几个节拍，`data` 包因此可以直接调运行时服务。
+- 现在合法 `type` 有 10 个，都登记在 `MxtFormationActionTypes`：`mxt:empty`（`EMPTY`，也是分派表默认项）、`mxt:attack`（`ATTACK`）、`mxt:buff`（`BUFF`）、`mxt:aura`（`AURA`）、`mxt:protection`（`PROTECTION`）、`mxt:particle`（`PARTICLE`）、`mxt:send_message`（`SEND_MESSAGE`）、`mxt:activate`（`ACTIVATE`）、`mxt:tick`（`TICK`）、`mxt:inactivate`（`INACTIVATE`）。
 - 注册只经 `MxtFormationActionTypes.REGISTRY` 一次，**别在别处再注册一遍，也别另建第二张阵法模块表**。
 
 ### `FormationProtection` {#formationprotection}

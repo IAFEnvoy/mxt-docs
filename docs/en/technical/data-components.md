@@ -39,7 +39,7 @@ The **Payload** column is the Java shape the codec decodes into, not JSON key na
 | Component id | Payload | What it does |
 | --- | --- | --- |
 | `mxt:technique` | `Holder<Technique>` | Which technique this stack **teaches**. With it, the `technique_binding` is no longer picked by matcher at all: the declaration whose `technique` equals this one is named instead. |
-| `mxt:technique_reading` | `TechniqueReadingComponent` (optional `learn_time`, `hold_animation`, `hold_sound`) | How this stack **is read**, overriding the declaration picked in the previous step field by field. Which technique it teaches is not here - that is `mxt:technique`. |
+| `mxt:technique_reading` | `TechniqueReadingComponent` (optional `learn_time`, `hold_animation`, `hold_sound`) | How this stack **is read**, overriding what the technique writes for those three fields. Which technique it teaches is not here - that is `mxt:technique`. |
 
 ### Aura and Artifacts
 

@@ -49,15 +49,16 @@ description: 从结构、半径与费用写起，加一个增益模块和一条�
   {
     "type": "mxt:buff",
     "abilities": ["example:body_tempering"],
-    "target": "allies",
+    "target": "allies"
+  },
+  {
+    "type": "mxt:aura",
     "aura_zone": "example:misty_valley",
     "max_bonus": {"example:qi": 40}
   },
   {
-    "type": "mxt:range_display",
-    "particle": {"type": "minecraft:end_rod"},
-    "shape": "ring",
-    "points": 32
+    "type": "mxt:particle",
+    "shape": "mxt:five"
   }
 ]
 ```
@@ -68,12 +69,12 @@ description: 从结构、半径与费用写起，加一个增益模块和一条�
 | --- | --- | --- | --- |
 | `abilities` | `HolderOrTag<ability>[]` | `[]` | 授予阵内目标的技能，写法与别处一致。 |
 | `target` | `all\|allies\|owner` | `all` | 谁受益。`allies` 会问敌我识别系统（见下）。 |
-| `aura_zone` | `Holder<aura_zone>` | 无 | 把这座阵法当作一个灵气域：范围内的灵气改成这个域。 |
-| `max_bonus` | `Map<Holder<aura>, NumberProvider>` | `{}` | 该域灵气**上限**的加成，只对域里已有的灵气生效。 |
 
-`mxt:range_display` 只负责让人**看得见**这座阵法：`particle` 必填，`shape` 默认 `"ring"`，`points`（`1..512`）默认 `32`，`interval_periods`（`1..1200`）默认 `1`。
+`mxt:aura` 管的是**阵地本身**：`aura_zone` 把范围内的灵气解析换成这个域（必填），`max_bonus` 抬这个域里已有灵气的**上限**（`{"example:qi": 40}`），没写进域里的灵气加不上。
 
-模块的可选类型一共五个：`mxt:none`（占位）、`mxt:attack`（攻击）、`mxt:buff`（增益）、`mxt:protection`（守御）、`mxt:range_display`（范围显示）。**没有单独的"灵气域模块"**——灵气域是 `mxt:buff` 的一个字段。
+`mxt:particle` 只负责让人**看得见**这座阵法：`shape` 必填，写的是[图形定义](../datapack/json/formation_shape.md)的 id（本体自带 `mxt:five` / `mxt:six` / `mxt:eight`，也可以自己写一份环 + 折线的图形，**每一笔的颜色、疏密、尘埃大小、起点角度与生长窗口都写在那份图形里**）、`duration_ticks` 默认 `0`（不画动画；写了就按这个时长把图形从阵心长出来，描线由客户端自己的计时器推）、`interval_ticks` 默认 `10`（每 10 tick 发一次心跳，最小也是 10、且必须是 10 的倍数）。
+
+模块的可选类型一共十个：`mxt:empty`（占位）、`mxt:attack`（攻击）、`mxt:buff`（增益）、`mxt:aura`（灵气域）、`mxt:protection`（守御）、`mxt:particle`（阵形绘制）、`mxt:send_message`（喊话），以及三个通用节拍 `mxt:activate` / `mxt:tick` / `mxt:inactivate`。
 
 ::: tip `target: allies` 与敌我识别
 
@@ -147,7 +148,7 @@ description: 从结构、半径与费用写起，加一个增益模块和一条�
 
 :::
 
-激活顺序是：占用检查 → 结构校验 → 领地检查 → 半径 → 事件 → 扣激活费 → 写索引 → 区块灵气标脏 → `activate_action`。之后每个周期（20 tick）按这个顺序找钱：**地脉吸收 → 存量 → 阵主**。所以一座阵法可以靠脚下的灵脉自己养活；不够时先吃存量，再向阵主收；全都拿不出来就发一个可取消的"维持失败"事件，没人拦着就拆除。
+激活顺序是：占用检查 → 结构校验 → 领地检查 → 半径 → 事件 → 扣激活费 → 写索引 → 区块灵气标脏 → `mxt:activate` 的方块行为。之后每个周期（20 tick）按这个顺序找钱：**地脉吸收 → 存量 → 阵主**。所以一座阵法可以靠脚下的灵脉自己养活；不够时先吃存量，再向阵主收；全都拿不出来就发一个可取消的"维持失败"事件，没人拦着就拆除。
 
 `storage` 是给"阵主不在也要运转"准备的：容量按灵气分别记，拆除时里面剩下的灵气**直接散逸**。
 
@@ -160,26 +161,34 @@ description: 从结构、半径与费用写起，加一个增益模块和一条�
 
 ## 第 5 步 —— 让阵主受自身阵法影响
 
-想让阵法"自己人也打"，靠顶层 `entity_enter_action`、`entity_tick_action`、`entity_exit_action`（逐实体）与 `activate_action`、`tick_action`、`deactivate_action`（整座阵法）。它们都是普通的实体行为/方块行为，所以阵法的表现力等于行为类型的表现力。
+想让阵法"自己人也打"，靠三个通用节拍模块：`mxt:activate`（进阵）、`mxt:tick`（每周期）、`mxt:inactivate`（出阵），每个都带一个方块行为（阵法自身）和一个实体行为（逐实体）。它们都是普通的方块行为/实体行为，所以阵法的表现力等于行为类型的表现力。
 
 一个实用的开局：进阵提示一声，出阵提示一声。
 
 ```json
-"entity_enter_action": {
-  "type": "mxt:play_sound",
-  "sound": "minecraft:block.beacon.activate",
-  "volume": 0.6,
-  "pitch": 1.4
-},
-"entity_exit_action": {
-  "type": "mxt:play_sound",
-  "sound": "minecraft:block.beacon.deactivate",
-  "volume": 0.4,
-  "pitch": 0.8
-}
+"actions": [
+  {
+    "type": "mxt:activate",
+    "entity_action": {
+      "type": "mxt:play_sound",
+      "sound": "minecraft:block.beacon.activate",
+      "volume": 0.6,
+      "pitch": 1.4
+    }
+  },
+  {
+    "type": "mxt:inactivate",
+    "entity_action": {
+      "type": "mxt:play_sound",
+      "sound": "minecraft:block.beacon.deactivate",
+      "volume": 0.4,
+      "pitch": 0.8
+    }
+  }
+]
 ```
 
-逐实体行为只在实体**真的在半径内**时触发（球半径判定），而且只针对已加载的实体；区块卸载/重载会造成一次"离开再进入"，所以进入行为要写得**幂等**——重复播放一次提示音没关系，重复发奖励就不行。
+逐实体那一半只在实体**真的在半径内**时触发（球半径判定），而且只针对已加载的实体；区块卸载/重载会造成一次"离开再进入"，所以进场那一半要写得**幂等**——重复播放一次提示音没关系，重复发奖励就不行。
 
 ## 在游戏里验证
 

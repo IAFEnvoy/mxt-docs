@@ -22,7 +22,7 @@ description: MiXianTu 内置类型分派的工作方式，以及每一族类型�
 
 几个类型族接受**简写**：JSON 数字就是 `mxt:constant`，字符串就是 `mxt:expression`，`"minecraft:apple"` 这样的物品 ID 就是匹配器条目 `mxt:item`。能简写的地方，写全类型对象也一样有效。
 
-**一个分派注册表一页，挂在写出它的那个定义页下面**：技能类型、技能目标选择器、数据存储与载具渲染器在 [`ability`](../json/ability.md) 页下；诅咒类型在 [`curse`](../json/curse.md) 页下；阵法功能在 [`formation`](../json/formation.md) 页下；天劫节拍在 [`tribulation`](../json/tribulation.md) 页下；秘境生成方式在 [`secret_realm`](../json/secret_realm.md) 页下；资源条的四族（上下文、绘制器、显示条件、数值来源）在 [`resource`](../json/resource.md) 页下；环境上限在 [`aura_zone`](../json/aura_zone.md) 页下；触发器在 [`trigger`](../json/trigger.md) 页下。行为、条件、消耗、物品匹配器、数值提供器与公式变量被满包引用、没有唯一归属，因此留在这个分组里。
+**一个分派注册表一页，挂在写出它的那个定义页下面**：技能类型、技能目标选择器、数据存储与载具渲染器在 [`ability`](../json/ability.md) 页下；诅咒类型在 [`curse`](../json/curse.md) 页下；阵法功能在 [`formation`](../json/formation.md) 页下；阵法的笔画类型在 [`formation_shape`](../json/formation_shape.md) 页下；天劫节拍在 [`tribulation`](../json/tribulation.md) 页下；秘境生成方式在 [`secret_realm`](../json/secret_realm.md) 页下；资源条的四族（上下文、绘制器、显示条件、数值来源）在 [`resource`](../json/resource.md) 页下；环境上限在 [`aura_zone`](../json/aura_zone.md) 页下；触发器在 [`trigger`](../json/trigger.md) 页下。行为、条件、消耗、物品匹配器、数值提供器与公式变量被满包引用、没有唯一归属，因此留在这个分组里。
 
 ## 参与分派的字段
 
@@ -36,6 +36,7 @@ description: MiXianTu 内置类型分派的工作方式，以及每一族类型�
 | `type` | 触发器 `mxt:trigger_type` | [触发器](./other/trigger-type) |
 | `type` | 消耗 `mxt:cost_type` | [消耗](./other/cost-type) |
 | `type` | 阵法功能模块 `mxt:formation_action_type` | [阵法功能](./other/formation-action) |
+| `type`（图形里的每一笔） | 阵法笔画 `mxt:formation_stroke_type` | [阵法笔画类型](./other/formation-stroke-type) |
 | `type` | 天劫节拍 `mxt:timeline_entry_type` | [天劫节拍](./other/timeline-entry) |
 | `type` | 秘境生成方式 `mxt:secret_realm_generation_type` | [秘境生成方式](./other/secret-realm-generation) |
 | `type` | 资源数值来源 `mxt:resource_value_provider_type` | [资源数值来源](./other/resource-value-provider) |

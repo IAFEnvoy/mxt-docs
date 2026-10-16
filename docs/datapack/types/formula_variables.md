@@ -145,8 +145,8 @@ description: 公式能读到的每一个名字、由谁提供，以及写错名�
 | 变量 | 谁提供 | 说明 |
 | --- | --- | --- |
 | `damage` | 契约的战斗行为 | 契约灵宠刚打出的伤害 |
-| `formation_radius` | 阵法的 `entity_tick_action` | 生效中阵法的半径 |
-| `distance` | 阵法的 `entity_tick_action` | 阵法中心与实体之间的格数 |
+| `formation_radius` | 阵法的逐实体节拍 | 生效中阵法的半径 |
+| `distance` | 阵法的逐实体节拍 | 阵法中心与实体之间的格数 |
 | `aura_tribulation_modifier` | 天劫时间线 | 本地灵气影响，取自灵气区域的 `tribulation_modify` 规则，每个时间线节拍开始时采样一次 |
 
 ### 秘境
@@ -204,9 +204,9 @@ description: 公式能读到的每一个名字、由谁提供，以及写错名�
 | 灵植的药力（`main_effects`、`auxiliary_effects`、`catalyst_power`） | 这一堆药材，外加调用方给的上下文 | 局部值 `herb_age`；上下文里有实体时还有实体族 |
 | 灵植的生长（`growth_rate`、`condition`、`costs`） | 该植株所在地的那个 Level | 局部值 `herb_age`（**这株植物当下**的药龄，不是堆上的），外加只拿 Level 能读到的那些 |
 | 炼丹配方自己的公式字段（阈值 / 温度 / 时长 / 环境门槛） | 开炉的玩家，外加核心那一档的位置 | 实体族；`furnace_rank`（核心那一档在它自己链上的位置，手里没有核心时读 `0`） |
-| 锻造、阵法、契约、生物档案、秘境、法器 | 玩家、阵主或生物 | 实体族（`entity_tick_action` 另有 `formation_radius` / `distance`；秘境实例里另有秘境族） |
+| 锻造、阵法、契约、生物档案、秘境、法器 | 玩家、阵主或生物 | 实体族（阵法的逐实体节拍另有 `formation_radius` / `distance`；秘境实例里另有秘境族） |
 | 天劫时间线的节拍时长与条件 | 施法者 | 实体族 + `aura_tribulation_modifier` |
-| 只拿 Level 求值的公式：阵法的 `tick_action` / `deactivate_action`、阵法灵气加成、灵气工作台的花费、KubeJS 的方块行为与条件 | 无 | 只有 `zero` 与 `random` |
+| 只拿 Level 求值的公式：阵法自身那几趟（`mxt:activate` / `mxt:tick` / `mxt:inactivate` 的方块行为）、灵气工作台的花费、KubeJS 的方块行为与条件 | 无 | 只有 `zero` 与 `random` |
 | 客户端预览那种空上下文：物品与武器提示框、物品灵气容量、货币价值判定 | 无 | 只有 `zero` 与 `random` |
 
 ::: info 空上下文很常见

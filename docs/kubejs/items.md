@@ -52,7 +52,7 @@ MiXianTu 负责行为、条件、灵气、货币与 Tooltip，这些表则把一
 | 丹药绑定 | `mxt/pill_binding/<条目>.json` | 把这一族已注册物品认成同一份丹药，并给出服用次数与冷却；作用写在 [丹药](/datapack/json/pill) 里。 |
 | 工具绑定 | `mxt/tool_binding/<条目>.json` | 认领工具物品，并给出它们解锁的锻打方式。 |
 | 图纸绑定 | `mxt/blueprint_binding/<条目>.json` | 认领图纸物品，并给出它们提供的锻造蓝图。 |
-| 功法绑定 | `mxt/technique_binding/<条目>.json` | 一门功法**怎么读**：长按时长、姿势、音效、品质链与条件，以及本体为它生成的载体物品。手册的身份是堆上的 `mxt:technique` 组件，`items` 是可选的第二条路。 |
+| 功法绑定 | `mxt/technique_binding/<条目>.json` | 一门功法的**手册是哪几件物品**、本体为它生成的载体物品，以及学习前的条件。手册的身份是堆上的 `mxt:technique` 组件，`items` 是可选的第二条路。 |
 
 给一颗授予灵根的丹药做绑定：
 

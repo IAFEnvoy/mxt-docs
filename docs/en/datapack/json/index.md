@@ -1,11 +1,11 @@
 ---
 title: Dynamic Registries
-description: All 41 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
+description: All 42 datapack registries with their file directory and purpose, plus the built-in type dispatch table and the KubeJS extension types.
 ---
 
 # Dynamic Registries
 
-The table below lists the mod's 41 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it.
+The table below lists the mod's 42 datapack registries. In the field tables, "Default" is the value used when a field is omitted, and "Required" means loading fails without it.
 
 **Recipes are not in this table.** The recipe pages that go through the vanilla `RecipeManager` sit in the **Recipes** group below: alchemy recipes (`mxt:alchemy`), spirit crafting (`mxt:spirit_shaped` / `mxt:spirit_shapeless`) and talisman drawing (`mxt:talisman_drawing`). Their JSON goes in `data/<namespace>/recipe/`, never in `mxt/<recipe name>/`; they are not registries either, so `/reload` reloads them. File location, and how to sort JSON into subdirectories by category, is on the [Datapack Development Overview](../overview.md).
 
@@ -33,6 +33,7 @@ The table below lists the mod's 41 datapack registries. In the field tables, "De
 | `alchemy_furnace` | `mxt/alchemy_furnace` | Furnace specifications: slots, per-batch capacity and cooling rate. |
 | `alchemy_wall_material` | `mxt/alchemy_wall_material` | Wall materials: the temperature limit of one casing block. |
 | `formation` | `mxt/formation` | Formation lifecycle and aura overrides. |
+| `formation_shape` | `mxt/formation_shape` | The figure a formation draws: circles and polylines, and the paint, density and growth window each stroke carries. |
 | `tribulation` | `mxt/tribulation` | A tribulation: its start gate, timeline beats, and what happens on success or failure. |
 | `creature_profile` | `mxt/creature_profile` | Creature attribute profiles: matching, gates, the inner core, and one action run when the profile is written. |
 | `contract_type` | `mxt/contract_type` | Contract lifecycle: conditions on both sides, four actions on the beast side plus three and a grant on the owner side, the signing cost and two caps. |

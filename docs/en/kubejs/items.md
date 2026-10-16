@@ -52,7 +52,7 @@ MiXianTu owns behaviour, conditions, aura, currency and tooltips; these tables c
 | Pill binding | `mxt/pill_binding/<entry>.json` | Claims this family of registered items as one pill and gives it a use cap and cooldown; what a dose does is in [Pill](../datapack/json/pill.md). |
 | Tool binding | `mxt/tool_binding/<entry>.json` | Claims tool items and lists the forging methods they unlock. |
 | Blueprint binding | `mxt/blueprint_binding/<entry>.json` | Claims blueprint items and lists the forging blueprints they offer. |
-| Technique binding | `mxt/technique_binding/<entry>.json` | How one technique is read: hold length, pose, sound, quality chain and conditions, plus the item the mod generates as its carrier. A manual's identity is the stack's `mxt:technique` component; `items` is the optional second route. |
+| Technique binding | `mxt/technique_binding/<entry>.json` | Which items are one technique's manual, the item the mod generates as its carrier, and the conditions that gate learning. A manual's identity is the stack's `mxt:technique` component; `items` is the optional second route. |
 
 Bind a pill that grants a spirit root:
 

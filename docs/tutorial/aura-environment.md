@@ -246,7 +246,7 @@ MxtEvents.auraZone(event => {
 })
 ```
 
-阵法也可以携带自己的区域，那是解析顺序的最高层。区域和容量加成都在阵法的 `mxt:buff` 行为里：
+阵法也可以携带自己的区域，那是解析顺序的最高层。区域和容量加成都在阵法的 `mxt:aura` 行为里：
 
 ```json
 {
@@ -254,7 +254,7 @@ MxtEvents.auraZone(event => {
   "radius": 8,
   "actions": [
     {
-      "type": "mxt:buff",
+      "type": "mxt:aura",
       "max_bonus": {"example:qi": 50},
       "aura_zone": "example:misty_valley"
     }

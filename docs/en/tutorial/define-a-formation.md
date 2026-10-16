@@ -49,15 +49,16 @@ The controller has a 3×3×3 tolerance: clicking one block off is not a failure,
   {
     "type": "mxt:buff",
     "abilities": ["example:body_tempering"],
-    "target": "allies",
+    "target": "allies"
+  },
+  {
+    "type": "mxt:aura",
     "aura_zone": "example:misty_valley",
     "max_bonus": {"example:qi": 40}
   },
   {
-    "type": "mxt:range_display",
-    "particle": {"type": "minecraft:end_rod"},
-    "shape": "ring",
-    "points": 32
+    "type": "mxt:particle",
+    "shape": "mxt:five"
   }
 ]
 ```
@@ -68,12 +69,12 @@ The controller has a 3×3×3 tolerance: clicking one block off is not a failure,
 | --- | --- | --- | --- |
 | `abilities` | `HolderOrTag<ability>[]` | `[]` | Abilities granted to the targets inside, written as anywhere else. |
 | `target` | `all\|allies\|owner` | `all` | Who benefits. `allies` consults the foe identification system (below). |
-| `aura_zone` | `Holder<aura_zone>` | none | Treat the array as an aura zone: the aura inside becomes this zone's. |
-| `max_bonus` | `Map<Holder<aura>, NumberProvider>` | `{}` | A bonus to the **ceiling** of that zone's aura, applied only to auras the zone already has. |
 
-`mxt:range_display` only makes the array **visible**: `particle` is required, `shape` defaults to `"ring"`, `points` (`1..512`) to `32`, and `interval_periods` (`1..1200`) to `1`.
+`mxt:aura` is about the **ground itself**: `aura_zone` replaces the aura resolved inside the radius with that zone (required), and `max_bonus` raises the **ceiling** of an aura the zone already has (`{"example:qi": 40}`) — an aura the zone does not list cannot be raised.
 
-There are five module types in total: `mxt:none` (a placeholder), `mxt:attack`, `mxt:buff`, `mxt:protection` and `mxt:range_display`. **There is no separate "aura zone module"** — the aura zone is a field of `mxt:buff`.
+`mxt:particle` only makes the array **visible**: `shape` is required and names a [figure definition](../datapack/json/formation_shape.md) (the mod ships `mxt:five` / `mxt:six` / `mxt:eight`, and a pack can write its own ring and polylines, **each stroke's colour, density, dust size, start angle and growth window written there**), `duration_ticks` defaults to `0` (no animation; a value grows the figure out of the controller over that many ticks, on the client's own timer), and `interval_ticks` to `10` (a keep-alive every 10 ticks; the minimum, and a multiple of 10).
+
+There are ten module types in total: `mxt:empty` (a placeholder), `mxt:attack`, `mxt:buff`, `mxt:aura` (the aura zone), `mxt:protection`, `mxt:particle` (the figure), `mxt:send_message` (saying something), and the three generic beats `mxt:activate` / `mxt:tick` / `mxt:inactivate`.
 
 ::: tip `target: allies` and foe identification
 
@@ -147,7 +148,7 @@ Every entry of these two lists has to decode: a misspelled field name (`{"id": "
 
 :::
 
-Activation runs: occupancy → structure → claims → radius → event → pay the activation cost → write the index → mark the chunk's aura dirty → `activate_action`. Every period (20 ticks) it then looks for money in this order: **vein absorption → storage → the owner**. So an array can feed itself from the ley line under it; when that is not enough it eats into storage, then charges the owner, and if nothing can pay, a cancellable "upkeep failed" event fires and the array is dismantled unless somebody stops it.
+Activation runs: occupancy → structure → claims → radius → event → pay the activation cost → write the index → mark the chunk's aura dirty → the block action of `mxt:activate`. Every period (20 ticks) it then looks for money in this order: **vein absorption → storage → the owner**. So an array can feed itself from the ley line under it; when that is not enough it eats into storage, then charges the owner, and if nothing can pay, a cancellable "upkeep failed" event fires and the array is dismantled unless somebody stops it.
 
 `storage` exists so an array can keep running while its owner is away; capacity is tracked per aura, and whatever is left in it **dissipates** when the array comes down.
 
@@ -160,26 +161,34 @@ Activation and dismantling need no commands:
 
 ## Step 5 — Letting the Owner Be Affected Too
 
-To make an array do something to the owner's own side, use the top-level `entity_enter_action`, `entity_tick_action`, `entity_exit_action` (per entity) and `activate_action`, `tick_action`, `deactivate_action` (for the array itself). They are ordinary entity and block actions, so a formation is exactly as expressive as the action types are.
+To make an array do something to the owner's own side, use the three generic beat modules: `mxt:activate` (arriving), `mxt:tick` (every period) and `mxt:inactivate` (leaving), each carrying one block action for the array itself and one entity action for the entities. They are ordinary block and entity actions, so a formation is exactly as expressive as the action types are.
 
 A useful opener: a sound on the way in and on the way out.
 
 ```json
-"entity_enter_action": {
-  "type": "mxt:play_sound",
-  "sound": "minecraft:block.beacon.activate",
-  "volume": 0.6,
-  "pitch": 1.4
-},
-"entity_exit_action": {
-  "type": "mxt:play_sound",
-  "sound": "minecraft:block.beacon.deactivate",
-  "volume": 0.4,
-  "pitch": 0.8
-}
+"actions": [
+  {
+    "type": "mxt:activate",
+    "entity_action": {
+      "type": "mxt:play_sound",
+      "sound": "minecraft:block.beacon.activate",
+      "volume": 0.6,
+      "pitch": 1.4
+    }
+  },
+  {
+    "type": "mxt:inactivate",
+    "entity_action": {
+      "type": "mxt:play_sound",
+      "sound": "minecraft:block.beacon.deactivate",
+      "volume": 0.4,
+      "pitch": 0.8
+    }
+  }
+]
 ```
 
-Per-entity actions fire only for entities **actually inside the sphere** and only for loaded entities; an unloaded chunk produces a spurious leave-and-enter pair, so enter actions should be **idempotent** — replaying a sound is fine, handing out a reward again is not.
+The per-entity half fires only for entities **actually inside the sphere** and only for loaded entities; an unloaded chunk produces a spurious leave-and-enter pair, so the arriving half should be **idempotent** — replaying a sound is fine, handing out a reward again is not.
 
 ## Verify
 

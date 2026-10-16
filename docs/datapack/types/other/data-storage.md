@@ -149,7 +149,7 @@ description: mxt:data_storage_type 的各项：六种内容可写状态、容器
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `id` | 标识符 | **必填** | 技能自身的 id |
+| `ability` | 标识符 | **必填** | 技能自身的 id |
 
 **一条地址只有一条记录**，写入是整份替换：同一技能加同一种类写两次，第二条换掉第一条；同一技能上每种种类最多一条，因为种类本身就是槽位，不给槽位起名字，所以一个技能不可能同时存两份 `mxt:charges`。
 
@@ -158,7 +158,7 @@ description: mxt:data_storage_type 的各项：六种内容可写状态、容器
 ```json
 {
   "type": "mxt:modify_ability_storage",
-  "id": "example:iron_palm",
+  "ability": "example:iron_palm",
   "value": {"type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 2}
 }
 ```

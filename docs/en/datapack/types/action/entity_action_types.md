@@ -462,18 +462,18 @@ Writes one declared storage kind of one ability.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `id` | Identifier | **required** | The ability's own id. |
+| `ability` | Identifier | **required** | The ability's own id. |
 | `value` | Storage object | **required** | A whole storage object. |
 
 ```json
 {
   "type": "mxt:modify_ability_storage",
-  "id": "example:sword_focus",
+  "ability": "example:sword_focus",
   "value": { "type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 1 }
 }
 ```
 
-A kind the ability does not declare, and the runtime's own cursors, are refused. It writes on the server only; when `id` names no ability, or the ability does not declare the kind named in `value`, it logs one warning and writes nothing.
+A kind the ability does not declare, and the runtime's own cursors, are refused. It writes on the server only; when `ability` names no ability, or the ability does not declare the kind named in `value`, it logs one warning and writes nothing.
 
 ### `mxt:spawn_entity`
 

@@ -39,7 +39,7 @@ description: 本体注册的每一个物品数据组件：装什么、谁来写�
 | 组件 id | 载荷 | 作用 |
 | --- | --- | --- |
 | `mxt:technique` | `Holder<Technique>` | 这一堆**教的是哪门功法**。有它时不再按匹配器挑 `technique_binding` 声明，而是点名 `technique` 等于它的那一条。 |
-| `mxt:technique_reading` | `TechniqueReadingComponent`（可选 `learn_time`、`hold_animation`、`hold_sound`） | 这一堆**怎么被读**，逐字段覆盖上一步挑出的那条声明。学哪门功法不在这里，那在 `mxt:technique`。 |
+| `mxt:technique_reading` | `TechniqueReadingComponent`（可选 `learn_time`、`hold_animation`、`hold_sound`） | 这一堆**怎么被读**，逐字段覆盖功法自己写的那三个字段。学哪门功法不在这里，那在 `mxt:technique`。 |
 
 ### 灵气与法器
 

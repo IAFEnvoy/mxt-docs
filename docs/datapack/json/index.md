@@ -4,7 +4,7 @@ title: 动态注册表
 
 # 动态注册表
 
-下表列出本模组的 41 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。
+下表列出本模组的 42 个数据包注册表。字段表里的「默认」是省略该字段时用的值，「必填」表示缺失时加载失败。
 
 **配方不在表里。** 走原版 `RecipeManager` 的配方页收在下面的「合成表」分组里：炼丹配方（`mxt:alchemy`）、灵气合成（`mxt:spirit_shaped` / `mxt:spirit_shapeless`）与画符配方（`mxt:talisman_drawing`）。它们的 JSON 放在 `data/<namespace>/recipe/`，**不要**放进 `mxt/<配方名>/`；它们也不是注册表，所以 `/reload` 会重新读取它们。文件位置与「按类别把 JSON 分进子文件夹」的写法见[数据包开发总览](../overview.md)。
 
@@ -32,6 +32,7 @@ title: 动态注册表
 | `alchemy_furnace` | `mxt/alchemy_furnace` | 炉型规格：槽位、一炉容量与炉温回落速度。 |
 | `alchemy_wall_material` | `mxt/alchemy_wall_material` | 炉壁材料：一块炉壁的耐温上限。 |
 | `formation` | `mxt/formation` | 阵法生命周期和灵气覆写。 |
+| `formation_shape` | `mxt/formation_shape` | 阵法画出来的图形：折线与圆两种笔画，以及每笔自己的颜色、疏密与生长窗口。 |
 | `tribulation` | `mxt/tribulation` | 天劫：启动门槛、时间线节拍与成败行为。 |
 | `creature_profile` | `mxt/creature_profile` | 生物属性档案：匹配、门槛、内丹与写入时的一条行为。 |
 | `contract_type` | `mxt/contract_type` | 契约生命周期：双方条件、灵宠侧四个时刻的行为、主人侧三个时刻的行为与存续期授予、签订代价与两个上限。 |

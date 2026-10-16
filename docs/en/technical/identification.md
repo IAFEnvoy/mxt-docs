@@ -179,15 +179,20 @@ flowchart TD
 "target_condition": { "type": "mxt:not", "condition": { "type": "mxt:friend" } }
 ```
 
-`mxt:formation_ally` goes into a formation's per-entity actions (those condition slots are entity conditions, with no second entity to pair against, so the formation supplies the owner's half — asking **every owner on the list** in turn). One array hurting enemies and healing friends:
+`mxt:formation_ally` goes into a formation's per-entity beats (those condition slots are entity conditions, with no second entity to pair against, so the formation supplies the owner's half — asking **every owner on the list** in turn). One array hurting enemies and healing friends:
 
 ```json
-"entity_tick_action": {
-  "type": "mxt:if_else",
-  "condition": { "type": "mxt:formation_ally" },
-  "if_action": { "type": "mxt:heal", "amount": 1 },
-  "else_action": { "type": "mxt:damage", "amount": 2 }
-}
+"actions": [
+  {
+    "type": "mxt:tick",
+    "entity_action": {
+      "type": "mxt:if_else",
+      "condition": { "type": "mxt:formation_ally" },
+      "if_action": { "type": "mxt:heal", "amount": 1 },
+      "else_action": { "type": "mxt:damage", "amount": 2 }
+    }
+  }
+]
 ```
 
 There is also a more convenient entry point for formations: a definition with a top-level `spare_friends: true` has friends skipped by the runtime, see [formation](../datapack/json/formation.md). Neither condition is affected by server settings — those only decide whether the top-level switch does anything.

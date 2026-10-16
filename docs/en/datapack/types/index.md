@@ -22,7 +22,7 @@ Always write `type` with its full ID: the built-in types live in the `mxt:` name
 
 Several families accept **shorthand**: a JSON number is `mxt:constant`, a string is `mxt:expression`, and an item ID such as `"minecraft:apple"` is the matcher entry `mxt:item`. Wherever a shorthand exists, writing the full typed object works just as well.
 
-**One dispatch registry per page, hung under the definition page that writes it**: Ability Types, Ability Target Selector, Data Storage and Mount Renderers are under [`ability`](../json/ability.md); Curse Types under [`curse`](../json/curse.md); Formation Actions under [`formation`](../json/formation.md); Timeline Entries under [`tribulation`](../json/tribulation.md); Secret Realm Generations under [`secret_realm`](../json/secret_realm.md); the four resource bar families (context, renderer, visibility, value source) under [`resource`](../json/resource.md); Aura Maximum under [`aura_zone`](../json/aura_zone.md); Triggers under [`trigger`](../json/trigger.md). Actions, conditions, costs, the item matcher, number providers and formula variables are referenced all over a pack and belong to no single definition, so they stay in this group.
+**One dispatch registry per page, hung under the definition page that writes it**: Ability Types, Ability Target Selector, Data Storage and Mount Renderers are under [`ability`](../json/ability.md); Curse Types under [`curse`](../json/curse.md); Formation Actions under [`formation`](../json/formation.md); a formation's stroke kinds under [`formation_shape`](../json/formation_shape.md); Timeline Entries under [`tribulation`](../json/tribulation.md); Secret Realm Generations under [`secret_realm`](../json/secret_realm.md); the four resource bar families (context, renderer, visibility, value source) under [`resource`](../json/resource.md); Aura Maximum under [`aura_zone`](../json/aura_zone.md); Triggers under [`trigger`](../json/trigger.md). Actions, conditions, costs, the item matcher, number providers and formula variables are referenced all over a pack and belong to no single definition, so they stay in this group.
 
 ## Dispatched Fields
 
@@ -36,6 +36,7 @@ Several families accept **shorthand**: a JSON number is `mxt:constant`, a string
 | `type` | Trigger `mxt:trigger_type` | [Triggers](./other/trigger-type) |
 | `type` | Cost `mxt:cost_type` | [Costs](./other/cost-type) |
 | `type` | Formation module `mxt:formation_action_type` | [Formation Actions](./other/formation-action) |
+| `type` (each stroke of a figure) | Formation stroke `mxt:formation_stroke_type` | [Formation Stroke Types](./other/formation-stroke-type) |
 | `type` | Tribulation beat `mxt:timeline_entry_type` | [Timeline Entries](./other/timeline-entry) |
 | `type` | Secret realm generation `mxt:secret_realm_generation_type` | [Secret Realm Generations](./other/secret-realm-generation) |
 | `type` | Resource value source `mxt:resource_value_provider_type` | [Resource Value Providers](./other/resource-value-provider) |

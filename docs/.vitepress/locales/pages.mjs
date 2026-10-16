@@ -254,7 +254,17 @@ export const sections = [
             zh: 'formation（阵法）',
             en: 'formation',
             items: [
-              { page: 'datapack/types/other/formation-action', zh: 'formation_action_type（阵法功能）', en: 'Formation Actions (formation_action_type)' }
+              { page: 'datapack/types/other/formation-action', zh: 'formation_action_type（阵法功能）', en: 'Formation Actions (formation_action_type)' },
+              {
+                // A figure is its own registry, but it is only ever reached from a formation's
+                // `mxt:particle` module, so it hangs under the formation definition it is written in.
+                page: 'datapack/json/formation_shape',
+                zh: 'formation_shape（阵法图形）',
+                en: 'formation_shape',
+                items: [
+                  { page: 'datapack/types/other/formation-stroke-type', zh: 'formation_stroke_type（阵法笔画类型）', en: 'Formation Stroke Types (formation_stroke_type)' }
+                ]
+              }
             ]
           },
           { page: 'datapack/json/heat_source', zh: 'heat_source（供热方块）', en: 'heat_source' },

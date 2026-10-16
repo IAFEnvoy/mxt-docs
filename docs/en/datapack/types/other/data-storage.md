@@ -149,7 +149,7 @@ A data pack addresses a value by the ability's own id:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `id` | Identifier | **required** | The ability's own id |
+| `ability` | Identifier | **required** | The ability's own id |
 
 **One address holds one record**, and a write replaces it whole: writing the same ability and the same kind twice makes the second replace the first; an ability holds at most one record per kind, because the kind itself is the slot and slots are not named, so one ability cannot hold two `mxt:charges` at once.
 
@@ -158,7 +158,7 @@ A data pack addresses a value by the ability's own id:
 ```json
 {
   "type": "mxt:modify_ability_storage",
-  "id": "example:iron_palm",
+  "ability": "example:iron_palm",
   "value": {"type": "mxt:charges", "maximum": 3, "recharge_ticks": 100, "remaining": 2}
 }
 ```

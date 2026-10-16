@@ -224,7 +224,7 @@ The server syncs the actual and environment concentration at the current positio
 
 ## Formation Interaction
 
-A formation definition can carry an `mxt:buff` function module and add an `aura_zone` to it:
+A formation definition can carry an `mxt:aura` function module to override the zone its ground resolves to:
 
 ```json
 {
@@ -232,7 +232,7 @@ A formation definition can carry an `mxt:buff` function module and add an `aura_
   "radius": 8,
   "actions": [
     {
-      "type": "mxt:buff",
+      "type": "mxt:aura",
       "max_bonus": { "example:spirit_power": 50 },
       "aura_zone": "example:spirit_gathering"
     }

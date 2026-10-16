@@ -179,15 +179,20 @@ flowchart TD
 "target_condition": { "type": "mxt:not", "condition": { "type": "mxt:friend" } }
 ```
 
-`mxt:formation_ally` 用在阵法的逐实体行为里（那些行为的条件槽是实体条件，没有第二个实体可以和该实体配对，所以由阵法补上阵主那一半，并且**逐个问名单上的每一位**）。例如同一座阵法伤敌而治疗友军：
+`mxt:formation_ally` 用在阵法的逐实体节拍里（那里的条件槽是实体条件，没有第二个实体可以和该实体配对，所以由阵法补上阵主那一半，并且**逐个问名单上的每一位**）。例如同一座阵法伤敌而治疗友军：
 
 ```json
-"entity_tick_action": {
-  "type": "mxt:if_else",
-  "condition": { "type": "mxt:formation_ally" },
-  "if_action": { "type": "mxt:heal", "amount": 1 },
-  "else_action": { "type": "mxt:damage", "amount": 2 }
-}
+"actions": [
+  {
+    "type": "mxt:tick",
+    "entity_action": {
+      "type": "mxt:if_else",
+      "condition": { "type": "mxt:formation_ally" },
+      "if_action": { "type": "mxt:heal", "amount": 1 },
+      "else_action": { "type": "mxt:damage", "amount": 2 }
+    }
+  }
+]
 ```
 
 阵法还有一个更省事的入口：顶层 `spare_friends: true` 的阵法由运行时跳过好友，见[阵法](/datapack/json/formation)。两个条件都不受服务端配置影响——配置只决定顶层开关做不做。

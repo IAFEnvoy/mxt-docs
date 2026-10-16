@@ -36,7 +36,7 @@ actions, conditions, quality, aura, tooltips
 | `data/example/mxt/pill/qi_pill.json` | 丹药作用：食用行为、丹毒与过量。 |
 | `data/example/mxt/pill_binding/qi_pill.json` | 这族物品是哪一份丹药，以及它的次数与冷却。 |
 | `data/example/mxt/weapon_binding/spirit_sword.json` | 武器属性修正与战斗行为。 |
-| `data/example/mxt/technique_binding/azure_manual.json` | 这门功法怎么被读，以及本体生成的载体用哪件物品。 |
+| `data/example/mxt/technique_binding/azure_manual.json` | 这门功法的载体用哪件物品，以及学它之前要过的条件。 |
 
 品质档位不在这页：它有自己的链与升级规则，见[定义品质链](./define-a-quality-chain.md)。这页的四件物品用那篇建立的三档。
 
@@ -94,7 +94,7 @@ ServerEvents.recipes(event => {
 | `item_binding` | 通用的"用掉这件物品会怎样" | `items`、`conditions`、`actions`、`element`、`priority` |
 | `pill_binding` | 这族物品是哪一份丹药，以及服用次数与冷却 | `items`、`pill`、`max_uses`、`cooldown`、`priority` |
 | `weapon_binding` | 当武器用时的属性与动作 | `items`、`attributes`、`use_action`、`attack_action`、`tick_action`、`conditions`、`element`、`priority` |
-| `technique_binding` | 这门功法怎么被读、载体用哪件物品 | `items`、`technique`、`carrier_item`、`learn_time`、`hold_animation`、`hold_sound` |
+| `technique_binding` | 手册是哪几件物品、载体用哪件物品 | `technique`、`items`、`priority`、`carrier_item`、`conditions` |
 
 三条共同规则：
 
@@ -221,13 +221,14 @@ ServerEvents.recipes(event => {
 
 ## 第 6 步 —— 功法与手册
 
-功法是逻辑；`technique_binding` 描述这门功法**怎么被读**——长按时长、姿势、音效、品质链与条件，并声明本体为它生成的载体用哪件物品。它**没有任何行为钩子**，这一点和另外三张表不同。
+功法是逻辑；`technique_binding` 只描述这门功法的**手册是哪几件物品**、本体为它生成的载体用哪件物品，以及学习前的条件。它**没有任何行为钩子**，这一点和另外三张表不同。读多久、什么姿势、什么声音写在功法自己身上（`learn_time` / `hold_animation` / `hold_sound`）——下面那门功法按住右键三秒才学得会。
 
 ```json
 // data/example/mxt/technique/azure_breath.json
 {
   "quality": "example:refined",
   "learn_condition": {"type": "mxt:has_realm", "aura": "example:qi"},
+  "learn_time": 60,
   "cultivation_modifier": 1.25,
   "passive_modifiers": [
     {

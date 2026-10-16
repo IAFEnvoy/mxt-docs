@@ -246,7 +246,7 @@ MxtEvents.auraZone(event => {
 })
 ```
 
-Formations can also carry their own zone, which is the top level of the resolution order. The zone and the capacity bonus both live in a `mxt:buff` action on the formation:
+Formations can also carry their own zone, which is the top level of the resolution order. The zone and the capacity bonus both live in an `mxt:aura` action on the formation:
 
 ```json
 {
@@ -254,7 +254,7 @@ Formations can also carry their own zone, which is the top level of the resoluti
   "radius": 8,
   "actions": [
     {
-      "type": "mxt:buff",
+      "type": "mxt:aura",
       "max_bonus": {"example:qi": 50},
       "aura_zone": "example:misty_valley"
     }

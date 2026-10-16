@@ -36,7 +36,7 @@ Do not invent `mxt:item` or `mxt:weapon` files out of thin air. Those registries
 | `data/example/mxt/pill/qi_pill.json` | What the pill does: dose action, toxicity and overdose. |
 | `data/example/mxt/pill_binding/qi_pill.json` | Which pill this item family is, plus its cap and cooldown. |
 | `data/example/mxt/weapon_binding/spirit_sword.json` | Weapon attribute modifiers and combat behaviour. |
-| `data/example/mxt/technique_binding/azure_manual.json` | How that technique is read, and which item the mod generates as its carrier. |
+| `data/example/mxt/technique_binding/azure_manual.json` | Which item is that technique's carrier, and the conditions that gate learning it. |
 
 Quality tiers are not on this page: they have a chain and upgrade rules of their own, see [Define a Quality Chain](./define-a-quality-chain.md). The four items here use the three tiers built there.
 
@@ -94,7 +94,7 @@ The four tables do different jobs and their fields barely overlap. All four are 
 | `item_binding` | The generic "what happens when this item is used up" | `items`, `conditions`, `actions`, `element`, `priority` |
 | `pill_binding` | Which pill this item family is, plus its use cap and cooldown | `items`, `pill`, `max_uses`, `cooldown`, `priority` |
 | `weapon_binding` | Attributes and actions while it is used as a weapon | `items`, `attributes`, `use_action`, `attack_action`, `tick_action`, `conditions`, `element`, `priority` |
-| `technique_binding` | How the technique is read, and which item is its carrier | `items`, `technique`, `carrier_item`, `learn_time`, `hold_animation`, `hold_sound` |
+| `technique_binding` | Which items are the manual, and which item is its carrier | `technique`, `items`, `priority`, `carrier_item`, `conditions` |
 
 Three rules they share:
 
@@ -221,13 +221,14 @@ A pill takes two tables: `pill` says what eating it does, and `pill_binding` say
 
 ## Step 6 — Techniques and Manuals
 
-A technique is the logic; `technique_binding` describes **how that technique is read** — hold duration, pose, sound, quality chain and conditions — and declares which item the mod generates as its carrier. It has **no action hooks at all**, which is where it differs from the other three tables.
+A technique is the logic; `technique_binding` only describes **which items are that technique's manual**, which item the mod generates as its carrier, and the conditions that gate learning. It has **no action hooks at all**, which is where it differs from the other three tables. How long a read lasts and how it looks is written on the technique itself (`learn_time` / `hold_animation` / `hold_sound`) — the technique below takes a three-second hold to learn.
 
 ```json
 // data/example/mxt/technique/azure_breath.json
 {
   "quality": "example:refined",
   "learn_condition": {"type": "mxt:has_realm", "aura": "example:qi"},
+  "learn_time": 60,
   "cultivation_modifier": 1.25,
   "passive_modifiers": [
     {

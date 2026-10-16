@@ -48,9 +48,11 @@ The display name of a data-driven definition generates its translation key autom
 
 JSON has **no** `translation_key` field, and the definitions of these 24 registries **store no text at all**; their names and descriptions are always derived from the registered id: `resource`, `aura`, `realm_stage`, `element`, `spirit_root`, `physique`, `ability`, `curse`, `technique`, `progression`, `cultivation`, `artifact`, `medicinal_property`, `spirit_herb`, `alchemy_furnace`, `alchemy_wall_material`, `pill`, `pill_binding`, `formation`, `tribulation`, `secret_realm`, `contract_type`, `talisman`, `quality`. They carry no `name` / `description` field, and writing one is not read; **the only way a pack can give a definition words is to translate the generated key above**. The description key is the name key plus `.description`.
 
-**Only three places draw a description key: `quality` (the line under the quality name), `contract_type` (a contract scroll's tooltip) and `pill` (the tooltip of an item the pill claims)** — and only when that key is actually translated; every other registry's description key is read by no screen or tooltip.
+**Only four kinds of definition draw a description key: `quality` (the line under the quality name), `contract_type` (a contract scroll's tooltip), `pill` (the tooltip of an item the pill claims) and `technique` (a manual's tooltip, and the line a read manual prints in chat)** — and only when that key is actually translated: a key the language file does not have prints nothing at all, never the key name itself; every other registry's description key is read by no screen or tooltip.
 
-`minor_stages` is not a list of names but a count: sub-stage names are always generated as `<this stage's name key>.minor_stage.<index>` (the registry namespace is part of it, and the index starts at `0`).
+An untranslated name never puts a key on screen either: **where something has to be shown - a list row, a title, a panel entry, or an argument inside another sentence - the id stands in** (written like `mxt:aura/example.fire`, which still says which entry it is), and **where nothing has to be shown - a tooltip line that only acts as a heading, such as a pill's, a herb's or a furnace's definition name or a talisman type's usage line - the line is left out**.
+
+`minor_stages` is not a list of names but a count: sub-stage names are always generated as `<this stage's name key>.minor_stage.<index>` (the registry namespace is part of it, and the index starts at `0`). A sub-stage the language file does not name is left out.
 
 ### Screen Titles
 

@@ -48,9 +48,11 @@ data/mxt/tags/damage_type/no_bonus.json
 
 JSON 里**没有** `translation_key` 这类字段，下面这 24 张注册表的定义**不存任何文本**，名字与描述永远按注册 id 现算：`resource`、`aura`、`realm_stage`、`element`、`spirit_root`、`physique`、`ability`、`curse`、`technique`、`progression`、`cultivation`、`artifact`、`medicinal_property`、`spirit_herb`、`alchemy_furnace`、`alchemy_wall_material`、`pill`、`pill_binding`、`formation`、`tribulation`、`secret_realm`、`contract_type`、`talisman`、`quality`。它们里面没有 `name` / `description` 字段，给了也读不到；**包唯一能给一个定义配词的办法就是翻译上面那个生成的键**。描述键是名字键再接 `.description`。
 
-**只有三处会把描述键画出来：`quality`（品质名下面那一行）、`contract_type`（契约卷轴的提示框）与 `pill`（认领丹药的物品提示框）**，而且只在这个键被翻译时才画；其余注册表的描述键没有任何界面或提示框去读。
+**会把描述键画出来的是这四类定义：`quality`（品质名下面那一行）、`contract_type`（契约卷轴的提示框）、`pill`（认领丹药的物品提示框）与 `technique`（手册的提示框，以及被读时聊天栏那一行）**，而且**只在这个键被翻译时才画**：语言文件里没有这个键就整行不输出，不会把 `mxt.aura.example.fire.description` 这样的键名当正文打出去；其余注册表的描述键没有任何界面或提示框去读。
 
-`minor_stages` 不是名字列表，而是一个数量：子阶段名一律按 `<本境界名字键>.minor_stage.<下标>` 生成（同样带注册表命名空间，下标从 `0` 起）。
+名字没被翻译时，界面上不会出现键名：**必须显示点什么的地方——列表行、标题、面板条目，以及当参数嵌在别的句子里的时候——回退显示 id**（会是 `mxt:aura/example.fire` 这样的写法，仍然认得出是哪一条）；**可以空着的地方——提示框里只起标题作用的那一行（丹药定义名、药材定义名、炉壁与炉型名、符箓类型的说明行）——整行不输出**。
+
+`minor_stages` 不是名字列表，而是一个数量：子阶段名一律按 `<本境界名字键>.minor_stage.<下标>` 生成（同样带注册表命名空间，下标从 `0` 起）；没被翻译的那一重不显示。
 
 ### 界面标题
 

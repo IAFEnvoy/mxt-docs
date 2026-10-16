@@ -152,4 +152,4 @@ aside: false
 
 ## 名称与翻译 {#translation}
 
-类别就是注册表自己的 path：`example:refined` 查 `mxt.quality.example.refined`，描述再加 `.description`（**注册表命名空间仍是 `mxt`**）。名字与描述都只能靠翻译这两个键，定义里没有可写的文本字段；会把描述画出来的只有三处：品质（画在品质名下面）、`contract_type`（契约卷轴的提示框）与 `pill`（认领丹药的物品提示框）；其余注册表的描述键没有任何界面或提示框去读。JSON 里没有 `translation_key` 字段；路径里的 `/` 和其它注册表一样原样保留在键中。
+类别就是注册表自己的 path：`example:refined` 查 `mxt.quality.example.refined`，描述再加 `.description`（**注册表命名空间仍是 `mxt`**）。名字与描述都只能靠翻译这两个键，定义里没有可写的文本字段；会把描述画出来的是品质（画在品质名下面）、`contract_type`（契约卷轴的提示框）、`pill`（认领丹药的物品提示框）与 `technique`（手册的提示框，以及被读时聊天栏那一行）；其余注册表的描述键没有任何界面或提示框去读。JSON 里没有 `translation_key` 字段；路径里的 `/` 和其它注册表一样原样保留在键中。
