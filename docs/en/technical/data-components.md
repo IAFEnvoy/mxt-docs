@@ -5,7 +5,7 @@ description: Every item data component the mod registers - what it holds, who wr
 
 # Data Components
 
-Every piece of state the mod hangs on an item stack goes through a vanilla **data component** (`DataComponentType`). There is no "mod-specific NBT on the item" anywhere. All 33 are registered in one place, `registry.MxtDataComponents`, and each declares both a **persistent codec** and a **network codec** (`persistent(...).networkSynchronized(...)`) - so they all save with the world and all sync to the client. There is no server-only component and no session-only component.
+Every piece of state the mod hangs on an item stack goes through a vanilla **data component** (`DataComponentType`). There is no "mod-specific NBT on the item" anywhere. All 35 are registered in one place, `registry.MxtDataComponents`, and each declares both a **persistent codec** and a **network codec** (`persistent(...).networkSynchronized(...)`) - so they all save with the world and all sync to the client. There is no server-only component and no session-only component.
 
 A component is **this stack's own fact**: it was forged, it has a talisman inscribed on it, it holds this much aura. The other half is the **datapack declaration** ("what this kind of item usually is"). Which way they merge is fixed in [Data Loading](/en/technical/data-loading).
 
@@ -40,6 +40,8 @@ The **Payload** column is the Java shape the codec decodes into, not JSON key na
 | --- | --- | --- |
 | `mxt:technique` | `Holder<Technique>` | Which technique this stack **teaches**. With it, the `technique_binding` is no longer picked by matcher at all: the declaration whose `technique` equals this one is named instead. |
 | `mxt:technique_reading` | `TechniqueReadingComponent` (optional `learn_time`, `hold_animation`, `hold_sound`) | How this stack **is read**, overriding what the technique writes for those three fields. Which technique it teaches is not here - that is `mxt:technique`. |
+| `mxt:stored_text` | `Component` (a bare string is a translation key, an object is a full component) | The text a jade slip carries, printed into the chat log whole when it is read; a slip without it says it has nothing written. |
+| `mxt:jade_slip_reading` | `int` (ticks, `0` and up) | How long reading a jade slip takes: the content appears once the hold has run that many ticks. Absent is `40` (two seconds); `0` reads it on the click, and so does a sneaking right-click. |
 
 ### Aura and Artifacts
 

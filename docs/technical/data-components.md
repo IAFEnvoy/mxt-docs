@@ -5,7 +5,7 @@ description: 本体注册的每一个物品数据组件：装什么、谁来写�
 
 # 数据组件
 
-本体往物品堆上挂的状态**全部**走原版数据组件（`DataComponentType`），没有"往物品上存一份模组自己的 NBT"这回事。全部 33 个登记在 `registry.MxtDataComponents` 一处，每一个都同时声明**持久化 codec** 与**网络 codec**（`persistent(...).networkSynchronized(...)`），所以它们都跟着存档走、也跟着同步给客户端——组件里没有"只服务端"或"只在本次会话有效"的类别。
+本体往物品堆上挂的状态**全部**走原版数据组件（`DataComponentType`），没有"往物品上存一份模组自己的 NBT"这回事。全部 35 个登记在 `registry.MxtDataComponents` 一处，每一个都同时声明**持久化 codec** 与**网络 codec**（`persistent(...).networkSynchronized(...)`），所以它们都跟着存档走、也跟着同步给客户端——组件里没有"只服务端"或"只在本次会话有效"的类别。
 
 组件是**这一堆物品自己的事实**：它被锻造过、它铭刻了哪条符、它装了多少灵气。与之相对的是**数据包声明**（"这类物品通常怎样"），两者的合并方向写死在[数据加载](/technical/data-loading)的「组件压过声明」一节。
 
@@ -40,6 +40,8 @@ description: 本体注册的每一个物品数据组件：装什么、谁来写�
 | --- | --- | --- |
 | `mxt:technique` | `Holder<Technique>` | 这一堆**教的是哪门功法**。有它时不再按匹配器挑 `technique_binding` 声明，而是点名 `technique` 等于它的那一条。 |
 | `mxt:technique_reading` | `TechniqueReadingComponent`（可选 `learn_time`、`hold_animation`、`hold_sound`） | 这一堆**怎么被读**，逐字段覆盖功法自己写的那三个字段。学哪门功法不在这里，那在 `mxt:technique`。 |
+| `mxt:stored_text` | `Component`（裸字符串＝翻译键，对象＝完整组件） | 玉简上写着的那段文字，读出来时整段打进聊天栏；不写就印一句"什么都没写"。 |
+| `mxt:jade_slip_reading` | `int`（tick，`0` 及以上） | 玉简**读多久**：按住右键读满这么多 tick 才出内容。不写就是 `40`（两秒）；写 `0` 与**潜行右键**一样是一点即读。 |
 
 ### 灵气与法器
 
