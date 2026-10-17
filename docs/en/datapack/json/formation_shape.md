@@ -53,14 +53,13 @@ That is what lets one figure carry a sparse outline and a dense detail: of two s
 
 ## A stroke's own paint {#paint}
 
-**Every stroke carries its own colour**, and the two fields are alternatives — never both, and never neither:
+**Every stroke carries its own colour**, in one `color` field written one of two ways:
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `color` | Colour | One colour for the whole stroke, written the way colours are anywhere else (`#RRGGBB`). |
-| `gradient` | Array of 2–16 `{"at": …, "color": …}` | A ramp along **that stroke's own length**: `at` 0 is its first point and 1 its last, and the stops **must be written in ascending order**. Outside the outermost stops the end colour is held, so a ramp need not reach either end. |
+| `color` | Colour, or an array of 2–16 `{"at": …, "color": …}` | One colour for the whole stroke (`#RRGGBB`, written the way colours are anywhere else), or a ramp along **that stroke's own length**. In a ramp `at` 0 is its first point and 1 its last, and the stops **must be written in ascending order**; outside the outermost stops the end colour is held, so a ramp need not reach either end. |
 
-There is no figure-wide colour to fall back to, so a stroke that writes neither fails to load. A ramp follows the stroke's length rather than stretching with the progress: while the figure is half drawn, what is on screen is the first half of that ramp.
+There is no figure-wide colour to fall back to, so a stroke that writes no `color` fails to load — and one field means a stroke is never both flat and ramped. A ramp follows the stroke's length rather than stretching with the progress: while the figure is half drawn, what is on screen is the first half of that ramp.
 
 ## The three the mod ships {#builtin}
 

@@ -46,6 +46,12 @@ mxt-docs
    └─ check-config-labels.mjs # 校验配置名与模组语言文件逐字一致
 ```
 
+## 松烟主题
+
+主题入口在 `docs/.vitepress/theme/index.ts`，依次加载 `songyan.css`（松烟配色与可复用组件）和 `custom.css`（VitePress 组件适配）。浅色使用宣纸、松绿与朱砂，深色使用墨底、浅青与暖金；颜色直接跟随 VitePress 的 `html.dark`，使用网站原有的模式按钮与偏好存储。
+
+导航、侧栏、搜索、正文、表格、代码块和提示框共用这套配色。修改颜色请调整 `songyan.css` 中的 `:root` / `:root.dark`；修改文档组件外观请调整 `custom.css`。需要在正文中使用松烟自带组件时，只给局部容器添加 `class="songyan-theme"`，避免将通用布局类套到整个 VitePress 页面。
+
 ## 内容从哪里来
 
 站点内容由两份既有文档生成，`pnpm run migrate` 负责搬运：

@@ -13,7 +13,8 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/webp', href: '/favicon.webp' }],
-    ['meta', { name: 'theme-color', content: '#5b8def' }]
+    ['meta', { name: 'theme-color', content: '#f5f2e9', media: '(prefers-color-scheme: light)' }],
+    ['meta', { name: 'theme-color', content: '#171e1a', media: '(prefers-color-scheme: dark)' }]
   ],
 
   markdown: {

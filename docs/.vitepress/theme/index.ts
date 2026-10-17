@@ -2,6 +2,8 @@ import { h } from 'vue'
 import DefaultTheme from 'vitepress/theme'
 import Mermaid from './components/Mermaid.vue'
 import ImageZoomLayer from './components/ImageZoomLayer.vue'
+import './songyan.css'
+import './custom.css'
 
 export default {
   ...DefaultTheme,

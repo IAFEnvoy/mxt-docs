@@ -14,18 +14,17 @@ Each entry of a [formation figure's](../../json/formation_shape.md) `strokes` pi
 | `mxt:circle` | One turn from `start_angle` | `radius`, `center`, `start_angle` |
 | `mxt:polyline` | From its first point to its last | `points` |
 
-Both kinds also carry the same six fields:
+Both kinds also carry the same five fields:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `color` | Colour | one of the two | One colour for the whole stroke; see [the figure page](../../json/formation_shape.md#paint). |
-| `gradient` | Array of 2–16 `{"at": …, "color": …}` | one of the two | A ramp along the stroke's own length. |
+| `color` | Colour, or an array of 2–16 `{"at": …, "color": …}` | **required** | One colour for the whole stroke, or a ramp along the stroke's own length; see [the figure page](../../json/formation_shape.md#paint). |
 | `spacing` | Number `0.01..64` | `0.33` | How many blocks apart its dusts sit; see [the figure page](../../json/formation_shape.md#layout). |
 | `size` | Number `0.01..4` | `2` | How big one of its dusts is drawn. |
 | `start` | Number `0..1` | `0` | Where in the figure's progress this stroke begins to be drawn. |
 | `end` | Number `0..1` | `1` | Where it stops. **Has to be above `start`**. |
 
-Exactly one of `color` and `gradient` is required; `start` and `end` are the window described under [growth](../../json/formation_shape.md#growth). Coordinates and units are on [the same page](../../json/formation_shape.md#coordinates).
+`color` is required, and one field is written one way: a flat colour and a ramp never appear together. `start` and `end` are the window described under [growth](../../json/formation_shape.md#growth). Coordinates and units are on [the same page](../../json/formation_shape.md#coordinates).
 
 ## `mxt:circle`
 

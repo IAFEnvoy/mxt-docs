@@ -14,18 +14,17 @@ description: 阵法图形里两种笔画的字段：mxt:circle 与 mxt:polyline�
 | `mxt:circle` | 从 `start_angle` 起绕一圈 | `radius`、`center`、`start_angle` |
 | `mxt:polyline` | 从第一个点走到最后一个点 | `points` |
 
-两种笔画都另有六个共有字段：
+两种笔画都另有五个共有字段：
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `color` | 颜色 | 与 `gradient` 二选一 | 整笔一个颜色，见[阵法图形的「每笔自己的颜色」](../../json/formation_shape.md#paint)。 |
-| `gradient` | 数组，2~16 个 `{"at": …, "color": …}` | 与 `color` 二选一 | 沿这一笔自己长度的渐变。 |
+| `color` | 颜色，或 2~16 个 `{"at": …, "color": …}` | **必填** | 整笔一个颜色，或沿这一笔自己长度的渐变，见[阵法图形的「每笔自己的颜色」](../../json/formation_shape.md#paint)。 |
 | `spacing` | 数值 `0.01..64` | `0.33` | 相邻两个尘埃之间多少格，见[「笔画的疏密与尘埃大小」](../../json/formation_shape.md#layout)。 |
 | `size` | 数值 `0.01..4` | `2` | 一个尘埃画多大。 |
 | `start` | 数值 `0..1` | `0` | 这一笔从图形进度的哪个位置开始画。 |
 | `end` | 数值 `0..1` | `1` | 画到哪个位置结束。**必须大于 `start`**。 |
 
-`color` 与 `gradient` 必须写且只能写一个；`start` / `end` 是[生长那一节](../../json/formation_shape.md#growth)说的窗口。坐标与单位见[那一页的「坐标与起点」](../../json/formation_shape.md#coordinates)。
+`color` 必须写，而且一个字段只有一种写法：纯色与渐变不会同时出现；`start` / `end` 是[生长那一节](../../json/formation_shape.md#growth)说的窗口。坐标与单位见[那一页的「坐标与起点」](../../json/formation_shape.md#coordinates)。
 
 ## `mxt:circle`
 
