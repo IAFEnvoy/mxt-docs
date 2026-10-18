@@ -2,7 +2,9 @@ import { h } from 'vue'
 import DefaultTheme from 'vitepress/theme'
 import Mermaid from './components/Mermaid.vue'
 import ImageZoomLayer from './components/ImageZoomLayer.vue'
+import ToolFrame from './components/ToolFrame.vue'
 import './songyan.css'
+import './tools.css'
 import './custom.css'
 
 export default {
@@ -16,5 +18,7 @@ export default {
   enhanceApp({ app }) {
     // 全局注册组件，名字必须和模板里 <Mermaid> 大小写完全一致
     app.component('Mermaid', Mermaid)
+    // The tool pages only say which tool they want; the frame does the loading.
+    app.component('ToolFrame', ToolFrame)
   }
 }

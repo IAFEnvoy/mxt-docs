@@ -157,7 +157,8 @@ export function buildNav(locale: Locale): DefaultTheme.NavItem[] {
         { text: '数据包', link: '/datapack/overview', activeMatch: '^/datapack/' },
         { text: 'KubeJS', link: '/kubejs/', activeMatch: '^/kubejs/' },
         { text: 'Java API', link: '/java/', activeMatch: '^/java/' },
-        { text: '技术细节', link: '/technical/', activeMatch: '^/technical/' }
+        { text: '技术细节', link: '/technical/', activeMatch: '^/technical/' },
+        { text: '工具', link: '/tools/', activeMatch: '^/tools/' }
       ]
     : [
         { text: 'Getting Started', link: `${p}/installation`, activeMatch: `^${p}/(installation|faq)` },
@@ -166,7 +167,8 @@ export function buildNav(locale: Locale): DefaultTheme.NavItem[] {
         { text: 'Datapack', link: `${p}/datapack/overview`, activeMatch: `^${p}/datapack/` },
         { text: 'KubeJS', link: `${p}/kubejs/`, activeMatch: `^${p}/kubejs/` },
         { text: 'Java API', link: `${p}/java/`, activeMatch: `^${p}/java/` },
-        { text: 'Technical Details', link: `${p}/technical/`, activeMatch: `^${p}/technical/` }
+        { text: 'Technical Details', link: `${p}/technical/`, activeMatch: `^${p}/technical/` },
+        { text: 'Tools', link: `${p}/tools/`, activeMatch: `^${p}/tools/` }
       ]
   return bar.filter((item) => [...live].some((key) => item.link.startsWith(key)))
 }

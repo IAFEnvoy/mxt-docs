@@ -68,7 +68,9 @@ export const sections = [
       // configuration entries are not commands, and every tab lives here.
       { page: 'player-guide/config', zh: '服务端配置', en: 'Server Configuration' },
       { page: 'player-guide/curios-slots', zh: 'Curios 槽位', en: 'Curios Slots' },
-      { page: 'player-guide/rift', zh: '裂隙', en: 'Rifts' }
+      { page: 'player-guide/rift', zh: '裂隙', en: 'Rifts' },
+      { page: 'player-guide/meteor', zh: '流星', en: 'Meteors' },
+      { page: 'player-guide/laser', zh: '激光粒子', en: 'Laser Particles' }
     ]
   },
   {
@@ -442,6 +444,16 @@ export const sections = [
       { page: 'technical/aura', zh: '灵气计算', en: 'Aura Calculation' },
       { page: 'technical/ability', zh: '技能施放', en: 'Ability Casting' },
       { page: 'technical/talisman-scoring', zh: '画符判分', en: 'Talisman Scoring' }
+    ]
+  },
+  {
+    // The authoring tools are not documentation of a subsystem: the pages run, so they get a category of
+    // their own instead of hanging off whichever definition they happen to write.
+    text: { zh: '工具', en: 'Tools' },
+    items: [
+      { page: 'tools/index', zh: '总览', en: 'Overview' },
+      { page: 'tools/formation-figure', zh: '阵法图形编辑器', en: 'Formation Figure Editor' },
+      { page: 'tools/talisman-strokes', zh: '符箓笔画编辑器', en: 'Talisman Stroke Editor' }
     ]
   }
 ]

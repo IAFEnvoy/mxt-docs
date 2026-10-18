@@ -369,7 +369,7 @@ public interface QualityProvider {
 
 **两个事件**（都在 `event` 包）：
 
-- `LifeSpanEndEvent.Pre` / `Post`：寿元耗尽那一刻发一次。`Pre` 可取消——在事件里写下正值＝续命成功，什么都不写＝关闭账本（`remaining = -1`、`total = 0`）；`Post` 带 `outcome()`（`NONE` / `DEATH` / `REINCARNATE`）。
+- `LifeSpanEndEvent.Pre` / `Post`：寿元耗尽那一刻发一次。`Pre` 可取消——在事件里写下正值＝续命成功，什么都不写＝关闭账本（`remaining = -1`、`total = 0`）；`Post` 带 `getOutcome()`（`NONE` / `DEATH` / `REINCARNATE`）。
 - `LifeSpanRebirthEvent.Pre` / `Post`：**显式转世**前后各发一次，只由 `reincarnate` 这条公开入口发。`Pre` 可取消，取消＝整件事不做、身体原样不动。
 
 要点：
@@ -527,11 +527,11 @@ public interface QualityProvider {
 | 成员 | 作用 | 备注 |
 | --- | --- | --- |
 | `Relation(UUID judgeId, @Nullable Entity judge, Entity candidate)` / `Relation(Entity judge, Entity candidate)` | 构造 | 公开构造器，外部可以自己发一条 |
-| `judgeId()` | 裁判 UUID | **永远有值**——数据存在服务端管理器里的好友源（队伍、阵营）因此在玩家离线时也能作答 |
-| `judge()` | 裁判实体 | **离线时为空**，这是设计要求而不是错误 |
-| `candidate()` | 被判定者 | |
+| `getJudgeId()` | 裁判 UUID | **永远有值**——数据存在服务端管理器里的好友源（队伍、阵营）因此在玩家离线时也能作答 |
+| `getJudge()` | 裁判实体 | **离线时为空**，这是设计要求而不是错误 |
+| `getCandidate()` | 被判定者 | |
 | `setResult(TriState)` | 写下本监听器的判断 | `TRUE` = 当成我的人；`FALSE` = 不是，**不管名单怎么说**（压过包括玩家自己名单在内的一切来源）；`DEFAULT` = 交回名单 |
-| `result()` / `answered()` | 读当前结论 / 是否已经有人表态 | `FriendService` 只在 `answered()` 为真时采信事件 |
+| `getResult()` / `isAnswered()` | 读当前结论 / 是否已经有人表态 | `FriendService` 只在 `isAnswered()` 为真时采信事件 |
 
 要点：
 

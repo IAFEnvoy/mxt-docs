@@ -1,0 +1,297 @@
+/*
+ * The two authoring tools under /tools/ (a formation figure, a drawing's strokes) are plain DOM code mounted into a
+ * page, so their chrome is styled here rather than in a component. Everything reads the songyan tokens out of
+ * songyan.css, so the tools follow the site's light/dark switch without a palette of their own.
+ */
+
+.mxt-tool {
+  margin: 24px 0 8px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.mxt-tool *,
+.mxt-tool *::before,
+.mxt-tool *::after {
+  box-sizing: border-box;
+}
+
+.mxt-tool-grid {
+  display: grid;
+  grid-template-columns: auto minmax(300px, 470px);
+  gap: 20px;
+  align-items: start;
+}
+
+.mxt-tool-board {
+  min-width: 0;
+}
+
+.mxt-tool-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* The board is a viewport, not a page: a fixed dark ground reads the same in both modes and matches the dust. */
+.mxt-tool #board {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.mxt-tool #strip {
+  display: block;
+  width: 100%;
+  height: 30px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.mxt-tool .group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+}
+
+.mxt-tool .group .title {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.mxt-tool label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mxt-tool input[type="number"] {
+  width: 64px;
+}
+
+.mxt-tool input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.mxt-tool select,
+.mxt-tool textarea {
+  padding: 4px 6px;
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.mxt-tool input[type="color"] {
+  width: 34px;
+  height: 26px;
+  padding: 2px;
+}
+
+.mxt-tool input[type="range"] {
+  width: 130px;
+  margin: 0;
+}
+
+.mxt-tool button {
+  padding: 4px 10px;
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
+}
+
+.mxt-tool button:hover {
+  border-color: var(--edge-hover);
+  background: var(--surface-soft);
+  color: var(--green);
+}
+
+.mxt-tool button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.mxt-tool .readout {
+  margin-top: 6px;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mxt-tool #selected {
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.mxt-tool #warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.mxt-tool #warnings div {
+  color: var(--danger);
+}
+
+.mxt-tool #warnings div.ok {
+  color: var(--ink-muted);
+}
+
+.mxt-tool #list {
+  margin: 0;
+  padding: 0;
+  max-height: 150px;
+  overflow: auto;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+}
+
+.mxt-tool #list:empty {
+  display: none;
+}
+
+.mxt-tool #list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--edge-light);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mxt-tool #list li:last-child {
+  border-bottom: 0;
+}
+
+.mxt-tool #list li:hover {
+  background: var(--surface-soft);
+}
+
+.mxt-tool #list li.picked {
+  background: var(--tint-green);
+  color: var(--green);
+}
+
+.mxt-tool #list li span {
+  flex: 1;
+}
+
+.mxt-tool #list li button {
+  padding: 1px 6px;
+}
+
+.mxt-tool .swatch {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+}
+
+.mxt-tool #json {
+  width: 100%;
+  height: 200px;
+  resize: vertical;
+  overflow: auto;
+  white-space: pre;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.mxt-tool .hint {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.mxt-tool--talisman-strokes #board {
+  width: 270px;
+  height: 630px;
+}
+
+.mxt-tool--talisman-strokes .mxt-tool-grid {
+  grid-template-columns: auto minmax(300px, 430px);
+}
+
+/* The button on a documentation page that opens the editor in its own window. */
+div.mxt-tool-open {
+  margin: 0 0 14px;
+  text-align: right;
+}
+
+div.mxt-tool-open a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  text-decoration: none;
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
+}
+
+div.mxt-tool-open a:hover {
+  border-color: var(--edge-hover);
+  background: var(--surface-soft);
+  color: var(--green);
+}
+
+/*
+ * The popped-out view: `layout: page` already drops the doc wrapper, and these rules take the rest of the chrome away so
+ * the page is nothing but the editor. It is opened from the button, so there is no nav to come back by — closing the tab
+ * is how you leave.
+ */
+.mxt-solo .VPNav,
+.mxt-solo .VPLocalNav,
+.mxt-solo .VPFooter {
+  display: none !important;
+}
+
+.mxt-solo .VPContent,
+.mxt-solo .VPPage {
+  padding: 0 !important;
+}
+
+.mxt-bare {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 22px 26px 30px;
+}
+
+.mxt-bare .mxt-tool {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .mxt-tool-grid,
+  .mxt-tool--talisman-strokes .mxt-tool-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

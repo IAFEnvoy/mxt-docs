@@ -37,6 +37,7 @@
 | 站内链接 | `pnpm run check:links`（`-- --strict`） | 校验链接与 `#锚点`。 |
 | 配置名 | `pnpm run check:config` | 需要读模组仓库的语言文件，见下。 |
 | Mermaid 图 | `pnpm run check:mermaid` | 改了任何 ```mermaid 围栏就跑：图在浏览器里画，构建不会替你发现画错的图。 |
+| 工具页 | `pnpm run check:tools` | 改了 `docs/.vitepress/theme/tools/` 里那个图形编辑器之后跑：把模块挂到桩 DOM 上，逐条比对它算的几何与模组一致。 |
 | 中英对等 | `pnpm run check:parity [子目录]` | 逐页比对两棵树：标题数、代码块数、表格行数、行内标识符集合。不是构建门槛，是重写/翻译时用来找"一边写了、另一边漏了"的页。 |
 | 一次性迁移 | `pnpm run migrate` | 会**重写**它自己生成过的页面；只在你确实要重来时跑。 |
 
@@ -55,6 +56,7 @@ MXT_EN_DOCS=/path/to/old-docs MXT_ZH_DOCS=/path/to/MiXianTu/docs pnpm run migrat
 | 导航、侧边栏、分组 | `docs/.vitepress/locales/pages.mjs`（**全站页面清单，唯一结构来源**；`build.ts` 由它生成导航与整站侧边栏，缺失页自动过滤） |
 | 语言包与界面文案 | `docs/.vitepress/locales/zh.ts` / `en.ts`、`docs/.vitepress/config.ts` |
 | 配图 | `docs/public/images/<主题>/`（两种语言共用，引用写 `/images/...`） |
+| 会跑的工具页（`/tools/`） | 页面 `docs/tools/*.md` 只写 `<ToolFrame tool=… host=… />`，并带 `aside: false`（右栏目录对一块要鼠标画的棋盘没用）；编辑器本体在 `docs/.vitepress/theme/tools/*.js`（`mount(host, lang)` 自己铺 DOM 与监听），文案在 `theme/tools/messages/<工具>.js`（`labels` 是按标记里那句英文键的映射，其余是拼出来的句子），`theme/tools/labels.js` 只替换文本节点；样式在 `docs/.vitepress/theme/tools.css`（读 `songyan.css` 的变量，所以跟着明暗走）。**每台编辑器还有一份独立页** `docs/tools/<工具>-full.md`（`layout: page` + `pageClass: mxt-solo`，中英各一份，**不登记 `pages.mjs`**）：只有编辑器，导航与页脚由 `.mxt-solo` 的规则藏掉；文档页上那个「在新窗口打开」按钮是 HTML `<a target="_blank">`（`check:links` 只看 markdown 链接，这条由 `check:tools` 兜） |
 | 校验与迁移脚本 | `scripts/`（`check-*.mjs`、`parallax.mjs`、`migrate-docs.mjs`、`repos.mjs` 只管"外部仓库在哪"） |
 
 三条容易踩的：

@@ -28,6 +28,7 @@ mxt-docs
 │  ├─ kubejs/               # KubeJS
 │  ├─ java/                 # Java API
 │  ├─ technical/            # 技术细节：源码级实现说明（伤害系统、敌我识别系统…）
+│  ├─ tools/                # 会跑的编辑器：阵法图形、符箓笔画
 │  ├─ en/                   # 英文镜像（与根目录一一对应，URL 带 /en/ 前缀）
 │  ├─ public/               # logo、favicon、文章配图等静态资源（所有语言共用）
 │  └─ .vitepress/
@@ -37,12 +38,13 @@ mxt-docs
 │     │  ├─ en.ts           # 英文语言包
 │     │  ├─ build.ts       # 由页面清单生成导航与整站侧边栏树（自动过滤缺失页）
 │     │  └─ pages.mjs       # 全站页面清单（唯一结构来源）
-│     └─ theme/             # 默认主题 + 自定义样式
+│     └─ theme/             # 默认主题 + 自定义样式（含 tools/ 里那两个编辑器模块）
 └─ scripts/
    ├─ repos.mjs             # 模组仓库等外部仓库的定位（环境变量优先，其次自动发现）
    ├─ migrate-docs.mjs      # 从两份既有文档生成站点内容
    ├─ check-i18n.mjs        # 列出只存在于单一语言的页面
    ├─ check-links.mjs       # 校验站内链接与锚点
+   ├─ check-formation-tool.mjs # 把阵法图形编辑器挂到桩 DOM 上，比对几何与模组一致
    └─ check-config-labels.mjs # 校验配置名与模组语言文件逐字一致
 ```
 
@@ -51,6 +53,27 @@ mxt-docs
 主题入口在 `docs/.vitepress/theme/index.ts`，依次加载 `songyan.css`（松烟配色与可复用组件）和 `custom.css`（VitePress 组件适配）。浅色使用宣纸、松绿与朱砂，深色使用墨底、浅青与暖金；颜色直接跟随 VitePress 的 `html.dark`，使用网站原有的模式按钮与偏好存储。
 
 导航、侧栏、搜索、正文、表格、代码块和提示框共用这套配色。修改颜色请调整 `songyan.css` 中的 `:root` / `:root.dark`；修改文档组件外观请调整 `custom.css`。需要在正文中使用松烟自带组件时，只给局部容器添加 `class="songyan-theme"`，避免将通用布局类套到整个 VitePress 页面。
+
+## 会跑的页面（`/tools/`）
+
+`docs/tools/` 下是两台写数据包时用得上的编辑器：阵法图形（一份 `mxt:formation_shape` 的 `strokes`）与符箓笔画（一份 `mxt:talisman_drawing` 的 `pattern.strokes`）。它们不是静态文档，所以拆成五件东西：
+
+| 文件 | 职责 |
+| --- | --- |
+| `docs/tools/*.md` | 页面：中英各一份的说明，正文里只有一句 `<ToolFrame tool="…" host="…" />`，front matter 带 `aside: false` 去掉右栏目录 |
+| `docs/.vitepress/theme/components/ToolFrame.vue` | 按名字懒加载模块，取当前语言（`useData().lang`）一起交给 `mount`，把它挂进那个空 `div`；离开页面时调 `dispose()` 解绑监听 |
+| `docs/.vitepress/theme/tools/*.js` | 编辑器本体：`mount(host, lang)` 铺 DOM、绑事件，返回 `{dispose, api}` |
+| `docs/.vitepress/theme/tools/messages/<工具>.js` | 文案：`labels` 是「标记里那句英文 → 译文」的表，其余是拼出来的句子（状态行、读数、警告），`en` 就是现有英文 |
+| `docs/.vitepress/theme/tools.css` | 样式：只读 `songyan.css` 的变量，所以跟着明暗切换 |
+
+四个约束：
+
+- **模块被导入时不许碰 DOM**，否则构建的预渲染会炸。页面先渲染一个空 `div`，客户端再把它填上——服务端与客户端渲染的都是空 `div`，不会 hydration 不匹配。
+- **`mount()` 把所有监听挂在一个 `AbortController` 上**：本站是单页应用，离开再回来会挂一份新的，旧的必须解绑。
+- **文案一律走那张表**：标记里的固定文字用 `labels` 按文本节点替换（`theme/tools/labels.js`），代码里拼的句子走 `t.xxx()`。别在标记里直接写死一句会被翻译掉的话，也别在代码里拼英文——两边都只有表里那一份。
+- **`api` 里的纯函数是给 `pnpm run check:tools` 用的**：`scripts/check-formation-tool.mjs` 把图形编辑器挂到一个桩 DOM 上，逐条比对它算的几何与模组一致，顺带检查两份语言表的键一致、每个 `labels` 键都还能在标记里找到、中文表真的替换到了文本节点上。改了 `theme/tools/` 下任何东西就跟着跑一次。
+
+每台编辑器还有一份**独立页**：`/tools/formation-figure-full` 与 `/tools/talisman-strokes-full`（`docs/tools/<工具>-full.md`，中英各一份）。`layout: page` + `pageClass: mxt-solo` + `sidebar: false`，正文只有一个 `mxt-bare` 包着 `<ToolFrame>`，导航、页脚与本地导航条由 `tools.css` 里 `.mxt-solo` 的规则藏掉，于是那一页只剩编辑器。它们**刻意不登记 `pages.mjs`**——不是文档页，不该进侧边栏也不该参与 `check:i18n`；文档页上那个「在新窗口打开编辑器」按钮是 HTML `<a target="_blank">`，而 `check:links` 只看 markdown 链接，所以这对「按钮 → 独立页」由 `pnpm run check:tools` 连着检查。
 
 ## 内容从哪里来
 
@@ -98,6 +121,7 @@ pnpm run check:links         # 校验站内链接与 #锚点
 pnpm run check:links -- --strict
 pnpm run check:config        # 校验文档里的配置名与模组语言文件逐字一致（需要模组仓库，见下）
 pnpm run check:mermaid       # 体检所有 ```mermaid 围栏（图在浏览器里画，构建发现不了画错的图）
+pnpm run check:tools         # 把阵法图形编辑器挂到桩 DOM 上，比对几何与模组一致
 pnpm run build               # 构建失败会报告死链
 ```
 

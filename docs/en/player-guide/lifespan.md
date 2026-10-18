@@ -38,7 +38,7 @@ A body with **no ledger** reads as "not accounted for": the `lifespan_remaining`
 | `reincarnate` | The body is washed back to a mortal on the spot; what it keeps is on the Reincarnation tab below. The very same reset is also reachable on demand: the `/mxt lifespan reincarnate` command, `MxtLifespan.reincarnate` and the `mxt:reincarnate` data pack action run it. |
 | `none` | Nothing is done at all: only the `lifespanEnd` event fires and content decides. |
 
-Before any of that, `Pre` of `lifespanEnd` fires and **can be cancelled**: a listener that writes a positive lifespan inside the event (through the service or straight onto the attachment) has extended the life and the countdown carries on, while a listener that writes nothing only refuses that one end — the account closes (`remaining = -1`, `total = 0`) instead of being retried forever. `Post` carries `outcome()`, naming the branch the base ran. The details are on [MxtEvents](/en/kubejs/api/events).
+Before any of that, `Pre` of `lifespanEnd` fires and **can be cancelled**: a listener that writes a positive lifespan inside the event (through the service or straight onto the attachment) has extended the life and the countdown carries on, while a listener that writes nothing only refuses that one end — the account closes (`remaining = -1`, `total = 0`) instead of being retried forever. `Post` carries `getOutcome()`, naming the branch the base ran. The details are on [MxtEvents](/en/kubejs/api/events).
 
 ## Character Information Panel
 

@@ -38,7 +38,7 @@ description: 寿元账本怎么记、服务端怎么结算、耗尽后身死还�
 | `reincarnate` | 当场洗回凡人，保留什么看下面的「转世」标签页；同一份重置也能按需触发——命令 `/mxt lifespan reincarnate`、脚本入口 `MxtLifespan.reincarnate` 与数据包行为 `mxt:reincarnate` 跑的就是它。 |
 | `none` | 什么都不做，只发 `lifespanEnd` 事件，交给内容包处理。 |
 
-耗尽前会发 `lifespanEnd` 的 `Pre`，**可以取消**：在事件里给身体写下正数寿元（走服务或直接写附件都行）就是续命，倒计时接着跑；什么都没写的取消只是拒绝这一次结束，账本随之关闭（`remaining = -1`、`total = 0`），不会反复重试。`Post` 带 `outcome()`，说明基础流程走了哪一支。细节见 [MxtEvents](/kubejs/api/events)。
+耗尽前会发 `lifespanEnd` 的 `Pre`，**可以取消**：在事件里给身体写下正数寿元（走服务或直接写附件都行）就是续命，倒计时接着跑；什么都没写的取消只是拒绝这一次结束，账本随之关闭（`remaining = -1`、`total = 0`），不会反复重试。`Post` 带 `getOutcome()`，说明基础流程走了哪一支。细节见 [MxtEvents](/kubejs/api/events)。
 
 ## 人物信息面板
 

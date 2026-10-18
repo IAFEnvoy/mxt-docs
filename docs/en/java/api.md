@@ -369,7 +369,7 @@ Package `com.iafenvoy.mxt.runtime.cultivation`. The lifespan ledger (**the ticks
 
 **Two events** (both in the `event` package):
 
-- `LifeSpanEndEvent.Pre` / `Post`: fired once at the moment a lifespan runs out. `Pre` is cancellable — writing a positive lifespan inside it has extended the life, while writing nothing closes the account (`remaining = -1`, `total = 0`); `Post` carries `outcome()` (`NONE` / `DEATH` / `REINCARNATE`).
+- `LifeSpanEndEvent.Pre` / `Post`: fired once at the moment a lifespan runs out. `Pre` is cancellable — writing a positive lifespan inside it has extended the life, while writing nothing closes the account (`remaining = -1`, `total = 0`); `Post` carries `getOutcome()` (`NONE` / `DEATH` / `REINCARNATE`).
 - `LifeSpanRebirthEvent.Pre` / `Post`: fired before and after an **explicit rebirth**, and only by that public entry point. A cancelled `Pre` means the whole thing did not happen and the body is untouched.
 
 Key points:
@@ -527,11 +527,11 @@ Package `com.iafenvoy.mxt.event`. The identification hook of the friend system, 
 | Member | Purpose | Notes |
 | --- | --- | --- |
 | `Relation(UUID judgeId, @Nullable Entity judge, Entity candidate)` / `Relation(Entity judge, Entity candidate)` | Construction | Public constructors, so the outside can post one itself |
-| `judgeId()` | The judge's UUID | **Always present** — a friend source whose data lives in a server manager (a team, a faction) can therefore answer while the player is offline |
-| `judge()` | The judge entity | **Empty while offline**, which is a design requirement rather than a bug |
-| `candidate()` | The one being judged | |
+| `getJudgeId()` | The judge's UUID | **Always present** — a friend source whose data lives in a server manager (a team, a faction) can therefore answer while the player is offline |
+| `getJudge()` | The judge entity | **Empty while offline**, which is a design requirement rather than a bug |
+| `getCandidate()` | The one being judged | |
 | `setResult(TriState)` | Writes down this listener's verdict | `TRUE` = treat as one of mine; `FALSE` = not one, **whatever the list says** (it overrides every source, including the player's own list); `DEFAULT` = hand it back to the list |
-| `result()` / `answered()` | Reads the current verdict / whether anyone has answered yet | `FriendService` only trusts the event when `answered()` is true |
+| `getResult()` / `isAnswered()` | Reads the current verdict / whether anyone has answered yet | `FriendService` only trusts the event when `isAnswered()` is true |
 
 Key points:
 
