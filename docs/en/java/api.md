@@ -1,7 +1,7 @@
----
+   
 title: Public API
 description: "The runtime entry points another mod can call directly: reading datapack registries, definition display names, the item catalogue and creative tabs, aura and resources, cultivation and breakthrough, abilities, damage, formations, foe identification and currency."
----
+   
 
 # Public API
 
@@ -9,20 +9,19 @@ This page lists the **entry points another mod can call directly**. What a datap
 
 Three things up front:
 
-- **These entry points stay in their own module packages** (`registry`, `util`, `runtime/*`, `data`); only the interfaces you are meant to **implement** live in `com.iafenvoy.mxt.api`, see [Interfaces](interfaces/index.md).
-- **The server is authoritative**: costs, cultivation, abilities, damage and formation settlement all happen on the server only; the client only renders and sends requests. Which entry points go dead on the client are collected in [The Server and Client Boundary](#boundary).
-- To learn **why** a given line looks the way it does (rather than "which methods exist"), see the technical pages: [Aura Calculation](../technical/aura.md), [Damage System](../technical/damage.md), [Foe Identification](../technical/identification.md).
+  **These entry points stay in their own module packages** (`registry`, `util`, `runtime/*`, `data`); only the interfaces you are meant to **implement** live in `com.iafenvoy.mxt.api`, see [Interfaces](interfaces/index.md).
+  **The server is authoritative**: costs, cultivation, abilities, damage and formation settlement all happen on the server only; the client only renders and sends requests. Which entry points go dead on the client are collected in [The Server and Client Boundary](#boundary).
+  To learn **why** a given line looks the way it does (rather than "which methods exist"), see the technical pages: [Aura Calculation](../technical/aura.md), [Damage System](../technical/damage.md), [Foe Identification](../technical/identification.md).
 
 ## Finding an entry point by what you want to do {#pick}
 
 | What you want to do | Entry point | Where |
-| --- | --- | --- |
+|     |     |     |
 | Read a definition out of a datapack registry | [`MxtDatapackRegistries`](#mxtdatapackregistries) | `registry` |
 | Turn a definition into a display name | [`DefinitionText`](#definitiontext) | `util` |
 | Assemble one tooltip line of numbers | [`TooltipText`](#tooltiptext) | `util` |
 | Evaluate a datapack number | [`NumberProvider`](#numberprovider) | `util.formula` |
 | Ask "does this item count as this definition" | [`ItemMatcher`](#itemmatcher) | `util.matcher` |
-| Turn a registry's definitions into creative tab items | [`CreativeTabHelper`](#creativetabhelper) | `data` |
 | Ask which tier a stack reads, and let your own definitions answer | [`QualityService` / `QualityProvider`](#qualityservice) | `runtime.item` / `api` |
 | Ask how much aura a position has | [`AuraService`](#auraservice) | `runtime.world` |
 | Read or write one value on an entity | [`ResourceService`](#resourceservice) | `runtime.resource` |
@@ -42,12 +41,12 @@ Three things up front:
 
 Package `com.iafenvoy.mxt.registry`. The declarations of the 40 native datapack registries and their uniform read entry point; `/reload` rebuilding and client synchronisation are both left to the vanilla registry system, and this class **holds no snapshot**.
 
-The nine item/block tables (`item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`, `block_aura`, `heat_source`) are here too: they are ordinary datapack registries, the item-keyed ones claim their entries through `items` (`currency` through `item`) and the block-keyed ones through `blocks`, and they are read exactly like everything below. To ask "which definition applies to this stack", use `ItemMatcher.find(...)`. Fields and file locations are in [Registry Overview](/en/datapack/json/index).
+The nine item/block tables (`item_aura`, `currency`, `default_quality`, `item_binding`, `weapon_binding`, `tool_binding`, `blueprint_binding`, `block_aura`, `heat_source`) are here too: they are ordinary datapack registries, the item keyed ones claim their entries through `items` (`currency` through `item`) and the block keyed ones through `blocks`, and they are read exactly like everything below. To ask "which definition applies to this stack", use `ItemMatcher.find(...)`. Fields and file locations are in [Registry Overview](/en/datapack/json/index).
 
 Reading a value by id / holder (it reads the **server** registry):
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `get(ResourceKey<? extends Registry<T>> key, Identifier id)` | Gets the definition value by id | A missing entry gives `Optional.empty()` |
 | `holder(key, Identifier id)` | Gets a holder by id | Reads the **server** registry |
 | `holders(key)` | Iterates every holder of the whole registry | |
@@ -55,23 +54,23 @@ Reading a value by id / holder (it reads the **server** registry):
 Explicitly passing a registry accessor (**use these on the client**):
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `holder(HolderLookup.Provider access, key, Identifier id)` | The **only correct entry point** for getting a holder by id on the client | Does not touch `ServerLifecycleHooks` |
 | `holders(Provider access, key)` / `holders(RegistryAccess access, key)` | Iterates the whole registry | |
 | `get(Provider access, key, Identifier id)` | Gets a value | Same as above |
 
-**This layer filters nothing.** Whether an entry is in the registry is the whole answer, and switching a definition off is load-time work (`neoforge:conditions`, see [Disabling a Definition](../datapack/conventions.md#disabling-a-definition)): an entry a condition blocks is simply not in the registry. So a holder you read is a holder you may act on, and there is no such state as "I read a definition that was switched off".
+**This layer filters nothing.** Whether an entry is in the registry is the whole answer, and switching a definition off is load time work (`neoforge:conditions`, see [Disabling a Definition](../datapack/conventions.md#disabling a definition)): an entry a condition blocks is simply not in the registry. So a holder you read is a holder you may act on, and there is no such state as "I read a definition that was switched off".
 
 Tags:
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `isTagged(key, Identifier id, Identifier tagId)` / `isTagged(key, Holder<T> holder, Identifier tagId)` | Whether it is in a tag | A missing entry returns `false` |
 
 Lenient lookup and size:
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `holderOrEmpty(key, Identifier id)` | The same as `holder(key, id)`, but **gives empty instead of throwing when no server is running** | For readers that also run on the client (for example `CurseService.definitionState`) |
 | `registry(key)` | Gets the vanilla `Registry<T>` itself | Throws `IllegalStateException` when no server is running |
 | `size(key)` | The number of entries in that registry | The same server assertion as `registry(...)` |
@@ -79,25 +78,25 @@ Lenient lookup and size:
 
 Key points:
 
-- The class **caches no registry instance**. To cache, key by **registry instance** (`/reload` does not replace the instance, only a world load does), see `DamageElements`.
-- A `Holder` an attachment still stores while the current pack no longer provides it (the entry is blocked by `neoforge:conditions`, or its file was deleted) **does not disappear on its own between two world loads**: attachments are decoded while the world loads, a reference whose definition cannot be found at that moment is dropped by the tolerant list codec (entering the world again clears it), and `/reload` does not decode attachments again, so the old reference is still there for the rest of the session. To ask "is it still there", look the id up in the registry yourself (`Elements.of`, `activeSpiritRoots` and `SecretRealmService.enter` all do), rather than taking a holder you hold for proof that it still exists.
-- `newDatapackRegistries(NewRegistry)` is called by the startup event and is **not for business code**; the registries and codecs are registered in `MxtResourceKeys`.
+  The class **caches no registry instance**. To cache, key by **registry instance** (`/reload` does not replace the instance, only a world load does), see `DamageElements`.
+  A `Holder` an attachment still stores while the current pack no longer provides it (the entry is blocked by `neoforge:conditions`, or its file was deleted) **does not disappear on its own between two world loads**: attachments are decoded while the world loads, a reference whose definition cannot be found at that moment is dropped by the tolerant list codec (entering the world again clears it), and `/reload` does not decode attachments again, so the old reference is still there for the rest of the session. To ask "is it still there", look the id up in the registry yourself (`Elements.of`, `activeSpiritRoots` and `SecretRealmService.enter` all do), rather than taking a holder you hold for proof that it still exists.
+  `newDatapackRegistries(NewRegistry)` is called by the startup event and is **not for business code**; the registries and codecs are registered in `MxtResourceKeys`.
 
 ### `DefinitionText` {#definitiontext}
 
 Package `com.iafenvoy.mxt.util`. Turns a definition into a display name; the key is `<registry namespace>.<category>.<definition namespace>.<path>`, where `category` is the registry id's path.
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `name(Holder<?> holder)` / `name(ResourceKey<?> key)` | Gets the display name | **The entry point recommended inside the mod**: the category is answered by the registry itself (the path of `key.registry()`), so callers pass no category string |
-| `name(Identifier id, String category)` | For when all you have is a bare id | **Hard-assumes the `mxt` namespace**; do not use this overload for a non-`mxt` definition |
+| `name(Identifier id, String category)` | For when all you have is a bare id | **Hard assumes the `mxt` namespace**; do not use this overload for a non `mxt` definition |
 | `description(Holder<?> holder)` / `description(ResourceKey<?> key)` | Gets the description | The key is the name key plus `.description`; **this is the description's only exit** |
 | `minorStage(Holder<?> holder, int index)` / `minorStage(ResourceKey<?> key, int index)` | Gets a minor stage's name | The key is this stage's name key plus `.minor_stage.<index>`, the index starting at `0` |
 | `derived(Holder<?> holder, String suffix)` / `derived(ResourceKey<?> key, String suffix)` | The name key plus one suffix | `description` and `minorStage` both go through it, as does any other text belonging to a definition |
 | `category(Identifier registry)` | Gets the category of a registry | It is its path |
 | `key(ResourceKey<?>)` / `key(Identifier registry, Identifier id)` | Builds a text key from the entry / registry+definition | |
-| `key(String category, String registryNamespace, Identifier id)` | The low-level concatenation | **The only exit for building a definition key** |
-| `resolved(Component text)` | Whether this text is "real text" or "an untranslated bare key" | Reads the client language file; a display-layer judgement |
+| `key(String category, String registryNamespace, Identifier id)` | The low level concatenation | **The only exit for building a definition key** |
+| `resolved(Component text)` | Whether this text is "real text" or "an untranslated bare key" | Reads the client language file; a display layer judgement |
 
 Key points: **do not assemble a second set of name keys anywhere else**; a definition has **no text field at all**, so its name and description are always derived from the registered id and the only way a pack gives a definition words is by translating the generated key. An untranslated key renders as the key itself (not an empty string), and `resolved(...)` is there to decide exactly that — **always pass a description through it before drawing it**.
 
@@ -106,27 +105,27 @@ Key points: **do not assemble a second set of name keys anywhere else**; a defin
 Package `com.iafenvoy.mxt.util`. How numbers and a single line are assembled in a tooltip; pure computation, no state.
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `number(double value)` | At most two decimals, trailing zeros dropped | Uses `Locale.ROOT`, unaffected by the language environment: `3.0` → `3`, `3.50` → `3.5`, `3.456` → `3.46` |
-| `signed(double value)` | A signed number | Anything non-negative gets a `+` (`0` → `+0`) |
+| `signed(double value)` | A signed number | Anything non negative gets a `+` (`0` → `+0`) |
 | `join(List<? extends Component> parts)` / `join(Component... parts)` | Joins several parts into **one line** | What is inserted between parts is the translation key `TooltipText.SEPARATOR` (`tooltip.mxt.separator`), not a literal punctuation mark |
 
-Key points: list punctuation differs per language, so **do not hard-code the ideographic comma or ", " anywhere else** — every joined line must go through here.
+Key points: list punctuation differs per language, so **do not hard code the ideographic comma or ", " anywhere else** — every joined line must go through here.
 
 ### `NumberProvider` {#numberprovider}
 
 Package `com.iafenvoy.mxt.util.formula`. The abstraction of a "number": a constant in JSON, an exp4j expression string, or one of the structured providers in `mxt:number_provider_type`.
 
 | Member | Purpose | Notes |
-| --- | --- | --- |
-| `double evaluate(FormulaContext context)` | Evaluates it | An implementation must guard non-finite results itself with `assertFinite` |
+|     |     |     |
+| `double evaluate(FormulaContext context)` | Evaluates it | An implementation must guard non finite results itself with `assertFinite` |
 | `MapCodec<? extends NumberProvider> codec()` | This implementation's `MapCodec` | A new implementation must also be registered in `mxt:number_provider_type`, otherwise the typed codec cannot recognise it |
-| `default boolean assertFinite(double value)` | Checks whether a runtime result is finite | On a non-finite value it logs one diagnostic containing `using 0` and returns `false`; **it does not change the number itself**, the caller owns the fallback |
+| `default boolean assertFinite(double value)` | Checks whether a runtime result is finite | On a non finite value it logs one diagnostic containing `using 0` and returns `false`; **it does not change the number itself**, the caller owns the fallback |
 | `NumberProvider.CODEC` | The uniform datapack entry point | Tries `double` → expression string → `{type:...}` in that order; the encoding side always writes `{type:...}` back |
 | `NumberProvider.TYPED_CODEC` | Dispatches on `"type"` | |
-| `NumberProvider.FINITE_DOUBLE_CODEC` | Rejects a non-finite double | Used for load-time validation |
+| `NumberProvider.FINITE_DOUBLE_CODEC` | Rejects a non finite double | Used for load time validation |
 
-Built-in types (`mxt:number_provider_type`): `constant` (the default), `expression`, `context_variable`, `sum`, `uniform`, `binomial`, `weighted_list`, `conditional`, plus the `js` one handed to scripts.
+Built in types (`mxt:number_provider_type`): `constant` (the default), `expression`, `context_variable`, `sum`, `uniform`, `binomial`, `weighted_list`, `conditional`, plus the `js` one handed to scripts.
 
 Key points: a field only needs one shape (a number / an expression string / `{type:...}`), **do not invent another number format for one field** — every number outside `Cost` goes through it.
 
@@ -135,7 +134,7 @@ Key points: a field only needs one shape (a number / an expression string / `{ty
 Package `com.iafenvoy.mxt.util.matcher`. The matcher behind "which definition applies to this item": **any entry** in `entries()` matching is a match (an or, not an and).
 
 | Member | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `List<Entry> entries()` | The list of match entries | An implementation must supply them all |
 | `int priority()` | Sort weight | **No default implementation** — every implementation returns the `priority` it decoded from JSON; a matcher without that field returns `DEFAULT_PRIORITY` |
 | `DEFAULT_PRIORITY` | The value used when a definition writes no `priority` (`0`) | The three item conditions, the `mxt:item` cost and the two framework hold declarations have no such field and use it too; **the rank is not split by Entry kind** |
@@ -150,55 +149,37 @@ Entry kinds (`mxt:item_matcher_entry_type`, default `item`): `item`, `tag`, `wil
 
 Key points:
 
-- The "first" in `find` is the definition with the **largest `priority` number** — not registration order, and not the "most specific" match; it is the same direction as `aura_zone` and `element_reaction`. Only equal `priority` values depend on the order of the stream passed in.
-- `priority` is **a field of the claim tables themselves** (`artifact`, the `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` bindings, `spirit_herb`, `item_aura`, `currency` and `default_quality`; default `0`, with no range validation at load time), so when a general definition and one that names items both exist the pack writes down which wins; naming an item **does not** move it up. `ArtifactHold` reads the field of the artifact it wraps; the `mxt:item` cost, the three item conditions and the two framework-owned hold declarations (technique reading and pouring) have no such field and always answer `DEFAULT_PRIORITY`.
-- **`itemLevel()` is the cache-safety dividing line**: returning `true` means "whether it matches depends only on the item itself", and a caller caching per item **may only** cache such entries; an entry that reads components / NBT on the stack — or whose answer comes from another definition, like `mxt:herb_tag`, which asks which `spirit_herb` claims the item — has to be asked once per stack.
-- The shorthand covers only `item` and `tag`; another implementation encoded through the shorthand throws `IllegalArgumentException`.
+  The "first" in `find` is the definition with the **largest `priority` number** — not registration order, and not the "most specific" match; it is the same direction as `aura_zone` and `element_reaction`. Only equal `priority` values depend on the order of the stream passed in.
+  `priority` is **a field of the claim tables themselves** (`artifact`, the `item`/`weapon`/`pill`/`tool`/`blueprint`/`technique` bindings, `spirit_herb`, `item_aura`, `currency` and `default_quality`; default `0`, with no range validation at load time), so when a general definition and one that names items both exist the pack writes down which wins; naming an item **does not** move it up. `ArtifactHold` reads the field of the artifact it wraps; the `mxt:item` cost, the three item conditions and the two framework owned hold declarations (technique reading and pouring) have no such field and always answer `DEFAULT_PRIORITY`.
+  **`itemLevel()` is the cache safety dividing line**: returning `true` means "whether it matches depends only on the item itself", and a caller caching per item **may only** cache such entries; an entry that reads components / NBT on the stack — or whose answer comes from another definition, like `mxt:herb_tag`, which asks which `spirit_herb` claims the item — has to be asked once per stack.
+  The shorthand covers only `item` and `tag`; another implementation encoded through the shorthand throws `IllegalArgumentException`.
 
 ## The item catalogue and creative tabs {#picker}
 
-### `CreativeTabHelper` {#creativetabhelper}
+The item picker belongs to the **Picker** mod (bundled here through `jarJar`): the screen, the `/picker` command, the open packet and the catalogue reading are all its, and this mod only registers its own categories at startup (`data/PickerCategories`). So there is no "catalogue API of this mod" here - to read the rows, use the Picker's `PickerContents`.
 
-Package `com.iafenvoy.mxt.data`. The **read** side of the "table → selectable rows" catalogue: `/picker` and other mods both go through it. Each entry is one `PickerItem(stack, names)` row: `stack` is what is drawn, `names` are the names that row can be searched by. It is read-only — it writes nothing onto items and decides nothing about who may take them.
+A category is one registry: the category id `/picker <category>` takes is the registry id, `PickerCatalogue.categories()` gives every category in registration order and `PickerCatalogue.category(Identifier)` finds one by id. `minecraft:item` and `minecraft:block` are the Picker's own built-ins and this mod does not register them again; the categories this mod registers, and the shape of their rows, are on [The Item Picker](screens.md).
 
-A category is just a registry: `ItemPickerManager.categories()` gives the `ResourceKey<Registry<?>>` list in registration order, and the category id the command and the open packet use is `key.identifier()`. Where the rows come from is decided by that registry's own provider — an item-shaped table (`item_aura`, `currency`, `default_quality`, the various bindings…) keeps one row per item it claims (`currency` through `item`, the rest through `items`), a block-shaped table (`block_aura`, `heat_source`) one row per block its `blocks` claims, and a row is named by the entry's own name (its `name` if the definition writes one, otherwise a translation key derived from the id). That is why every `CreativeTabHelper` overload takes a registry key and there is no category object.
+Where the rows come from is decided by that registry's own provider - an item shaped table (`item_aura`, `currency`, `default_quality`, the various bindings…) keeps one row per item it claims (`currency` through `item`, the rest through `items`), a block shaped table (`block_aura`, `heat_source`) one row per block its `blocks` claims, and a row is named by the entry's own name (its `name` if the definition writes one, otherwise a translation key derived from the id). Within a category the rows follow the registry's own order.
 
 Among matcher entries **only an item and a tag name their items outright**; every other entry is asked of **each registered item** instead (wildcards, regexes, a whole ingredient and capabilities such as `mxt:spirit_storage` all produce rows that way), and only the entries that read stack data (a `mxt:quality` tier, the `mxt:technique` component, a spirit herb filtered by its properties) answer no for a bare stack and therefore add no row.
 
-Every query takes the registry access from you (`HolderLookup.Provider`; `BuildCreativeModeTabContentsEvent.getParameters().holders()` is one), so the client reads the tables it has synced and the server reads its own — there is no "reading the other side" case.
-
-| Method | What it does | Notes |
-| --- | --- | --- |
-| `itemsOf(Provider, key)` | Every row of one registry | `key` is a registry key; **a registry that was never registered as a category gives an empty list**, never a throw |
-| `itemsOf(Provider, key, Predicate<Identifier>)` | Filter rows by entry id | The predicate receives **the entry's own id** (a definition's id, or the item's or block's own id), which is why "a mod id" means reading its namespace |
-| `itemsOfMod(Provider, key, String)` | The rows of one registry that live in one namespace | `mxt:aura` entries belong to `mxt`, `mymod:aura/…` to `mymod` |
-| `itemsOfMod(Provider, String)` | Across every category, the rows of one namespace | What a "everything from my mod" creative tab uses |
-| `stacksOf(...)` / `stacksOfMod(...)` | The stack view of the four above | See below |
-
-Key points:
-
-- **What a creative tab takes is `stacksOf` / `stacksOfMod`**: they drop duplicates by **vanilla's own creative tab rule** (`ItemStackLinkedSet`, where the same item with the same components is one entry) and **every stack is a copy** — editing one cannot reach the row inside the picker. The de-duplication is not decoration: every `mxt:aura` row is the same spirit stone standing in for a definition, and handing those rows to a tab as they are makes vanilla's `accept` throw "this stack already exists in the tab". The row view (`itemsOf*`) keeps one row per definition and does not de-duplicate.
-- **Vanilla's `accept` also requires `count == 1`**, which every row the mod itself registers is; write 1 in your own rows too.
-- The queries have no side effects and work on both sides: they read only the access you pass in, touch no server singleton and write no attachment.
-- To draw the same rows as a picker page instead of feeding a tab, use `ItemPickerScreen.over(title, stacks)`, see [The Item Picker](screens.md#the-item-picker-itempickerscreen).
-
-**The catalogue itself lives elsewhere**: which registry maps to which rows, and how each row is built, is `com.iafenvoy.mxt.picker.ItemPickerManager` — `categories()` gives every category's registry key in registration order (`key.identifier()` is the category id the command and the open packet use), `category(Identifier)` finds one key by id, `provider(ResourceKey<? extends Registry<?>>)` gives that registry's own `ItemProvider<?>` (it turns registry entries into `PickerItem` rows), and `registerSingle` / `register` add entries (the `mxt:` registries are registered by the mod). `CreativeTabHelper` only reads it, so the two classes stay apart. One limit to know: **a registry honours only the first provider registered for it** — registering a second one for a key already taken is **silently inert** (the category list also lists it once).
+For a creative tab, use `PickerContents.stacksOf` / `stacksOfMod`: they drop duplicates by **vanilla's own creative tab rule** (`ItemStackLinkedSet`, where the same item with the same components is one entry) and **every stack is a copy**. The de-duplication is not decoration: every `mxt:aura` row is the same spirit stone standing in for a definition, and handing those rows to a tab as they are makes vanilla's `accept` throw "this stack already exists in the tab". The row view (`itemsOf*`) keeps one row per definition and does not de-duplicate; vanilla's `accept` also requires `count == 1`, which every row the mod itself registers is. Every query takes the registry access from you (`HolderLookup.Provider`; `BuildCreativeModeTabContentsEvent.getParameters().holders()` is one), so the client reads the tables it has synced and the server reads its own.
 
 ```java
 // Your own creative tab: everything this mod contributed (plus its own items)
 @Override
 public void buildContents(BuildCreativeModeTabContentsEvent event) {
     if (event.getTabKey() != MY_TAB) return;
-    for (ItemStack stack : CreativeTabHelper.stacksOfMod(event.getParameters().holders(), "mymod"))
+    for (ItemStack stack : PickerContents.stacksOfMod(event.getParameters().holders(), "mymod"))
         event.accept(stack);
 }
 ```
-
 ## Item quality {#quality}
 
 ### `QualityService` and `QualityProvider` {#qualityservice}
 
-Packages `com.iafenvoy.mxt.runtime.item` (the service) and `com.iafenvoy.mxt.api` (the interface). **There is exactly one resolution order for "which tier is this stack"**, and it lives in one place, `QualityService.find`. It walks **three layers** in order: the `mxt:quality` component on the stack, then **the definition the stack itself carries**, then the `mxt:default_quality` registry. Nine definitions in this mod sit on the second layer today. For the field-level rules see [Quality](/en/datapack/json/quality).
+Packages `com.iafenvoy.mxt.runtime.item` (the service) and `com.iafenvoy.mxt.api` (the interface). **There is exactly one resolution order for "which tier is this stack"**, and it lives in one place, `QualityService.find`. It walks **three layers** in order: the `mxt:quality` component on the stack, then **the definition the stack itself carries**, then the `mxt:default_quality` registry. Nine definitions in this mod sit on the second layer today. For the field level rules see [Quality](/en/datapack/json/quality).
 
 `api/QualityProvider` is the contract a **definition type** implements to say "the tier my own items start on is mine to answer".
 
@@ -211,7 +192,7 @@ public interface QualityProvider {
 **Implementing it alone changes nothing.** A definition type also has to register a carrier component with `QualityService.carry` before it joins the second layer:
 
 | Overload | Use it when |
-| --- | --- |
+|     |     |
 | `carry(Supplier<? extends DataComponentType<Holder<T>>> type)` | the component's value **is** the definition, so it is read straight as a `Holder<T>` |
 | `carry(Supplier<? extends DataComponentType<C>> type, Function<C, Optional<Holder<T>>> extract)` | the component is a record with the definition inside it, pulled out by `extract` |
 
@@ -219,26 +200,25 @@ public interface QualityProvider {
 
 Key points:
 
-- **There is one registration order**: this mod's own carriers are registered in `QualityService`'s static block at class load, so an addon's carriers come after them. A lookup walks the whole list in registration order and the first one to answer wins.
-- **It is a registration, not a scan of whatever components a stack happens to carry**: when two providers sit on one stack, only the registration order can decide who is asked first - component iteration order has no contract at all.
-- **A carrier has to answer from the stack alone**: neither overload is handed a registry, because the gate that decides whether an item may be used (`QualityService.check`) only has the quality registry in hand. A design that wants to look another registry up by id will not work here.
-- **An unbound reference answers nothing**: when the holder a carrier pulls out is unbound (the current pack deleted that definition) this layer answers empty and resolution falls through, rather than producing a dead tier.
-- **The definition type is only the thing being asked**: what actually gets read is the definition's own `defaultQuality()`, so once a type implements the interface and registers a carrier, every one of its definitions joins the second layer automatically.
+  **There is one registration order**: this mod's own carriers are registered in `QualityService`'s static block at class load, so an addon's carriers come after them. A lookup walks the whole list in registration order and the first one to answer wins.
+  **It is a registration, not a scan of whatever components a stack happens to carry**: when two providers sit on one stack, only the registration order can decide who is asked first   component iteration order has no contract at all.
+  **A carrier has to answer from the stack alone**: neither overload is handed a registry, because the gate that decides whether an item may be used (`QualityService.check`) only has the quality registry in hand. A design that wants to look another registry up by id will not work here.
+  **An unbound reference answers nothing**: when the holder a carrier pulls out is unbound (the current pack deleted that definition) this layer answers empty and resolution falls through, rather than producing a dead tier.
+  **The definition type is only the thing being asked**: what actually gets read is the definition's own `defaultQuality()`, so once a type implements the interface and registers a carrier, every one of its definitions joins the second layer automatically.
 
 The rest of `QualityService`'s public surface:
 
 | Method | What it does | Notes |
-| --- | --- | --- |
-| `find(Provider access, ItemStack stack)` | The tier this stack resolves to | The one implementation of the three-layer order; an empty stack gives empty |
+|     |     |     |
+| `find(Provider access, ItemStack stack)` | The tier this stack resolves to | The one implementation of the three layer order; an empty stack gives empty |
 | `set(stack, quality)` / `clear(stack)` | Write / remove the override component | After `clear` the stack falls back to **the definition it carries**, then to the `mxt:default_quality` registry |
 | `hasOverride(stack)` | Whether the stack **has** that component | A different question from "did a tier resolve": a stack with no component can still read a tier from its definition or the `mxt:default_quality` registry |
 | `canUse(user, stack)` / `check(user, stack)` | The "may this be used" gate | `check` returns a `Failure`; binding conditions, the tier's own `condition`, pill use caps and cooldowns all live here |
-| `modifier(...)` | One of the quality's three modifiers | A multiplier; missing, non-finite or ≤ 0 all fall back to `DEFAULT_MODIFIER` (`1.0`) |
-| `displayName(quality)` | The tier's own name, in the tier's own colour | **The one way to list a tier** (it is `coloredName(quality, DefinitionText.name(quality))`); `/quality get\|set\|upgrade`, the spirit-root / physique lists and drawing settlement all go through it |
+| `modifier(...)` | One of the quality's three modifiers | A multiplier; missing, non finite or ≤ 0 all fall back to `DEFAULT_MODIFIER` (`1.0`) |
+| `displayName(quality)` | The tier's own name, in the tier's own colour | **The one way to list a tier** (it is `coloredName(quality, DefinitionText.name(quality))`); `/quality get\|set\|upgrade`, the spirit root / physique lists and drawing settlement all go through it |
 | `coloredName(quality, text)` | Puts this tier's `color` on some **other** text | Returns the text unchanged when the quality declares no colour |
-| `ordered()` / `ordered(Provider access)` | Every tier, ordered by the `tooltip_order` tag | Clients use the overload that takes a `Provider` |
 
-Use `set` to store a single-stack override rather than writing the component yourself, and call `notifyCannotUse` when a refused use should give the player the same message (it is public so an interaction that runs below the gate's own priority can still report the refusal it sees).
+Use `set` to store a single stack override rather than writing the component yourself, and call `notifyCannotUse` when a refused use should give the player the same message (it is public so an interaction that runs below the gate's own priority can still report the refusal it sees).
 
 ## Aura and resources {#aura}
 
@@ -251,50 +231,50 @@ Package `com.iafenvoy.mxt.runtime.world`. The **only resolver** of "how much aur
 Queries (callable on both sides):
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
-| `getPositionAura(Level level, BlockPos pos)` | **The final aura at a position**: the environment pool + that chunk's stock + the distance-falloff contribution of nearby blocks + the formation's `max_bonus` ceiling bonus | This is the reading `/mxt aura query` uses; internally it fetches / initialises that chunk's aura attachment |
+|     |     |     |
+| `getPositionAura(Level level, BlockPos pos)` | **The final aura at a position**: the environment pool + that chunk's stock + the distance falloff contribution of nearby blocks + the formation's `max_bonus` ceiling bonus | This is the reading `/mxt aura query` uses; internally it fetches / initialises that chunk's aura attachment |
 | `getSensedAura(Level level, BlockPos pos)` | **The environment concentration**: environment only, **deliberately without the chunk stock** | The resource bar's `mxt:environment_concentration` is this reading; when no region definition is found it gives an empty pool with the other fields still present |
 
 Writing chunk stock:
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
-| `consume(Level level, BlockPos pos, Map<Holder<Aura>, Double> costs)` | Deducts one payment of aura from that chunk's stock and returns whether it succeeded | **All or nothing**: any non-finite entry, a negative entry or insufficient stock returns `false` and deducts nothing at all |
-| `change(Level level, BlockPos pos, Map<Holder<Aura>, Double> amounts)` | Directly increases or decreases that chunk's stock (may be negative) | Returns `void`, **a failure carries no signal at all** (any non-finite value silently drops the whole payment); **a missing aura is never implicitly created** |
-| `initialize(AuraChunkAttachment chunk, Resolved resolved, BlockPos pos)` | Writes one layer of environment pool into the chunk stock and marks it as a template | The server-side write path |
+|     |     |     |
+| `consume(Level level, BlockPos pos, Map<Holder<Aura>, Double> costs)` | Deducts one payment of aura from that chunk's stock and returns whether it succeeded | **All or nothing**: any non finite entry, a negative entry or insufficient stock returns `false` and deducts nothing at all |
+| `change(Level level, BlockPos pos, Map<Holder<Aura>, Double> amounts)` | Directly increases or decreases that chunk's stock (may be negative) | Returns `void`, **a failure carries no signal at all** (any non finite value silently drops the whole payment); **a missing aura is never implicitly created** |
+| `initialize(AuraChunkAttachment chunk, Resolved resolved, BlockPos pos)` | Writes one layer of environment pool into the chunk stock and marks it as a template | The server side write path |
 
 Result types: `AuraResult` (a table of `Holder<Aura>` → `AuraPool(amount, maximum, regenPerTick, supplied)`, plus the rule, the source and a `SourceKind`) and `Resolved(holder, definition, kind, maxBonus)` (one layer's resolution result; `id()` gives `mxt:empty` when there is no holder).
 
 Key points:
 
-- **"The final aura at a position" and "the environment concentration" are two entry points**: the former includes the chunk stock, the latter does not. Both pools are **separated by `Holder<Aura>`**, and `aura` and `resource` are one to one, so **there is no "give me the pool of a certain `resource`" entry point**.
-- **The account you can actually spend is the chunk stock**, and only `consume` / `change` can change it; `getPositionAura` gives a composite view (with the block contributions mixed in).
-- **A query is a snapshot of the current tick**: results are memoised by `(position, game tick)` and the whole table is dropped at the end of every tick (`AuraQueryCache`), so a `consume` / `change` is **not** visible to a query made in the same tick (a newly activated formation is the same story, visible only from the next tick) — if you need the new value right away, keep your own bookkeeping from the call's result. See [Aura Calculation](../technical/aura.md).
-- `supplied` separately records "how much of this amount comes from the block emitters underfoot", because a consumer allowed to spend the terrain underfoot (a formation that draws on the environment, say) has to deduct its own share first, or it would double-count.
-- **The later layer wins**: biome < dimension < custom region < formation override. A dimension binding **replaces** the biome rather than being overridden by it — reading the order of that English comment directly is easy to get backwards.
-- A formation override only posts `AuraZoneEvent.Override` when there is a region holder and it is the server; if it is cancelled the lower-priority layer is kept; an override without a holder passes through silently.
-- Both client queries can be called, but **dimension tag matching may differ from the server** (a dimension stem is a registry not synchronised to the client), so do not treat a client result as authoritative.
+  **"The final aura at a position" and "the environment concentration" are two entry points**: the former includes the chunk stock, the latter does not. Both pools are **separated by `Holder<Aura>`**, and `aura` and `resource` are one to one, so **there is no "give me the pool of a certain `resource`" entry point**.
+  **The account you can actually spend is the chunk stock**, and only `consume` / `change` can change it; `getPositionAura` gives a composite view (with the block contributions mixed in).
+  **A query is a snapshot of the current tick**: results are memoised by `(position, game tick)` and the whole table is dropped at the end of every tick (`AuraQueryCache`), so a `consume` / `change` is **not** visible to a query made in the same tick (a newly activated formation is the same story, visible only from the next tick) — if you need the new value right away, keep your own bookkeeping from the call's result. See [Aura Calculation](../technical/aura.md).
+  `supplied` separately records "how much of this amount comes from the block emitters underfoot", because a consumer allowed to spend the terrain underfoot (a formation that draws on the environment, say) has to deduct its own share first, or it would double count.
+  **The later layer wins**: biome < dimension < custom region < formation override. A dimension binding **replaces** the biome rather than being overridden by it — reading the order of that English comment directly is easy to get backwards.
+  A formation override only posts `AuraZoneEvent.Override` when there is a region holder and it is the server; if it is cancelled the lower priority layer is kept; an override without a holder passes through silently.
+  Both client queries can be called, but **dimension tag matching may differ from the server** (a dimension stem is a registry not synchronised to the client), so do not treat a client result as authoritative.
 
 ### `ResourceService` {#resourceservice}
 
 Package `com.iafenvoy.mxt.runtime.resource`. Applies the bounds of a `resource` definition (`min` / `max`) consistently across the three paths of **initialisation, change and passive regeneration**.
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
-| `initialize(ResourceHolderAttachment holder, Holder<Resource> resource, FormulaContext context)` | Lands the value from `default_value` and clamps it to the bounds | **An existing value is left alone** (`changed = false`); bounds that cannot be resolved or a non-finite default → `invalid` |
+|     |     |     |
+| `initialize(ResourceHolderAttachment holder, Holder<Resource> resource, FormulaContext context)` | Lands the value from `default_value` and clamps it to the bounds | **An existing value is left alone** (`changed = false`); bounds that cannot be resolved or a non finite default → `invalid` |
 | `change(ResourceHolderAttachment holder, Holder<Resource> resource, double amount, FormulaContext context)` | Increases or decreases this value | Out of bounds is **clamped**, not refused; internally it calls `initialize` first (first access lands the value automatically); a result equal to the current value returns `unchanged` |
 | `regenerate(ResourceHolderAttachment holder, Holder<Resource> resource, NumberProvider regen, long elapsedTicks, FormulaContext context)` | Passive regeneration: `regen × elapsedTicks`, then goes through `change` | **`elapsedTicks < 0` throws `IllegalArgumentException`** — the only place in this class that throws |
-| `formulaContext(CultivationAttachment spirit, Holder<Resource> resource, FormulaContext base)` | Attaches this value's context to a formula | **Read-friendly**: the cultivation attachment is passed in by the caller (read it with `getExistingData`) |
-| `formulaContext(LivingEntity entity, Holder<Resource> resource, FormulaContext base)` | Takes the cultivation state from the entity and attaches it | **Creates an attachment** (internally `getData(MxtAttachments.CULTIVATION)`), so do not use this overload in a read-only place |
-| `resolveBounds(Resource definition, FormulaContext context)` | Resolves `min` / `max` | Any non-finite value or `min > max` → `Optional.empty()`; use it when you want a read-only check of your own instead of writing another clamping routine |
+| `formulaContext(CultivationAttachment spirit, Holder<Resource> resource, FormulaContext base)` | Attaches this value's context to a formula | **Read friendly**: the cultivation attachment is passed in by the caller (read it with `getExistingData`) |
+| `formulaContext(LivingEntity entity, Holder<Resource> resource, FormulaContext base)` | Takes the cultivation state from the entity and attaches it | **Creates an attachment** (internally `getData(MxtAttachments.CULTIVATION)`), so do not use this overload in a read only place |
+| `resolveBounds(Resource definition, FormulaContext context)` | Resolves `min` / `max` | Any non finite value or `min > max` → `Optional.empty()`; use it when you want a read only check of your own instead of writing another clamping routine |
 
 Result types: `Result(valid, changed, value)` — **on failure `value` is `NaN`, so read `valid()` before the number**; and `Bounds(min, max)`.
 
 Key points:
 
-- The three write methods **only change the attachment passed in**; they neither fetch nor create one themselves; the only thing that implicitly creates an attachment is `formulaContext(...)` taking a `LivingEntity`.
-- The by-id overloads (`initialize(holder, id, context)`, `change(holder, id, amount, context)` and the `formulaContext(..., id, base)` pair) **resolve the definition from the registry by id themselves** on every call, so an entry the current pack does not provide (its file was deleted, or a `neoforge:conditions` block keeps it out) is skipped; when the id does not resolve they **fail silently** (a write gives `invalid`, and the two `formulaContext` calls return `base` unchanged).
-- Neither this class nor `AuraService` **has a server check of its own**; whether they are only called on the server is left to the call site's self-discipline.
+  The three write methods **only change the attachment passed in**; they neither fetch nor create one themselves; the only thing that implicitly creates an attachment is `formulaContext(...)` taking a `LivingEntity`.
+  The by id overloads (`initialize(holder, id, context)`, `change(holder, id, amount, context)` and the `formulaContext(..., id, base)` pair) **resolve the definition from the registry by id themselves** on every call, so an entry the current pack does not provide (its file was deleted, or a `neoforge:conditions` block keeps it out) is skipped; when the id does not resolve they **fail silently** (a write gives `invalid`, and the two `formulaContext` calls return `base` unchanged).
+  Neither this class nor `AuraService` **has a server check of its own**; whether they are only called on the server is left to the call site's self discipline.
 
 ## Cultivation and realms {#cultivation}
 
@@ -305,23 +285,23 @@ Package `com.iafenvoy.mxt.runtime.cultivation`. A pure static utility class; all
 **Breakthrough (the only entry point)**:
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
-| `attempt(LivingEntity entity, CultivationAttachment spirit, ResourceHolderAttachment resources, Holder<Aura> aura, FormulaContext context, BooleanSupplier conditionsMet)` | Attempts a breakthrough to the next realm | This is the **only server-gated method** in the class: the client gets `Failure.SERVER_ONLY` directly, with no log line |
+|     |     |     |
+| `attempt(LivingEntity entity, CultivationAttachment spirit, ResourceHolderAttachment resources, Holder<Aura> aura, FormulaContext context, BooleanSupplier conditionsMet)` | Attempts a breakthrough to the next realm | This is the **only server gated method** in the class: the client gets `Failure.SERVER_ONLY` directly, with no log line |
 | `attempt(..., Identifier auraId, ...)` | Same as above, with the aura given by id | Gives `NO_NEXT_REALM` when the aura cannot be resolved |
 
 **Progress and minor stages**:
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `addProgress(LivingEntity, Holder<Aura>, double amount, FormulaContext)` | Adds cultivation progress | Returns the **amount actually accepted**; an invalid amount or no next realm gives `0.0` |
 | `addProgressForChain(...)` | Same as above, taking an entity or a `CultivationAttachment` | Two overloads |
 | `remainingProgressForChain(CultivationAttachment, Holder<Aura>, FormulaContext)` | How much is still missing to the next realm | |
-| `minorStage(Holder<Aura>, CultivationAttachment, FormulaContext)` / `minorStage(RealmStage, double progress, FormulaContext)` | The current minor stage (**0-based**) | The piecewise arithmetic exists only here and has a reentrancy guard; no `minor_stages` or an invalid value gives `NaN` |
+| `minorStage(Holder<Aura>, CultivationAttachment, FormulaContext)` / `minorStage(RealmStage, double progress, FormulaContext)` | The current minor stage (**0 based**) | The piecewise arithmetic exists only here and has a reentrancy guard; no `minor_stages` or an invalid value gives `NaN` |
 
-**Read-only and management**:
+**Read only and management**:
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `breakthroughStatusForChain(LivingEntity, Holder<Aura>, FormulaContext)` | Breakthrough status (reached or not, conditions met or not, automatic or not, the progress interval) | The automatic breakthrough tick and the information panel share one answer |
 | `pendingConditionsForChain(LivingEntity, Holder<Aura>)` | Which conditions are still missing | |
 | `setRealm(CultivationAttachment spirit, Identifier target)` | Sets the realm directly (for administrators) | Returns whether it actually changed; **it has no entity parameter and therefore no server check** |
@@ -330,54 +310,54 @@ Result types: `BreakthroughResult(advanced, failure, failedResource, costs)`, `B
 
 Key points:
 
-- **The boundary is inconsistent**: only `attempt` blocks the client; `addProgress*` / `setRealm` / `minorStage` do not check, and calling them on the client really writes the attachment.
-- Conditions declared by the content are evaluated **before the cost is paid**, so unmet conditions do not waste resources.
-- `INVALID_FORMULA` doubles as the normalised exit for "every cost failure that is not insufficient resources"; `failedResource` is only non-empty when resources were short during the payment stage.
-- `Failure.DISABLED` is produced only by the script bridge (`MxtKubeJsApi.tryBreakthrough`, when the aura id does not resolve) — `attempt` itself never produces it.
-- `Failure.MAX_PROGRESS` was **removed** on 2026-09-25 (it was provably unreachable): the progress ceiling can never be the reason a breakthrough is refused — `threshold()` requires a stage's `max_experience ≥ breakthrough_exp`, so progress being pinned at `max_experience` already satisfies `progress ≥ breakthrough_exp`, and the attempt can then only fail on conditions, cost or cancellation. An inline `Failure` branch that still writes it fails to compile.
+  **The boundary is inconsistent**: only `attempt` blocks the client; `addProgress*` / `setRealm` / `minorStage` do not check, and calling them on the client really writes the attachment.
+  Conditions declared by the content are evaluated **before the cost is paid**, so unmet conditions do not waste resources.
+  `INVALID_FORMULA` doubles as the normalised exit for "every cost failure that is not insufficient resources"; `failedResource` is only non empty when resources were short during the payment stage.
+  `Failure.DISABLED` is produced only by the script bridge (`MxtKubeJsApi.tryBreakthrough`, when the aura id does not resolve) — `attempt` itself never produces it.
+  `Failure.MAX_PROGRESS` was **removed** on 2026 09 25 (it was provably unreachable): the progress ceiling can never be the reason a breakthrough is refused — `threshold()` requires a stage's `max_experience ≥ breakthrough_exp`, so progress being pinned at `max_experience` already satisfies `progress ≥ breakthrough_exp`, and the attempt can then only fail on conditions, cost or cancellation. An inline `Failure` branch that still writes it fails to compile.
 
 ### `CultivationRanks` {#cultivationranks}
 
 Package `com.iafenvoy.mxt.runtime.cultivation`. Answers *which position this body holds on this aura chain* — the single exit for a chain rank.
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
-| `realmRank(CultivationAttachment spirit, Holder<Aura> aura)` | This entity's realm index **on this aura chain**, **counting a mortal as `0` so the first realm is `1` and each stage above it follows** | A current stage that is not on the chain gives `-1`; no first realm on the chain (or a first realm the walk never reached) also gives `-1`, **never `0`**, or a broken chain's head would outrank a mortal |
+|     |     |     |
+| `realmRank(CultivationAttachment spirit, Holder<Aura> aura)` | This entity's realm index **on this aura chain**, **counting a mortal as `0` so the first realm is `1` and each stage above it follows** | A current stage that is not on the chain gives ` 1`; no first realm on the chain (or a first realm the walk never reached) also gives ` 1`, **never `0`**, or a broken chain's head would outrank a mortal |
 
 Key points:
 
-- The index **counts the mortal state**, so a mortal is not an alias for the first realm: `0` and `1` are two different numbers, and a formula can tell "not in any realm yet" from "at the start of the first minor stage".
-- A rank comes only from a chain the shared index (`DatapackCache`) walked; a chain the index does not hold gives `-1` — both a chain the walk could not complete (a broken link, a fork, a loop) and an index that does not exist yet (no world loaded, or just after leaving one).
-- The mortal branch **does not consult the index**: never having entered a realm is a fact about the body, not about whether the chain got indexed, so it is `0` whenever the aura declares a `first_realm` (with no `first_realm` there is nowhere to be, so it gives `-1`).
-- In-chain comparisons (`DatapackCache.isRealmAtLeast`) use the **raw, unshifted** index on both sides, so the comparison gives the same answer with or without this `1`.
+  The index **counts the mortal state**, so a mortal is not an alias for the first realm: `0` and `1` are two different numbers, and a formula can tell "not in any realm yet" from "at the start of the first minor stage".
+  A rank comes only from a chain the shared index (`DatapackCache`) walked; a chain the index does not hold gives ` 1` — both a chain the walk could not complete (a broken link, a fork, a loop) and an index that does not exist yet (no world loaded, or just after leaving one).
+  The mortal branch **does not consult the index**: never having entered a realm is a fact about the body, not about whether the chain got indexed, so it is `0` whenever the aura declares a `first_realm` (with no `first_realm` there is nowhere to be, so it gives ` 1`).
+  In chain comparisons (`DatapackCache.isRealmAtLeast`) use the **raw, unshifted** index on both sides, so the comparison gives the same answer with or without this `1`.
 
 ### `LifeSpanService` {#lifespanservice}
 
 Package `com.iafenvoy.mxt.runtime.cultivation`. The lifespan ledger (**the ticks left** and **the ceiling** this life was granted) and the one exit through which a life runs out. The numbers come from data packs (`realm_stage.lifespan`, `mxt:modify_lifespan`, `mxt:reincarnate`) while the server config owns the pace and what running out does.
 
 | Method | What it does | Notes |
-| --- | --- | --- |
-| `remaining(Entity)` / `total(Entity)` | Reads the two numbers | **Read-only, it does not create the attachment**; a body with no ledger answers `-1` (`UNACCOUNTED`) |
+|     |     |     |
+| `remaining(Entity)` / `total(Entity)` | Reads the two numbers | **Read only, it does not create the attachment**; a body with no ledger answers ` 1` (`UNACCOUNTED`) |
 | `set(LivingEntity entity, long ticks)` | Rewrites both numbers | `ticks < 0` is refused; answers `Result(changed, failure)` |
 | `add(LivingEntity entity, long ticks)` | A positive amount extends the life (both numbers grow), a negative one takes life away (only what is left drops) | Same result; a body nobody ever granted life to is measured from the configured **Base lifespan**; `0` does nothing at all |
 | `seed(LivingEntity entity)` | Seeds the ledger from the configured **Base lifespan** | Answers `false` with the master switch off, with a base of `0`, or when a ledger already exists (login and settlement share it) |
 | `settle(Entity entity)` | One settlement, which is also the expiry verdict | Answers `false` outright with the master switch off, for creative / spectator players, for anything that is not a living body and for a body with no ledger; **the only entry point that can end a life** |
 | `reincarnate(LivingEntity entity)` | Runs the rebirth reset list on the spot (the switches on the Reincarnation tab) | Answers `Result`: when `Pre` is cancelled the `failure` is `CANCELLED` and nothing at all happens. The data pack action `mxt:reincarnate`, `/mxt lifespan reincarnate`, KubeJS `MxtLifespan.reincarnate` and an addon all call this one method; it runs with the master switch off too |
-| `display(long remaining, long total, int ticksPerYear)` | The display component the character panel and the action-bar warning share | A negative remainder reads as "Unlimited" |
+| `display(long remaining, long total, int ticksPerYear)` | The display component the character panel and the action bar warning share | A negative remainder reads as "Unlimited" |
 
 `Result.failure` takes `SERVER_ONLY`, `INVALID_VALUE`, and `CANCELLED` — the last one only ever comes from `reincarnate`.
 
 **Two events** (both in the `event` package):
 
-- `LifeSpanEndEvent.Pre` / `Post`: fired once at the moment a lifespan runs out. `Pre` is cancellable — writing a positive lifespan inside it has extended the life, while writing nothing closes the account (`remaining = -1`, `total = 0`); `Post` carries `getOutcome()` (`NONE` / `DEATH` / `REINCARNATE`).
-- `LifeSpanRebirthEvent.Pre` / `Post`: fired before and after an **explicit rebirth**, and only by that public entry point. A cancelled `Pre` means the whole thing did not happen and the body is untouched.
+  `LifeSpanEndEvent.Pre` / `Post`: fired once at the moment a lifespan runs out. `Pre` is cancellable — writing a positive lifespan inside it has extended the life, while writing nothing closes the account (`remaining =  1`, `total = 0`); `Post` carries `getOutcome()` (`NONE` / `DEATH` / `REINCARNATE`).
+  `LifeSpanRebirthEvent.Pre` / `Post`: fired before and after an **explicit rebirth**, and only by that public entry point. A cancelled `Pre` means the whole thing did not happen and the body is untouched.
 
 Key points:
 
-- **A write never kills**: `set` / `add` only record, and expiry is judged by `settle` alone, so nobody dies halfway through a cost transaction or an ability.
-- Server-only: a client-side write answers `Failure.SERVER_ONLY` and writes no log.
-- A player whose lifespan runs out under **On expiry → Death** is turned into a spectator (nothing drops, no death event fires and the ledger keeps its `0`); a non-player creature dies of the `mxt:lifespan` damage type, and if another mod blocks that kill the account is closed instead of retried.
-- An explicit rebirth fires **no** `lifespanEnd` — that event only answers "did a lifespan run out".
+  **A write never kills**: `set` / `add` only record, and expiry is judged by `settle` alone, so nobody dies halfway through a cost transaction or an ability.
+  Server only: a client side write answers `Failure.SERVER_ONLY` and writes no log.
+  A player whose lifespan runs out under **On expiry → Death** is turned into a spectator (nothing drops, no death event fires and the ledger keeps its `0`); a non player creature dies of the `mxt:lifespan` damage type, and if another mod blocks that kill the account is closed instead of retried.
+  An explicit rebirth fires **no** `lifespanEnd` — that event only answers "did a lifespan run out".
 
 ## Abilities {#ability}
 
@@ -386,12 +366,12 @@ Key points:
 Package `com.iafenvoy.mxt.runtime.ability`. A pure static utility class. **There is only one road to executing an ability**, and every entry point is here.
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `use(Holder<Ability> ability, Entity actor, AbilityAttachment attachment, ResourceHolderAttachment resources, long gameTime, FormulaContext context)` | Casts an already granted ability | With `cast_time > 0` it only records the deadline, and the result has `casting = true` |
-| `useCarried(..., @Nullable Vec3 origin)` | An ability carried by an item | Does not require a grant (the item is the permission); a non-instant ability gives `CARRIED_NOT_INSTANT` |
-| `finishCast(Holder<Ability>, Entity, AbilityAttachment, ResourceHolderAttachment, long gameTime, FormulaContext)` | Lands the ability once the channel is due | If it is not yet due it returns the in-progress result unchanged |
+| `useCarried(..., @Nullable Vec3 origin)` | An ability carried by an item | Does not require a grant (the item is the permission); a non instant ability gives `CARRIED_NOT_INSTANT` |
+| `finishCast(Holder<Ability>, Entity, AbilityAttachment, ResourceHolderAttachment, long gameTime, FormulaContext)` | Lands the ability once the channel is due | If it is not yet due it returns the in progress result unchanged |
 | `gate(ToggleContext context)` | The shared gate: grant / cooldown / conditions / cost | **Executes no effect**; called by `AbilityActivationService.activate` when `Togglable#gated` is true |
-| `tickChannel(Holder<Ability>, Entity, AbilityAttachment, ResourceHolderAttachment, long gameTime, FormulaContext)` | Settles a channel every tick | Only the server-side entity tick bridge calls it; any failure stops the channel |
+| `tickChannel(Holder<Ability>, Entity, AbilityAttachment, ResourceHolderAttachment, long gameTime, FormulaContext)` | Settles a channel every tick | Only the server side entity tick bridge calls it; any failure stops the channel |
 | `stopChannel(AbilityAttachment)` | Stops a channel | |
 | `cancelCast(Holder<Ability>, AbilityAttachment, long gameTime)` | Interrupts a charge | **No refund** |
 | `executeTargetAction(Ability definition, Entity actor, Entity target, FormulaContext context)` | Runs an ability's target action | Reused by the event bridge, with an empty `origin` |
@@ -400,13 +380,13 @@ Return types: `UseResult(committed, casting, failure, failedResource, amounts)` 
 
 Key points:
 
-- Whenever something is "pressing a switch", the server always goes through `runtime/ability/AbilityActivationService` first — the wheel, commands, KubeJS and talismans all use it, **so do not write another "pressing a switch" dispatch anywhere else**. Only when an implementation is `Togglable` and `gated(ctx)` is true does it come back and call `gate` here.
-- **Cooldown and cost are entirely this road's job**: the `cooldown` field writes the `mxt:cooldown` state itself, and content does not need to declare a cooldown a second time.
-- **What an ability does when it takes effect is the type's answer**: the four action fields (`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`) are **declared and run by each type that runs actions**, so the step this road takes to "what should happen" is `AbilityEffect.run(definition.type(), actor, context, origin)` — one static entry that only asks whether the type implements the `AbilityEffect` **capability interface** rather than dispatching on the concrete class, with the shared execution of the four fields on `ActionCarrier`. When each of the four fields runs is on [Ability · The Four Action Fields](/en/datapack/json/ability#action-fields-by-type).
-- **A targeted cast (`mxt:targeted`) takes this same road**: it implements the `AbilityApplier` capability interface (`reach` for the entities this cast lands on plus `payload` for the ability run on each of them), the runtime asks `reach` once **before anything is paid** - picking nobody is `NO_TARGET` and a payload with no one-target half is `NOT_APPLICABLE` (both are values of `Failure` above) - and its own price, cooldown and element affinity are still taken once by this road. See [Targeted Casts](/en/datapack/json/ability#targeted).
-- World actions never roll back, so a composite ability validates with `prepare` first and then `commit`s as one.
-- This class **does not check the client itself** and never produces `Failure.SERVER_ONLY` — the client-side `SERVER_ONLY` is returned by the caller (the KubeJS bridge `MxtKubeJsApi`, for instance). Calling `use` directly on the client really acts.
-- The `amounts` / `costs` in any result are for display and records only; **do not use them as a basis for rollback**.
+  Whenever something is "pressing a switch", the server always goes through `runtime/ability/AbilityActivationService` first — the wheel, commands, KubeJS and talismans all use it, **so do not write another "pressing a switch" dispatch anywhere else**. Only when an implementation is `Togglable` and `gated(ctx)` is true does it come back and call `gate` here.
+  **Cooldown and cost are entirely this road's job**: the `cooldown` field writes the `mxt:cooldown` state itself, and content does not need to declare a cooldown a second time.
+  **What an ability does when it takes effect is the type's answer**: the four action fields (`entity_action` / `target_selector` / `target_condition` / `bi_entity_action`) are **declared and run by each type that runs actions**, so the step this road takes to "what should happen" is `AbilityEffect.run(definition.type(), actor, context, origin)` — one static entry that only asks whether the type implements the `AbilityEffect` **capability interface** rather than dispatching on the concrete class, with the shared execution of the four fields on `ActionCarrier`. When each of the four fields runs is on [Ability · The Four Action Fields](/en/datapack/json/ability#action fields by type).
+  **A targeted cast (`mxt:targeted`) takes this same road**: it implements the `AbilityApplier` capability interface (`reach` for the entities this cast lands on plus `payload` for the ability run on each of them), the runtime asks `reach` once **before anything is paid**   picking nobody is `NO_TARGET` and a payload with no one target half is `NOT_APPLICABLE` (both are values of `Failure` above)   and its own price, cooldown and element affinity are still taken once by this road. See [Targeted Casts](/en/datapack/json/ability#targeted).
+  World actions never roll back, so an ability is priced with `prepare` first and only then committed.
+  This class **does not check the client itself** and never produces `Failure.SERVER_ONLY` — the client side `SERVER_ONLY` is returned by the caller (the KubeJS bridge `MxtKubeJsApi`, for instance). Calling `use` directly on the client really acts.
+  The `amounts` / `costs` in any result are for display and records only; **do not use them as a basis for rollback**.
 
 ## Damage {#damage}
 
@@ -417,29 +397,29 @@ Package `com.iafenvoy.mxt.runtime.damage`. **The one settlement pipeline for a s
 **The only dealing entry point**:
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
-| `deal(@Nullable Entity attacker, Entity target, double amount, Optional<Holder<DamageType>> damageType, @Nullable FormulaContext context)` | **The only method to call** when this mod deals damage itself: it builds the `DamageSource`, checks the `mxt:no_bonus` pass-through, runs layer one, and then hands it to vanilla `hurtServer` | The client (target not in a `ServerLevel`) and any non-finite / non-positive amount return `0.0D`; the `damageType` parameter may not be `null`, pass `Optional.empty()` when there is no type; what it returns is the **shaped value**, before vanilla mitigation (armour, invulnerability frames), not "how much health was actually lost" |
+|     |     |     |
+| `deal(@Nullable Entity attacker, Entity target, double amount, Optional<Holder<DamageType>> damageType, @Nullable FormulaContext context)` | **The only method to call** when this mod deals damage itself: it builds the `DamageSource`, checks the `mxt:no_bonus` pass through, runs layer one, and then hands it to vanilla `hurtServer` | The client (target not in a `ServerLevel`) and any non finite / non positive amount return `0.0D`; the `damageType` parameter may not be `null`, pass `Optional.empty()` when there is no type; what it returns is the **shaped value**, before vanilla mitigation (armour, invulnerability frames), not "how much health was actually lost" |
 
-**Layer one: attacker-side shaping (pure computation, dealing no damage)**:
+**Layer one: attacker side shaping (pure computation, dealing no damage)**:
 
 | Method | Purpose |
-| --- | --- |
-| `outgoing(@Nullable Entity attacker, Entity target, double amount, @Nullable FormulaContext context, Set<Holder<Element>> elements)` | Base value × `damage_multiplier` × `element_modifier` × self-conflict × (the attacker's `damage_dealt_multiplier` × this strike's `overcomes` against the target's spirit roots) |
-| `outgoing(...)` (the shorthand without `elements`) | With no declared damage type, this strike's element is the attacker's own spirit-root element |
-| `selfConflictMultiplier(@Nullable Entity attacker)` | The multiplier when the main-hand item's element conflicts with an active spirit root's `conflicting_elements`; each element is **multiplied only once** (however many roots conflict) |
+|     |     |
+| `outgoing(@Nullable Entity attacker, Entity target, double amount, @Nullable FormulaContext context, Set<Holder<Element>> elements)` | Base value × `damage_multiplier` × `element_modifier` × self conflict × (the attacker's `damage_dealt_multiplier` × this strike's `overcomes` against the target's spirit roots) |
+| `outgoing(...)` (the shorthand without `elements`) | With no declared damage type, this strike's element is the attacker's own spirit root element |
+| `selfConflictMultiplier(@Nullable Entity attacker)` | The multiplier when the main hand item's element conflicts with an active spirit root's `conflicting_elements`; each element is **multiplied only once** (however many roots conflict) |
 | `physiqueMultiplier(@Nullable Entity entity, boolean dealt)` | An active physique's `damage_dealt_multiplier` (`dealt=true`) / `damage_taken_multiplier` (`dealt=false`), multiplied together; always in the **holder's own** formula context |
 | `masteryMultiplier(@Nullable FormulaContext context)` / `elementMultiplier(@Nullable FormulaContext context)` | Reads `damage_multiplier` / `element_modifier`; a missing or invalid value reads `1.0`, and **writing `0` is respected** (it is not "unset") |
 
-**Layer two: target-side reduction (pure computation) and helpers**:
+**Layer two: target side reduction (pure computation) and helpers**:
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `incoming(LivingEntity target, Set<Holder<Element>> attacking, double amount)` | × the target's `adapted_to` × the target's `damage_taken_multiplier` | The main overload; **only `DamageEventBridge` calls it once in `LivingIncomingDamageEvent`**, so do not call it yourself as well (that is a second reduction) |
 | `incoming(LivingEntity target, DamageSource source, double amount)` / `incoming(LivingEntity target, @Nullable Entity attacker, double amount)` | Derives the element from the damage source or the attacker and then reduces | Two shorthands for the main overload above |
 | `adaptationMultiplier(LivingEntity target, Set<Holder<Element>> attacking)` | The target's `adapted_to` | Being overcome is the attacker's advantage, so the target side does not add it a second time |
 | `overcomeMultiplier(Set<Holder<Element>> attacking, Entity target)` | The attacker's elements' `overcomes` against the target's spirit roots | Every matching pair is multiplied (two elements both overcoming means both count) |
 | `attachmentMultiplier(LivingEntity target)` | The product of the `attachment_multiplier` of the **artifacts** the target carries | It only scales the **element buildup** this strike leaves, and does not affect what an element reaction does |
-| `bypasses(DamageSource source)` | Whether this damage type is in `mxt:no_bonus` | Pass-through means no factor is multiplied and no element is left, but **vanilla's own mitigation still applies** — it is "not governed by this mod's bonus arithmetic", not immunity |
+| `bypasses(DamageSource source)` | Whether this damage type is in `mxt:no_bonus` | Pass through means no factor is multiplied and no element is left, but **vanilla's own mitigation still applies** — it is "not governed by this mod's bonus arithmetic", not immunity |
 | `source(Level level, @Nullable Entity attacker, Optional<Holder<DamageType>> damageType)` | Builds this strike's `DamageSource` | **Attribution is decided here** (a player → `playerAttack`, a mob → `mobAttack`, neither → `generic`); a caller building its own source loses the kill credit |
 
 Public constants: `DAMAGE_MULTIPLIER` and `ELEMENT_MODIFIER` (the two variable names in the formula context), `NO_BONUS` (a `TagKey<DamageType>`, which is `mxt:no_bonus`).
@@ -449,21 +429,21 @@ Public constants: `DAMAGE_MULTIPLIER` and `ELEMENT_MODIFIER` (the two variable n
 Package `com.iafenvoy.mxt.runtime.damage`. Answers "**what element is this strike**", and gives both layers **the same** reading.
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `strike(Level level, Optional<Holder<DamageType>> type, @Nullable Entity attacker)` / `strike(DamageSource source)` | This strike's element set | **The one rule shared by the pipeline and the damage condition**: a damage type claimed by elements means those elements, and with no claimant it falls back to the attacker's spirit roots |
 | `reading(Level level, ...)` / `reading(DamageSource source)` | The elements + the origin + how much buildup each element will leave | The three fields come from **the same** registry query; reduction and element buildup must share this one reading, or the two numbers go out of step |
 | `of(RegistryAccess access, Holder<DamageType> type)` / `of(DamageSource source)` | **Who claimed this damage type** (without the fallback) | No claimant gives an **empty set**; the index is built from the `damage_types` each element definition declares |
 | `typeOf(RegistryAccess access, Holder<Element> element)` | Takes the first resolvable type in that element's `damage_types` | A tag form expands to the first matching element |
 | `resolveType(RegistryAccess access, List<Either<Holder<Element>, TagKey<Element>>> elements, Optional<Holder<DamageType>> damageType)` | Decides what type a declarative strike should go out as | An empty result means keeping its original reading (the attacker's spirit roots); a failed declaration only warns and **never fails the load** |
-| `checkDeclaration(RegistryAccess access, ...)` | Checks that the declared elements really claim this type | Checked **on first use**, not at load time (registries are decoded in parallel, and a load-time check would make the same pack pass sometimes and fail other times) |
+| `checkDeclaration(RegistryAccess access, ...)` | Checks that the declared elements really claim this type | Checked **on first use**, not at load time (registries are decoded in parallel, and a load time check would make the same pack pass sometimes and fail other times) |
 
 Types: `Strike(elements, attachment, origin)`, `Claim(element, attachment)`, and `enum Origin {TYPE, ROOTS}` — `attaches()` says whether this strike leaves buildup on the target, and **an element reaction is only started by TYPE**.
 
 Key points:
 
-- A strike's element **must be readable from the `DamageSource`**: that is all the reduction layer has in hand.
-- The cache is keyed by the **damage type `Registry` instance** (the element registry and the damage type registry reload in the same step, so one key notices both); `/reload` does not replace the instance, so the cache neither goes stale nor should it, and the cap is 4 registries.
-- When several elements claim one damage type, **every claim is multiplied**, and a warning is logged while the index is built.
+  A strike's element **must be readable from the `DamageSource`**: that is all the reduction layer has in hand.
+  The cache is keyed by the **damage type `Registry` instance** (the element registry and the damage type registry reload in the same step, so one key notices both); `/reload` does not replace the instance, so the cache neither goes stale nor should it, and the cap is 4 registries.
+  When several elements claim one damage type, **every claim is multiplied**, and a warning is logged while the index is built.
 
 ## Formations {#formation}
 
@@ -471,19 +451,19 @@ Key points:
 
 A formation's framework (structure, radius, costs) is on `Formation`; "what this formation does" is decided by its `actions` list, and every item in that list is a **functional module**.
 
-- `FormationActionType` (`com.iafenvoy.mxt.data.formation`) is the shape of a module: a `codec()`, plus a `CODEC` dispatching on the JSON `"type"` field (it must be a `Codec` rather than a `MapCodec`, because a formation holds a **list** of modules), plus four optional beat methods `activate` / `tick` / `interval` / `inactivate` — activation, every period and dismantling are modules themselves now.
-- The dispatch registry `mxt:formation_action_type` is a **built-in registry** (default entry `empty`), registered statically in code through `NewRegistryEvent`, and **not one of the datapack registries in `MxtDatapackRegistries`**.
-- So: **a datapack can freely add `mxt:formation` entries (module combinations and parameters), but it cannot add a module type**. One more module kind = one record + one `DeferredRegister` registration, and the record answers those beats itself, which is why the `data` package may call runtime services directly.
-- There are currently 10 legal `type`s, all registered in `MxtFormationActionTypes`: `mxt:empty` (`EMPTY`, also the dispatch registry's default), `mxt:attack` (`ATTACK`), `mxt:buff` (`BUFF`), `mxt:aura` (`AURA`), `mxt:protection` (`PROTECTION`), `mxt:particle` (`PARTICLE`), `mxt:send_message` (`SEND_MESSAGE`), `mxt:activate` (`ACTIVATE`), `mxt:tick` (`TICK`), `mxt:inactivate` (`INACTIVATE`).
-- Registration happens only once through `MxtFormationActionTypes.REGISTRY`; **do not register it again elsewhere, and do not build a second formation module registry**.
+  `FormationActionType` (`com.iafenvoy.mxt.data.formation`) is the shape of a module: a `codec()`, plus a `CODEC` dispatching on the JSON `"type"` field (it must be a `Codec` rather than a `MapCodec`, because a formation holds a **list** of modules), plus four optional beat methods `activate` / `tick` / `interval` / `inactivate` — activation, every period and dismantling are modules themselves now.
+  The dispatch registry `mxt:formation_action_type` is a **built in registry** (default entry `empty`), registered statically in code through `NewRegistryEvent`, and **not one of the datapack registries in `MxtDatapackRegistries`**.
+  So: **a datapack can freely add `mxt:formation` entries (module combinations and parameters), but it cannot add a module type**. One more module kind = one record + one `DeferredRegister` registration, and the record answers those beats itself, which is why the `data` package may call runtime services directly.
+  There are currently 10 legal `type`s, all registered in `MxtFormationActionTypes`: `mxt:empty` (`EMPTY`, also the dispatch registry's default), `mxt:attack` (`ATTACK`), `mxt:buff` (`BUFF`), `mxt:aura` (`AURA`), `mxt:protection` (`PROTECTION`), `mxt:particle` (`PARTICLE`), `mxt:send_message` (`SEND_MESSAGE`), `mxt:activate` (`ACTIVATE`), `mxt:tick` (`TICK`), `mxt:inactivate` (`INACTIVATE`).
+  Registration happens only once through `MxtFormationActionTypes.REGISTRY`; **do not register it again elsewhere, and do not build a second formation module registry**.
 
 ### `FormationProtection` {#formationprotection}
 
 Package `com.iafenvoy.mxt.runtime.formation`. The **only decision point** for "does the ward in a formation forbid this action": breaking, placing, using, interacting, attacking, explosions and mob griefing all ask the same question and get the same answer.
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
-| `prevented(ServerLevel level, Action action, @Nullable BlockPos target, @Nullable UUID actorId)` | Whether this action is stopped at this position / for this actor | `true` = forbidden. It takes a **UUID** rather than a player or entity, because a server-side audit has to be able to run the rules with no player online; `actorId == null` is legal (explosions, mob griefing) |
+|     |     |     |
+| `prevented(ServerLevel level, Action action, @Nullable BlockPos target, @Nullable UUID actorId)` | Whether this action is stopped at this position / for this actor | `true` = forbidden. It takes a **UUID** rather than a player or entity, because a server side audit has to be able to run the rules with no player online; `actorId == null` is legal (explosions, mob griefing) |
 | `covers(ProtectionFormationAction ward, Action action)` | Which switch of this ward governs this action | One to one with the datapack fields (`block_break` → `BREAK`, and so on) |
 | `hasProtection(Formation definition)` | Whether this definition has a ward module | A pure definition query that does not look at the world |
 | `delegationHandsOver()` | Whether "delegate to the claim plugin" really yields right now | **Server Config → Compatibility → Delegate Needs Claims** is off, or the claim plugin really is protecting |
@@ -495,11 +475,11 @@ Package `com.iafenvoy.mxt.runtime.formation`. The **only decision point** for "d
 
 Key points:
 
-- **The decision looks at both ends of the action**: the actor's position **or** the target's position inside the radius makes this ward apply; with no target it can still refuse on the actor's position.
-- **The exemption order**: an empty actor is not exempt; a ward **with no owner exempts nobody**; an actor **on the ownership list** → exempt (every listed owner counts); only when the ward declares `spare_friends` **and** **Server Config → Formations → Friend or Foe** is on does it ask `FriendService.identify(...) == TRUE` (asked of every owner in turn); an entity no friend source recognises is always stopped.
-- When delegation holds, this ward **does not apply at all** (skipped, not downgraded), and two independent paths trigger it: the module declaring `delegate_to_claims` itself, or `claim_linkage == claims_precedence` with the controller's chunk already claimed.
-- Claims are only asked about **the chunk the controller is in**, so a ward spanning a border is not governed by two rule sets at once.
-- **Do not write another ward decision inside an event subscriber**.
+  **The decision looks at both ends of the action**: the actor's position **or** the target's position inside the radius makes this ward apply; with no target it can still refuse on the actor's position.
+  **The exemption order**: an empty actor is not exempt; a ward **with no owner exempts nobody**; an actor **on the ownership list** → exempt (every listed owner counts); only when the ward declares `spare_friends` **and** **Server Config → Formations → Friend or Foe** is on does it ask `FriendService.identify(...) == TRUE` (asked of every owner in turn); an entity no friend source recognises is always stopped.
+  When delegation holds, this ward **does not apply at all** (skipped, not downgraded), and two independent paths trigger it: the module declaring `delegate_to_claims` itself, or `claim_linkage == claims_precedence` with the controller's chunk already claimed.
+  Claims are only asked about **the chunk the controller is in**, so a ward spanning a border is not governed by two rule sets at once.
+  **Do not write another ward decision inside an event subscriber**.
 
 ## Foe identification {#friends}
 
@@ -508,24 +488,24 @@ Key points:
 Package `com.iafenvoy.mxt.runtime.friend`. The only place to ask "**is this one of mine**": friendly fire, ward exemptions and AI decisions all go through it. The mechanics and the list commands are in [Foe Identification](../technical/identification.md).
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `isFriend(Entity judge, Entity candidate)` | The boolean answer | Only `TRUE` counts as "yes"; both `DEFAULT` and `FALSE` count as no |
-| `identify(Entity judge, Entity candidate)` | The three-state decision | Forwards to the one below |
-| `identify(UUID judgeId, @Nullable Entity judge, Entity candidate)` | The three-state decision, **the judge may be offline** | Posts `FriendEvent.Relation` first, and only falls back to the built-in friend list when nobody answers |
-| `builtin(Entity judge, Entity candidate)` / `builtin(UUID judgeId, @Nullable Entity judge, Entity candidate)` | Asks the built-in friend list directly, **posting no event** | Safe to call inside a `Relation` listener — which is exactly why "the list plus my own additions" is expressible |
+| `identify(Entity judge, Entity candidate)` | The three state decision | Forwards to the one below |
+| `identify(UUID judgeId, @Nullable Entity judge, Entity candidate)` | The three state decision, **the judge may be offline** | Posts `FriendEvent.Relation` first, and only falls back to the built in friend list when nobody answers |
+| `builtin(Entity judge, Entity candidate)` / `builtin(UUID judgeId, @Nullable Entity judge, Entity candidate)` | Asks the built in friend list directly, **posting no event** | Safe to call inside a `Relation` listener — which is exactly why "the list plus my own additions" is expressible |
 
 Key points:
 
-- **No memoisation**: every call posts an event, and a listener is entitled to query the world. A caller asking repeatedly within one tick has to store the answer itself.
-- The built-in decision order is: yourself is always your own → an unloaded judge falls back to `FriendCache` (the offline mirror) → a judge that is not a player is `FALSE` (only a player can have a list) → otherwise read the friend attachment (with `getExistingData`, **read-only, creating no empty attachment**).
-- This class **has no side check of its own** and posts its event anyway; do not expect it to give an authoritative answer on the client.
+  **No memoisation**: every call posts an event, and a listener is entitled to query the world. A caller asking repeatedly within one tick has to store the answer itself.
+  The built in decision order is: yourself is always your own → an unloaded judge falls back to `FriendCache` (the offline mirror) → a judge that is not a player is `FALSE` (only a player can have a list) → otherwise read the friend attachment (with `getExistingData`, **read only, creating no empty attachment**).
+  This class **has no side check of its own** and posts its event anyway; do not expect it to give an authoritative answer on the client.
 
 ### `FriendEvent` {#friendevent}
 
 Package `com.iafenvoy.mxt.event`. The identification hook of the friend system, **posted on `NeoForge.EVENT_BUS`** (not the mod bus), and what is actually posted is the nested `FriendEvent.Relation` — a subscriber has to name that.
 
 | Member | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `Relation(UUID judgeId, @Nullable Entity judge, Entity candidate)` / `Relation(Entity judge, Entity candidate)` | Construction | Public constructors, so the outside can post one itself |
 | `getJudgeId()` | The judge's UUID | **Always present** — a friend source whose data lives in a server manager (a team, a faction) can therefore answer while the player is offline |
 | `getJudge()` | The judge entity | **Empty while offline**, which is a design requirement rather than a bug |
@@ -535,24 +515,24 @@ Package `com.iafenvoy.mxt.event`. The identification hook of the friend system, 
 
 Key points:
 
-- **It is not a cancellable event**: to veto, call `setResult(FALSE)`.
-- `result` is **a single mutable field**: a later answer overwrites an earlier one, with no aggregation and no "ask once" guard. To express "add on top of the list", call `FriendService.builtin(...)` in the listener yourself and merge.
-- Do not post another `Relation` from inside a listener (it would loop back into `identify`).
+  **It is not a cancellable event**: to veto, call `setResult(FALSE)`.
+  `result` is **a single mutable field**: a later answer overwrites an earlier one, with no aggregation and no "ask once" guard. To express "add on top of the list", call `FriendService.builtin(...)` in the listener yourself and merge.
+  Do not post another `Relation` from inside a listener (it would loop back into `identify`).
 
 ## Currency {#currency}
 
 ### `CurrencyValueService` {#currencyvalueservice}
 
-Package `com.iafenvoy.mxt.runtime.economy`. The **server-side read API** for item-standard currency definitions: it only computes value and gives exchange quotes, and **never charges** — currency is not a cost. The format is in [currency](../datapack/json/currency.md).
+Package `com.iafenvoy.mxt.runtime.economy`. The **server side read API** for item standard currency definitions: it only computes value and gives exchange quotes, and **never charges** — currency is not a cost. The format is in [currency](../datapack/json/currency.md).
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `unitValue(Item item)` / `unitValue(ItemStack stack)` | The unit price of one | Needs a current server; when it cannot be obtained it gives `OptionalLong.empty()` without throwing or logging |
-| `unitValue(Provider access, ...)` (including the overloads with a holder and a `FormulaContext`) | The explicit-registry / holder-carrying forms | **An empty stack gives `of(0L)`**; only the overload with a `FormulaContext` threads the context all the way into the `unavailable_when` check and the quality multiplier |
-| `value(ItemStack stack)` / `value(@Nullable Entity holder, ItemStack stack)` | The whole-stack value = unit price × count | A unit price that cannot be found, or a multiplication past `Long.MAX_VALUE`, always gives empty and **never truncates or clamps** |
+| `unitValue(Provider access, ...)` (including the overloads with a holder and a `FormulaContext`) | The explicit registry / holder carrying forms | **An empty stack gives `of(0L)`**; only the overload with a `FormulaContext` threads the context all the way into the `unavailable_when` check and the quality multiplier |
+| `value(ItemStack stack)` / `value(@Nullable Entity holder, ItemStack stack)` | The whole stack value = unit price × count | A unit price that cannot be found, or a multiplication past `Long.MAX_VALUE`, always gives empty and **never truncates or clamps** |
 | `totalValue(Collection<ItemStack> stacks)` | The total value of a pile of stacks | Any stack that is not currency, or an overflowing sum → empty |
-| `exchangeOffers(ItemStack input)` (plus the registry and holder-carrying forms) | Which quotes this input can be exchanged for | Only takes the `exchanges` of the definition that **claims this item** (the highest `priority` one) and flattens them; empty when that winner is unavailable, and with no server it gives an empty list |
-| `isExchangeInput(RegistryAccess registryAccess, ItemStack input)` | Whether this stack can go into the exchange input slot (**without yet looking at whether the count suffices**) | Requires the winner claiming this item to be available and to have a non-empty `exchanges` |
+| `exchangeOffers(ItemStack input)` (plus the registry and holder carrying forms) | Which quotes this input can be exchanged for | Only takes the `exchanges` of the definition that **claims this item** (the highest `priority` one) and flattens them; empty when that winner is unavailable, and with no server it gives an empty list |
+| `isExchangeInput(RegistryAccess registryAccess, ItemStack input)` | Whether this stack can go into the exchange input slot (**without yet looking at whether the count suffices**) | Requires the winner claiming this item to be available and to have a non empty `exchanges` |
 | `definition(Provider access, ItemStack stack)` | Finds a currency definition by matcher only | **Does not judge availability** — do not treat `isPresent()` as "usable" |
 | `unavailableReason(Provider access, @Nullable Entity holder, ItemStack stack)` | Why it is unavailable | With `holder == null` it is **always empty** (there is no holder, so no reason can be asked for); it takes the first entry in `unavailable_when` whose condition is true |
 
@@ -562,18 +542,18 @@ Package `com.iafenvoy.mxt.runtime.economy`. The **server-side read API** for ite
 
 Key points:
 
-- **`empty` and `0L` are two different conclusions**: `empty` = not currency / no server / overflow / no definition found; `0L` = it is currency, but the stack is empty or it is currently unavailable; on the exchange side "no quotes" shows up as an **empty list**.
-- **A query without a holder treats any definition that writes `unavailable_when` as unavailable** (internally it requires that list to be empty); pass a holder to judge by conditions.
-- The quality multiplier is the **only** place where "item currency value meets quality": it multiplies the `value_multiplier` of the quality the priced stack resolves for itself; when the product is below 1, past the long ceiling, or no longer finite, the **declared denomination is kept** rather than clamped.
+  **`empty` and `0L` are two different conclusions**: `empty` = not currency / no server / overflow / no definition found; `0L` = it is currency, but the stack is empty or it is currently unavailable; on the exchange side "no quotes" shows up as an **empty list**.
+  **A query without a holder treats any definition that writes `unavailable_when` as unavailable** (internally it requires that list to be empty); pass a holder to judge by conditions.
+  The quality multiplier is the **only** place where "item currency value meets quality": it multiplies the `value_multiplier` of the quality the priced stack resolves for itself; when the product is below 1, past the long ceiling, or no longer finite, the **declared denomination is kept** rather than clamped.
 
 ## Alchemy {#alchemy}
 
 ### `AlchemyWorkstationService` {#alchemyworkstationservice}
 
-Package `com.iafenvoy.mxt.runtime.alchemy`. The furnace's **one intake point**: previewing, lighting, aborting and the per-tick advance all live here, and the block entity only answers state (see [AlchemyWorkstation](interfaces/alchemy/alchemy-workstation.md)).
+Package `com.iafenvoy.mxt.runtime.alchemy`. The furnace's **one intake point**: previewing, lighting, aborting and the per tick advance all live here, and the block entity only answers state (see [AlchemyWorkstation](interfaces/alchemy/alchemy workstation.md)).
 
 | Method | Purpose | Notes |
-| --- | --- | --- |
+|     |     |     |
 | `start(ServerPlayer player, AlchemyWorkstation station)` | Lights the furnace | Returns `StartResult(started, failure, qualityFailure)`. The materials are consumed only once the whole judgement chain has passed: structure, furnace spec, quality, where the inputs sit and how many there are, whether the temperature can be reached, the ambient aura, and whether the output bin can take the result; a cancellation from `alchemyCraft`'s `Pre`, or a listener that moved the real inventory, gives `CANCELLED` and **does not restore the inventory**. |
 | `preview(ServerPlayer player, AlchemyWorkstation station)` | Previews the same judgement and **takes no chosen recipe** | Returns `AlchemyPreview(mixture, candidates, resolvedRecipe, blocker, parameters, qualityFailure, successOutputs, failureOutputs)`; lighting uses that same `parameters`, so a preview and a real run never give two different answers. |
 | `abort(ServerLevel level, BlockPos pos, AlchemyWorkstation station)` / `abort(..., AlchemyFailure reason)` | Aborts the active batch | Settles it as a failure once, and the materials already consumed are not returned; a batch that is already `READY`, or already settled, is not settled a second time. |
@@ -584,16 +564,16 @@ Result types: `StartResult`, `AlchemyPreview`, `Parameters` (the recipe vector e
 
 Key points:
 
-- **The temperature and the outputs are not written in from outside**: `Parameters` is evaluated once at the moment of lighting and frozen, the active batch reads that frozen copy, and only a batch started after a `/reload` reads a new recipe.
-- **`start` and `preview` share one judgement**: temperature and output capacity only take part in accepting or rejecting the entry that has already been chosen, and never make the judgement pick a weaker recipe.
-- **A heat block answers only two numbers**, see [AlchemyHeatSource](interfaces/alchemy/alchemy-heat-source.md).
+  **The temperature and the outputs are not written in from outside**: `Parameters` is evaluated once at the moment of lighting and frozen, the active batch reads that frozen copy, and only a batch started after a `/reload` reads a new recipe.
+  **`start` and `preview` share one judgement**: temperature and output capacity only take part in accepting or rejecting the entry that has already been chosen, and never make the judgement pick a weaker recipe.
+  **A heat block answers only two numbers**, see [AlchemyHeatSource](interfaces/alchemy/alchemy heat source.md).
 
 ## The server and client boundary {#boundary}
 
 This section gathers into one place the boundary scattered around the rest — every entry point above only tells its own exceptions.
 
-- **Only the server settles**: costs, cultivation progress, breakthroughs, abilities, damage, formations and currency value are all server-side facts. A client call gets at best a return value of "nothing happened".
-- **But "client-safe" is not a default property of a service class**: the mod's own KubeJS bridge (`MxtKubeJsApi`) writes an `isClientSide()` check at every entry point and returns `SERVER_ONLY` / `false` / `0` without logging; `AbilityService` and `CultivationService` (apart from `attempt`) **have no such check of their own**. When writing a new entry point for another mod to call, block it once at the **boundary** the way the KubeJS bridge does.
-- **Do not query server registries on the render thread**: in `MxtDatapackRegistries`, every overload without a `Provider` / `RegistryAccess` reads the current server, so either switch to an accessor-carrying overload or cache the result.
-- **Failures use result records, not exceptions**: every `*Result` record (`UseResult`, `GateResult`, `BreakthroughResult` …) carries a `Failure` enum and an optional `failedResource`, and a normal refusal throws nothing.
-- **The client only sends intent**: a new interaction passes only an id and a choice, and the server re-resolves the definition and decides for itself, see [Network Protocol and Server Authority](network.md).
+  **Only the server settles**: costs, cultivation progress, breakthroughs, abilities, damage, formations and currency value are all server side facts. A client call gets at best a return value of "nothing happened".
+  **But "client safe" is not a default property of a service class**: the mod's own KubeJS bridge (`MxtKubeJsApi`) writes an `isClientSide()` check at every entry point and returns `SERVER_ONLY` / `false` / `0` without logging; `AbilityService` and `CultivationService` (apart from `attempt`) **have no such check of their own**. When writing a new entry point for another mod to call, block it once at the **boundary** the way the KubeJS bridge does.
+  **Do not query server registries on the render thread**: in `MxtDatapackRegistries`, every overload without a `Provider` / `RegistryAccess` reads the current server, so either switch to an accessor carrying overload or cache the result.
+  **Failures use result records, not exceptions**: every `*Result` record (`UseResult`, `GateResult`, `BreakthroughResult` …) carries a `Failure` enum and an optional `failedResource`, and a normal refusal throws nothing.
+  **The client only sends intent**: a new interaction passes only an id and a choice, and the server re resolves the definition and decides for itself, see [Network Protocol and Server Authority](network.md).

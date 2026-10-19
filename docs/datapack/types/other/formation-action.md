@@ -109,14 +109,17 @@ description: 阵法功能模块 mxt:formation_action_type 的全部内置模块�
 | --- | --- | --- | --- |
 | `aura_zone` | 灵气区域 id | **必填** | 高优先级的运行时灵气覆写：替换阵地所在位置的灵气解析结果 |
 | `max_bonus` | 灵气 id 到 `NumberProvider` 的映射 | `{}` | 覆盖后选中的那个区域每种灵气的额外容量上限 |
+| `upkeep_weight` | `NumberProvider` | `1` | 阵法参与同区块灵气分配的权重 |
 
 ```json
-{"type": "mxt:aura", "aura_zone": "example:fireland", "max_bonus": {"mxt:common": 50}}
+{"type": "mxt:aura", "aura_zone": "example:fireland", "max_bonus": {"mxt:common": 50}, "upkeep_weight": 3}
 ```
 
 `aura_zone` 的优先级高于群系 / 维度 / 人工区域，覆盖只在阵法在册期间生效；完整口径见[阵法](../../json/formation.md)的「灵气覆写」。
 
 `max_bonus` 只随着覆盖一起应用：没有覆盖就没有地方加，该灵气区域不提供的灵气也加不上（不会凭空创造灵气）。多条加成落在同一种灵气上时取最高。
+
+`upkeep_weight` 在阵法**和玩家抢同一份区块灵气**时生效：阵法把自己覆盖范围内、每个区块的发射方块算作一次请求，与该区块里修炼的人按 `aura_zone.distribution` 分同一个池，权重就是它这一份。分到的量用来抵扣维护费，不够的部分才由阵法储备与主人补。`realm_weighted` 下它和玩家的权重同列比较。多个 `mxt:aura` 模块时取最大的那个。
 
 `aura_zone` 因此是**必填**的：只写 `max_bonus` 的模块永远没有作用对象，会被当成写错直接拒收。
 

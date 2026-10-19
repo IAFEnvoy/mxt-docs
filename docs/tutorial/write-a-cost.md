@@ -74,9 +74,9 @@ description: "一套被满包复用的消耗数组：五种写法、四种类型
 
 `mxt:item` 的 `items` 是一个 [`ItemMatcher`](../datapack/types/shared_data_types.md#itemmatcher)：裸物品 ID、`#物品标签`，或带 `type` 的匹配条目（`mxt:item`、`mxt:tag`、`mxt:wildcard`、`mxt:regex`、`mxt:technique`、`mxt:spirit_storage`、`mxt:herb_tag`、`mxt:quality`、`mxt:ingredient`）混在一个数组里。它的 `amount` **向上取整**，所以写 `1.5` 是取走 2 个；取整后非正或非有限表示这一笔无法支付，而不是「取走 0 个」。
 
-`mxt:aura` 比另外三种多一件事：**它能扣的不止一份存量**。付款者自己支付时，扣的是这门灵气所度量的那个数值；由场地从**共享灵气池**支付时（修炼的 `aura_costs`），先按同区块多人修炼的池子分配份额缩放，再由池子全有或全无地扣；从**方块实体的自有存量**支付时（灵气合成配方的 `aura`），扣这门灵气本身、按整单位向上取整。同一份 `mxt:aura` 条目写在哪，就由那处的通道决定它扣在哪——条目自己不带这个信息。
+`mxt:aura` 比另外三种多一件事：**它能扣的不止一份存量**。付款者自己支付时，扣的是这门灵气所度量的那个数值；由场地从**共享灵气池**支付时（修炼 `costs` 里的灵气条目），先按同区块多人修炼的池子分配份额缩放，再由池子全有或全无地扣；从**方块实体的自有存量**支付时（灵气合成配方的 `aura`），扣这门灵气本身、按整单位向上取整。同一份 `mxt:aura` 条目写在哪，就由那处的通道决定它扣在哪——条目自己不带这个信息。
 
-有两条字段**只收 `mxt:aura` 条目**，写别的类型是加载错误：`cultivation.aura_costs` 与灵气合成配方的 `aura`。它们还接受映射写法：键是灵气 id、值是数值提供器。
+灵气合成配方的 `aura` **只收 `mxt:aura` 条目**，写别的类型是加载错误；它还接受映射写法：键是灵气 id、值是数值提供器。
 
 ## 第 3 步 —— 把数组接到技能上
 
@@ -99,7 +99,7 @@ description: "一套被满包复用的消耗数组：五种写法、四种类型
 
 其余字段原样不动：换个字段名、少写一项都不影响数组本身的语义，`costs` 在哪个字段上就由哪个字段付。这里是用技能当例子，因为它最容易在游戏里试——但被换掉的只有 `costs`。
 
-`costs` 出现的字段一共十二个：`ability.costs`（**所有技能类型共用**，所以 `mxt:mount` 的每 tick 燃料与 `mxt:upkeep` 的每周期费用也写在这里）、`mxt:channelled` 的 `upkeep_costs`、`realm_stage.costs`、`cultivation.costs` 与 `cultivation.aura_costs`、`formation.activation_costs` 与 `formation.maintenance_costs`、`forging_method.costs`、`contract_type.costs`、`talisman.costs`、`quality.upgrade_costs`，以及灵气合成配方的 `aura`。它们共用的就是这一套形状。
+`costs` 出现的字段一共十一个：`ability.costs`（**所有技能类型共用**，所以 `mxt:mount` 的每 tick 燃料与 `mxt:upkeep` 的每周期费用也写在这里）、`mxt:channelled` 的 `upkeep_costs`、`realm_stage.costs`、`cultivation.costs`、`formation.activation_costs` 与 `formation.maintenance_costs`、`forging_method.costs`、`contract_type.costs`、`talisman.costs`、`quality.upgrade_costs`，以及灵气合成配方的 `aura`。它们共用的就是这一套形状。
 
 ## 第 4 步 —— 全有或全无
 
@@ -110,12 +110,12 @@ costs = [qi ×10, aura example:qi ×2, emerald ×2]
 身上有 20 qi、没有绿宝石  →  qi 一点也不少
 ```
 
-一笔之内也有合并规则。**同一数组里两项指向同一个存储是加载错误**：同一个数值写两次、或同一门灵气写两次，直接报 `Duplicate resource cost` / `Duplicate aura cost` 并带上那个 id。而两项只是**经由不同路径到达同一个值**不是错误——一个 `mxt:resource` 与一个用该数值度量的 `mxt:aura` 会把金额**相加**，因为这是唯一不依赖书写顺序的答案。所以上面的数组一次扣：资源账户里 10 + 2 = 12 点 `example:qi`。
+一笔之内也有规则。**同一数组里两项指向同一个存储会被认出来**：同一个数值写两次、同一门灵气写两次、物品条目写两项、同一个脚本 id 写两次，以及一个 `mxt:resource` 与一个用该数值度量的 `mxt:aura` 落到同一个值，都会在报价时被比出来、打一条运行期警告。定义照常加载，金额按目标合计后只扣一次——但同一个目标写两遍没有意义，能写成一条就写成一条。
 
-上面说的是「一份数组」。**一次动作里的好几份数组是另一回事**：符箓一次发动好几条技能、复合技能带好几个子技能、修炼一拍既付环境灵气又付身体费用，都是「好几笔付款 + 一次边界」。边界的规则是：
+上面说的是「一份数组」。**一次动作里的好几份数组是另一回事**：符箓一次发动好几条技能、修炼一拍既付环境灵气又付身体费用，都是「好几笔付款」。规则是：
 
-- 后面的哪一笔被拒，前面已经写下的**按倒序回退**（后写的先还），整个动作当作没发生、行为也不跑。
-- **脚本那一笔不能回退**，所以它排在最后跑：其它通道全部付完之后才轮到 `mxt:js`。代价是脚本必须自己对这一笔保持**幂等**——它做出去的外部动作没有任何东西能收回来。
+- 每一笔都是「先按整份数组模拟一遍、全部通过再逐项真扣」，但**没有回退**：后面哪一笔在扣款那一刻仍被拒，前面已经扣掉的不会退回。所以宁可让它在模拟阶段就被拒。
+- **脚本那一笔排在最后跑**：其它通道全部付完之后才轮到 `mxt:js`，因为脚本的外部动作没有任何东西能收回来。代价是脚本必须自己对这一笔保持**幂等**。
 
 ## 第 5 步 —— 付不出时玩家看到什么
 
@@ -177,16 +177,15 @@ MxtCosts.register('example:quest_token',
 3. `/mxt resource example:qi set 12` 再按一次：一样成功，账户正好见底。10 + 2 = 12 就是那份数组里资源项与灵气项相加的结果。
 4. 把物品项的 `amount` 改成 `1.5`，重开世界再按一次：取走 2 个，向上取整。
 5. 把某项 `amount` 改成 `0`，重开世界再按一次：那一项算不出可用金额，整份数组付不出，报的是配置无效一类的说明，不是「扣 0 点」。
-6. 把 `{"id": "example:qi", "amount": 10}` 复制成两项，重开世界：世界加载不了，日志报 `Duplicate resource cost`——同一个数值在同一个数组里只能写一次。
+6. 把 `{"id": "example:qi", "amount": 10}` 复制成两项，重开世界：定义照常加载，但付款时会打一条警告说这两项取的是同一个目标。
 7. 给技能加上 `{"type": "mxt:js", "id": "example:quest_token", "params": {"count": 3}}`，把 `mxt_costs.js` 里的 `register` 整段注释掉再 `/reload`：日志里报这个脚本消耗没人注册（`Unknown KubeJS cost`），技能付不出；把注册加回来再 `/reload`，`tokens` 够 3 时就能发动。
 
 ## 常见错误
 
 | 现象 | 原因 |
 | --- | --- |
-| 报 `Duplicate resource cost` | 同一个数组里同一个数值写了两项。两项只是经过不同路径到达同一个值是合法的（会相加），同名才是错误。 |
-| 报 `Duplicate aura cost` | 同一个数组里同一门灵气写了两项。 |
-| 报 `Every entry of an aura cost list must be an mxt:aura cost` | `cultivation.aura_costs` 或灵气合成配方的 `aura` 里写了别的类型。这两个字段只收 `mxt:aura`。 |
+| 日志里一条「同一个目标写了两项」的警告 | 同一个数组里两次写到同一个存储（同一门数值、同一门灵气、同一个脚本 id、两项物品，或一个 `mxt:aura` 与它度量的那个 `mxt:resource`）。定义照常加载、金额按目标合计后只扣一次，但同一个目标写两遍没有意义。 |
+| 报 `Every entry of an aura cost list must be an mxt:aura cost` | 灵气合成配方的 `aura` 里写了别的类型。这个字段只收 `mxt:aura`。 |
 | 报 `Unknown KubeJS cost`（带那个 id，并说明这笔消耗付不出） | 脚本消耗的回调没有注册（脚本没加载、id 写错、或注册在客户端脚本里）。类型本身照常加载。 |
 | 整份定义加载失败 | `costs` 数组里有一项解不出来（未知 `type`、缺必填字段）。这个数组不套容错列表的口径，不会只丢那一项。 |
 | 消耗从头到尾收不到 | 付款者不提供这条通道：`mxt:item` / `mxt:js` 需要玩家。这报成「付不出」，不报成定义坏了。 |

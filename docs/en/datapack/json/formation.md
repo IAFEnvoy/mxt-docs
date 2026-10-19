@@ -250,6 +250,8 @@ A few boundaries:
 - No `aura_zone` → no override → `max_bonus` has nowhere to go.
 - An `aura_zone` whose zone does not provide some aura → no bonus can be added to that aura (it does not conjure aura out of nothing).
 
+`upkeep_weight` on the same module is the array's share when it **competes with players for the same aura**: the stock is stored per sub-chunk (16 blocks of height), and the array asks for the block emitters inside its radius sub-chunk by sub-chunk, splitting each of those with whoever is cultivating in it under that zone's `distribution`; what it is granted pays the maintenance bill first, and only the rest comes from the array's store and then its owner. Ground an array covers is **no longer subtracted from the environment**, so a query inside an array still sees every block emitter — the array's bill is paid out of that same stock, not counted twice.
+
 ## Activating and dismantling
 
 The plate (`mxt:formation_plate`) is the only item that can bring an array into the world: its `mxt:formation_plate` component holds a `formation` reference and is settled on right-clicking a block. The same plate is the switch — right-clicking the controller activates, right-clicking an activated controller dismantles (you have to be an owner or an administrator; with the server setting "Formations → Allies May Dismantle" on, an owner's friends can dismantle too).

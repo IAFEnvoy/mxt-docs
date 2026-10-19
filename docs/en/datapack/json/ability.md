@@ -42,7 +42,7 @@ Every type reads `condition`, and reads it every beat: it is both the gate for c
 
 `costs` go through the one shared cost plan: the whole array is validated first and then deducted as a whole; anything that cannot be paid refuses the whole array and rolls back what was already written. The `amount` of a `mxt:resource` entry is evaluated with the caster context plus **the spent value's own formula context** (the resource family's variables, such as `realm_rank` and `absorbed_aura`); see [Formula Variables](../types/formula_variables.md).
 
-`cast_time` is read by the cast pipeline only: a press books nothing but a due tick, and the action fields run on that tick. A positive value on an item-carried ability (one that needs no grant) is refused outright, with the failure reason `CARRIED_NOT_INSTANT`; a positive value on a child of `mxt:composite` makes the whole composite refuse with `INVALID_FORMULA`. `mxt:composite` itself never reads this field.
+`cast_time` is read by the cast pipeline only: a press books nothing but a due tick, and the action fields run on that tick. A positive value on an item-carried ability (one that needs no grant) is refused outright, with the failure reason `CARRIED_NOT_INSTANT`.
 
 ### Element Affinity
 
@@ -113,7 +113,7 @@ A press of `mxt:targeted` runs one full cast: its own `costs` / `cast_time` / `c
 
 It does **not read** its own top-level `entity_action` / `target_condition` / `bi_entity_action`. Every entity the `target_selector` picks is tested first by **the payload ability's own** `target_condition` (running caster → target), and only a target that passes runs **the payload's** `bi_entity_action`; **the actor is always whoever pressed**, so damage and effects are credited to them, the same rule as `mxt:aura`'s per-target pulse. The payload's own `costs` / `cast_time` / `cooldown` / `charges` / `condition` / element affinity are not read at all, and neither are its `entity_action` or its `target_selector`, so it has to be **one of the five types that run the four action fields**. The price and the cooldown are all charged to this `mxt:targeted` ability itself, once per cast.
 
-**Landing on nobody is decided before anything is paid**, so a press that reaches no one costs nothing: a `target_selector` that picks no entity, or whose picks are all filtered out by the payload's `target_condition`, is `NO_TARGET` (no target matches); a payload type with no one-target half at all is `NOT_APPLICABLE` (the named ability cannot act on a target). Written as a child of `mxt:composite`, these two are decided during the **draft preview** as well, so nothing is paid there either. With `cast_time > 0` this step is decided on the tick the cast finishes, and a failed one reports "Cast failed: `<reason>`" on the action bar.
+**Landing on nobody is decided before anything is paid**, so a press that reaches no one costs nothing: a `target_selector` that picks no entity, or whose picks are all filtered out by the payload's `target_condition`, is `NO_TARGET` (no target matches); a payload type with no one-target half at all is `NOT_APPLICABLE` (the named ability cannot act on a target). With `cast_time > 0` this step is decided on the tick the cast finishes, and a failed one reports "Cast failed: `<reason>`" on the action bar.
 
 **Where the effects land**: an action in the payload that **acts on the target** (entity-facing ones such as `mxt:damage_target` / `mxt:heal_target` / `mxt:apply_effect`) is unaffected; an action that **places something** (ones that land by where this cast happens, such as `mxt:spawn_lightning`, `mxt:explode`, `mxt:spawn_particles`, `mxt:spawn_effect_cloud`, `mxt:play_sound`, `mxt:block_action`) lands at the **activation's own place** by default. A wheel press, a command or a script has no place, so those land at each target's own position; **a talisman or a display stand does have one** (the talisman, the stand), so they all land at the talisman's feet. To make them land **at the target's own position** in every case, wrap such actions in `mxt:target_action` with `"use_target_position": true`:
 
@@ -175,7 +175,7 @@ Which entity flies it is decided by `entity_type`; the field and the contract ar
 
 **Only five types are pressable**: `mxt:active` / `mxt:channelled` / `mxt:targeted` / `mxt:storage` / `mxt:flight_control`. The first three go through the full cast pipeline and pay for themselves; `mxt:flight_control` and `mxt:storage` first pass the **shared gate**, which tests in order granted → cooldown → condition → costs, and **writes no charge and runs no effect**.
 
-**The wheel pool only takes pressable types**: the candidate pool reads the grant ledger, sorts by id and then filters on being pressable. So `mxt:triggered` / `mxt:aura` / `mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:composite` / `mxt:word` / `mxt:empty` all **never enter the wheel pool**, and `hidden` is not one of that filter's conditions either. The dispatch on a wheel press is: a pressable type goes to activation, and **everything else falls back to one ordinary cast** — a path that only serves **an already saved wheel cell / layout**, since a layout is written to disk and may name an ability that is not pressable, so the server still honours it.
+**The wheel pool only takes pressable types**: the candidate pool reads the grant ledger, sorts by id and then filters on being pressable. So `mxt:triggered` / `mxt:aura` / `mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:word` / `mxt:empty` all **never enter the wheel pool**, and `hidden` is not one of that filter's conditions either. The dispatch on a wheel press is: a pressable type goes to activation, and **everything else falls back to one ordinary cast** — a path that only serves **an already saved wheel cell / layout**, since a layout is written to disk and may name an ability that is not pressable, so the server still honours it.
 
 **Commands and KubeJS are a different road**: `/mxt ability cast` and the KubeJS cast entry point cast any type directly, and an item-carried ability goes the same way; those runs go through the cast pipeline as usual (condition, costs, `cast_time`, cooldown, charges).
 
@@ -213,12 +213,14 @@ sequenceDiagram
     end
 ```
 
-For a top-level ability to be a channelled ability you can release from the wheel, make `mxt:channelled` a child of `mxt:composite`: `mxt:active` and `mxt:channelled` are mutually exclusive single `type`s, and only a composite's children become the active channel. `mxt:composite`'s own `costs` / `cooldown` / `charges` all take no effect, and the money and the cooldown are booked under **the child's own id**.
+A top-level ability you can release from the wheel is simply written as `mxt:channelled`: it is pressable on its own, a press opens the channel and another press releases it.
 
 ```json
 {
-  "type": "mxt:composite",
-  "abilities": ["example:meditate_channel"]
+  "type": "mxt:channelled",
+  "tick_interval": 20,
+  "upkeep_costs": [],
+  "entity_action": { "type": "mxt:no_op" }
 }
 ```
 

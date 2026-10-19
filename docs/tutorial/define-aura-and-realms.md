@@ -208,7 +208,7 @@ realm_stage chain             progress + conditions + costs → next realm
   "priority": 1,
   "tick_interval": 20,
   "absorb_amount": 1.5,
-  "aura_costs": [{"type": "mxt:aura", "aura": "example:qi", "amount": 1}],
+  "costs": [{"type": "mxt:aura", "aura": "example:qi", "amount": 1}],
   "cooldown": 100
 }
 ```
@@ -218,7 +218,7 @@ realm_stage chain             progress + conditions + costs → next realm
 | `priority` | 多条法门并存时的先后：数值大者先，相同则按注册表顺序。它只在**此刻适用的**法门里排序。默认 `0`。 |
 | `tick_interval` | 结算间隔，单位 tick，范围 `1..72000`；`20` 表示每秒一次。默认 `20`。 |
 | `absorb_amount` | 当前境界数值自然恢复的倍率；先填满资源条，溢出量成为修为。默认 `1`。 |
-| `aura_costs` | 每 tick 从修炼者所在位置的**共享灵气池**扣除的灵气消耗，只写 `mxt:aura` 条目（`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`）。多人同区块修炼时，各人的量先按池子分配份额缩放，再由池子**全有或全无**地扣。 |
+| `costs` | 每 tick 的消耗：`mxt:aura` 条目从修炼者所在位置的**共享灵气池**扣（`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`），其余条目从修炼者自己账上扣。多人同区块修炼时，灵气那些条目先按池子分配份额缩放，再由池子**全有或全无**地扣。 |
 | `cooldown` | 停止后再次开始修炼前的冷却 tick。默认 `0`。 |
 
 `start_condition` 与 `tick_condition` 决定修炼能否开始与继续；两者默认恒为真，并且都能读取环境。没有“灵气种类”字段：只应在正确地点运行的行为会直接要求那个地点，例如用 `mxt:aura_range`（某一门灵气的浓度区间，每一项都必填 `max`）或 `mxt:dimension`。剩下的字段是 `costs`（每 tick 从修炼者身上扣的消耗，`Cost` 数组、全有或全无）、`aura_gains`（每 tick 额外增加的灵气）、`tick_action`（**每个 tick** 都运行的实体行为）和 `cultivate_action`（**结算成功那一拍**才运行的实体行为）。
@@ -306,7 +306,7 @@ realm_stage chain             progress + conditions + costs → next realm
 | --- | --- |
 | 谁都无法离开凡人 | aura 上缺少 `first_realm`，没有可以突破到的阶段。 |
 | 修炼从不开始 | 行为的 `start_condition` 或 `tick_condition` 不满足——为你想要的地点写一个 `mxt:aura_range` 或群系条件，因为没有可匹配的“灵气种类”词汇。 |
-| 资源条从不增长 | 共享灵气池付不出 `aura_costs`（池子本身不够，或那份被同区块的其他修炼者分掉），或者 `use_condition` 为假。 |
+| 资源条从不增长 | 共享灵气池付不出 `costs` 里的灵气条目（池子本身不够，或那份被同区块的其他修炼者分掉），或者 `use_condition` 为假。 |
 | 世界拒绝加载 | 有定义解码失败：某个必填 Holder 指向不存在的 ID，或某个字段形状不对。整次加载都会失败，而不只是那个文件。 |
 | `breakthrough_exp` 大于 `max_experience` | 这一档无法被突破到；两者都是常量时，Codec 会在加载期拒绝。门槛要写在**当前档**（突破的终点）上，别写到上一档。 |
 | 境界条件从不通过 | `breakthrough` 写在目标档上、求值时身体还在上一档；`mxt:realm` 比的又是当下所在，所以在目标档自己的条件里点名它自己永远过不了（凡人是唯一例外）。要么点名下面那一档，要么用 `"comparison": ">="` 或改查数值。 |

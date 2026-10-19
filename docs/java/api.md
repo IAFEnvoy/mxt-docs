@@ -22,7 +22,6 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 | 拼一行提示框数值 | [`TooltipText`](#tooltiptext) | `util` |
 | 求一个数据包数值 | [`NumberProvider`](#numberprovider) | `util.formula` |
 | 判断"这件物品算不算这条定义" | [`ItemMatcher`](#itemmatcher) | `util.matcher` |
-| 把注册表里的定义变成创造栏物品 | [`CreativeTabHelper`](#creativetabhelper) | `data` |
 | 问一堆物品是哪一档、让自己的定义参与定档 | [`QualityService` / `QualityProvider`](#qualityservice) | `runtime.item` / `api` |
 | 问某个坐标有多少灵气 | [`AuraService`](#auraservice) | `runtime.world` |
 | 读写实体身上的一条数值 | [`ResourceService`](#resourceservice) | `runtime.resource` |
@@ -157,43 +156,25 @@ Entry 种类（`mxt:item_matcher_entry_type`，默认 `item`）：`item`、`tag`
 
 ## 物品目录与创造栏 {#picker}
 
-### `CreativeTabHelper` {#creativetabhelper}
+物品选择器是 **Picker 模组**的功能（本模组通过 `jarJar` 内置它）：界面、`/picker` 命令、开屏包与目录读取都在那边，本模组只在启动时登记自己的分类（`data/PickerCategories`）。所以这里没有"本模组的目录 API"——要读这些行，用 Picker 的 `PickerContents`。
 
-包 `com.iafenvoy.mxt.data`。**读**那条「表 → 可选项」目录的入口：`/picker` 界面与别的模组都走它。每一项是一行 `PickerItem(stack, names)`：`stack` 是要画的堆，`names` 是这一行能被哪些名字搜到。它只读——不往物品上写东西，也不判定谁能拿。
+分类就是一张注册表：`/picker <分类 id>` 的分类 id 就是注册表 id，`PickerCatalogue.categories()` 按登记顺序给出全部分类，`PickerCatalogue.category(Identifier)` 按 id 找一个。`minecraft:item` 与 `minecraft:block` 是 Picker 自己的内置分类，本模组不再登记它们；本模组登记的分类与行形状见[物品选择器](/java/screens)。
 
-分类就是一张注册表：`ItemPickerManager.categories()` 按登记顺序给出 `ResourceKey<Registry<?>>` 列表，命令与开屏包用的分类 id 就是 `key.identifier()`。行怎么来由那张注册表自己的 provider 决定——物品形状的表（`item_aura`、`currency`、`default_quality`、各种 binding…）一行是它认领到的那件物品（`currency` 看 `item`，其余看 `items`），方块形状的表（`block_aura`、`heat_source`）一行是它 `blocks` 认领到的那个方块，行名用条目自己的名字（定义写了 `name` 就读它，否则按 id 推翻译键）。所以 `CreativeTabHelper` 的重载只收注册表 key，没有分类对象那一套。
+行怎么来由那张注册表自己的 provider 决定——物品形状的表（`item_aura`、`currency`、`default_quality`、各种 binding…）一行是它认领到的那件物品（`currency` 看 `item`，其余看 `items`），方块形状的表（`block_aura`、`heat_source`）一行是它 `blocks` 认领到的那个方块，行名用条目自己的名字（定义写了 `name` 就读它，否则按 id 推翻译键）。每个类目里的行序就是那张注册表自己的顺序。
 
 匹配条目里**只有物品与标签能直接点名物品**，其余条目会拿**每一件已注册物品**试一遍（通配符、正则、整份材料、`mxt:spirit_storage` 这类都能这样出行）；**只有读堆数据的那几种**（`mxt:quality` 的档位、`mxt:technique` 组件、按药性筛的灵草）对裸物品答否，因此不出行。
 
-每条查询都要求自己传注册表访问器（`HolderLookup.Provider`，`BuildCreativeModeTabContentsEvent.getParameters().holders()` 就是它），所以客户端用客户端已同步的表、服务端用服务端的表，不存在"读到另一侧"的问题。
-
-| 方法 | 作用 | 备注 |
-| --- | --- | --- |
-| `itemsOf(Provider, key)` | 一张注册表的全部行 | `key` 是注册表 key；**没登记成分类的注册表给空列表**，不抛 |
-| `itemsOf(Provider, key, Predicate<Identifier>)` | 按条目 id 筛行 | 谓词拿到的是**条目自己的 id**（定义 id / 物品或方块自己的 id），所以"模组 id"就是取它的命名空间 |
-| `itemsOfMod(Provider, key, String)` | 一张注册表里属于某个命名空间的行 | `mxt:aura` 的条目属于 `mxt`，`mymod:aura/…` 属于 `mymod` |
-| `itemsOfMod(Provider, String)` | 跨全部分类，挑出某个命名空间的行 | 给自己做一个"我模组的东西"创造栏用它 |
-| `stacksOf(...)` / `stacksOfMod(...)` | 上面四条的堆视图 | 见下 |
-
-要点：
-
-- **给创造栏的是 `stacksOf` / `stacksOfMod`**：它们按**原版创造栏自己的规则**（`ItemStackLinkedSet`，同物品同组件算同一件）去掉重复，而且**每一份都是拷贝**——改它不会碰到选择器里的那一行。去重不是装饰：`mxt:aura` 的每一行都是同一颗灵石当替身，把行原样塞进创造栏，原版的 `accept` 会当场抛"这个堆已经在栏里了"。行视图（`itemsOf*`）一个定义一行，不去重。
-- **原版创造栏的 `accept` 还要求 `count == 1`**，本体的行都是 1；自己注册的行也请写 1。
-- 查询无副作用、双端可调：它只读你传进来的那份访问器，不碰服务端单例，也不写任何附件。
-- 想把这批行画成一张选择器页（而不是进创造栏），用 `ItemPickerScreen.over(title, stacks)`，见[物品选择界面](/java/screens)。
-
-**目录本身在别的类里**：哪张注册表对应哪些行、每行怎么造，是 `com.iafenvoy.mxt.picker.ItemPickerManager`——`categories()` 按登记顺序给出全部分类的注册表 key（`key.identifier()` 就是命令与开屏包用的那个分类 id），`category(Identifier)` 按 id 找一个 key，`provider(ResourceKey<? extends Registry<?>>)` 拿到那张注册表自己的 `ItemProvider<?>`（它把注册表条目变成一行行 `PickerItem`），`registerSingle` / `register` 登记（`mxt:` 的注册表由本体登记好了）。`CreativeTabHelper` 只负责读它，两个类一眼能分开。有一条限制要知道：**一张注册表只认第一次登记的那份 provider**，对已经登记过的 key 再登记一次是**静默无效**的（分类列表也只列一次）。
+给创造栏用 `PickerContents.stacksOf` / `stacksOfMod`：它们按**原版创造栏自己的规则**（`ItemStackLinkedSet`，同物品同组件算同一件）去掉重复，而且**每一份都是拷贝**。去重不是装饰：`mxt:aura` 的每一行都是同一颗灵石当替身，把行原样塞进创造栏，原版的 `accept` 会当场抛"这个堆已经在栏里了"。行视图（`itemsOf*`）一个定义一行，不去重；原版创造栏的 `accept` 还要求 `count == 1`，本体的行都是 1。每条查询都要求自己传注册表访问器（`HolderLookup.Provider`，`BuildCreativeModeTabContentsEvent.getParameters().holders()` 就是它），所以客户端用客户端已同步的表、服务端用服务端的表，不存在"读到另一侧"的问题。
 
 ```java
 // 自己的创造栏：让这个模组贡献过的定义（以及它自己的物品）全进来
 @Override
 public void buildContents(BuildCreativeModeTabContentsEvent event) {
     if (event.getTabKey() != MY_TAB) return;
-    for (ItemStack stack : CreativeTabHelper.stacksOfMod(event.getParameters().holders(), "mymod"))
+    for (ItemStack stack : PickerContents.stacksOfMod(event.getParameters().holders(), "mymod"))
         event.accept(stack);
 }
 ```
-
 ## 物品品质 {#quality}
 
 ### `QualityService` 与 `QualityProvider` {#qualityservice}
@@ -236,7 +217,6 @@ public interface QualityProvider {
 | `modifier(...)` | 取品质的三个修正之一 | 是乘数；缺失、非有限或 ≤ 0 一律按 `DEFAULT_MODIFIER`（`1.0`） |
 | `displayName(quality)` | 品质这一档自己的名字，套上它自己的颜色 | **列一个档位时的统一写法**（就是 `coloredName(quality, DefinitionText.name(quality))`）；`/quality get\|set\|upgrade`、灵根 / 体质列表与画符结算都走它 |
 | `coloredName(quality, text)` | 给一段**别的**文本套上这一档的 `color` | 品质没写颜色就原样返回 |
-| `ordered()` / `ordered(Provider access)` | 按 `tooltip_order` 标签排好的全部档 | 客户端用带 `Provider` 的那个重载 |
 
 存单堆覆盖用 `set`，别自己往组件里写；被拒绝的使用想给玩家同一句提示，就调 `notifyCannotUse`（它是公开的，好让排在闸门自己的优先级之下、但仍要看这次拒绝的交互也报得出来）。
 

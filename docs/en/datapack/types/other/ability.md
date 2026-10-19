@@ -29,7 +29,6 @@ The common fields — the handful every type reads — are on the [ability defin
 | [`mxt:flight_control`](#mxt-flight-control) | One press to take off, one to land | **Yes** |
 | [`mxt:storage`](#mxt-storage) | One press opens a carried storage | **Yes** |
 | [`mxt:upkeep`](#mxt-upkeep) | A periodic price | No |
-| [`mxt:composite`](#mxt-composite) | Delegates to child abilities | No |
 | [`mxt:word`](#mxt-word) | The two whitelisted effects | No |
 
 **Needs a key** only affects the wheel: only pressable types enter the wheel pool, and no other type does. Commands, scripts and item-carried abilities cast a type of any kind directly.
@@ -50,7 +49,7 @@ Each of the five types runs this set at **its own moment**:
 | `mxt:aura` | A pulse that comes due on `interval` **finds entities by radius one by one**, and each entity only runs `target_condition` + `bi_entity_action` (a pulse reads neither `target_selector` nor `entity_action`); fired one-off (a command, a script, a talisman) it runs the whole set once through the ordinary path. |
 | `mxt:interval` | Runs the whole set on its own `interval`; fired one-off by a command or a script it runs once through the ordinary path. |
 
-Every other type reads **none of it**: `mxt:word` carries a terminal payload of its own (its `effect` field), `mxt:composite` delegates to its children, `mxt:targeted` only picks targets (it runs the payload's one-target half), and `mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` have no such layer either.
+Every other type reads **none of it**: `mxt:word` carries a terminal payload of its own (its `effect` field), `mxt:targeted` only picks targets (it runs the payload's one-target half), and `mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` have no such layer either.
 
 `mxt:targeted` also writes a key called `target_selector`, but that is its own "who does this cast reach", not half of the set above.
 
@@ -70,7 +69,6 @@ Every other type reads **none of it**: `mxt:word` carries a terminal payload of 
 | `mxt:flight_control` | `hand`, `speed_multiplier`, `cooldown` |
 | `mxt:storage` | `slots`, `cooldown` |
 | `mxt:upkeep` | `interval`, `on_fail`, `owner_only` |
-| `mxt:composite` | `abilities`, `all_required` |
 | `mxt:word` | `effect`, `requires_operator`, `amount`, `cooldown` |
 
 `cooldown` and `damage_condition` are read by only some types, so they are not in the common field table — but they are still written beside `type` in JSON.
@@ -84,7 +82,7 @@ Which state kinds an ability can store is decided by its `type`; a data pack doe
 
 | `type` | Declared state kinds |
 | --- | --- |
-| `mxt:empty` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:composite` | Only the default `mxt:active_state` |
+| `mxt:empty` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` | Only the default `mxt:active_state` |
 | `mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` | `mxt:active_state`, `mxt:cooldown`, and `mxt:charges` when `charges` is written, plus `mxt:toggle` / `mxt:timer` / `mxt:resource` / `mxt:target_lock` |
 | `mxt:interval` | `mxt:active_state` and those four content-side kinds; no `mxt:cooldown` and no `mxt:charges` |
 | `mxt:targeted` | `mxt:active_state`, `mxt:cooldown`, and `mxt:charges` when `charges` is written; none of those four |
@@ -188,7 +186,7 @@ One press runs one full cast, uses `target_selector` to pick targets, and then r
 | `ability` | Ability id | **required** | The payload ability run on every target |
 | `cooldown` | `NumberProvider` | `0` | Cooldown length |
 
-The payload takes **concrete ids only, never a `#tag`**, and it has to be one of the five types that run the four action fields; naming `mxt:modifier` / `mxt:composite` / `mxt:word` / another `mxt:targeted` is refused before anything is paid.
+The payload takes **concrete ids only, never a `#tag`**, and it has to be one of the five types that run the four action fields; naming `mxt:modifier` / `mxt:word` / another `mxt:targeted` is refused before anything is paid.
 
 None of the payload's own `costs` / `cast_time` / `cooldown` / `charges` / `condition` / element affinity is read, and neither are its `entity_action` and `target_selector`.
 
@@ -335,21 +333,6 @@ When settlement is skipped: the stack carries no `mxt:upkeep`, `costs` is empty,
 
 It is not a pressable type.
 
-## `mxt:composite`
-
-It does nothing itself and delegates to child abilities.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `abilities` | Ability id list | **required** | The child abilities |
-| `all_required` | Boolean | `true` | Whether all of them have to pass before anything runs |
-
-The children take **concrete ids only, never a `#tag`**; a tag counts as a bad entry and is dropped with a log line. An artifact's `abilities`, a technique's `granted_abilities` and a talisman's `abilities` are the other way round and take either.
-
-Its own `costs` / `cast_time` / `cooldown` / `charges` all take no effect — the money and the cooldown are booked under **each child's own id**. `condition` and element affinity are still tested against the composite itself first.
-
-With `all_required: false` only the **first** child in the list is handed to the cast and the rest are never looked at; an empty list reports `NOT_GRANTED`. With `true` every child is first draft-previewed (condition, element affinity, costs, charges, cooldown all worked into the draft), a failure in any one of them means nothing lands at all and not a single child runs, and only once all of them pass are they committed in list order and run one after another. A child with `cast_time > 0` is refused during that preview with `INVALID_FORMULA`.
-
 ## `mxt:word`
 
 A terminal payload: it executes no target behaviour of its own.
@@ -365,4 +348,4 @@ A terminal payload: it executes no target behaviour of its own.
 
 `amount` has to evaluate finite, non-negative and no larger than a single-precision float allows, or this cast is refused with `PERMISSION_DENIED`. Failing `requires_operator` refuses it the same way.
 
-It is not a pressable type; usually it is a child of an `mxt:composite`, or cast by a command or a script.
+It is not a pressable type; it is cast by a command or a script.

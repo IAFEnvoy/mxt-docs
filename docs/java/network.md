@@ -44,7 +44,7 @@ sequenceDiagram
     end
 ```
 
-服务端向客户端同步动态注册表、资源/灵气必要状态（`AuraStateS2CPayload`）和附件，并按需下发 `ItemPickerS2CPayload`（打开物品选择器，只带标题和分类 id，不带物品）、`AlchemyStateS2CPayload`（丹炉监控页的读数：`(containerId, view)`，`view` 是服务端算好的只读读数——炉体名与品质、阶段、状态文案、能不能开炉、是否锁着（有一批在跑）、是否已成型、主辅格数，加一组数字：当前炉温、设定温度、可设上限、配方目标温度与容差、剩余与总时长、越界刻数；客户端只画它，不重算配方）与 `OwnerNameS2CPayload`（回答上一条：知道就回名字，没见过这名玩家就什么都不回——客户端把这个答案也记下来，于是一次会话只问一次，工具提示下一帧就能读到名字）。不要把客户端传入的数值当作可信结果；payload 只应传 ID、选择和操作意图。**轮盘配置界面本身不在这条路上**：它是客户端命令 `/wheel`（或那个默认未绑定的按键 `key.mxt.wheel_configuration`）自己打开的，服务端既不参与，也没有为"打开界面"设 payload（它保存布局与选中项用的是上表那两条，与打开界面无关）。
+服务端向客户端同步动态注册表、资源/灵气必要状态（`AuraStateS2CPayload`）和附件，并按需下发 `AlchemyStateS2CPayload`（丹炉监控页的读数：`(containerId, view)`，`view` 是服务端算好的只读读数——炉体名与品质、阶段、状态文案、能不能开炉、是否锁着（有一批在跑）、是否已成型、主辅格数，加一组数字：当前炉温、设定温度、可设上限、配方目标温度与容差、剩余与总时长、越界刻数；客户端只画它，不重算配方）与 `OwnerNameS2CPayload`（回答上一条：知道就回名字，没见过这名玩家就什么都不回——客户端把这个答案也记下来，于是一次会话只问一次，工具提示下一帧就能读到名字）。不要把客户端传入的数值当作可信结果；payload 只应传 ID、选择和操作意图。**轮盘配置界面本身不在这条路上**：它是客户端命令 `/wheel`（或那个默认未绑定的按键 `key.mxt.wheel_configuration`）自己打开的，服务端既不参与，也没有为"打开界面"设 payload（它保存布局与选中项用的是上表那两条，与打开界面无关）。
 
 **S2C payload 的类型两端都要登记，但 handler 只在客户端登记。** 服务端是编码方，所以它必须知道这些 payload 的 codec；可它永远不会处理它们，而 `ClientNetworkHandler` 这类处理器会碰到 `Screen` 等客户端专属类——专用服务器的类加载器拒绝加载这些类，只要在注册时**构造**一次处理器，服务器就会在 mod 加载阶段崩掉（`NoClassDefFoundError: net/minecraft/client/gui/screens/Screen`）。`NetworkManager` 因此按 `FMLEnvironment.getDist()` 分两支：客户端用带 handler 的 `playToClient`，服务端用不带 handler 的那个重载，只登记类型。
 

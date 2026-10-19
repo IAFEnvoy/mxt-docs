@@ -443,6 +443,7 @@ export const sections = [
       { page: 'technical/identification', zh: '敌我识别系统', en: 'Foe Identification' },
       { page: 'technical/aura', zh: '灵气计算', en: 'Aura Calculation' },
       { page: 'technical/ability', zh: '技能施放', en: 'Ability Casting' },
+      { page: 'technical/cost', zh: '消耗', en: 'Cost' },
       { page: 'technical/talisman-scoring', zh: '画符判分', en: 'Talisman Scoring' }
     ]
   },

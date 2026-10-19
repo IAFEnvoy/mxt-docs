@@ -35,7 +35,7 @@ Java extensions should reuse the existing data definitions, actions, conditions,
 - [Network Protocol and Server Authority](./network.md) — every C2S and S2C payload, and the one channel that carries item contents.
 - [Information Panel](./information-panel.md) — register your own lines in the character information panel.
 - [Wheel Entries](./wheel.md) — how to add an entry to the client wheel.
-- [Client Screens](./screens.md) — where the screens live, and how the item picker clones the vanilla creative search tab.
+- [Client Screens](./screens.md) — where the screens live, and how this mod's definitions become rows in the item picker.
 - [Types Reference](../datapack/types/index.md) — every built-in action and condition type.
 - [JSON Data Formats](../datapack/json/index.md) — every field of every definition.
 - [Datapack Overview](../datapack/overview.md) — the datapack directory layout and when changes take effect.

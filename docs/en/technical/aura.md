@@ -13,7 +13,7 @@ This page is about how "how much aura is at this position" is computed. For the 
 | --- | --- |
 | `runtime.world.AuraService` | The one query entry point: zone resolution, stock, weighted block contributions, consumption, queries. |
 | `runtime.world.AuraQueryCache` | Per-tick memo: results, static zone, pools, biome, availability… |
-| `runtime.world.AuraChunkTicker` | Periodic work: rebuilding dirty chunks, visitor counts, stock regeneration. |
+| `runtime.world.AuraChunkTicker` | Periodic work: section rescan, visitor counts, stock regeneration. |
 | `runtime.world.AuraZoneEventBridge` | The entity-tick query gate, zone enter/leave events, snapshots to clients. |
 | `attachment.AuraChunkAttachment` | The chunk stock: authoritative, persisted, consumable, regenerating. |
 | `runtime.world.BlockAuraService` | Block emitters: scans chunks, builds the per-section aggregates. |
@@ -50,7 +50,7 @@ flowchart TD
     FORM --> EVENT{"Was the override event cancelled?"}
     EVENT -->|cancelled| POOLS
     EVENT -->|not cancelled| POOLS["Start from the chunk stock<br/>and apply the formation's maximum bonus"]
-    POOLS --> BLOCK["Scan the 7×7 section columns<br/>and weight block emitters by distance"]
+    POOLS --> BLOCK["Scan the 7×7×7 sections<br/>and weight block emitters by distance"]
     BLOCK --> MERGE["Subtract this chunk's aggregate<br/>and add the weighted view back"]
     MERGE --> RESULT["Assemble the AuraResult"]
     RESULT --> CACHE["Write this tick's memo tables"]
@@ -63,7 +63,7 @@ The diagram below opens the same chain up sideways: on the left, where the state
 flowchart LR
     POS["Query position"] --> STOCK["Chunk stock<br/>consumable and regenerating"]
     POS --> BLOCKCACHE["Block aura cache<br/>per-section aggregates"]
-    BLOCKCACHE --> SCAN["Scan the 7×7 section columns<br/>weighted by 1 / max(1, d²)"]
+    BLOCKCACHE --> SCAN["Scan the 7×7×7 sections<br/>weighted by 1 / max(1, d²)"]
     STOCK --> AVAIL["Availability: consumed share<br/>split between visitors"]
     SCAN --> AVAIL
     STOCK --> MERGE["Subtract this chunk's aggregate<br/>and add the weighted view back"]
@@ -88,8 +88,8 @@ A few easy misreadings:
 - **Within one layer `priority` decides**, and a tie goes to the **lower** registry id; the empty zone has `Integer.MIN_VALUE`, so it always loses.
 - **A formation is picked as the nearest one that can give an aura zone**, not the highest priority one: otherwise an inner ward would hide the aura zone of the array it stands in.
 - **The override event can veto** the formation step; when cancelled the previously resolved template stays.
-- **The stock is only re-initialised when it is empty or its template changed.** The stock is a state that has already been consumed from, so it cannot be recomputed from scratch on every query.
-- **A query writes state**: initialising an uninitialised chunk is itself a query at the chunk's midpoint.
+- **The stock is only re-seeded when a section has none yet or the template changed.** The stock is a state that has already been consumed from, so it cannot be recomputed from scratch on every query; seeding is done for the whole chunk at once.
+- **A query writes state**: `AuraChunkTicker` initialising an unseeded chunk is itself a query at the chunk's midpoint.
 
 ## How the environmental stock is computed
 
@@ -106,14 +106,17 @@ new AuraPool(initial * fluctuation, value.max().resolve(initial), value.regenPer
 - Cycles: a day cycle of `24000` ticks and a moon cycle of `192000`, `1 + amplitude * sin(...)` floored at 0; `static` or disabled reads `1.0`.
 - `AuraPool` requires finite, non-negative values with `maximum` allowed to be `+∞`, and clamps `amount` to `maximum` whenever the maximum is finite — so regeneration never crosses the ceiling while an unlimited pool has no ceiling at all.
 
-## Block emitters: 7×7 section columns
+## Block emitters: 7×7×7 sections
 
-Block contributions are gathered per **sub-chunk** by `applyBlockDistance`: horizontally `dx, dz ∈ [-3, 3]` (7×7 columns), vertically every section the chunk attachment has recorded.
+Block contributions are gathered per **sub-chunk** by `applyBlockDistance` over the **7×7×7** sections around the query point's section, `dx, dz, dy ∈ [-3, 3]`:
 
 | Distance from the query point | What is used | Distance |
 | --- | --- | --- |
 | Within 3×3×3 sections | each entry of `sources()`, at its **real block position** | block centre to query point |
-| Further away | the section's **aggregate value**, at the **section centre** | section centre to query point |
+| Outside 3×3×3 but still inside 7×7×7 | the section's **aggregate value**, at the **section centre** | section centre to query point |
+| Beyond 7×7×7 | nothing | — |
+
+A section outside the cube is already at least 64 blocks away, where `1 / max(1, d²)` is `1/4096` or less, so the cutoff changes nothing measurable — it just stops paying for the work.
 
 The weight is `1 / max(1, d²)` in both cases (the `max` keeps a zero distance from producing infinity). Every term is then multiplied by an availability factor:
 
@@ -125,6 +128,46 @@ return available / Math.max(1, visitors);
 That is "how much of the shared stock has already been consumed", scaled, and then split between **visitors** — one patch of block aura cannot be taken in full by every player asking for it. Finally the current chunk's stock is rewritten as "subtract this chunk's aggregate, add the weighted view back" for amount, maximum and regeneration alike, and `supplied` records the weighted amount that was added.
 
 Unloaded chunks are skipped outright: **aura reads low at chunk borders**, which is a deliberate trade (no terrain generation to answer a query).
+
+## How the block cache is built (and why the palette)
+
+The unit is a **sub-chunk**, not a whole column. Each section goes through three steps, and a section that fails any of the first two never reads a single cell:
+
+1. `hasOnlyAir()` — an all-air section is skipped in O(1);
+2. `maybeHas(state in the block index)` — this walks **palette entries only** (1 test for a single-value section, ≤16 for a linear palette, ≤256 for a hash palette), never the 4096 cells;
+3. only a section that passes gets `count()`: a one-value palette answers "this state × 4096" directly, anything else walks the packed storage once and tallies how many cells each state has.
+
+The sections visited are the **highest non-air section ∪ the sections already cached**: a section that was mined out now sits beyond the filled range, so only the union still clears it.
+
+These three steps only run on a full rebuild — chunk load, rescan, the cache-clearing command. A player break or placement applies a single-block delta and reads no cells at all.
+
+### Why counts can stand in for positions
+
+`N` identical contributions add up to the same value scaled once (`AuraValue.scale(int)`): amounts add, ceilings add after each is resolved, regeneration adds, and the colour is weighted by amount (the same colour weighted is itself). So "this state appears N times" and "merge it in one at a time N times" agree field by field — this is exact, not an approximation.
+
+Positions are needed in exactly two places, and both compute them **on demand** instead of storing them: the 3×3×3-section exact ring around a query, and the sections a formation's sphere cuts through.
+
+### Complexity
+
+An overworld chunk has 24 sections of 4096 cells, so a whole column is 98,304 cells.
+
+| Work | Whole-column scan (the naive way) | Now |
+| --- | --- | --- |
+| Building one chunk's cache | 98,304 cell reads, whether or not the chunk has an emitter; one object allocated per matching block | 24 all-air tests plus ≤24 palette scans; only the sections that pass read 4096 cells (O(1) for a one-value section) |
+| The block part of one query | read a stored position per block | one aggregate read per section; the exact ring computes ≤27 sections × (palette gate + one pass over the sections that pass) |
+| Raising a formation of radius R | mark every covered chunk dirty and rescan the full column (≈8 million cells at R = 64) | once per 20 ticks: covered chunks × sections × 2 distance tests, plus one pass over the sections on the sphere's surface; raising it marks nothing dirty and loads nothing |
+| Save data and memory | one row per emitting block (position + values + absorbent list) | one row per section that has an emitter (aura → value) |
+
+**Availability** — how much of a section is left, thinned out by how many players can see it — is a **section** quantity: the stock share, the visitor count and the environmental concentration do not vary between blocks. So it is resolved once per section, and inside the exact ring each block only multiplies its own falloff. A distant section contributes straight from the attachment's stored aggregate, once per section, never cell by cell. The volume is 7×7×7 sections; anything beyond it contributes nothing.
+
+Two edges are worth knowing:
+
+- `count()` on a mixed section allocates a small tally table and walks the packed storage once; the O(1) shortcut exists only for a section whose palette holds a single value;
+- wherever **positions** are needed (the exact ring, the sections a sphere cuts through) cells still have to be walked; the palette only removes the sections that contain nothing of interest.
+
+::: warning The global palette only affects the gate, not `count()`
+A section with more than 256 distinct states switches to the global palette, whose "maybe has" answers **yes** unconditionally, so such a section always passes the gate and can never be skipped. `count()` itself is unaffected: it picks between the O(1) shortcut and one pass over the packed storage purely by "does the palette hold a single value", regardless of the palette kind; reading each distinct state goes through the registry instead of a small palette array, which is still O(1). Such a section therefore costs exactly what any mixed section costs — one pass over 4096 cells plus a small tally table.
+:::
 
 ## How large is the approximation error
 
@@ -151,16 +194,19 @@ sequenceDiagram
     participant T as AuraChunkTicker
     participant B as AuraZoneEventBridge
     participant G as entity tick
-    T->>T: every 10 ticks: rebuild dirty chunks, count visitors, regenerate stock
+    T->>T: every tick: build the pools of chunks loaded last tick
+    T->>T: every 10 ticks: count visitors, regenerate stock, rescan sections that came due
     B->>B: advance the query cache epoch
     B->>G: send a snapshot every 5 ticks
     G->>G: entity gate: new entity / moved a block / window elapsed
     G->>T: only a real question resolves, and it is memoised for this tick
 ```
 
-- **Block changes**: break/place events mark the chunk dirty at a low priority and the next periodic `flushDirty` rebuilds it — but **every query flushes first**, so a block placed this tick is visible immediately.
+- **Chunk load**: the whole column's block cache is rebuilt once, and its pools are built on the next tick — zone resolution deliberately does not run inside the load callback, where the chunk is not fully ready.
+- **Block changes**: break/place events apply a **single-block delta on the spot** at the lowest priority, re-evaluating only that block and never scanning a section; a cancelled event never touches the cache.
+- **Rescan**: every section comes due on its own clock, `600 + rand(600)` ticks apart (30–60 seconds), staggered. This is what picks up `/setblock`, `/fill`, pistons and TNT, which no event reports.
+- **Force refresh**: the cache-clearing command still rebuilds the whole column of every loaded chunk in range, synchronously.
 - **Regeneration**: every 10 ticks (**Server Config → Aura → Block Aura Period**) loaded chunks run `amount + regenPerTick * elapsed ticks`, clamped by the ceiling.
-- **Rescan**: each chunk re-scans its block emitters every `200 + rand(400)` ticks, so correctness does not depend on block events alone.
 - **Per-tick memoisation**: results, static zone, pools, biome and availability are memoised per "position + this tick", and the epoch is advanced by `AuraZoneEventBridge` at the **end** of a tick — so stock changes inside one tick do not affect an answer already computed, and **a formation activated this tick is only visible next tick**.
 - **The entity gate**: entity ticks no longer query unconditionally; only a new entity, a changed block position, a changed dimension or an elapsed window resolves. The window is **Server Config → Aura → Entity Aura Period** (10 ticks by default, 1–1200; set it to 1 to query every entity every tick). The price is that a stationary entity's zone enter/leave events can be delayed by that many ticks.
 
@@ -179,6 +225,8 @@ sequenceDiagram
 The conclusion is counter-intuitive: **the bottleneck is `getBiome`, not the registry scan** — every one of the 7×7 block sources asks for its biome first. Memoisation took a repeated query from 155.6 µs to 5.8 µs (about 27×), and the few microseconds of registry selection are simply not a problem in a pack with a handful of zones — which is why **`aura_zone` has no index**; that only becomes worth doing at a hundred zones, as an "biome/dimension → candidate zones" table.
 
 The memo tables are keyed by position, or by position plus definition, hold at most 16384 entries each and are replaced wholesale when they overflow (the worst case is a recompute); **a stale value is never returned**.
+
+The outer layer is one table per world, keyed weakly by the world object itself: once a world closes, its memo is gone with it, and no module has to walk the tables on unload.
 
 ## What the client sees is a snapshot
 
@@ -203,6 +251,8 @@ Note that "actual" includes the stock and the block contributions while the envi
 | **Server Config → Aura → Timing Stats** | off | Prints query stage timings to the log every 10 seconds; diagnostics only. |
 | **Server Config → Formations → Draw Environment** | off | Whether formations may spend the environment aura at their controller. |
 
+A formation is **another consumer** of that stock: every 20 ticks it splits each sub-chunk with anyone cultivating in it, weighted by `upkeep_weight` on `mxt:aura`, and what it is granted pays its upkeep. The stock itself is stored per sub-chunk (16 blocks of height), so the aura underfoot and the aura 16 blocks up are two separate pools; the block cache carries no ownership information.
+
 Four registries take part, and they do not play the same role:
 
 | Registry | How it takes part in a position's aura |
@@ -216,11 +266,11 @@ The repository ships a single `block_aura` entry (the spirit stone block, `amoun
 
 ## Costs and limits
 
-- **Unloaded chunks do not count**: a query window containing unloaded chunks simply skips them, so chunk borders, other dimensions and unloaded formations all read low. The search is 7×7 columns and it **never generates terrain to answer**.
+- **Unloaded chunks do not count**: a query window containing unloaded chunks simply skips them, so chunk borders, other dimensions and unloaded formations all read low. The search covers 7×7×7 sections and it **never generates terrain to answer**.
 - **A per-tick staleness window**: stock changes inside one tick (a formation just activated, a block changed but not yet flushed) only reach a query on the next tick; the period settings above are the size of that window.
 - **Splitting between visitors is bookkeeping**: a "visitor" is recorded for each player's 7×7×7 sections without checking whether they can actually see the section, and the table is rebuilt every 10 ticks. It guarantees that one patch of terrain aura is not taken in full by every player, but it is not a visibility test.
 - **`SourceKind.CHUNK` is easy to misread**: it means "no biome, dimension or area template matched", not "came from the chunk stock".
-- **Hot and slow spots**: `getBiome` is the single largest cost; rescanning block emitters walks a whole column (loaded chunks × world height); the cache-clearing commands rebuild every loaded chunk in a radius synchronously and will hitch; block matching re-resolves the `block_aura` tags on every block event.
+- **Hot and slow spots**: `getBiome` is the single largest cost; the block cache is built per section, so all-air sections and sections whose palette holds nothing of interest read no cells at all, and only the sections that pass walk 4096 cells; the cache-clearing commands rebuild every loaded chunk in a radius synchronously and will hitch. The block-to-definition index is resident and rebuilt by the datapack hook when a pack or tag changes, so the `block_aura` tags are no longer re-resolved on every block event.
 - **Diagnostics are incomplete**: the memo tables count hits and misses, but the pipeline's result table counts hits only — its miss rate cannot be read off the log.
 
 ## See also

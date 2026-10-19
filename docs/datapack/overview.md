@@ -92,7 +92,7 @@ flowchart TD
 - `/mxt aura query` 查询当前位置最终灵气；`/mxt aura vein` 查询灵石矿脉信息。
 - `/mxt registries list` 列出这些动态注册表与各自的条目数量；`/mxt registries validate` 报出上一次构建发现的所有问题，并逐条指出问题来自哪个文件（修炼、技能与功法的引用链条，以及忘了写行为的触发器规则）——没有问题时报出注册表数量、条目总数与「校验通过」。世界加载完之后跑一次这条命令，可以确认数据包产出的注册表状态是能用的。
 - `/mxt technique repair` 清理玩家数据里**已失效的功法引用**（引用的定义已被数据包删除、或被 `neoforge:conditions` 挡掉时使用）；`dry-run` 只报告不改动；`/mxt technique drop <id>` 精确移除某一门功法。见下节。
-- `/picker [<分类 id>]` 打开物品选择器，直接查看这些定义认领的物品或方块：分类就是注册表 id（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`、`/picker mxt:block_aura`），不写则列出全部已注册分类。物品键的注册表列它认领的物品，`mxt:block_aura` 与 `mxt:heat_source` 列它们认领的方块。需要 gamemaster 权限，且只在创造模式下可用；顶层 `/picker` 别名由服务端配置「命令别名 → /picker」开关，`/mxt picker` 始终可用。
+- `/picker [<分类 id>]` 打开物品选择器，直接查看这些定义认领的物品或方块：分类就是注册表 id（如 `/picker mxt:aura`、`/picker mxt:artifact`、`/picker mxt:currency`、`/picker mxt:item_binding`、`/picker mxt:block_aura`），不写则列出全部已注册分类。物品键的注册表列它认领的物品，`mxt:block_aura` 与 `mxt:heat_source` 列它们认领的方块。命令由内置的 Picker 模组提供，需要 gamemaster 权限，且只在创造模式下可用。
 - 测试模组数据位于 `src/test-mod/resources/data/mxt_test/mxt`，启动测试服务端可验证数据包闭环。
 
 ### 修复失效的功法引用

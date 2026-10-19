@@ -22,7 +22,7 @@ description: "在修炼行为上写一条只有身边有人时才出成果的法
   "priority": 10,
   "tick_interval": 20,
   "absorb_amount": "3 + realm_rank * 0.15",
-  "aura_costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 1 }],
+  "costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 1 }],
   "cultivate_condition": {
     "type": "mxt:partner",
     "range": 5.0,
@@ -45,7 +45,7 @@ description: "在修炼行为上写一条只有身边有人时才出成果的法
 | `priority` | 比单人那条高，两条都能用时选这条。 |
 | `cultivate_condition` | 这一拍给不给成果。不成立时不扣钱、不给收获，人照旧坐在那儿。 |
 | `absorb_amount` | 双修的回报写在这里，高于单人法门即可。 |
-| `tick_interval` / `aura_costs` | 结算间隔与花费，和单人法门一样按拍算。 |
+| `tick_interval` / `costs` | 结算间隔与花费，和单人法门一样按拍算。 |
 
 `mxt:partner` 以自己为球心扫 `range` 格内的存活生物，自己不算，每个候选过一遍 `bientity_condition`——那里 actor 是自己、target 是候选。`count` 是命中数量的窗口，`{ "min": 1, "max": 1 }` 就是"正好一个人"；不写 `max` 就是"至少一个"。
 
@@ -122,7 +122,7 @@ give @p mxt:technique_book[mxt:technique="example:azure_breath"]
 
 1. 两个玩家站在 5 格内，互为好友，主手各拿一本手册，各自按下修炼按键。两个人都进得去，`/mxt cultivate status` 显示跑的是这条法门。
 2. 资源条与修为开始涨，速度比单人那条快。
-3. 其中一个人走出 5 格，或者把手册换到副手、收起来：两边**都还在修炼**，但从下一拍起没有成果——资源条停住，`aura_costs` 也不再扣。
+3. 其中一个人走出 5 格，或者把手册换到副手、收起来：两边**都还在修炼**，但从下一拍起没有成果——资源条停住，`costs` 也不再扣。
 4. 如果写了第 2 步的 `tick_condition`：走开之后的下一个结算拍两边都停，动作栏提示「修炼无法继续：不满足修炼条件」。
 5. 一个人单独按下修炼按键：动作栏提示「没有一门当下能修的法门」。`cultivate_condition` 不成立的法门根本不会被选中，所以人不会先坐下再被停。
 

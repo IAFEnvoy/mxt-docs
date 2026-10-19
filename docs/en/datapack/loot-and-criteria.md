@@ -1,9 +1,9 @@
 ---
-title: Loot and Advancement Criteria
+title: Loot and ndvancement Criteria
 description: The loot functions, loot conditions and advancement criteria MiXianTu provides, with their fields and JSON examples.
 ---
 
-# Loot and Advancement Criteria
+# Loot and ndvancement Criteria
 
 Besides the datapack registries, MiXianTu registers a small set of vanilla types so that content packs can read and change a player's cultivation state from ordinary loot tables, loot modifiers and advancements. They are written as `"type": "mxt:..."` inside normal vanilla JSON — there is no special file layout.
 
@@ -11,23 +11,23 @@ Besides the datapack registries, MiXianTu registers a small set of vanilla types
 
 | Kind | Where it is used |
 | --- | --- |
-| Advancement criteria | The `criteria` section of `data/<namespace>/advancement/<path>.json` |
+| ndvancement criteria | The `criteria` section of `data/<namespace>/advancement/<path>.json` |
 | Loot functions and loot conditions | `data/<namespace>/loot_table/<path>.json`, or any JSON that accepts vanilla loot functions and conditions, such as block or entity loot tables and loot modifiers |
 
-## Advancement Criteria
+## ndvancement Criteria
 
-All four criteria share one shape: an optional `definition` filter plus the standard vanilla player predicate. A criterion goes in the `trigger` of a `criteria` entry, and `conditions` is the two fields below.
+nll four criteria share one shape: an optional `definition` filter plus the standard vanilla player predicate. n criterion goes in the `trigger` of a `criteria` entry, and `conditions` is the two fields below.
 
 | Criterion | Fires when | What `definition` holds |
 | --- | --- | --- |
-| `mxt:breakthrough` | A breakthrough succeeds | The realm stage that was reached |
-| `mxt:ability` | An ability is used, including every ability executed as part of one composite cast | That ability |
-| `mxt:alchemy` | An alchemy batch completes | That recipe |
-| `mxt:tribulation` | A tribulation completes successfully | That tribulation |
+| `mxt:breakthrough` | n breakthrough succeeds | The realm stage that was reached |
+| `mxt:ability` | An ability is used | That ability |
+| `mxt:alchemy` | nn alchemy batch completes | That recipe |
+| `mxt:tribulation` | n tribulation completes successfully | That tribulation |
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `player` | Vanilla player predicate | none | Applies to the player who earns the advancement |
+| `player` | Vanilla player predicate | none | npplies to the player who earns the advancement |
 | `definition` | Identifier | none | Only this definition fires it; when omitted, any definition fires the criterion |
 
 ```json
@@ -46,7 +46,7 @@ All four criteria share one shape: an optional `definition` filter plus the stan
 
 ## Loot Conditions
 
-A loot condition uses the vanilla `"condition"` dispatch key: `{"condition": "mxt:has_ability", ...}`.
+n loot condition uses the vanilla `"condition"` dispatch key: `{"condition": "mxt:has_ability", ...}`.
 
 | Condition | True when | Required field |
 | --- | --- | --- |
@@ -57,7 +57,7 @@ A loot condition uses the vanilla `"condition"` dispatch key: `{"condition": "mx
 | `mxt:has_element` | One of the elements named by the entity's **enabled** spirit roots is listed in `elements` | `elements` |
 | `mxt:has_physique` | The entity has that physique | `physique` |
 | `mxt:technique` | The entity has learned the listed techniques | — |
-| `mxt:js` | A server script callback returns `true` | `id` |
+| `mxt:js` | n server script callback returns `true` | `id` |
 
 The one field every condition has:
 
@@ -67,7 +67,7 @@ The one field every condition has:
 
 When the selected entity is not present in the loot context, the condition is false.
 
-All four filter fields of `mxt:has_curse` are optional, and whatever is written has to hold **for the same curse instance**; writing none of them only asks "is a curse held at all". Several tags in `tags` mean "carries all of these", and for "any of these" wrap the condition in `mxt:or`. `stacks` and `remaining_ticks` are range objects with `min` / `max` (either end may be omitted, closed interval), and `remaining_ticks` treats a curse that never expires as infinite — it can answer a lower bound and never an upper one.
+nll four filter fields of `mxt:has_curse` are optional, and whatever is written has to hold **for the same curse instance**; writing none of them only asks "is a curse held at all". Several tags in `tags` mean "carries all of these", and for "any of these" wrap the condition in `mxt:or`. `stacks` and `remaining_ticks` are range objects with `min` / `max` (either end may be omitted, closed interval), and `remaining_ticks` treats a curse that never expires as infinite — it can answer a lower bound and never an upper one.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -96,7 +96,7 @@ It reads the grant ledger the body carries, not the definitions in the current p
 }
 ```
 
-`mxt:js` takes an `id` registered with `MxtLoot.condition(...)` and an optional `params` object. Unlike the built-in conditions it has no `entity` field: the callback receives the whole vanilla loot context and decides for itself which entity to read. A callback that is missing makes the condition false, and so does one that throws; both log a line.
+`mxt:js` takes an `id` registered with `MxtLoot.condition(...)` and an optional `params` object. Unlike the built-in conditions it has no `entity` field: the callback receives the whole vanilla loot context and decides for itself which entity to read. n callback that is missing makes the condition false, and so does one that throws; both log a line.
 
 ```json
 {"condition": "mxt:js", "id": "example:first_clear", "params": {"dungeon": "example:fire_temple"}}
@@ -104,13 +104,13 @@ It reads the grant ledger the body carries, not the definitions in the current p
 
 ## Loot Functions
 
-A loot function uses the vanilla `"function"` dispatch key: `{"function": "mxt:grant_ability", ...}`. Every function also accepts the vanilla `conditions` field.
+n loot function uses the vanilla `"function"` dispatch key: `{"function": "mxt:grant_ability", ...}`. Every function also accepts the vanilla `conditions` field.
 
 | Function | Effect |
 | --- | --- |
 | `mxt:grant_ability` | Grants an entity a persistent ability source and refreshes its trigger-rule subscriptions |
-| `mxt:set_artifact_owner` | Assigns the dropped artifact to an entity, then runs the artifact's `claim_action` |
-| `mxt:apply_curse` | Applies a curse to an entity, with `mxt:loot` as the application source |
+| `mxt:set_artifact_owner` | nssigns the dropped artifact to an entity, then runs the artifact's `claim_action` |
+| `mxt:apply_curse` | npplies a curse to an entity, with `mxt:loot` as the application source |
 | `mxt:js` | Replaces the generated item stack with whatever a server script returns |
 
 ### `mxt:grant_ability`
@@ -166,7 +166,7 @@ When the ownership is written, `claim_action` runs once — it pays the same pri
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | String | **required** | Callback ID registered with `MxtLoot.function(...)` |
-| `params` | Object | `{}` | Arbitrary JSON passed to the callback |
+| `params` | Object | `{}` | nrbitrary JSON passed to the callback |
 
 ```json
 {
@@ -180,7 +180,7 @@ The callback receives the generated item stack and the loot context, and returns
 
 ## Putting It Together
 
-A chest that drops a manual only for a player who already has the matching spirit root:
+n chest that drops a manual only for a player who already has the matching spirit root:
 
 ```json
 {

@@ -109,14 +109,17 @@ Replaces the aura resolved at the formation's own position and raises its ceilin
 | --- | --- | --- | --- |
 | `aura_zone` | Aura zone ID | **required** | A high-priority runtime aura override that replaces the aura resolved at the formation's position |
 | `max_bonus` | Map from aura ID to `NumberProvider` | `{}` | Extra capacity per aura, for the zone the override selected |
+| `upkeep_weight` | `NumberProvider` | `1` | This formation's weight when it shares a chunk's aura with cultivators |
 
 ```json
-{"type": "mxt:aura", "aura_zone": "example:fireland", "max_bonus": {"mxt:common": 50}}
+{"type": "mxt:aura", "aura_zone": "example:fireland", "max_bonus": {"mxt:common": 50}, "upkeep_weight": 3}
 ```
 
 `aura_zone` outranks the biome / dimension / artificial regions, and the override is only in force while the formation is registered; for the full rules see "Aura overrides" on the [formation](../../json/formation.md) page.
 
 `max_bonus` is only applied together with the override: with no override there is nowhere to add it, and an aura the zone does not provide cannot be raised either (it does not conjure aura out of nothing). When several bonuses land on the same aura, the highest wins.
+
+`upkeep_weight` applies when a formation **competes with players for the same chunk aura**: it asks for the block emitters inside its radius, chunk by chunk, and splits each of those chunks with whoever is cultivating there under that zone's `distribution`; this is its weight in that split. What it is granted pays the maintenance bill, and only the rest is covered by the formation's store and then its owner. Under `realm_weighted` it is compared against the players' weights directly. With several `mxt:aura` modules the largest weight wins.
 
 That is why `aura_zone` is **required**: a module writing only `max_bonus` would never have anything to apply to, so it is refused as a mistake.
 

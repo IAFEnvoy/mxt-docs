@@ -41,7 +41,7 @@ aside: false
 
 `costs` 走的是同一套消耗计划：先整份校验、再整份扣除，中途有任何一项付不出就整份拒付，已写入的部分还原。`mxt:resource` 条目的 `amount` 在施法者上下文之外还带上**该数值自己的公式上下文**（资源族变量，如 `realm_rank`、`absorbed_aura`），见[公式变量](../types/formula_variables.md)。
 
-`cast_time` 只在施放时读，按下那一刻只登记一个到点时刻，到那一 tick 才跑动作字段。物品承载的技能（不要求持有）写正值直接被拒，失败原因是 `CARRIED_NOT_INSTANT`；`mxt:composite` 的子技能写正值会让整条复合技能以 `INVALID_FORMULA` 拒掉。`mxt:composite` 自己这一项不读。
+`cast_time` 只在施放时读，按下那一刻只登记一个到点时刻，到那一 tick 才跑动作字段。物品承载的技能（不要求持有）写正值直接被拒，失败原因是 `CARRIED_NOT_INSTANT`。
 
 ### 元素亲和
 
@@ -112,7 +112,7 @@ aside: false
 
 它**不读**自己顶层的 `entity_action` / `target_condition` / `bi_entity_action`。每个被 `target_selector` 选中的实体，先过**载荷技能自己的** `target_condition`（方向是施法者 → 目标），通过才跑**载荷的** `bi_entity_action`；**行为者始终是按下的人**，伤害与效果都记在他头上，与 `mxt:aura` 的逐目标脉冲同一条口径。载荷自己的 `costs` / `cast_time` / `cooldown` / `charges` / `condition` / 元素亲和一个都不读，它的 `entity_action` 与 `target_selector` 同样不读，所以它必须是**自己会跑四个动作字段的五个类型之一**。价格与冷却全算在这条 `mxt:targeted` 自己头上，一次施放只付一次。
 
-**落空在付款之前判**，所以按到没人的地方不花钱：`target_selector` 一个实体都没选到、或者选到的全被载荷的 `target_condition` 挡掉＝`NO_TARGET`（没有符合条件的目标）；载荷类型根本没有"单目标那一半"＝`NOT_APPLICABLE`（指定的技能不能作用在目标身上）。写进 `mxt:composite` 的子技能时，这两个原因也在**预演**阶段就判掉，同样一分钱不花。`cast_time > 0` 时这一步在唱完的那一 tick 判，失败那一次会在动作栏报「施放失败：<原因>」。
+**落空在付款之前判**，所以按到没人的地方不花钱：`target_selector` 一个实体都没选到、或者选到的全被载荷的 `target_condition` 挡掉＝`NO_TARGET`（没有符合条件的目标）；载荷类型根本没有"单目标那一半"＝`NOT_APPLICABLE`（指定的技能不能作用在目标身上）。`cast_time > 0` 时这一步在唱完的那一 tick 判，失败那一次会在动作栏报「施放失败：<原因>」。
 
 **效果落在哪里**：载荷里**作用于目标**的行为（`mxt:damage_target` / `mxt:heal_target` / `mxt:apply_effect` 这类以实体为准的）不受影响；**要摆个东西出来**的行为（`mxt:spawn_lightning`、`mxt:explode`、`mxt:spawn_particles`、`mxt:spawn_effect_cloud`、`mxt:play_sound`、`mxt:block_action` 这些按"这次施放在哪儿"落点的）默认落在**发动地点**。轮盘、命令、脚本发动没有地点，于是落在每个目标自己的位置；**符箓与展示架发动有地点**（符箓 / 架子那里），于是全都落在符箓脚下。要让它们**一律落在目标自己的位置**，把这类行为包进 `mxt:target_action` 并写 `"use_target_position": true`：
 
@@ -174,7 +174,7 @@ aside: false
 
 **按键型只有五个**：`mxt:active` / `mxt:channelled` / `mxt:targeted` / `mxt:storage` / `mxt:flight_control`。前三个按一下就走一次完整施放、自己付款；`mxt:flight_control` 与 `mxt:storage` 短一截，只查持有、冷却、条件与代价，**不写充能、也不跑动作字段**。
 
-**轮盘池只收按键型**：候选池读授予台账、按 id 排序，再用按键型过滤。所以 `mxt:triggered` / `mxt:aura` / `mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:composite` / `mxt:word` / `mxt:empty` 都**不会进轮盘池**，`hidden` 也不是这道筛选的条件。轮盘按下时的分派是：按键型走激活，**其余回落成一次普通施放**——这一路只服务于**已保存的轮盘格子 / 布局**，布局落盘，里面可能点名一条不可按键的技能，所以服务端仍然受理。
+**轮盘池只收按键型**：候选池读授予台账、按 id 排序，再用按键型过滤。所以 `mxt:triggered` / `mxt:aura` / `mxt:interval` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:word` / `mxt:empty` 都**不会进轮盘池**，`hidden` 也不是这道筛选的条件。轮盘按下时的分派是：按键型走激活，**其余回落成一次普通施放**——这一路只服务于**已保存的轮盘格子 / 布局**，布局落盘，里面可能点名一条不可按键的技能，所以服务端仍然受理。
 
 **命令与 KubeJS 是另一条路**：`/mxt ability cast` 与 KubeJS 的施放入口对任何类型都直接施放，物品承载也走同一条，那几次照常过完整套闸门（条件、代价、`cast_time`、冷却、充能）。
 
@@ -212,12 +212,14 @@ sequenceDiagram
     end
 ```
 
-顶层技能若要是可从上手栏释放的引导技，应把 `mxt:channelled` 作为 `mxt:composite` 的子技能：`mxt:active` 与 `mxt:channelled` 是互斥的单一 `type`，而复合技能的子技能才会成为活跃引导。`mxt:composite` 自己的 `costs` / `cooldown` / `charges` 都不生效，钱与冷却都记在**子技能自己的 id** 下。
+顶层技能要可从上手栏释放就直接写 `mxt:channelled`：它本身就是按键型，按下即激活通道，再按一次松开。
 
 ```json
 {
-  "type": "mxt:composite",
-  "abilities": ["example:meditate_channel"]
+  "type": "mxt:channelled",
+  "tick_interval": 20,
+  "upkeep_costs": [],
+  "entity_action": { "type": "mxt:no_op" }
 }
 ```
 

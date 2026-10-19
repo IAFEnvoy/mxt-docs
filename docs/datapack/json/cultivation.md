@@ -18,9 +18,8 @@ aside: false
 | `cultivate_action` | EntityAction | `mxt:no_op` | **结算成功那一拍**跑的行为：`cultivate_condition` 成立、`tick_interval` 已到、费用付清之后才跑。 |
 | `tick_condition` | `EntityCondition` | `mxt:always` | 还继续不继续修炼；不成立会**中止**本次运功。 |
 | `tick_interval` | Integer | `20` | 吸收结算间隔。 |
-| `costs` | `Cost` 数组 | `[]` | 每次修炼消耗，从修炼的实体自己账上扣。 |
+| `costs` | `Cost` 数组 | `[]` | 每次修炼消耗：`mxt:aura` 条目从修炼者所在位置的**共享灵气池**扣，其余从修炼的实体自己账上扣。 |
 | `absorb_amount` | `NumberProvider` | `1` | 修炼时当前境界资源自然回复的倍率。 |
-| `aura_costs` | 只含 `mxt:aura` 条目的 `Cost` 数组 | `[]` | 每次修炼从修炼者所在位置的**共享灵气池**扣除的消耗。 |
 | `aura_gains` | `{id, amount}` 数组 | `[]` | 额外增加的灵气。 |
 | `cooldown` | Integer | `0` | 停止后冷却 tick。 |
 | `tick_action` | EntityAction | `mxt:no_op` | **每一个 tick** 都跑的行为（`tick_condition` 通过之后），与这一拍有没有成果无关。 |
@@ -40,7 +39,7 @@ aside: false
 
 `cultivate_condition` 的用途很窄，**基本只用于双修判定**："身边得有人、而且他手上得拿着东西，我这一拍才拿得到成果"。单人的门槛用另外两个更直白——不满足就别修（灵气浓度、维度、功法、场地）写 `start_condition`，修到一半不该继续写 `tick_condition`；只有"人还能站在那儿修、但这一拍不该给东西"时才用它。
 
-`costs` 整份数组**全有或全无**；写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。
+`costs` 只有一份，两条通道：`mxt:aura` 条目由场地付（修炼者所在位置的共享灵气池），其余条目由修炼的实体自己付。整份数组先按通道分别模拟一遍（只读），全部通过才逐项真扣；写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。
 
 `absorb_amount` 先填满资源条，溢出量进入修为。
 
@@ -48,9 +47,7 @@ aside: false
 
 `tick_action` 在**每一个** tick 都跑（`tick_condition` 通过之后）；`cultivate_action` 只在**真正结算的那一拍**跑——`cultivate_condition` 成立、`tick_interval` 已到、费用付清之后。
 
-`aura_costs` 只接受 `mxt:aura` 条目，写其它类型是加载错误；`amount` 必须求值为有限正数，否则这一项付不出。写法见[共享数据类型 · `Cost`](../types/shared_data_types.md#cost)。
-
-`aura_costs` 的付款方式是这套字段里最绕的一处。多人同区块修炼时，每一项先按池子能给它的份额独立缩放（这一项拿得到的量 ÷ 这一项要的量，夹在 `0..1`），本次结算的倍率取这些份额的平均；缩放后的金额才是真正提交给池子的数，提交时池子**全有或全无**地扣。所以一项不足只压低这一项自己的贡献与整体倍率，并不会直接拒付；真的付不出（或缩放后倍率为 `0`、而服务器配置要求必须有可用灵气）才以灵气不足中止。公式求值出非有限数会让这一次修炼以 `INVALID_FORMULA` 中止。
+`costs` 里 `mxt:aura` 条目的付款方式是这套字段里最绕的一处。多人同区块修炼时，每一项先按池子能给它的份额独立缩放（这一项拿得到的量 ÷ 这一项要的量，夹在 `0..1`），本次结算的倍率取这些份额的平均；缩放后的金额才是真正提交给池子的数，提交时池子**全有或全无**地扣。所以一项不足只压低这一项自己的贡献与整体倍率，并不会直接拒付；真的付不出（或缩放后倍率为 `0`、而服务器配置要求必须有可用灵气）才以灵气不足中止。公式求值出非有限数会让这一次修炼以 `INVALID_FORMULA` 中止。
 
 没有单独的"环境类型"字段：能在哪里修炼完全由三个条件表达，它们都能读环境——`mxt:aura_range` 要求某门灵气的浓度区间，`mxt:dimension` 要求维度，方块/群系类条件要求脚下的地方。注意这与 `aura_zone.cultivate_condition`、`realm_stage.cultivate_condition` 是几侧：那两个由环境 / 境界自己声明"这里能不能修炼、这条链的回复算不算数"，这三个由法门声明"我需要什么"。
 
@@ -62,7 +59,7 @@ aside: false
   "tick_condition": { "type": "mxt:aura_range", "aura": { "example:qi": { "min": 5, "max": 200 } } },
   "tick_interval": 20,
   "absorb_amount": 1.5,
-  "aura_costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 0.5 }],
+  "costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 0.5 }],
   "aura_gains": [{ "id": "example:qi", "amount": 1 }],
   "cooldown": 100,
   "tick_action": { "type": "mxt:no_op" },

@@ -17,9 +17,8 @@ A `cultivation` is one method of cultivation: which ambient aura it takes in, ho
 | `cultivate_action` | EntityAction | `mxt:no_op` | Runs on a **tick that actually settles**: `cultivate_condition` holds, `tick_interval` has elapsed and the costs are paid. |
 | `tick_condition` | `EntityCondition` | `mxt:always` | Whether the session carries on; failing it **stops** the session. |
 | `tick_interval` | Integer | `20` | Absorption settlement interval. |
-| `costs` | `Cost` array | `[]` | Paid on each session tick, out of the cultivating entity's own accounts. |
+| `costs` | `Cost` array | `[]` | Paid on each session tick: an `mxt:aura` entry comes out of the **shared aura pool** where the cultivator stands, every other entry out of the cultivating entity's own accounts. |
 | `absorb_amount` | `NumberProvider` | `1` | Multiplier for the natural recovery of the current realm's resource while cultivating. |
-| `aura_costs` | `Cost` array holding only `mxt:aura` entries | `[]` | Paid on each session tick out of the **shared aura pool** where the cultivator stands. |
 | `aura_gains` | `{id, amount}` array | `[]` | Extra aura gained. |
 | `cooldown` | Integer | `0` | Cooldown in ticks after stopping. |
 | `tick_action` | EntityAction | `mxt:no_op` | Runs on **every** tick (once `tick_condition` has passed), whether or not that tick yields anything. |
@@ -39,7 +38,7 @@ All three can read the environment and the bodies around: `mxt:aura_range` asks 
 
 `tick_interval` ranges over `1..72000`, `cooldown` over `0..72000`.
 
-The whole `costs` array is **all or nothing**, paid out of the cultivator's own accounts; how to write it is in [Shared Data Types · `Cost`](../types/shared_data_types.md#cost).
+`costs` is one array with two channels: an `mxt:aura` entry is paid by the ground (the shared aura pool where the cultivator stands), every other entry by the cultivating entity itself. The whole array is simulated first, channel by channel and read-only, and only then is each entry taken; how to write it is in [Shared Data Types · `Cost`](../types/shared_data_types.md#cost).
 
 `absorb_amount` fills the resource bar first, and the overflow goes into cultivation progress.
 
@@ -47,9 +46,7 @@ Each `aura_gains` entry is `{id, amount}`, where `id` is one aura.
 
 `tick_action` runs on **every** tick (once `tick_condition` has passed); `cultivate_action` runs only on a **tick that actually settles** — `cultivate_condition` holds, `tick_interval` has elapsed and the costs are paid.
 
-`aura_costs` accepts only `mxt:aura` entries — any other type is a load error; `amount` has to evaluate to a finite positive number, or that entry cannot be paid. How to write it is in [Shared Data Types · `Cost`](../types/shared_data_types.md#cost).
-
-How `aura_costs` is paid is the most involved part of this field set. When several players cultivate in the same chunk, each entry is first scaled on its own by the share the pool can give it (what that entry can get ÷ what it asks for, clamped to `0..1`), and this settlement's multiplier is the average of those shares; the scaled amount is what actually gets submitted to the pool, and the pool then charges it **all or nothing**. So an entry that comes up short only drags down its own contribution and the overall multiplier — it does not refuse payment by itself; the session only aborts for lack of aura when nothing can be paid at all (or the scaled multiplier is `0` and the server config demands usable aura). A formula that evaluates to a non-finite number aborts the session with `INVALID_FORMULA`.
+How the `mxt:aura` entries of `costs` are paid is the most involved part of this field set. When several players cultivate in the same chunk, each entry is first scaled on its own by the share the pool can give it (what that entry can get ÷ what it asks for, clamped to `0..1`), and this settlement's multiplier is the average of those shares; the scaled amount is what actually gets submitted to the pool, and the pool then charges it **all or nothing**. So an entry that comes up short only drags down its own contribution and the overall multiplier — it does not refuse payment by itself; the session only aborts for lack of aura when nothing can be paid at all (or the scaled multiplier is `0` and the server config demands usable aura). A formula that evaluates to a non-finite number aborts the session with `INVALID_FORMULA`.
 
 There is no separate "environment kind" field: where a session can run is expressed entirely by the three conditions, and all of them can read the environment — `mxt:aura_range` demands a concentration range of some aura, `mxt:dimension` demands a dimension, and block or biome conditions demand the place underfoot. Note that this is another side from `aura_zone.cultivate_condition` and `realm_stage.cultivate_condition`: those have the environment or the realm declare "cultivation is allowed here" and "this chain's regeneration counts", while these three have the method declare what it needs.
 
@@ -61,7 +58,7 @@ There is no separate "environment kind" field: where a session can run is expres
   "tick_condition": { "type": "mxt:aura_range", "aura": { "example:qi": { "min": 5, "max": 200 } } },
   "tick_interval": 20,
   "absorb_amount": 1.5,
-  "aura_costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 0.5 }],
+  "costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 0.5 }],
   "aura_gains": [{ "id": "example:qi", "amount": 1 }],
   "cooldown": 100,
   "tick_action": { "type": "mxt:no_op" },

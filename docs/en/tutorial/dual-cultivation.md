@@ -22,7 +22,7 @@ This page follows [Define Aura and Realms](./define-aura-and-realms.md): that on
   "priority": 10,
   "tick_interval": 20,
   "absorb_amount": "3 + realm_rank * 0.15",
-  "aura_costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 1 }],
+  "costs": [{ "type": "mxt:aura", "aura": "example:qi", "amount": 1 }],
   "cultivate_condition": {
     "type": "mxt:partner",
     "range": 5.0,
@@ -45,7 +45,7 @@ This page follows [Define Aura and Realms](./define-aura-and-realms.md): that on
 | `priority` | Higher than the solo method, so this one wins while both could run. |
 | `cultivate_condition` | Whether this tick yields anything. While it fails nothing is paid and nothing is gained, and the body keeps sitting. |
 | `absorb_amount` | The reward for pairing up — write it higher than the solo method. |
-| `tick_interval` / `aura_costs` | Settlement interval and cost, per settlement like any other method. |
+| `tick_interval` / `costs` | Settlement interval and cost, per settlement like any other method. |
 
 `mxt:partner` scans living entities within `range` blocks of the asking body, never counting itself, and hands each candidate to `bientity_condition` — inside there the actor is the asking body and the target is the candidate. `count` is a window on the number of hits, so `{ "min": 1, "max": 1 }` means "exactly one"; leaving `max` out means "at least one".
 
@@ -122,7 +122,7 @@ Two ready-made outlets, both in the same definition:
 
 1. Two players within 5 blocks of each other, friends, each with a manual in the main hand, each pressing the cultivation key. Both get in, and `/mxt cultivate status` names this method.
 2. The resource bar and cultivation progress start moving, faster than the solo method.
-3. One of them walks more than 5 blocks away, or moves the manual to the off hand, or puts it away: **both keep cultivating**, but from the next tick on there are no results — the bar stops and `aura_costs` is no longer paid.
+3. One of them walks more than 5 blocks away, or moves the manual to the off hand, or puts it away: **both keep cultivating**, but from the next tick on there are no results — the bar stops and `costs` is no longer paid.
 4. With the `tick_condition` from step 2, the settlement after that walk-away stops both, and the actionbar reports "Cultivation cannot continue: Cultivation conditions are not met".
 5. Pressing the cultivation key alone reports "no method can be practised right now". A method whose `cultivate_condition` fails is never picked, so a body is never seated only to be stopped again.
 

@@ -60,7 +60,7 @@ These six have no "entity" scope. Registration does not declare a scope at all -
 
 | Attachment id | Hangs on | Holds | What it does |
 | --- | --- | --- | --- |
-| `mxt:aura_chunk` | **chunk** | `initialized`, `template`, `block_aura_sections`, `aura` | This chunk's **authoritative aura stock**. Every value is independently keyed by its own resource, and there is deliberately **no** aggregate aura pool. |
+| `mxt:aura_chunk` | **chunk** | `template`, `block_aura_sections`, `aura` | This chunk's **authoritative aura stock**; `aura` is keyed by sub-chunk like `block_aura_sections`, so every 16-block section has its own amount, ceiling and regeneration. Within one section each value is independently keyed by its own resource, and there is deliberately **no** aggregate aura pool. |
 | `mxt:herb_chunk` | **chunk** | `plants` (one row per packed position, with `position`, `age`, `clock`) | One row per spirit herb in this patch of ground. Both numbers are needed: the age cannot be re-derived from the clock alone (growth depends on the age a period starts from), and storing it is what makes a read idempotent. A negative clock is a **naturally generated plant nobody has touched**, turned into a real row on the first read. |
 | `mxt:aura_world` | **level** | custom aura areas | Aura areas added **by hand** from a datapack or script. Formation areas are derived live and are **deliberately not stored** here. |
 | `mxt:formation_world` | **level** | active formations, indexed by their validated controller position | The index of formations running in one level. It holds **live** `FormationInstance` objects, so a caller that reaches one through this attachment is mutating the stored state in place. |

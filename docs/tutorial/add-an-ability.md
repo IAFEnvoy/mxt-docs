@@ -44,7 +44,7 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 
 | 字段 | 作用 |
 | --- | --- |
-| `type` | 从内置的 `ability_type` 注册表中选择生命周期，**直接写在顶层**（不是嵌套的 `ability` 对象）：`empty`、`active`、`triggered`、`modifier`、`aura`、`interval`、`channelled`、`targeted`、`composite`、`word`、`mount`、`flight_control`、`storage`、`upkeep`。`mxt:active` 是能放进轮盘的类型；`mxt:targeted` 同样需要按键，但它是"挑一批目标、在它们身上各跑一次另一条技能"，见[定向施放](../datapack/json/ability.md#targeted)。 |
+| `type` | 从内置的 `ability_type` 注册表中选择生命周期，**直接写在顶层**（不是嵌套的 `ability` 对象）：`empty`、`active`、`triggered`、`modifier`、`aura`、`interval`、`channelled`、`targeted`、`word`、`mount`、`flight_control`、`storage`、`upkeep`。`mxt:active` 是能放进轮盘的类型；`mxt:targeted` 同样需要按键，但它是"挑一批目标、在它们身上各跑一次另一条技能"，见[定向施放](../datapack/json/ability.md#targeted)。 |
 | `icon` | 可选。裸字符串是 16x16 的 GUI 贴图；对象是物品堆模板（`{"id": ...}`，可带 `count` 与 `components`）。不写时该条目用名字绘制。 |
 | `costs` | `Cost` 对象列表，在行为执行前支付，整份数组**全有或全无**。`mxt:resource` 消耗数值，`mxt:aura` 按灵气身份扣该灵气所度量的数值，`mxt:item` 消耗物品，`mxt:js` 交给脚本（最后运行），而 `{"id": ..., "amount": ...}` 简写等价于 `mxt:resource`。 |
 | `cast_time` | 施法时长，单位 tick。 |
@@ -172,12 +172,11 @@ description: 定义一个主动技能与一个触发技能，为它们设置消�
 | 现象 | 原因 |
 | --- | --- |
 | 技能从不显示在轮盘的可选池里 | 池子里列的是**需要按键的技能**；触发、被动类技能没有自己的轮盘条目。 |
-| 引导技能无法从轮盘释放 | `mxt:active` 与 `mxt:channelled` 是互斥的类型。把这个引导技能包成某个 `mxt:composite` 技能的子技能，并让该复合技能成为顶层定义。 |
 | 消耗从未被扣除 | 一项消耗要么写带 `type` 的完整形状（例如 `{"type": "mxt:resource", "resource": ..., "amount": ...}`），要么写 `{"id": ..., "amount": ...}` 简写；不要写成没有 `type` 的 `{"resource": ...}`。 |
 | 技能公式永远是 `0` | 它用了自己的上下文不提供的变量，例如在实体公式里用 `realm_rank`。求值时会报出这个名字：开发环境记录完整错误，生产环境对每条不同消息记一行警告，两者都按 `0` 继续。 |
 | `mxt:word` 什么都不做 | 它是终端效果、由代码白名单限定（`self_heal`、`purge_self_curses`），并且默认需要管理员权限。它不是执行命令的手段。 |
 | 所有人一开始就有这个技能 | 它是被某个灵根、体质或功法上的 `granted_abilities` 列表授予的，而所有人都满足那个定义——这些列表在定义被持有期间生效。 |
-| 动作完全没有发生，也不报错 | `entity_action`（或 `target_selector` / `target_condition` / `bi_entity_action`）被写在了一个**不跑动作的类型**上（`mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` / `mxt:composite` / `mxt:word`）。这四个字段由**会跑动作的五个类型**（`mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` / `mxt:interval`）各自声明，写在别的类型上是没人读的键（不报错也不生效）——把这条技能换成会跑动作的类型，或把这些键搬到真正要跑它们的那条技能上。 |
+| 动作完全没有发生，也不报错 | `entity_action`（或 `target_selector` / `target_condition` / `bi_entity_action`）被写在了一个**不跑动作的类型**上（`mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` / `mxt:word`）。这四个字段由**会跑动作的五个类型**（`mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` / `mxt:interval`）各自声明，写在别的类型上是没人读的键（不报错也不生效）——把这条技能换成会跑动作的类型，或把这些键搬到真正要跑它们的那条技能上。 |
 | 写了 `"effect": "..."` 但什么也没发生 | 技能引用的 `effect` 字段**没人读**：把四个动作字段直接写在发动型自己身上，不要写 `effect` 一行；`mxt:word` 的 `effect` 是另一回事（它自己的效果枚举），不受影响。 |
 | 定向技能按下去只报「没有符合条件的目标」 | `mxt:targeted` 的 `target_selector` 一个实体都没圈到，或者圈到的都被载荷技能的 `target_condition` 挡掉了：检查选择器的距离（`mxt:area` 的 `radius`、`mxt:ray` / `mxt:cone` 的 `length`）。这种落空**在付款之前**判，所以不花钱；点名的技能不能作用在目标身上时报的是另一条原因「指定的技能不能作用在目标身上」。 |
 

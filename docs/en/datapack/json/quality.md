@@ -148,7 +148,7 @@ An alchemy formula also carries two fields on the machine side, not in an item's
 
 The `mxt:component` condition cannot read quality either — it wants `nbt` to be a compound tag compared partially, while quality serializes to a string.
 
-Vanilla tags take no part in quality resolution: the `group/<name>` tag is not read. `tooltip_order` only decides **the order tiers are listed in** — the picker's quality category follows it, with the tiers the tag names first in the tag's own order and every other tier after them; it takes no part in quality resolution and does not change a ladder. `color` only affects the places that draw a tier's name, and takes no part either.
+Vanilla tags take no part in quality resolution: the `group/<name>` tag is not read, and no other tag on the quality registry is read either - tiers are listed in the registry's own order. `color` only affects the places that draw a tier's name, and takes no part either.
 
 ## Names and translation {#translation}
 

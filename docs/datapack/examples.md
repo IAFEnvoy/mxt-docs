@@ -83,13 +83,13 @@ data/example/mxt/aura/qi.json
 }
 ```
 
-修炼方式。`aura_costs` 只收 `mxt:aura` 条目，从修炼者脚下的共享灵气池支付；`tick_interval` 是每多少刻结算一次，结算那一拍跑 `cultivate_action`，`tick_action` 则每个 tick 都跑。
+修炼方式。`costs` 里 `mxt:aura` 条目从修炼者脚下的共享灵气池支付、其余从修炼者自己账上扣；`tick_interval` 是每多少刻结算一次，结算那一拍跑 `cultivate_action`，`tick_action` 则每个 tick 都跑。
 
 ```json
 // data/example/mxt/cultivation/meditation.json
 {
   "absorb_amount": "1 + level * 0.1",
-  "aura_costs": [{"type": "mxt:aura", "aura": "example:spirit_power", "amount": 1}],
+  "costs": [{"type": "mxt:aura", "aura": "example:spirit_power", "amount": 1}],
   "tick_interval": 20,
   "tick_action": {"type": "mxt:no_op"},
   "cultivate_action": {"type": "mxt:no_op"}

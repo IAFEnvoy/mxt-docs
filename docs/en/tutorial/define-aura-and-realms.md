@@ -208,7 +208,7 @@ A `cultivation` is a named activity. The player selects one, and it settles on a
   "priority": 1,
   "tick_interval": 20,
   "absorb_amount": 1.5,
-  "aura_costs": [{"type": "mxt:aura", "aura": "example:qi", "amount": 1}],
+  "costs": [{"type": "mxt:aura", "aura": "example:qi", "amount": 1}],
   "cooldown": 100
 }
 ```
@@ -218,7 +218,7 @@ A `cultivation` is a named activity. The player selects one, and it settles on a
 | `priority` | The order among several methods: the higher number wins, an equal one falling back to registry order. It only orders the methods that **apply right now**. Defaults to `0`. |
 | `tick_interval` | Settlement interval in ticks, `1..72000`; `20` means once per second. Defaults to `20`. |
 | `absorb_amount` | Multiplier for the natural recovery of the current realm's value; the bar fills first and the overflow becomes cultivation progress. Defaults to `1`. |
-| `aura_costs` | The aura spent each tick, paid from the **shared aura pool** at the cultivator's position, and written with `mxt:aura` entries only (`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`). When several players cultivate in the same chunk each one's amount is scaled by the pool's allocation first, and the pool is then charged **all or nothing**. |
+| `costs` | What each tick spends: an `mxt:aura` entry comes out of the **shared aura pool** at the cultivator's position (`[{"type": "mxt:aura", "aura": "example:qi", "amount": 1}]`) and every other entry out of the cultivator's own account. When several players cultivate in the same chunk each aura entry is scaled by the pool's allocation first, and the pool is then charged **all or nothing**. |
 | `cooldown` | Ticks before cultivation can start again after it stops. Defaults to `0`. |
 
 `start_condition` and `tick_condition` decide whether cultivation may start and continue; both default to always true, and both can read the environment. There is no "aura kind" field: an action that should only run in the right place asks for that place directly, for example with `mxt:aura_range` (a concentration range for one aura, where `max` is required on every entry) or `mxt:dimension`. `costs` (paid by the cultivating entity each tick, one `Cost` array and all or nothing), `aura_gains` (extra aura added per tick), `tick_action` (an entity action run on **every** tick) and `cultivate_action` (an entity action run only on a **tick that settles**) are the remaining fields.
@@ -306,7 +306,7 @@ Then, in game:
 | --- | --- |
 | Nobody can ever leave Mortal | `first_realm` is missing on the aura, so there is no stage to break through to. |
 | Cultivation never starts | The action's `start_condition` or `tick_condition` is not satisfied — write a `mxt:aura_range` or a biome condition for the place you want, because there is no aura-kind vocabulary to match against. |
-| The bar never grows | The shared aura pool cannot pay `aura_costs` (it does not hold enough, or other cultivators in the chunk take their share), or `use_condition` is false. |
+| The bar never grows | The shared aura pool cannot pay the aura entries of `costs` (it does not hold enough, or other cultivators in the chunk take their share), or `use_condition` is false. |
 | The world refuses to load | A definition failed to decode: a required holder points at an ID that does not exist, or a field has the wrong shape. The whole load fails, not just the file. |
 | `breakthrough_exp` greater than `max_experience` | This stage can never be broken through to; the codec rejects it at load time when both are constants. Write the gate on the **current** stage (the one the breakthrough arrives at), not on the stage below. |
 | The realm condition never passes | `breakthrough` lives on the target stage, but it is evaluated while the body still stands on the stage below, and `mxt:realm` compares what you currently stand in — so naming that target stage inside its own conditions can never pass (the mortal step is the one exception). Name the stage below, or use `"comparison": ">="`, or check a value. |

@@ -25,7 +25,7 @@ aside: false
 | `element` | 元素 id 列表，条目可以是 `#标签` | `[]` | 这件法器**是什么元素**：条目是一个元素、`#` 标签是一组元素。这是「物品的元素」的第一顺位来源之一，完整口径见 [weapon_binding](./weapon_binding.md)。注意 `spirit_capacity` 里的灵气**不参与**这条读取：那说的是「能装什么」，不是「是什么」。 |
 | `attachment_multiplier` | Double | `1.0` | 这件法器**作为护身物**值多少：携带（双手与 Curios 槽）期间，打在携带者身上的打击留下的元素附着乘上它——`0.5` 只留一半、`0` 一点也不留，于是那条元素反应永远不会被这一击触发。多件法器**相乘**，不写就没有影响。这是「法宝抵消部分元素反应」的着力点：它压的是**攒的速度**，反应自身的效果不归它管。**只有法器有这个字段**（`item_binding` / `weapon_binding` 不提供），所以普通武器与物品不会意外变成护身物。 |
 
-`abilities` 里每一条都是**普通技能**，`type` 取自所有技能共用的固有分派表 `mxt:ability_type`（内置十四种：`empty`、`active`、`triggered`、`modifier`、`aura`、`interval`、`channelled`、`targeted`、`composite`、`word`、`mount`、`flight_control`、`storage`、`upkeep`）。类型、字段与写法全在[技能 · 技能类型](./ability.md#ability-types)。
+`abilities` 里每一条都是**普通技能**，`type` 取自所有技能共用的固有分派表 `mxt:ability_type`（内置十三种：`empty`、`active`、`triggered`、`modifier`、`aura`、`interval`、`channelled`、`targeted`、`word`、`mount`、`flight_control`、`storage`、`upkeep`）。类型、字段与写法全在[技能 · 技能类型](./ability.md#ability-types)。
 
 `abilities` 里的条目**只能是 id 或 `#标签`**。写一个对象进去（也就是把技能整个内联在这份文件里）不是合法条目，会让**世界加载失败**。
 

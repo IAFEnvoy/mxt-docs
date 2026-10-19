@@ -74,9 +74,9 @@ The four that write `type` are dispatched by the built-in `mxt:cost_type` regist
 
 An `mxt:item` entry's `items` is an [`ItemMatcher`](../datapack/types/shared_data_types.md#itemmatcher): a bare item id, an `#item tag`, or matching entries that write a `type` (`mxt:item`, `mxt:tag`, `mxt:wildcard`, `mxt:regex`, `mxt:technique`, `mxt:spirit_storage`, `mxt:herb_tag`, `mxt:quality`, `mxt:ingredient`), all mixed in one array. Its `amount` is **rounded up**, so `1.5` takes 2; a rounded amount that is not positive or not finite means the entry cannot be paid, not that it takes nothing.
 
-`mxt:aura` can do one thing the other three cannot: **it can charge more than one store.** When the payer pays it themselves, it takes the value that aura is measured in; when the venue pays it out of the **shared aura pool** (a cultivation's `aura_costs`), the amounts are first scaled by each cultivator's share of the pool in that chunk and the pool then pays all-or-nothing; and when a **block entity's own store** pays it (the `aura` of a spirit-crafting recipe), it takes that aura itself in whole units rounded up. The same `mxt:aura` entry charges whichever of those the call site offers — the entry does not carry that choice.
+`mxt:aura` can do one thing the other three cannot: **it can charge more than one store.** When the payer pays it themselves, it takes the value that aura is measured in; when the venue pays it out of the **shared aura pool** (an aura entry of a cultivation's `costs`), the amounts are first scaled by each cultivator's share of the pool in that chunk and the pool then pays all-or-nothing; and when a **block entity's own store** pays it (the `aura` of a spirit-crafting recipe), it takes that aura itself in whole units rounded up. The same `mxt:aura` entry charges whichever of those the call site offers — the entry does not carry that choice.
 
-Two fields **accept `mxt:aura` entries only**, and any other type in them is a load error: `cultivation.aura_costs` and the `aura` of a spirit-crafting recipe. They also accept the map form: the keys are aura ids and the values are number providers.
+The `aura` of a spirit-crafting recipe **accepts `mxt:aura` entries only**, and any other type in it is a load error. It also accepts the map form: the keys are aura ids and the values are number providers.
 
 ## Step 3 — Hang the Array on an Ability
 
@@ -99,7 +99,7 @@ Open the qi bolt the example pack already has and replace nothing but `costs`:
 
 Every other field stays as it was: renaming one or leaving one out changes nothing about the array itself — whichever field carries `costs` is what pays it. An ability is the example here because it is the easiest thing to try in game, but only `costs` was replaced.
 
-Twelve fields carry `costs`: `ability.costs` (**shared by every ability type**, which is why `mxt:mount`'s per-tick fuel and `mxt:upkeep`'s per-period fee are written here too), the `upkeep_costs` of `mxt:channelled`, `realm_stage.costs`, `cultivation.costs` and `cultivation.aura_costs`, `formation.activation_costs` and `formation.maintenance_costs`, `forging_method.costs`, `contract_type.costs`, `talisman.costs`, `quality.upgrade_costs`, and the `aura` of a spirit-crafting recipe. What they share is this one shape.
+Eleven fields carry `costs`: `ability.costs` (**shared by every ability type**, which is why `mxt:mount`'s per-tick fuel and `mxt:upkeep`'s per-period fee are written here too), the `upkeep_costs` of `mxt:channelled`, `realm_stage.costs`, `cultivation.costs`, `formation.activation_costs` and `formation.maintenance_costs`, `forging_method.costs`, `contract_type.costs`, `talisman.costs`, `quality.upgrade_costs`, and the `aura` of a spirit-crafting recipe. What they share is this one shape.
 
 ## Step 4 — All or Nothing
 
@@ -110,12 +110,12 @@ costs = [qi ×10, aura example:qi ×2, emerald ×2]
 20 qi on you, no emeralds      →  not one point of qi is taken
 ```
 
-There is a merge rule inside one payment as well. **Two entries in one array that name the same store are a load error**: writing one value twice, or one aura twice, reports `Duplicate resource cost` or `Duplicate aura cost` with that id. Two entries that merely **reach the same value through different routes** are not an error — a `mxt:resource` and an `mxt:aura` measured in that value **add up**, because that is the one answer which does not depend on the order they were written in. So the array above takes 10 + 2 = 12 `example:qi` out of the account in one go.
+There are rules inside one payment as well. **Two entries in one array that name the same store are spotted**: writing one value twice, one aura twice, two item entries, the same script id twice, or a `mxt:resource` together with the `mxt:aura` measured in that same value all log one warning at run time, when the payment is priced. The definition still loads and the amounts are added up per target, so that store is charged once, but writing one target twice buys nothing — one entry is always the better shape.
 
-That was "one array". **Several arrays inside one action are a different matter**: a talisman firing several abilities, a composite ability carrying several children, and a cultivation tick paying both the environment's aura and the body's fee are all "several payments plus one boundary". The boundary's rules are:
+That was "one array". **Several arrays inside one action are a different matter**: a talisman firing several abilities, and a cultivation tick paying both the environment's aura and the body's fee, are each "several payments". The rules are:
 
-- When a later payment is refused, whatever the earlier ones already wrote is **put back in reverse order** (last written, first returned), the whole action is treated as never having happened and the action itself does not run.
-- **The script payment cannot be put back**, so it runs last: `mxt:js` only comes up after every other channel has been paid. The price is that a script must be **idempotent** about its own entry — nothing can undo the outside effects it already had.
+- Every payment is "simulate the whole array first, then take every entry once it all passes", and there is **no rollback**: when a later payment is still refused at the moment it takes, what the earlier ones already took is not returned. So the earlier the simulation refuses, the better.
+- **The script payment runs last**: `mxt:js` only comes up after every other channel has been paid, because nothing can undo the outside effects a script already had. The price is that a script must be **idempotent** about its own entry.
 
 ## Step 5 — What the Player Sees When It Cannot Be Paid
 
@@ -177,16 +177,15 @@ Data pack registries are read while the world loads, so `/reload` is not enough:
 3. `/mxt resource example:qi set 12` and press it again: it succeeds and the account lands exactly on zero. 10 + 2 = 12 is the resource entry and the aura entry adding up.
 4. Change the item entry's `amount` to `1.5`, open the world again and press it: 2 emeralds are taken, rounded up.
 5. Change some `amount` to `0`, open the world again and press it: that entry cannot produce a usable amount and the whole array cannot be paid; the line reports an invalid configuration, not "charge 0".
-6. Copy `{"id": "example:qi", "amount": 10}` into a second entry and open the world: the world will not load and the log reports `Duplicate resource cost` — one value may be written once per array.
+6. Copy `{"id": "example:qi", "amount": 10}` into a second entry and open the world: the definition still loads, but the payment logs one warning that both entries take the same target.
 7. Add `{"type": "mxt:js", "id": "example:quest_token", "params": {"count": 3}}` to the ability, comment the whole `register` call in `mxt_costs.js` out and run `/reload`: the log says that no one registered this script cost (the message starts with `Unknown KubeJS cost`) and the ability cannot be paid; put the registration back, `/reload` again, and it fires once there are 3 `tokens`.
 
 ## Common Mistakes
 
 | Symptom | Cause |
 | --- | --- |
-| `Duplicate resource cost` | One value is written twice in one array. Two entries that reach the same value by different routes are legal (they add up); the same name twice is not. |
-| `Duplicate aura cost` | One aura is written twice in one array. |
-| `Every entry of an aura cost list must be an mxt:aura cost` | `cultivation.aura_costs` or a spirit-crafting recipe's `aura` carries another type. Those two fields accept `mxt:aura` only. |
+| One warning in the log about two entries taking the same target | One array writes to one store twice (the same value, the same aura, the same script id, two item entries, or an `mxt:aura` together with the `mxt:resource` it is measured in). The definition still loads and the amounts still add up, but writing one target twice buys nothing. |
+| `Every entry of an aura cost list must be an mxt:aura cost` | A spirit-crafting recipe's `aura` carries another type. That field accepts `mxt:aura` only. |
 | `Unknown KubeJS cost` (with that id, and that the cost cannot be paid) | The script cost's callback was never registered (the script did not load, the id is misspelled, or it was registered from a client script). The type itself still loads. |
 | The whole definition fails to load | One entry of the `costs` array cannot be decoded (an unknown `type`, a missing required field). This array does not use the tolerant-list convention and does not drop just that entry. |
 | The cost is never collected | The payer offers no such channel: `mxt:item` and `mxt:js` need a player. That is reported as "cannot be paid", not as a broken definition. |

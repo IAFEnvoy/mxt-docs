@@ -29,7 +29,6 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 | [`mxt:flight_control`](#mxt-flight-control) | 按一下起飞 / 落地 | **是** |
 | [`mxt:storage`](#mxt-storage) | 按一下打开自带储物 | **是** |
 | [`mxt:upkeep`](#mxt-upkeep) | 周期性扣费 | 否 |
-| [`mxt:composite`](#mxt-composite) | 委托给子技能 | 否 |
 | [`mxt:word`](#mxt-word) | 白名单里的两种效果 | 否 |
 
 **按键**这一列只影响轮盘：只有按键型会进轮盘池，其余类型不会。命令、脚本与物品承载的技能对任何类型都直接施放。
@@ -50,7 +49,7 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 | `mxt:aura` | `interval` 到点的脉冲**按半径逐个找实体**，对每个实体只跑 `target_condition` + `bi_entity_action`（脉冲不读 `target_selector` 与 `entity_action`）；被一次性发动（命令 / 脚本 / 符箓）时按普通路径跑一次整套。 |
 | `mxt:interval` | 自己按 `interval` 跑整套；被命令或脚本一次性发动时按普通路径跑一次。 |
 
-其余类型**一个都不读**：`mxt:word` 自带终端载荷（它自己的 `effect` 字段）、`mxt:composite` 委托给子技能、`mxt:targeted` 只挑目标（跑的是载荷的单目标那一半），`mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` 也没有这一层。
+其余类型**一个都不读**：`mxt:word` 自带终端载荷（它自己的 `effect` 字段）、`mxt:targeted` 只挑目标（跑的是载荷的单目标那一半），`mxt:modifier` / `mxt:mount` / `mxt:flight_control` / `mxt:storage` / `mxt:upkeep` / `mxt:empty` 也没有这一层。
 
 `mxt:targeted` 也写一个叫 `target_selector` 的键，但那是它自己"这次够得着谁"，不是上面这套的一半。
 
@@ -70,7 +69,6 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 | `mxt:flight_control` | `hand`、`speed_multiplier`、`cooldown` |
 | `mxt:storage` | `slots`、`cooldown` |
 | `mxt:upkeep` | `interval`、`on_fail`、`owner_only` |
-| `mxt:composite` | `abilities`、`all_required` |
 | `mxt:word` | `effect`、`requires_operator`、`amount`、`cooldown` |
 
 `cooldown` 与 `damage_condition` 只有一部分类型读，所以它们不在通用字段表里，但 JSON 里照样写在 `type` 同级。
@@ -84,7 +82,7 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 
 | `type` | 声明的状态种类 |
 | --- | --- |
-| `mxt:empty` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` / `mxt:composite` | 只有默认的 `mxt:active_state` |
+| `mxt:empty` / `mxt:modifier` / `mxt:mount` / `mxt:upkeep` | 只有默认的 `mxt:active_state` |
 | `mxt:active` / `mxt:triggered` / `mxt:channelled` / `mxt:aura` | `mxt:active_state`、`mxt:cooldown`、写了 `charges` 时的 `mxt:charges`，以及 `mxt:toggle` / `mxt:timer` / `mxt:resource` / `mxt:target_lock` |
 | `mxt:interval` | `mxt:active_state` 与那四种内容自用种类；没有 `mxt:cooldown`、没有 `mxt:charges` |
 | `mxt:targeted` | `mxt:active_state`、`mxt:cooldown`、写了 `charges` 时的 `mxt:charges`；没有那四种 |
@@ -188,7 +186,7 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 | `ability` | 技能 id | **必填** | 每个目标身上跑的载荷技能 |
 | `cooldown` | `NumberProvider` | `0` | 冷却长度 |
 
-载荷**只收具体 id，不收 `#标签`**，而且必须是会跑四个动作字段的五个类型之一；写了 `mxt:modifier` / `mxt:composite` / `mxt:word` / 另一条 `mxt:targeted` 会在付款之前就被拒掉。
+载荷**只收具体 id，不收 `#标签`**，而且必须是会跑四个动作字段的五个类型之一；写了 `mxt:modifier` / `mxt:word` / 另一条 `mxt:targeted` 会在付款之前就被拒掉。
 
 载荷自己的 `costs` / `cast_time` / `cooldown` / `charges` / `condition` / 元素亲和，以及它的 `entity_action` 与 `target_selector`，一个都不读。
 
@@ -335,21 +333,6 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 
 它不是按键型。
 
-## `mxt:composite`
-
-自己不做事，委托给子技能。
-
-| 字段 | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `abilities` | 技能 id 列表 | **必填** | 子技能 |
-| `all_required` | Boolean | `true` | 要不要全部通过才执行 |
-
-子技能**只收具体 id，不收 `#标签`**，写标签会被当成坏条目录一条日志后丢弃。法器 `abilities`、功法 `granted_abilities`、符箓 `abilities` 那几个字段相反，id 与 `#标签` 都收。
-
-它自己的 `costs` / `cast_time` / `cooldown` / `charges` 都不生效——钱与冷却记在**子技能自己的 id** 下。`condition` 与元素亲和仍先按它自己查一遍。
-
-`all_required: false` 时只把**列表第一个**子技能交给施放，其余完全不看；列表为空时报 `NOT_GRANTED`。`all_required: true` 时先对每个子技能做一次预演（条件、元素亲和、代价、充能、冷却逐项算进草稿），任一项失败则整条不落地、一个子技能都不会跑；全部通过后才按列表顺序提交并依次执行。`cast_time > 0` 的子技能在预演阶段就以 `INVALID_FORMULA` 拒掉。
-
 ## `mxt:word`
 
 终端载荷，自己不执行目标行为。
@@ -365,4 +348,4 @@ description: mxt:ability_type 里的十四个技能类型，各自读哪些字�
 
 `amount` 要求求值有限、非负、不超过单精度浮点上限，否则这次施放以 `PERMISSION_DENIED` 拒掉。`requires_operator` 不满足同样拒。
 
-它不是按键型，通常作为 `mxt:composite` 的子技能，或由命令、脚本施放。
+它不是按键型，由命令或脚本施放。
