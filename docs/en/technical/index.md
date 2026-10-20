@@ -38,6 +38,70 @@ It answers a different question from the other two categories:
 | Aura calculation | `AuraService` | `src/main/java/com/iafenvoy/mxt/runtime/world/` |
 | Cost | `CostPayment` | `src/main/java/com/iafenvoy/mxt/data/cost/` |
 
+## Module Relationships
+
+The code splits into four layers: **input** (datapacks, KubeJS, addon mods), **kernel** (definitions and registration), **runtime services** (the singletons that do the work), and **state and exits** (attachments, events, networking, the client). An arrow means "reads or drives", not a strict compile-time dependency - a built-in action is implemented in `data` and still calls into `runtime`.
+
+```mermaid
+flowchart TD
+    PACK["datapack JSON"]
+    SCRIPT["KubeJS scripts"]
+    ADDON["Java addon mods"]
+
+    DATA["data · definitions, codecs, built-in actions/conditions"]
+    REG["registry · built-in types and dynamic registries"]
+    CFG["config · client and server settings"]
+
+    RT["runtime.* · runtime services"]
+    ATT["attachment · entity / level / chunk state"]
+    COMP["item data components"]
+
+    EVENT["event · vanilla and NeoForge event bridge"]
+    NET["network · sync payloads"]
+    CLIENT["screen / render / particle · client presentation"]
+    SURFACE["command / item / recipe / loot / advancement"]
+    COMPAT["compat · KubeJS, FTB, Curios, JEI"]
+
+    PACK --> DATA
+    SCRIPT --> COMPAT
+    ADDON --> REG
+    DATA --> REG
+    DATA --> RT
+    REG --> RT
+    CFG --> RT
+    RT <--> ATT
+    RT <--> COMP
+    RT --> EVENT
+    EVENT --> RT
+    RT --> NET --> CLIENT
+    SURFACE --> RT
+    COMPAT --> RT
+```
+
+The runtime services read each other as well, and the direction is mostly one way: environment and state are data, and the gameplay reads and changes it. These are a few of the relationships that really exist (not all of them):
+
+```mermaid
+flowchart LR
+    CULT["cultivation<br/>realms"]
+    WORLD["world / aura<br/>aura and environment"]
+    ABILITY["ability<br/>abilities and triggers"]
+    DMG["damage / element<br/>damage and elements"]
+    FORM["formation<br/>formations"]
+    FRIEND["friend<br/>foe identification"]
+    RES["resource<br/>resources and costs"]
+    CRAFT["forging / alchemy<br/>artifact / talisman"]
+
+    CULT -->|aura at its position| WORLD
+    FORM -->|draws aura for upkeep| WORLD
+    FORM -->|is the owner on the target's side| FRIEND
+    FORM -->|grants abilities inside| ABILITY
+    FORM -->|upkeep cost| RES
+    ABILITY -->|actions deal damage| DMG
+    DMG -->|reads spirit-root relations| CULT
+    CRAFT -->|spends resources, grants abilities| RES
+    CRAFT --> ABILITY
+```
+
 ## Conventions
 
 - Class and method names are written as Java writes them, with the shared package prefix `com.iafenvoy.mxt` shortened and spelled out only on first use (so `runtime.damage.DamageCalculationService#deal` means the `deal` method of `com.iafenvoy.mxt.runtime.damage.DamageCalculationService`).

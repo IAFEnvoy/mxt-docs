@@ -63,7 +63,7 @@ aside: false
 | `/talisman give <talisman> count <1..64> charged` | 同上，并且已经灌满。 |
 | `/talisman give <talisman> stored [count <1..64>]` | 同上，模式为 `store`。储存模式的载体靠手动灌注，所以这一支不提供 `charged`。 |
 
-`give` 一次只收**一个**符箓 ID：一张载体只铭刻一条定义。要在一张载体上刻多条，直接写物品组件的 `talismans` 列表，例如 `give @s mxt:talisman[mxt:talisman={talismans:["mypack:flame_sigil","mypack:common_sigil"]}]`。定义参数按已加载的 `talisman` 注册表补全。
+`give` 一次只收**一个**符箓 ID：一张载体只铭刻一条定义，写第二条会顶掉第一条。要直接写物品组件，字段是单个 `talisman`，例如 `give @s mxt:talisman[mxt:talisman={talisman:"mypack:flame_sigil"}]`。定义参数按已加载的 `talisman` 注册表补全。
 
 ## 灌注与激发
 
@@ -202,6 +202,6 @@ aside: false
 
 这张符出手就变成一枚投掷物：撞到方块时先拿**被打中的那个方块**过 `block_condition`（这里要求它在 `minecraft:mineable/pickaxe` 里），过了才在命中处跑 `block_action`——`block_action` 是方块动作，落点就是那个方块，所以这里落下一道原版的 `minecraft:lightning_bolt`。撞到实体时改走目标那一半：`mxt:target_action` 配 `"use_target_position": true` 把嵌套动作放在**目标自己身上**，而符箓的原点仍是出手的位置（见上文"发动的地点"）。它没有 `max_use`：载体在出手那一刻就被消耗。
 
-"已经铭刻了哪些符箓"由物品组件 `mxt:talisman` 保存：它是一个按追加顺序排列的 `talisman` 条目列表，加上一个 `mode` 字段（`"fire"`（缺省）或 `"store"`），空列表就是刚做出来的空载体。组件里存的是**具体条目**，因此不能写标签。灌注进度另存于 `mxt:spirit_storage`，与灵石共用的存储组件，按**灵气**记已灌单位，缺省表示一点都没灌。组件与载体的说明见[通用物品](/player-guide/items)。
+"已经铭刻了哪条符箓"由物品组件 `mxt:talisman` 保存：一个 `talisman` 条目（可缺省，缺省就是刚做出来的空载体），加上一个 `mode` 字段（`"fire"`（缺省）或 `"store"`）。一张载体只铭刻一条，再刻一次会顶掉上一条。组件里存的是**具体条目**，因此不能写标签。灌注进度另存于 `mxt:spirit_storage`，与灵石共用的存储组件，按**灵气**记已灌单位，缺省表示一点都没灌。组件与载体的说明见[通用物品](/player-guide/items)。
 
 画符用的颜料是符笔自己的存量，另一个物品组件 `mxt:brush_pigment`：一个**非负整数**，1 单位就是 1 像素弧长，缺省与 `0` 是同一件事（都是空笔）。符笔不叠放，绘制时按每一笔的长度从这口存量里扣；加料照原版储物袋那套点击——**光标提着符笔对着颜料物品点一下**（左键右键都行），一次一份，一份多少由服务端配置「符箓 → 一份颜料的点数」说了算。

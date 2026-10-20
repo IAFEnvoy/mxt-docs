@@ -5,7 +5,9 @@ description: "Step-by-step walkthroughs that build a small MiXianTu content pack
 
 # Tutorials
 
-The reference pages on this site describe one file, one field or one API at a time. These tutorials go the other way: each one starts from an empty data pack and ends with something you can watch in game, so you can see how the tables fit together before you look up every field.
+The reference pages on this site describe one file, one field or one API at a time. The content tutorials start from an empty data pack and end with something you can watch in game, so you can see how the tables fit together before you look up every field.
+
+Start with [Development Mode](./dev-mode.md) to prepare an environment for reproducing problems and learn the module profiler GUI. The content tutorials then begin building the example pack.
 
 ## The Example Pack
 
@@ -94,6 +96,7 @@ data/example/
 
 | Tutorial | You build | Read it when |
 | --- | --- | --- |
+| [Development Mode](./dev-mode.md) | A debugging environment and the module profiler GUI: recording, sorting, scrolling and inspecting the last 240 ticks. | You are starting a content pack or need to reproduce and locate a problem. |
 | [Define Aura and Realms](./define-aura-and-realms.md) | An element, an aura resource, a linear realm chain, a cultivation action and a minimal aura zone — the core cultivation loop. | You need a player to be able to cultivate and break through. |
 | [Write a Dual Cultivation Method](./dual-cultivation.md) | A cultivation method that only yields while somebody is beside you: how the test is assembled, how both bodies get in, and what happens when one walks away. | The basic loop works and you want "two bodies cultivating together" to be a rule. |
 | [Define an Element Reaction](./define-an-element-reaction.md) | How a second element claims damage types, and what two attachments do once they add up. | The basic loop works and you want two elements to actually do something when they meet. |

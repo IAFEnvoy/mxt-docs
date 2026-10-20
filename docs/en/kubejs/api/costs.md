@@ -1,18 +1,18 @@
 ---
 title: 'MxtCosts: A Single Cost'
-description: Check or pay one Cost; for several entries use the atomic MxtResources payment.
+description: Check or pay one Cost; for several entries use the two-pass ordered MxtResources payment.
 ---
 
 # `MxtCosts`: A Single Cost
 
-`MxtCosts` takes **one** `Cost`: it either answers "could this be paid here" or pays it in one go. For several entries use [MxtResources](/en/kubejs/api/resources), which treats the whole array as one atomic transaction; **do not treat several `MxtCosts.consume` calls as one atomic payment**.
+`MxtCosts` takes **one** `Cost`: it either answers "could this be paid here" or pays it in one go. For several entries use [MxtResources](/en/kubejs/api/resources), which simulates the whole array before ordered deductions. Separate `MxtCosts.consume` calls check independently and do not share a preflight pass.
 
 ## Methods
 
 | Method | Parameters | Return value | Description |
 | --- | --- | --- | --- |
 | `check(player, definition)` | `Player`, any of the five `Cost` shapes | `boolean` | Only answers "could this be paid here": it is read-only and changes no inventory, value or aura, so a client script may call it. |
-| `consume(player, definition)` | `Player`, any of the five `Cost` shapes | `boolean` | Checks first and then pays, **all or nothing**; when it cannot be paid nothing is changed. Server-only: on a client script it logs one warning and returns `false` without touching the player. |
+| `consume(player, definition)` | `Player`, any of the five `Cost` shapes | `boolean` | A simulation refusal returns `false` without deduction. Once simulation passes, a real failure or runtime exception only logs WARN and still returns `true`, without rollback. Server-only: on a client script it logs one warning and returns `false` without touching the player. |
 | `register(id, check, consume)` | Callback ID, `(player, params, context) => boolean`, `(player, params, context) => void` | `void` | Registers a script cost. Datapack type: `mxt:js`. |
 
 `check` and `consume` take the **same `Cost` shape** (the five forms are on [Shared Data Types](/en/datapack/types/shared_data_types#cost)) and go through the same transaction: `check` is the read-only pre-flight and `consume` pays in one go.
@@ -34,7 +34,7 @@ MxtCosts.register('example:quest_token',
 {"type": "mxt:js", "id": "example:quest_token", "params": {"count": 3}}
 ```
 
-A script cost needs a player and runs **last**, after every other channel (value, aura, item) has been paid; it is not staged, so the callback has to be idempotent about it. A `Cost` is checked with the payer alone, so the `context` a cost callback receives is built from that payer and carries no event payload; `context.value('level')` works, `context.value('damage')` does not.
+A script cost needs a player and keeps its position in the cost array. Check must be read-only; consume failures are not refunded and do not cancel later fees or business effects. A `Cost` is checked with the payer alone, so the `context` a cost callback receives is built from that payer and carries no event payload; `context.value('level')` works, `context.value('damage')` does not.
 
 Full cost registry dispatch is supported. The current built-in types:
 

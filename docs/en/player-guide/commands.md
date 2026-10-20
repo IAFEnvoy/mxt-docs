@@ -49,6 +49,8 @@ Each alias can be switched off on its own, which removes only its top-level spel
 
 Commands that need administrator rights validate the `gamemaster` permission in the command tree: `/resource <id> set`, `/mxt breakthrough`, the whole `/mxt secret_realm` subtree (`list`, `info`, `enter`, `exit`, `destroy`), the whole `/mxt rift` subtree (`info`, `target`, `color`, `place`, `bind`), `/mxt soul reclaim`, `/mxt trigger publish`, `/cultivate select`, `/realm set`, `/lifespan get <targets>` / `set` / `add` / `reincarnate`, `/aura cache clear`, `/ability cast` / `grant` / `revoke`, `/contract bind` / `break` / `recall` / `behavior`, `/curse apply` / `remove` / `cleanse`, `/flight` (the whole subtree, which holds only `fill` today), `/formation bind` and `/formation owners add|remove`, `grant` / `remove` / `enable` / `disable` on `/spirit_root` and `/physique`, `/quality get <target>` / `set` / `clear` / `upgrade`, `/technique repair` (with its `dry-run`) / `drop`, and every node of `/lightning`, `/talisman` and `/tribulation`.
 
+The entire `/mxt debug` subtree and profiling chart data reception require operator level 3 (`admin`), including `on`, `off`, `status [sources...]` and `gui`. Only players can execute `gui`; see [/mxt](./commands/mxt).
+
 The remaining commands have no permission requirement — the read-only nodes such as `/mxt curse list`, `/ability list` and `/mxt trigger list` are among them — but several of them require an executing player right in the command tree (`/friend`'s whole subtree does), and those that default to the caller need one as well: run from the console they are refused outright, or simply return no result.
 
 ## Tab Completion

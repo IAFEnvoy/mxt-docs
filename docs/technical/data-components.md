@@ -99,7 +99,7 @@ description: 本体注册的每一个物品数据组件：装什么、谁来写�
 
 | 组件 id | 载荷 | 作用 |
 | --- | --- | --- |
-| `mxt:talisman` | `TalismanComponent`（`talismans`、`mode`） | 一张载体上**已铭刻的符箓**，按追加顺序排列（所以一张载体能刻好几条），空表就是一张空白载体。`mode` 是 `fire`（缺省）或 `store`，**存在堆上而不是任何定义上**，所以同一批铭刻在不同载体上可以有不同行为。它的提示框由 `TalismanTooltipAppender` 单独画，好让那些行落在载体的充能行上面。 |
+| `mxt:talisman` | `TalismanComponent`（`talisman`、`mode`） | 一张载体上**已铭刻的那条符箓**：单个 `talisman` 条目，缺省即一张空白载体；再刻一条会顶掉前一条。`mode` 是 `fire`（缺省）或 `store`，**存在堆上而不是任何定义上**，所以同一条铭刻在不同载体上可以有不同行为。它的提示框由 `TalismanTooltipAppender` 单独画，好让那些行落在载体的充能行上面。 |
 | `mxt:brush_pigment` | `int`（`0` 到上限） | 符笔自己的**颜料存量**，一个非负整数，**1 单位就是 1 像素弧长**。没写这个组件与写 `0` 是一回事。它不是消耗品条目：加料是原版储物袋那套点击，判定与换算只在 `runtime.talisman.BrushPigmentService` 一处。 |
 
 ### 灵植、丹炉与灵根

@@ -85,7 +85,7 @@ The whole `/talisman` subtree needs gamemaster permission; the top-level alias i
 Item component syntax does the same thing — what a carrier stores is a **list of concrete entries plus a mode**:
 
 ```mcfunction
-give @s mxt:talisman[mxt:talisman={talismans:["example:flame_sigil"],mode:"fire"}]
+give @s mxt:talisman[mxt:talisman={talisman:"example:flame_sigil",mode:"fire"}]
 ```
 
 `mode` defaults to `"fire"`, and an empty list is a brand-new blank carrier. Pouring progress lives in `mxt:spirit_storage` (the same component spirit stones use).
@@ -156,7 +156,7 @@ Datapack registries are read while the **world loads**, so reopen the world firs
 | The element affinity is reported as a mismatch | The ability's `element_affinity` does not match the caster's spirit roots — a talisman does not bypass that either. |
 | It says the ability needs a cast or a channel | An ability with `cast_time > 0` or `mxt:channelled` cannot be carried. |
 | Pouring never finishes / nothing happens | An aura entry in `costs` resolves to `0` in the empty context (a `realm_rank` formula, say) and takes no part in the pour; or you simply do not have enough aura (reported as such). |
-| The component syntax is refused | `talismans` takes concrete ids only; only `abilities` accepts `#tags`. |
+| The component syntax is refused | `talisman` takes a concrete id only; only `abilities` accepts `#tags`. |
 | It fired but the aura is gone | That invocation's share was taken; when the capacity only covers one shot the component empties with it, and when it covers several the rest stays. |
 | It only fires a couple of times before running dry | No `capacity` was written (it defaults to one invocation), or the carrier has no wear, which counts as one invocation. Write a bigger multiplier and pair it with `durability` / `consume` to fire several times from one pour. |
 

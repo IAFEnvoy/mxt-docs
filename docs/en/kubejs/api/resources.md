@@ -1,19 +1,19 @@
 ---
 title: 'MxtResources: Whole Cost Arrays'
-description: 'Pay a whole Cost array as one atomic transaction: when any entry cannot be paid, nothing is deducted.'
+description: 'Simulate a Cost array, then deduct in order; simulation refusals stop all deductions, while real failures warn and continue.'
 ---
 
 # `MxtResources`: Whole Cost Arrays
 
-`MxtResources` has a single method, but it is the one that pays **several entries together**: the whole `Cost` array is one transaction, so an entry that cannot be paid stops the entire payment and no half-charged state is left behind. For a single `Cost`, use [MxtCosts](/en/kubejs/api/costs).
+`MxtResources` has a single method, but it is the one that pays **several entries together**: the whole `Cost` array is simulated in order before any real deduction. Real failures only log WARN, and later fees and business effects continue without rollback or cancellation. For a single `Cost`, use [MxtCosts](/en/kubejs/api/costs).
 
 ## Methods
 
 | Method | Parameters | Return value | Description |
 | --- | --- | --- | --- |
-| `consume(entity, costs)` | a living entity, `Cost[]` | `ResourceTransactions.Result` | Pays the whole array atomically, **all or nothing**; when any one entry cannot be paid, nothing is deducted. |
+| `consume(entity, costs)` | a living entity, `Cost[]` | `ResultWithData<Map<Identifier, Double>>` | Diagnoses duplicate targets, then simulates and deducts in array order without merging or reordering. Simulation refusals deduct nothing; real failures only warn and continue. |
 
-`costs` is the **unified `Cost` array**: all five shapes can be written directly, and the older `{"id": ..., "amount": ...}` shorthand still works (it is read as `mxt:resource`). The payer has to be a **living entity** — it does not have to be a player, but `mxt:item` (which needs a player's inventory) and `mxt:js` (which needs a player) are simply unpayable for a non-player payer. An entry that cannot be decoded **is no longer dropped silently**: it fails the call, and the old behaviour of logging a WARN, discarding that entry while the rest still committed, is gone.
+`costs` is the **unified `Cost` array**: all five shapes can be written directly, and the older `{"id": ..., "amount": ...}` shorthand still works (it is read as `mxt:resource`). The payer has to be a **living entity** — it does not have to be a player, but `mxt:item` (which needs a player's inventory) and `mxt:js` (which needs a player) are simply unpayable for a non-player payer. An entry that cannot be decoded fails the call rather than being dropped silently.
 
 ```js
 const result = MxtResources.consume(player, [
@@ -21,14 +21,14 @@ const result = MxtResources.consume(player, [
   { type: 'mxt:aura', aura: 'mxt:fire_aura', amount: 'level + 2' }
 ])
 
-if (result.committed()) {
-  console.info(`Deducted: ${result.amounts()}`)
+if (result.isSuccess()) {
+  console.info(`Deducted: ${result.getData()}`)
 } else {
   console.warn(`Could not pay: ${result.failedResource()}`)
 }
 ```
 
-The accessors of the returned record are `committed()`, `failedResource()` and `amounts()`. On the client, with an invalid formula, or when any entry cannot be paid, `committed()` is `false`.
+The result provides `isSuccess()`, `isFailure()`, `failure()`, `failedResource()` and `getData()`. Client calls, invalid formulas and simulation refusals return `isSuccess() == false`. Once simulation passes and real attempts finish, success is returned without promising full collection. `getData()` totals only known actual resource spending; it excludes items, pool aura and unknown amounts inside scripts.
 
 ## Related
 

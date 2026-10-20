@@ -27,9 +27,9 @@ Four built-in types are registered in `mxt:cost_type`: `mxt:resource`, `mxt:aura
 
 The payment `CostPayment` is the only entry point: `price` only prices, `resourceAmounts()` / `auras()` / `resources()` are read-only projections, `replaceResourceAmounts` and `scale` edit the bill, `test` simulates one pass and `pay` simulates every fee and then takes them all. An edit changes the bill itself - a replaced resource fee is a new fixed transaction, a scaled amount is a new fixed transaction - so the simulated and the real pass work on one set of amounts and nothing is evaluated a second time after the price was read.
 
-An array that charges one target twice is not a load error: the payment **sums those fees and charges that store once**, and logs a warning. So an `mxt:aura` and the `mxt:resource` it is measured in reach one target and cost their sum, whatever order they were written in.
+Repeated targets are not a load error. Before execution, LoggerDispatcher logs WARN in development mode and DEBUG in production. Entries are not merged; both passes retain List order, including script positions. The same script id for the same payer is diagnosed separately while calls remain independent. Prefer one entry for a target's whole fee.
 
-The payment, not the data pack, decides the execution order: built-in stores first, scripts last. Nothing is rolled back as a group - if the real pass refuses a later fee, what the earlier ones already took stays taken and the result reports it.
+A simulation failure prevents all real deductions. Once all simulations pass, a real failure or RuntimeException only calls plain LOGGER.warn, without dispatch, propagation, rollback or cancellation. Later fees and business effects continue; the result is successful and contains known actual Debits. Success does not promise full collection. Partial receipts from failed fees are retained, unknown amounts are not invented, and the cached result prevents another pay from writing again.
 
 Why the shape is drawn this way, and what "one target written twice" used to go wrong with, are on [Cost](../../../technical/cost.md).
 

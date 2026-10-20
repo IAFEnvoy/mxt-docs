@@ -85,7 +85,7 @@ description: 写一份符箓定义、把它交给玩家、灌注灵气并发动�
 不想用命令时，直接写物品组件也行——载体上存的是**具体条目列表加一个模式**：
 
 ```mcfunction
-give @s mxt:talisman[mxt:talisman={talismans:["example:flame_sigil"],mode:"fire"}]
+give @s mxt:talisman[mxt:talisman={talisman:"example:flame_sigil",mode:"fire"}]
 ```
 
 `mode` 缺省就是 `"fire"`；空列表等于刚做出来的空白载体。灌注进度另存在 `mxt:spirit_storage`（与灵石共用同一个存储组件）。
@@ -156,7 +156,7 @@ give @s mxt:talisman[mxt:talisman={talismans:["example:flame_sigil"],mode:"fire"
 | 提示「灵根与该道法属性不合」 | 能力的 `element_affinity` 与施法者灵根不匹配——符箓也不绕过它。 |
 | 提示「需要吟唱或持续引导，符箓无法承载」 | `cast_time > 0` 或 `mxt:channelled` 的能力不能被承载。 |
 | 灌不满 / 按了没反应 | 灵气条目在空上下文里算出了 `0`（例如用了 `realm_rank`），它不参与灌注；或者手上灵气不够（会提示「灵气不足」）。 |
-| 组件写法被拒绝 | `talismans` 只收具体 ID；写 `#标签` 只有 `abilities` 允许。 |
+| 组件写法被拒绝 | `talisman` 只收具体 ID；写 `#标签` 只有 `abilities` 允许。 |
 | 发动成功但灵气没了 | 这次发动的那份被扣掉了；容量只够一次时组件随之清空，容量够几次时剩下的会留着。 |
 | 打不了几次就没了 | 没写 `capacity`（缺省 1 次）或载体没有耐久（剩余次数算 1）；把倍率写大，再配 `durability` / `consume`，就能一次灌注连打多次。 |
 

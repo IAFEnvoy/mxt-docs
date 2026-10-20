@@ -23,6 +23,7 @@ The project is still in development. Datapack formats and other interfaces are n
 | Goal | Documentation |
 |---|---|
 | Install the mod and check requirements | [Installation](./installation.md) |
+| Reproduce problems and inspect module timings | [Development Mode](./tutorial/dev-mode.md) |
 | Build your first content step by step | [Tutorials](./tutorial/index.md) |
 | Learn the keybinds, HUD, items and commands | [Player Guide](./player-guide/keys-and-hud.md) |
 | Write your first datapack | [Datapack overview](./datapack/overview.md) |
@@ -70,7 +71,7 @@ The **status** column says how far along a module is (it follows the code, and i
 | Alchemy | 🚧 | Hand-build a 3×3×3 furnace from a core, role bins and walls, and put a heat block in the bottom centre cell. When the player starts, it resolves the output from the actual properties. Pills keep use limits, cooldowns and toxicity. |
 | Spirit Herbs | ✅ | Any existing block can be a spirit herb: a definition claims blocks with `blocks` and its own fruit with `growth.drops`; placing one starts its age, world-generated ones already carry their own, and breaking it tiers the fruit by that age. |
 | Item Binding | 🚧 | Brings existing items into gameplay: attach passive behavior and vanilla attribute modifiers to any item, or bind abilities that fire on right-click use and on attack. |
-| Talismans | 🚧 | A Talisman Brush inscribes ability definitions onto a carrier (one carrier can hold several); holding right-click until it is full fires them, spending a carrier or the wear a definition declares. A drawing workstation shows a formula's shape, the player traces it, and how well it was traced decides success and tier. |
+| Talismans | 🚧 | A Talisman Brush inscribes ability definitions onto a carrier ; holding right-click until it is full fires them, spending a carrier or the wear a definition declares. A drawing workstation shows a formula's shape, the player traces it, and how well it was traced decides success and tier. |
 | Quality | ✅ | Items carry a quality shown in their tooltip; each tier links to the next with `quality` / `next` to form a low-to-high ladder, and the entry tier can be climbed; a stack's tier resolves in three layers: the item component, the `quality` the definition it carries declares, and the `default_quality` registry. |
 | Artifacts | 🚧 | Items become artifacts via `artifact`: `items` claims them, `spirit_capacity` sets a per-aura ceiling, and `abilities` names what carrying it grants. An artifact declares itself a flying mount (speed, seats, fuel, looks) that a technique-granted flying skill takes from either hand; storage is another ability type. |
 | Economy | ✅ | Items can be defined as currency with a value, supporting exchange and change; players can trade directly with each other, or use trade stations and cheques to settle transactions. |

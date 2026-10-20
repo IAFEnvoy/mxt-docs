@@ -99,7 +99,7 @@ The **Payload** column is the Java shape the codec decodes into, not JSON key na
 
 | Component id | Payload | What it does |
 | --- | --- | --- |
-| `mxt:talisman` | `TalismanComponent` (`talismans`, `mode`) | The talismans **inscribed on one carrier**, in append order (so one carrier can hold several); an empty list is a blank carrier. `mode` is `fire` (default) or `store` and lives **on the stack, not on any definition**, so the same inscriptions behave differently on different carriers. Its tooltip is drawn separately by `TalismanTooltipAppender` so those lines sit above the carrier's charge line. |
+| `mxt:talisman` | `TalismanComponent` (`talisman`, `mode`) | The talisman **inscribed on one carrier**: a single `talisman` entry, absent on a blank carrier, and inscribing another replaces it. `mode` is `fire` (default) or `store` and lives **on the stack, not on any definition**, so the same inscription behaves differently on different carriers. Its tooltip is drawn separately by `TalismanTooltipAppender` so those lines sit above the carrier's charge line. |
 | `mxt:brush_pigment` | `int` (0 to a cap) | The talisman brush's own **pigment store**, a non-negative integer where **1 unit is 1 pixel of arc length**. Not writing the component and writing `0` are the same thing. It is not a cost entry: refilling is the vanilla bundle's click, and the judgement and conversion live in exactly one place, `runtime.talisman.BrushPigmentService`. |
 
 ### Herbs, Furnaces and Spirit Roots

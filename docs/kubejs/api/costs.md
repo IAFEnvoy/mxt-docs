@@ -1,18 +1,18 @@
 ---
 title: MxtCosts：单个消耗
-description: 预检或支付一个 Cost；多个条目请用 MxtResources 的原子支付。
+description: 预检或支付一个 Cost；多个条目请用 MxtResources 的两遍顺序支付。
 ---
 
 # `MxtCosts`：单个消耗
 
-`MxtCosts` 收的是**一个** `Cost`：只回答"这里付得出吗"，或者一次性把它付掉。多个条目请用 [MxtResources](/kubejs/api/resources)，它把整份数组当成一笔原子事务；**不要把多次 `MxtCosts.consume` 当成一次原子支付**。
+`MxtCosts` 收的是**一个** `Cost`：只回答"这里付得出吗"，或者一次性把它付掉。多个条目请用 [MxtResources](/kubejs/api/resources)，它把整份数组先统一模拟，再按顺序实扣；多次 `MxtCosts.consume` 各自独立检查，不能共用一次预检。
 
 ## 方法
 
 | 方法 | 参数 | 返回值 | 说明 |
 | --- | --- | --- | --- |
 | `check(player, definition)` | `Player`、任一种 `Cost` 写法 | `boolean` | 只回答「这里付得出吗」：只读，不改变背包、数值或灵气，客户端脚本也可以调用。 |
-| `consume(player, definition)` | `Player`、任一种 `Cost` 写法 | `boolean` | 先检查再支付，整份消耗**全有或全无**；无法支付时不做任何改动。仅服务端：在客户端脚本中调用只记录一次警告并返回 `false`，不会改动玩家。 |
+| `consume(player, definition)` | `Player`、任一种 `Cost` 写法 | `boolean` | 模拟失败返回 `false` 且不扣款；模拟通过后尝试实扣，实扣失败或运行时异常只 WARN，仍返回 `true`，不回滚。仅服务端：在客户端脚本中调用只记录一次警告并返回 `false`，不会改动玩家。 |
 | `register(id, check, consume)` | 回调 ID、`(player, params, context) => boolean`、`(player, params, context) => void` | `void` | 注册脚本 Cost。数据包类型：`mxt:js`。 |
 
 `check` 与 `consume` 收的是**同一个 `Cost` 形状**（五种写法见[共享数据类型](/datapack/types/shared_data_types#cost)），走同一笔事务：`check` 是只读的预检，`consume` 一次性支付。
@@ -34,7 +34,7 @@ MxtCosts.register('example:quest_token',
 {"type": "mxt:js", "id": "example:quest_token", "params": {"count": 3}}
 ```
 
-脚本 Cost 需要玩家，并且在其它通道（数值、灵气、物品）全部付完之后**最后**运行；它不做暂存，所以回调必须自己保持幂等。`Cost` 只用付款者做检查，因此回调拿到的 `context` 由该付款者构建，不含事件载荷——`context.value('level')` 可用，`context.value('damage')` 不可用。
+脚本 Cost 需要玩家，并保持它在消耗数组中的位置；check 必须只读，consume 失败不自动退款，也不取消后续费用与业务。`Cost` 只用付款者做检查，因此回调拿到的 `context` 由该付款者构建，不含事件载荷——`context.value('level')` 可用，`context.value('damage')` 不可用。
 
 支持完整 Cost 注册表分派。当前内置类型：
 

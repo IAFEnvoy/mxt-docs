@@ -1,6 +1,6 @@
 ---
 title: Write a Cost
-description: "The one cost array the whole pack reuses: the five shapes, where each of the four types charges, the all-or-nothing boundary and its rollback order, the failure text a player sees, and how to register a script cost."
+description: "The one cost array the whole pack reuses: the five shapes, where each of the four types charges, duplicate targets, ordered deductions and their failure boundary, the failure text a player sees, and how to register a script cost."
 ---
 
 # Write a Cost
@@ -101,7 +101,7 @@ Every other field stays as it was: renaming one or leaving one out changes nothi
 
 Eleven fields carry `costs`: `ability.costs` (**shared by every ability type**, which is why `mxt:mount`'s per-tick fuel and `mxt:upkeep`'s per-period fee are written here too), the `upkeep_costs` of `mxt:channelled`, `realm_stage.costs`, `cultivation.costs`, `formation.activation_costs` and `formation.maintenance_costs`, `forging_method.costs`, `contract_type.costs`, `talisman.costs`, `quality.upgrade_costs`, and the `aura` of a spirit-crafting recipe. What they share is this one shape.
 
-## Step 4 — All or Nothing
+## Step 4 — Simulate Before Ordered Deductions
 
 **One array is one bill.** If any entry cannot be paid, the whole array charges nothing — the entries that could have been paid are left alone too:
 
@@ -110,12 +110,15 @@ costs = [qi ×10, aura example:qi ×2, emerald ×2]
 20 qi on you, no emeralds      →  not one point of qi is taken
 ```
 
-There are rules inside one payment as well. **Two entries in one array that name the same store are spotted**: writing one value twice, one aura twice, two item entries, the same script id twice, or a `mxt:resource` together with the `mxt:aura` measured in that same value all log one warning at run time, when the payment is priced. The definition still loads and the amounts are added up per target, so that store is charged once, but writing one target twice buys nothing — one entry is always the better shape.
+Prefer one entry for each target's whole fee. Repeated targets are diagnosed before execution with WARN in development mode and DEBUG in production. Entries are neither merged nor reordered, and arbitrary overlap between item matchers is not guaranteed to be detected.
 
-That was "one array". **Several arrays inside one action are a different matter**: a talisman firing several abilities, and a cultivation tick paying both the environment's aura and the body's fee, are each "several payments". The rules are:
+Fees from multiple contexts can share a payment. Cultivation's environment aura and body costs, for example, share simulation and deduction. Every payment follows three steps:
 
-- Every payment is "simulate the whole array first, then take every entry once it all passes", and there is **no rollback**: when a later payment is still refused at the moment it takes, what the earlier ones already took is not returned. So the earlier the simulation refuses, the better.
-- **The script payment runs last**: `mxt:js` only comes up after every other channel has been paid, because nothing can undo the outside effects a script already had. The price is that a script must be **idempotent** about its own entry.
+1. Diagnose repeated deduction targets.
+2. Simulate each entry in array order. If any entry refuses, nothing is deducted and business effects do not run.
+3. Once all pass, attempt real deductions in the same order. A real failure or runtime exception only logs WARN and continues with later fees and business effects, without propagation, rollback or cancellation. Scripts run at their array positions.
+
+With a balance of 5 and fees of 4 and 3, both simulations can pass. The first real fee takes 4, the second only warns, payment succeeds, and known spending is 4. Success does not promise full collection; avoid duplicate and overlapping demands.
 
 ## Step 5 — What the Player Sees When It Cannot Be Paid
 
@@ -173,7 +176,7 @@ Data pack registries are read while the world loads, so `/reload` is not enough:
 ```
 
 1. Learn `example:qi_bolt` (or grant it to yourself) and press it on the wheel: `example:qi` drops by 12 in one go and the emeralds in your inventory drop by 2.
-2. `/mxt resource example:qi set 11` and press it again: the ability does not fire, the chat line reports the shortage, and **not one emerald is taken** — the array is all or nothing.
+2. `/mxt resource example:qi set 11` and press it again: the ability does not fire, the chat line reports the shortage, and **not one emerald is taken** — a simulation refusal prevents the real pass.
 3. `/mxt resource example:qi set 12` and press it again: it succeeds and the account lands exactly on zero. 10 + 2 = 12 is the resource entry and the aura entry adding up.
 4. Change the item entry's `amount` to `1.5`, open the world again and press it: 2 emeralds are taken, rounded up.
 5. Change some `amount` to `0`, open the world again and press it: that entry cannot produce a usable amount and the whole array cannot be paid; the line reports an invalid configuration, not "charge 0".
@@ -184,13 +187,13 @@ Data pack registries are read while the world loads, so `/reload` is not enough:
 
 | Symptom | Cause |
 | --- | --- |
-| One warning in the log about two entries taking the same target | One array writes to one store twice (the same value, the same aura, the same script id, two item entries, or an `mxt:aura` together with the `mxt:resource` it is measured in). The definition still loads and the amounts still add up, but writing one target twice buys nothing. |
+| One warning in the log about two entries taking the same target | One array writes to one store twice (the same value, the same aura, the same script id, two item entries, or an `mxt:aura` together with the `mxt:resource` it is measured in). The definition loads; development logs WARN and production logs DEBUG. Both passes keep array order without merging. Prefer one entry for a target's whole fee. |
 | `Every entry of an aura cost list must be an mxt:aura cost` | A spirit-crafting recipe's `aura` carries another type. That field accepts `mxt:aura` only. |
 | `Unknown KubeJS cost` (with that id, and that the cost cannot be paid) | The script cost's callback was never registered (the script did not load, the id is misspelled, or it was registered from a client script). The type itself still loads. |
 | The whole definition fails to load | One entry of the `costs` array cannot be decoded (an unknown `type`, a missing required field). This array does not use the tolerant-list convention and does not drop just that entry. |
 | The cost is never collected | The payer offers no such channel: `mxt:item` and `mxt:js` need a player. That is reported as "cannot be paid", not as a broken definition. |
-| The cost is charged twice | Several `MxtCosts.consume` calls were treated as one atomic payment; pay a whole array in one go with `MxtResources`. |
-| The script already changed the world and then the payment failed | The script entry runs last and cannot be put back. A callback has to be idempotent — keep irrevocable work out of its first half. |
+| The cost is charged twice | Each `MxtCosts.consume` call is independent. Use `MxtResources` to simulate an entire array together; real failures still only warn and continue. |
+| Deduction logs WARN but the business effect still runs | Simulation passed; real failures continue without rollback or cancellation. Only known spending is reported. Check duplicate fees, stock changes and script callbacks. |
 | Editing the data pack files changes nothing | Data pack registries are read when the world loads, and `/reload` does not read them again. Server scripts are the other way round: `/reload` runs them again. |
 
 ## Next

@@ -61,13 +61,13 @@ Rules:
 ::: warning One entry per target
 Within one array, write each value, each aura and each script id once, and at most one item entry. **The same value reached by two routes counts as one target too**: an `mxt:aura` and the `mxt:resource` it is measured in land on one value, and a payment treats them as one target.
 
-Writing one twice is **not a load error**: the definition loads as usual, the payment **adds those entries up per target and charges that store once**, and logs one run-time warning per place and target. The warning is a hint — one entry is always the better shape.
+Writing one twice is **not a load error**. Duplicate targets are diagnosed before execution: WARN in development mode and DEBUG in production. Entries are neither merged nor reordered, and scripts keep their array positions. Overlap between different item matchers is not guaranteed to be detected.
 
-Writing it twice still charges correctly: the amounts are added up per target and checked and charged as that total. Why this rule belongs in the shape at all is on [Cost](../../technical/cost.md). The warning is only about shape — with one target written twice, "what does this actually cost" is left for the reader to add up, while one entry says it outright.
+Prefer a single entry for a target's whole fee. With a balance of 5 and fees of 4 and 3, each simulation can pass while the second real deduction fails. It only warns; the payment succeeds and known spending is 4. See [Cost](../../technical/cost.md) for the boundary.
 :::
 
-- **Two passes**: every entry is simulated first - its amount evaluated, the balance and the channel checked, **nothing written** - and only once every entry has passed is each of them taken. Something that still refuses at that moment (a shared aura pool emptied by another system, an inventory that changed in between, a script refusing) does **not** put back what the earlier entries already took.
-- **Reaching one value by different routes adds up**: a `mxt:resource` entry and a `mxt:aura` entry measured in that value are one target that is charged once, and the total is the sum of the two, whatever order they were written in - which is exactly the case the warning above recognises, so one entry is always the better shape.
+- **Three steps**: diagnose duplicates, then simulate each entry in order. Any simulation refusal stops the payment before deduction. Once all pass, deduct in the same order; a real refusal or runtime exception always logs WARN and continues with later fees and business effects, without propagation, rollback or cancellation.
+- **One target still has independent entries**: an `mxt:resource` and an `mxt:aura` measured in it share a balance but are only diagnosed, never merged for deduction. Quote totals and actual receipts serve different purposes, and payment success does not guarantee full collection.
 - The payer is a **living entity** (a player, a mob and a summoned creature all count), not necessarily a player. Whether an entry can be paid depends on which channels the place offers:
 
 | Shape | Where it is taken from |

@@ -1,6 +1,6 @@
 ---
 title: Server Configuration
-description: "The server configuration entries grouped by tab: talisman, alchemy and command aliases, with their defaults and limits."
+description: "The server configuration entries grouped by tab: talisman, alchemy, command aliases and debug, with their defaults and limits."
 ---
 
 # Server Configuration
@@ -32,6 +32,12 @@ The ten entries the talisman workstation uses, plus the cooldown that governs fi
 | Entry | Default | What it governs |
 | --- | --- | --- |
 | **Server Config → Alchemy → Natural toxicity decay per second** | `0` | How much toxicity a body that already has some loses per second, a finite non-negative number. `0` means it never fades on its own; a positive value subtracts once per 20 accumulated active entity ticks. Nothing decays while offline, and a body that never took a pill gains no attachment. |
+
+## Debug
+
+| Entry | Default | What it governs |
+| --- | --- | --- |
+| **Server Config → Debug → Debug Mode** | off | Opens the doors kept for reproducing something: trading with yourself, formula failures logged with the whole stack trace, the information panel reporting entries it cannot fit, and the internal trace log printed line by line. In a development build this entry does nothing, because it is already on there. On a release server it lets a player reporting a bug reach the same doors without a second install. |
 
 ## Command Aliases
 

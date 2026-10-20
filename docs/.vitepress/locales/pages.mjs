@@ -76,6 +76,7 @@ export const sections = [
   {
     text: { zh: '开发教程', en: 'Tutorials' },
     items: [
+      { page: 'tutorial/dev-mode', zh: '开发模式', en: 'Development Mode' },
       { page: 'tutorial/index', zh: '教程', en: 'Tutorials' },
       // The sword aura is one entity action the ability page does not have room for, so it hangs
       // under it as a child; the parent stays a link to its own page.

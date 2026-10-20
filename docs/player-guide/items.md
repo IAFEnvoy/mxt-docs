@@ -76,7 +76,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 灵根 | `mxt:spirit_root` | `mxt:spirit_root` | 保存一份 `spirit_root` 定义；右键获得这条灵根（"已持有"与元素互斥照旧被拒，见 [spirit_root](/datapack/json/spirit_root#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
 | 体质 | `mxt:physique` | `mxt:physique` | 保存一份 `physique` 定义；右键获得这项体质（"已持有"、`holder_condition` 不满足与互斥标签冲突照旧被拒，见 [physique](/datapack/json/physique#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
 | 符笔 | `mxt:talisman_brush` | `mxt:brush_pigment` | 符笔装自己的颜料存量，加料是原版储物袋那套点击（提着符笔点一下颜料就蘸）。颜料就是物品标签 `#mxt:brush_pigment` 里的物品，主资源包里只有朱砂 `mxt:cinnabar`；一份颜料给多少由服务端配置说了算（见[符笔与颜料](#符笔与颜料)）。 |
-| 符箓 | `mxt:talisman` | `mxt:talisman` + `mxt:spirit_storage` | 保存**已铭刻的符箓**：一个按追加顺序排列的 `talisman` 定义条目列表，加上一个模式字段 `mode`（`"fire"` 缺省／`"store"`），空列表就是刚做出来的空载体。手持按住右键灌注灵气（容量 = 一次发动的灵气用量 × 铭刻定义的 `capacity` 倍率，实际倍率还要跟载体剩余使用次数取小，按灵气分别计量），灌满那一刻铭刻的能力全部发动并消耗一件本体（`store` 模式除外：它只积累，不自动发动）。存量够付清一次发动的灵气条目时，**右键即发动**——写了 `durability` / `consume` 再配大倍率，就能灌满一次连打好几次（见 [灌注与激发](/datapack/json/talisman)）。**潜行 + 右键切换模式**，`store` 且已灌满时潜行使用不切换而是**直接发动**。摆在展示架上被填满时按模式处理，并以展示架的位置作为激发地点——公式与位置类行为都用它（见 [灌注与激发](/datapack/json/talisman)）。铭刻（写符）服务尚未接入，`mxt:talisman` 组件目前可以手写或用物品组件语法直接写入（`/talisman give` 也能发）；灌注进度与灵石共用同一个存储组件 `mxt:spirit_storage`（按灵气记已灌单位，缺省表示一点都没灌）。**徒手右键与灌满自动发动走同一个入口**，但两条规则各按"在哪"分：**冷却只是手上的闸门**（服务端配置「符箓 → 使用冷却」，默认 20 刻、0 关闭），一次**尝试**就进冷却，窗口内长按灌注不会发动、那一 tick 的灵气也不会被灌进去；**消耗则按位置分**——手上一次发动消耗一件本体（**创造模式不消耗**），摆在展示架上的**永远消耗**、且不查也不记冷却。两条规则都由 `SpiritSource.consumedByHand()` 区分。**铭刻的定义可以声明耐久**（`durability` / `consume`）：上限写进原版组件（`max_damage` 加 `max_stack_size: 1` 与 `damage: 0`，物品上就有耐久条），每次发动改成扣耐久、扣满那一次销毁载体；没声明耐久的载体照旧一次一张本体。 |
+| 符箓 | `mxt:talisman` | `mxt:talisman` + `mxt:spirit_storage` | 保存**已铭刻的那条符箓**：一个 `talisman` 定义条目（缺省就是刚做出来的空载体），加上一个模式字段 `mode`（`"fire"` 缺省／`"store"`）；一张载体只铭刻一条，再刻一条会顶掉前一条。手持按住右键灌注灵气（容量 = 一次发动的灵气用量 × 铭刻定义的 `capacity` 倍率，实际倍率还要跟载体剩余使用次数取小，按灵气分别计量），灌满那一刻铭刻的能力全部发动并消耗一件本体（`store` 模式除外：它只积累，不自动发动）。存量够付清一次发动的灵气条目时，**右键即发动**——写了 `durability` / `consume` 再配大倍率，就能灌满一次连打好几次（见 [灌注与激发](/datapack/json/talisman)）。**潜行 + 右键切换模式**，`store` 且已灌满时潜行使用不切换而是**直接发动**。摆在展示架上被填满时按模式处理，并以展示架的位置作为激发地点——公式与位置类行为都用它（见 [灌注与激发](/datapack/json/talisman)）。铭刻（写符）服务尚未接入，`mxt:talisman` 组件目前可以手写或用物品组件语法直接写入（`/talisman give` 也能发）；灌注进度与灵石共用同一个存储组件 `mxt:spirit_storage`（按灵气记已灌单位，缺省表示一点都没灌）。**徒手右键与灌满自动发动走同一个入口**，但两条规则各按"在哪"分：**冷却只是手上的闸门**（服务端配置「符箓 → 使用冷却」，默认 20 刻、0 关闭），一次**尝试**就进冷却，窗口内长按灌注不会发动、那一 tick 的灵气也不会被灌进去；**消耗则按位置分**——手上一次发动消耗一件本体（**创造模式不消耗**），摆在展示架上的**永远消耗**、且不查也不记冷却。两条规则都由 `SpiritSource.consumedByHand()` 区分。**铭刻的定义可以声明耐久**（`durability` / `consume`）：上限写进原版组件（`max_damage` 加 `max_stack_size: 1` 与 `damage: 0`，物品上就有耐久条），每次发动改成扣耐久、扣满那一次销毁载体；没声明耐久的载体照旧一次一张本体。 |
 
 功法书的页用原版书写书的页组件 `minecraft:writable_book_content`。它的 `pages` 是一串**纯字符串**，放不进 `translate` 组件，所以书上印出来的正文只有数据包写下时用的**那一种语言**——`custom_name`（物品名）不受影响，照常跟随语言切换。本体只把页读出来原样发进聊天栏，不做任何翻译。**这层限制得由本体改动才能解决**，数据包侧无解。
 
@@ -124,7 +124,7 @@ give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_rea
 give @s mxt:reward_box[mxt:reward_box="mxt_test:reward_box/spirit_stones"]
 give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
 give @s mxt:spirit_vessel[mxt:resource_capacity={"mxt_test:qi":1000.0},mxt:resource_container={"mxt_test:qi":25.0}]
-give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:flame_sigil"]}]
+give @s mxt:talisman[mxt:talisman={talisman:"mxt_test:flame_sigil"}]
 give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
 give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
 give @s mxt:technique_book[mxt:technique="mxt_test:azure_water_manual"]
@@ -139,7 +139,7 @@ give @s mxt:technique_book[mxt:technique="mxt_test:azure_water_manual"]
 铭刻好的符箓还可以带上一部分灌注进度（`mxt:spirit_storage` 与灵石共用，按 aura 记已灌单位，缺省表示一点都没灌）：
 
 ```mcfunction
-give @s mxt:talisman[mxt:talisman={talismans:["mxt_test:common_sigil"]},mxt:spirit_storage={amounts:{"mxt:common":3}}]
+give @s mxt:talisman[mxt:talisman={talisman:"mxt_test:common_sigil"},mxt:spirit_storage={amounts:{"mxt:common":3}}]
 ```
 
 阵盘也可以在游戏内绑定：主手持有阵盘时执行 `/mxt formation bind <formation>`（需要 gamemaster 权限）。绑定不再是取得可用阵盘的前提——**没绑定的阵盘右键时会自己认出脚下的阵法**（见 [未绑定的阵盘会自动识别](/datapack/json/formation)），命令与组件语法的用处变成了**限制**这块盘能立哪一座。组件语法要求先知道注册表 ID 和 NBT 结构，命令则由服务端做 Tab 补全并在 ID 不存在时拒绝。
