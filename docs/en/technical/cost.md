@@ -47,6 +47,6 @@ Follow the [shared data type guidance](/en/datapack/types/shared_data_types#cost
 | Items | Plans slots for that entry without writing | Rechecks before writing; receipts preserve the count and components of the items removed |
 | Script | Calls a read-only check | Checks again, then calls consume; a completion receipt records the script's claim, without inferring internal resource amounts |
 
-Amounts must be finite and positive. Item and bank amounts round upward; values beyond the integer range are refused before real deduction. Item entries plan independently without reserving slots across entries, so a later real fee can fail after an earlier one used the stock.
+Amounts must be finite and positive. Item counts round upward, and counts beyond the integer range are refused before deduction. Bank aura retains fractions: `0.25` is charged and receipted as `0.25`. Item entries plan independently without reserving slots across entries, so a later real fee can fail after an earlier one used the stock.
 
 Each script callback receives a separate parameter copy. Changes during simulation cannot alter consume's input. Check must be read-only, consume is not automatically refundable, and a successful simulation does not promise that real execution will succeed.

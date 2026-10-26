@@ -73,7 +73,7 @@ Prefer a single entry for a target's whole fee. With a balance of 5 and fees of 
 | Shape | Where it is taken from |
 | --- | --- |
 | `mxt:resource` | The payer's own value account. |
-| `mxt:aura` | The value that aura is measured in: out of the payer's own value account when the payer pays; when the ground pays from a **shared aura pool** (an aura entry of a cultivation's `costs`), the amount is first scaled by the pool's allocation for several players cultivating in the same chunk and then charged from the pool all or nothing; when a **block entity's own store** pays (a spirit crafting recipe's `aura`), that aura itself is taken in whole units, rounded up. |
+| `mxt:aura` | The value that aura is measured in: out of the payer's own value account when the payer pays; when the ground pays from a **shared aura pool** (an aura entry of a cultivation's `costs`), the amount is first scaled by the pool's allocation for several players cultivating in the same chunk and then charged from the pool all or nothing; when a **block entity's own store** pays (a spirit crafting recipe's `aura`), that aura itself is taken with fractions preserved. |
 | `mxt:item` | Needs a player's inventory. A payer that is not a player (or a formation with no owner) simply **cannot pay** — that is not a broken definition. |
 | `mxt:js` | Needs a player, and runs **last**, after every other channel has finished paying. A script cost is not staged, so the script itself has to stay idempotent about it. |
 

@@ -1,82 +1,96 @@
 ---
 title: Rifts
-description: How the Rift block and the Rift Anchor work — how the points, links and triangles are drawn, where the colour comes from, where you land, which of the two items does what, and what /mxt rift can do.
+description: Free planar outlines, destinations, the editor and token-summoned portals.
 ---
 
 # Rifts
 
-A rift (the `mxt:rift` block and its own block item) is a door to another dimension and draws a network of points and links; the Rift Anchor (`mxt:rift_anchor`) is what re-aims one at another dimension.
+A rift is a planar portal independent of blocks. Its local 2D vertices support concave polygons and arbitrary orientation without replacing stairs, slabs or the frame. Walls still occlude it; the portal does not cut holes into blocks.
 
-## Points, Links and Triangles
+The full portal record is saved in the chunk containing the center of its world-space outline bounds, with a location index at dimension level. Moving or reshaping the portal transfers the record when its center crosses a chunk boundary. Rebasing the editing origin without changing the world outline preserves the storage chunk. A portal spanning multiple chunks stays fully active while an edge chunk remains loaded. Unloading all related chunks releases runtime caches; loading them again restores the portal. Limited lifetimes keep counting while chunks are unloaded, and reloading cannot revive removed or expired portals. Existing planar portals transfer automatically, preserving their identity, expiry and destination.
 
-`mxt:rift` is a block that is invisible, has no collision and emits light level 15. It draws no model of its own; everything you see is built by a block entity renderer. It has **no direction**, and needs none — a link joins two neighbouring points, and there is nothing for a direction to decide:
+## Creating and Editing
 
-| Behaviour | Rule |
+Creating, editing, deleting and exporting require **operator level 2**. Regular players may summon portals with Secret Realm Tokens and travel through enabled portals.
+
+| Entry | Behaviour |
 | --- | --- |
-| Point | Every rift draws a **cube** at its own block centre: its point. It is drawn whether or not there are neighbours, and it is the block's most basic form. |
-| Link | It scans the **3×3×3 (26 neighbours)** around itself and links to **every rift it finds there**, whichever way either of them faces. |
-| How a link is drawn | Each link is drawn from **both ends, half each**: from its own centre to the midpoint between the two centres. The halves meet exactly in the middle, so no block needs to know whether the other half is being drawn right now. |
-| Triangle | If two of a rift's links are neighbours of each other as well, those three blocks close a triangle and **its interior is filled**. The fill is also drawn per block: each corner draws the share from "itself to the triangle's centroid", and the three shares tile the triangle exactly, with each share covering exactly one third of its area. |
-| Thickness | The point's side, a link's diameter and a fill's thickness are **one value**, set by the client setting **Rifts → Rift Thickness** (default `0.125` of a block, range `0.0001`–`0.5`). A fill is not a sheet: it is drawn as a slab of that thickness with a top and a bottom face and closed outer edges. |
+| `mxt:rift_anchor`, `mxt:rift` | Both are editor items. With no portal selected, use on a block face to open a draft without placing a block. |
+| Sneak-use an editor item | Record the current dimension, position and view as a destination. |
+| Use an editor item while aiming at a portal | Open the nearest portal along the view within 16 blocks, from either side. Blocks in front occlude it; blocks behind do not prevent selection. You can also use `/mxt rift edit <id>`. |
+| `/mxt rift edit` | Start a disabled draft. Only submitting publishes it. |
+| Secret Realm Token | Summon an entrance ahead of you, or a return portal while travelling in a realm. |
 
-The 26-neighbour reach is much denser than linking along a line: the eight blocks of a 2×2×2 are all neighbours of each other, so they draw 28 links and close 56 triangles. Space a structure out if you want a sparse net.
+The outline canvas is on the left and scrollable properties on the right. Drag selected vertices; Shift adds or removes selections, dragging empty space box-selects, right or middle drag pans, and the wheel zooms. The edge tool moves both endpoints. Vertex indices start at `0` and support numeric selection and coordinates.
 
-## Colour and Destination
+Coordinates use separate X / Y / Z inputs. Related parameters such as width and height, local coordinates, and scale appear side by side. Floating-point values display three decimal places; untouched values retain their original precision. Integer parameters remain integers. Checkboxes control portal activation and nearby safe landings. Dropdowns select the destination type and surface style, and the destination tab shows only the fields for the selected type. Numeric inputs support step adjustments; leave yaw and pitch empty to keep the incoming view angles.
 
-- **The colour defaults to the target dimension.** It is derived by hashing the dimension id, so the same dimension is the same colour on every client; the server never has to store a colour per rift or send a packet for it.
-- Right-clicking a rift with a dye sets a per-block colour override (it consumes one dye); `/mxt rift color <pos> auto` clears it back to "follows the target dimension".
-- **Opacity is locked at 1 and cannot be configured**: a rift is drawn fully opaque, because a translucent fill both hid the points and links inside it and made the block read as glass.
-- The destination and the colour can be written **on the block item before placement**: the component `mxt:rift` is `{target: <dimension id>, color: <int>}`, where a `color` of `-1` means "follow the dimension". Item component syntax, KubeJS and commands can all write it; see [Data Component Examples](./items.md#data-component-examples).
+Generators include rectangles, rounded rectangles, ellipses, regular polygons, arches and seeded fissures. Tools provide translation, rotation, scaling, shear, mirroring, chamfer, whole-outline offset and Bézier edges. Transforms with no selection affect all vertices. Snap spacing `1`, `0.5` and `0.0625` means whole blocks, half blocks and 1/16 blocks; `0` disables snapping.
 
-## Teleporting
+World preview collapses the panel to the top. Enable world editing, then right-drag outside the panel to look and left-click to use the selected tool along the view through the screen center. Panel buttons remain usable. Esc exits world editing before a second Esc closes the editor; returning to the canvas also exits world editing. Choose a tool first: Three-point Plane takes three block hit points; Fit Block Face takes one block face; Draw adds the ray-plane intersection; Move places the selected vertices at the aimed point. Collinear points cannot define a plane.
 
-- **Touching the block teleports immediately** (it implements the vanilla `Portal`, `getPortalTransitionTime` is 0, so there is none of a nether portal's warm-up): `mxt:rift` has no collision and can be walked through, and an entity is sent on as soon as it touches the block. There is no plane to line up with, so entering from any side is the same.
-- The landing point is scaled between dimensions and clamped to the world border, and then the game **looks for an existing rift that already leads back** to where you came from (within 16 blocks horizontally and 8 vertically, loaded chunks only): if it finds one you land next to it, and only otherwise does it carve a new rift there that leads back. So a round trip returns you where you started instead of opening a new door on every crossing. The search only looks at loaded chunks; it never generates terrain just to find one.
-- On arrival you get 600 ticks of slow falling and a portal sound. The landing spot is the first **standable** candidate in the order "the four horizontal neighbours (north → south → east → west) → one block above → two blocks above → the rift itself" (standable = something solid below, and no collision and no fluid here); if none of the seven works you land at the rift itself, with the slow falling as the fallback. Looking beside the rift first is what keeps a traveller out of the return rift they just arrived at.
+Undo and redo retain 64 steps, and a whole drag is one step. Invalid outlines stay in the draft and cannot replace the published portal. Apply preserves expiry; changing duration or choosing Renew restarts it. Removal requires a second click within 3 seconds.
 
-## Placing and Breaking
+## Destinations and Travel
 
-- Orientation does not matter: there is nothing to think about while placing, and two rifts link up as soon as they are next to each other.
-- **A rift cannot be taken down.** Its breaking speed is `-1` (the same setting bedrock has) and its blast resistance is `3600000`, so survival cannot mine it and explosions cannot remove it; creative mode can break it, but the block has **no loot table**, so it drops nothing. Decide where a rift goes before placing it — moving one means replacing that block with a command (`/setblock <pos> air`) and placing a fresh one.
-- Random ticks spawn particles around the point **tinted by that rift's own colour** (the vanilla portal particle wearing the rift's colour instead of the portal's violet), and a rift plays **no ambient sound**.
-
-## Placing and Adjusting: Two Items
-
-| Item | Purpose |
+| Type | Behaviour |
 | --- | --- |
-| Rift (`mxt:rift`, the block's own item) | **Places rift blocks and nothing else**: right-click with it to put one down. If the stack carries a `mxt:rift` component (written by a data pack, KubeJS or a command) it is placed with that destination and colour, otherwise with the defaults (the overworld, colour following the dimension). |
-| Rift Anchor (`mxt:rift_anchor`) | **Adjusts rifts and nothing else**: it carries a destination and a colour and never places a block. |
+| `position` | An explicit dimension and position, with optional yaw and pitch. `nearby=false` tries only that location; `true` searches offsets up to 4 blocks along each axis. |
+| `secret_realm` | A realm definition. The first successful entrance binds the portal to that instance; a full instance refuses entry instead of opening another. |
+| `return` | The origin saved when entering a realm. Entities without active realm travel cannot use it. |
 
-What the Rift Anchor does:
+The entity must contact the actual polygon from either side; concave cutouts do not trigger. Arrival applies portal cooldown and requires leaving all portal surfaces before another trigger. Riding, carrying passengers and platform-denied teleports are unsupported.
 
-| Use | Behaviour |
-| --- | --- |
-| Use on an existing rift | **Rewrites that block's** destination and colour. |
-| Sneak-use | Records the dimension you are standing in onto the anchor, which is how a destination is chosen without any command. |
-| `/mxt rift bind <dimension> [color]` | The same as the sneak-use, except it can be written to any dimension directly. |
+Coordinate destinations validate the entire body against collisions, fluids, hazards, world borders and support. Existing safe positions are searched first. If none is suitable, travel tries to place a single layer of dirt in empty space. Players usually receive a 3×3 platform; larger entities get a floor sized to their body with a one-block margin. Platforms cannot replace existing blocks, drain fluids, clear space, cross the world border or occupy other entities. If no platform can be safely placed, the entity stays put. Realm entrances, coordinate portals and return travel share this fallback.
 
-So the usual way to build a door is: lay the shape out with rift blocks, then set where it leads with the anchor (or with `/mxt rift target`).
+When placing dirt, the foot height rounds upward to an integer and stays at least one block above the world's minimum height to leave room for the floor. This height adjustment also applies with `nearby=false`, which does not search other locations. Existing safe positions remain unchanged.
 
-## `/mxt rift`
+Missing chunks load asynchronously; leaving the portal, editing or removing it, or disconnecting cancels the wait. The timeout is 200 ticks. Coordinates into a private realm still obey membership, entry conditions and capacity.
 
-The whole `/mxt rift` subtree needs the `gamemaster` permission. It reports and rewrites the state of a single rift, and it is the place to look when a rift does not show up; normal play places with the rift block and adjusts with the Rift Anchor.
+Temporary chunk loading is released when the wait ends. If release fails, the temporary ticket expires after approximately 300 ticks, even while loading remains incomplete. This fallback does not extend the player's 200-tick wait limit. Both limits use server ticks.
 
-| Subcommand | Behaviour |
-| --- | --- |
-| `info <pos>` | Prints where this rift leads, its colour (set by hand or following the target dimension), and its **link count, triangle count and how many blocks it is connected to**, plus whether it is **isolated** (no second rift anywhere in the surrounding 3×3×3) — one look tells you how it will be drawn and why it has not linked to a neighbour. |
-| `target <pos> <dimension>` | Changes which dimension it leads to (tab completion lists every server dimension). |
-| `color <pos> <RRGGBB\|auto>` | Sets the colour override, written `RRGGBB` (`#` accepted) or `auto`. |
-| `place <pos> <dimension>` | Places a rift leading to that dimension at a replaceable position directly. |
-| `bind <dimension> [color]` | Sets the held Rift Anchor to that destination; the same as the item's sneak-use. |
+## Secret Realm Tokens
 
-## Client Display
+Right-click summons a portal; contact performs travel. The token is not consumed. Its `preset` selects shape and appearance, and `duration_ticks` defaults to `0`, meaning a permanent portal. Reuse prefers the remembered valid portal in the same dimension and does not renew it. New summons have a 20-tick cooldown and a server player portal limit.
 
-The points, links and fills are drawn by the mod's own layered-pattern shader: one set of geometry at one thickness and one colour, drawn fully opaque, so a rift reads as a single material. Two client settings apply:
+Destroying a realm invalidates portals bound to it. Reusing a dimension index cannot make them target a replacement instance. Portal lifetime and realm lifetime are independent.
 
-- **Client Settings → Rifts → Custom Shaders** (on by default): turning it off uses plain translucent colour instead, so nothing depends on the custom pipeline.
-- **Client Settings → Rifts → Rift Thickness** (default `0.125`, range `0.0001`–`0.5`): the point's side, a link's diameter and a fill's thickness all move together.
+Secret realm arrivals also undergo safety checks after the destination chunks are prepared. Failure messages distinguish missing support, collisions, fluids, hazards, world bounds and unloaded chunks. Operators can diagnose with `/secret_realm check <dimension>` or adjust the instance entrance with `/secret_realm anchor <dimension> <x> <y> <z>`; see [Secret Realm Commands](commands/secret_realm.md).
 
-## See Also
+## Appearance and Limits
 
-- The Rift Anchor is listed with the other generic functional carriers in [Items and Blocks](./items.md).
-- The rest of `/mxt` is in [Commands](./commands/mxt.md).
+Styles are `rift` and `portal`, with primary and edge colours, speed, edge width, glow, edge particles and texture scale/rotation/offset. Primary colour `-1` derives a colour from the target identity. The surface is opaque and writes scene depth before later translucent effects. It does not show a live view of the destination.
+
+Disabling client configuration “Rifts → Custom shader” selects a basic solid surface. Defaults are 128 vertices per portal, 32 blocks on either local axis, 1024 portals per dimension and 32 per section. The server validates limits.
+
+## Commands
+
+The entire `/mxt rift` subtree requires operator level 2. `id` is the portal UUID; coordinates and facing use the execution dimension. Facing is `north|south|east|west|up|down`.
+
+Looking up or editing an unloaded portal by UUID reads its storage chunk. Listing the dimension or exporting its layout may read multiple chunks. UUID command suggestions do not load chunks.
+
+```text
+/mxt rift spawn <preset> <origin> <facing> position <dimension> <destination>
+/mxt rift spawn <preset> <origin> <facing> secret_realm <definition>
+/mxt rift spawn <preset> <origin> <facing> return
+/mxt rift edit [id]
+/mxt rift info [id]
+/mxt rift target <id> position <dimension> <destination>
+/mxt rift target <id> secret_realm <definition>
+/mxt rift target <id> return
+/mxt rift enabled <id> <true|false>
+/mxt rift duration <id> <ticks>
+/mxt rift copy <id> <origin>
+/mxt rift transform <id> move <offset>
+/mxt rift transform <id> rotate <degrees>
+/mxt rift transform <id> scale <factor>
+/mxt rift transform <id> mirror
+/mxt rift remove <id>
+/mxt rift export <id> <preset|layout>
+```
+
+## Blueprints and Export
+
+Hold a Rift Anchor in the main hand and choose Save to Held Anchor to store the draft. Its next use on a block face reuses the outline, appearance and destination at the new location. Export presets for [rift definitions](../datapack/json/rift.md), or layouts for [secret_realm.portals](../datapack/json/secret_realm.md). Options include coordinates relative to the player, local destinations and the dimension layout (up to 128 portals).
+
+Export validates on the server and copies JSON to the clipboard. Save File explicitly writes under the game directory’s `exports/mxt/rifts/`; existing files are never overwritten. Import accepts a single portal template, preset or one-portal layout. Exports omit members, owners, expiry timestamps and instance bindings.

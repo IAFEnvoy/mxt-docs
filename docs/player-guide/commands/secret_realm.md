@@ -1,0 +1,47 @@
+---
+title: /secret_realm
+---
+
+# `/secret_realm`
+
+秘境管理命令，整棵子树需要 **2 级 OP（gamemaster）**。也可使用 `/mxt secret_realm`；根别名由服务端的命令别名设置控制。
+
+秘境定义是模板，实例才是实际维度。实例维度键为 `<定义命名空间>:secret_realm/<定义路径>/<序号>`，序号从 `0` 开始。命令参数支持补全已登记的实例，包括休眠中的实例。
+
+| 命令 | 作用 |
+| --- | --- |
+| `/secret_realm definitions` | 列出可用的秘境定义 ID。 |
+| `/secret_realm list` | 列出实例维度、定义、人数上限、所有者、准备与加载状态。 |
+| `/secret_realm info <dimension>` | 查看指定实例及其保存的入口坐标。 |
+| `/secret_realm enter <definition>` | 按定义选择可加入的实例，或按规则创建实例并进入。 |
+| `/secret_realm join <dimension>` | 进入指定实例，不另找一份实例。 |
+| `/secret_realm check <dimension>` | 以执行玩家的体积与状态检查预定落点，报告安全结果和附近搜索结果。 |
+| `/secret_realm anchor <dimension> <x> <y> <z>` | 将实例入口设为指定的安全坐标。 |
+| `/secret_realm exit` | 回到进入秘境时保存的位置，仍受退出条件限制。 |
+| `/secret_realm destroy <dimension>` | 强制结束实例并删除其地形；`mxt:existing` 类型只清理实例成员，不删除真实维度。 |
+
+`loaded=false` 表示实例当前未加载，不代表实例已销毁。`info` 只读登记信息；`check` 和 `anchor` 会打开目标实例、按需准备地形和加载落点附近区块，但不传送玩家，也不增加成员。
+
+## 检查传送失败
+
+先用 `list` 找到入口门绑定的实例，再执行 `check`。输出包括预定坐标、实际找到的坐标、安全结论与加载前检查结果。加载前提示区块未加载、加载后检查安全，表示区块准备已成功；如果附近搜索失败，原因针对预定坐标。
+
+落点检查区分无支撑、碰撞、液体、危险方块、世界边界、区块未加载和实体尺寸问题。附近搜索最多检查各轴偏移 4 格的候选。`check` 和 `anchor` 不生成落点平台，也不挖开地形；实际传送找不到已有安全位置时，会尝试在空白处生成泥土平台，详见[裂隙](../rift.md#目的地与传送)。飞行或无重力实体的支撑规则与步行玩家不同；应使用实际出问题的玩家状态检查。
+
+`enter` 和 `join` 都检查进入条件、人数、成员状态与安全落点；`join` 不绕过这些规则。安全检查通过后仍提示传送失败，需开发者结合服务端日志排查平台或其他模组拒绝传送的原因。
+
+## 调整实例入口
+
+`anchor` 的坐标属于目标实例维度；相对坐标 `~` 以命令执行位置为基准。它只修改这一份实例保存的入口，不移动结构、已发布的门或玩家，也不修改数据包定义。坐标本身必须安全，不用附近搜索替换输入。
+
+```text
+/secret_realm list
+/secret_realm check pack:secret_realm/trial/0
+/secret_realm anchor pack:secret_realm/trial/0 9.5 65 9.5
+/secret_realm join pack:secret_realm/trial/0
+/secret_realm exit
+```
+
+示例坐标只有在目标维度确实存在安全平台时才适用。入口分配还受定义里的落点排列设置影响。已准备实例保存自己的入口，调整数据包入口不会覆盖它；要修正该实例应使用 `anchor`。
+
+传送门的创建、选门与删除见[裂隙](../rift.md)，定义字段见[secret_realm](../../datapack/json/secret_realm.md)。

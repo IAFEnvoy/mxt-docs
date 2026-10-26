@@ -25,9 +25,10 @@ A secret realm definition is **a template**, not one fixed dimension: every entr
 | `owned` | Boolean | `false` | Whether the instance can be claimed, see below. |
 | `duration_ticks` | Long | `0` | The instance time limit; `0` never expires. |
 | `structures` | Array | `[]` | Structures placed after the instance is built and before anybody enters, see below. |
+| `portals` | Array (up to 128) | `[]` | Portal templates installed on first preparation; see [rift](./rift.md#portal-templates-and-realm-layouts). |
 | `entry` | Object or array | none (random landing) | Where travellers arrive. A single object is the only landing point; an array picks one by `weight`, see below. |
 | `enter_condition` | `EntityCondition` | `mxt:always` | Evaluated against the entering entity; when it fails the entry is refused (`CONDITION_NOT_MET`). |
-| `exit_condition` | `EntityCondition` | `mxt:always` | **Only constrains a voluntary exit** (the token's right-click, `/mxt secret_realm exit`). |
+| `exit_condition` | `EntityCondition` | `mxt:always` | **Only constrains a voluntary exit** (return portals, `/mxt secret_realm exit`). |
 | `enter_denied_message` | `Component` | none | The message sent to a player whose entry condition failed; without it the failure code is shown. A bare string is treated as a translation key. |
 | `exit_denied_message` | `Component` | none | The same, for the exit condition. |
 | `enter_action` | `EntityAction` | `mxt:no_op` | The entry behaviour, run on the entering entity after the teleport has landed. |
@@ -71,7 +72,7 @@ A single object or an array of objects; an array picks one by `weight` (default 
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `pos` | `[x, y, z]` | none | A fixed landing point, used exactly as written when all three numbers are there. An entry without `pos` lands randomly instead, dropped onto the surface of that column. |
+| `pos` | `[x, y, z]` | none | A fixed planned arrival. An entry without `pos` lands randomly instead, using the surface height of that column. |
 | `yaw` / `pitch` | Float | the arriving entity's own angles | A fixed facing. |
 | `random_center` | `[x, z]` | the border centre | The centre of the random landing when `pos` is absent. |
 | `random_radius` | Double | 40% of the border diameter (`64` without a border) | The radius of the random landing. |
@@ -82,6 +83,8 @@ Every `weight` in the array must not be negative, `spread` must be a finite non-
 A random landing is sampled uniformly inside the radius, not "denser the further out you go". Its height comes from the surface of that column (the first block that stops movement); a hard-coded `pos` gets no such snapping. One group of arrivals is spread over six equal points on the circle: the first lands on the anchor, and the spread ones snap again to the surface of their own column.
 
 The landing point that was picked becomes this instance's **anchor** and is stored in the instance record: later travellers (players or mobs) land near the same spot instead of each rolling their own way to the far end of the secret realm.
+
+Actual entry searches the planned position and offsets up to 4 blocks along each axis before trying to build a dirt platform in empty space. Return travel uses the same fallback. Players usually receive a 3×3 floor; larger entities get a platform sized to their body with a one-block margin. Platforms cannot replace blocks, remove fluids or obstructions, cross world bounds or occupy other entities. When building, foot height rounds upward to an integer and stays at least one block above the minimum world height. If no safe platform can be placed, travel is refused without adding a member or clearing an unfinished travel record. The management commands `check` and `anchor` only inspect; they do not build landing platforms.
 
 ## `owned` (optional, default `false`)
 

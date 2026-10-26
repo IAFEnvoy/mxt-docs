@@ -19,7 +19,7 @@ The abstraction for what an ability, a formation or another action consumes. A `
 | Member | Description |
 | --- | --- |
 | `CostTarget target()` | The store this fee comes out of, and what kind of channel it is. Two fees of one payment naming the same target are the same store. |
-| `double amount()` | The fixed amount, in that store's own unit: a real number, whole items, whole bank units, one script call. |
+| `double amount()` | The fixed amount, in that store's own unit: a real number, whole items, fractional bank aura, one script call. |
 | `ResultWithData<List<Debit>> execute(boolean simulate)` | Both passes go through this one call: `true` only asks and writes nothing; `false` takes from its channel and answers with what it really took. The first real answer is terminal, so one fee is never taken twice. |
 | `Transaction withAmount(double amount)` | The same binding at another fixed amount, which is how a payment re-prices a fee without re-running the formula that priced it. Zero is dropped by the payment rather than executed as an empty fee. |
 
@@ -34,3 +34,12 @@ A simulation failure prevents all real deductions. Once all simulations pass, a 
 Why the shape is drawn this way, and what "one target written twice" used to go wrong with, are on [Cost](../../../technical/cost.md).
 
 The payer and the channels come from the **call site** (`CostContext` carries the payer and which channels it offers), and a datapack only writes what is wanted: `mxt:item` and `mxt:js` need a player, and a missing channel is a refusal rather than an error; a field such as a formation's upkeep names a resource account directly, because its owner may be offline. **Currency is not a cost**: the prices and the value multiplier in `currency` never become a `Cost`. The aura entries of a talisman are the one exception in this shape - they spend the charge the carrier itself was filled with, and its capacity comes from a separate multiplier field.
+
+`AuraCostSource.bind(CostContext, Holder<Aura>, double)` binds an aura source to a fixed transaction. `CostContext` carries `payer`, `formula`, `origin`, `account`, `auraSource` and `itemTarget`; use `of` / `account` / `pool` / `bank` or extend it with `withAuraSource`. Binding resolves the target without checking or changing stock; `execute(simulate)` handles checks and deductions. Account aura reuses the resource channel, while world pools and banks share `AuraAccess` transfers. Bank amounts and receipts are doubles without upward rounding. Java integrations must recompile against the new signatures.
+
+`origin` is a `String` used only for diagnostic logging. It does not determine prices, permissions or payment channels. `com.iafenvoy.mxt.data.cost.context.CostSources` provides shared string constants for built-in labels; extensions can pass their own labels without registration.
+
+```java
+CostContext.of(payer, CostSources.ABILITY);
+CostContext.of(payer, "example:ritual");
+```

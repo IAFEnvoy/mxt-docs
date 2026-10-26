@@ -48,7 +48,7 @@ description: 本体注册的每一个物品数据组件：装什么、谁来写�
 | 组件 id | 载荷 | 作用 |
 | --- | --- | --- |
 | `mxt:item_aura` | `double remain` | 一件**被消耗过**的物品堆上剩余的灵气，一个数。 |
-| `mxt:spirit_storage` | `Object2DoubleMap<Holder<Aura>>` | 实现 `ItemAuraAccess` 的物品堆上的灵气存量：哪几种灵气、各多少。键是**灵气本身**，不是计量它的 `resource`——纯计数器不带灵气。金额是 double，所以法器的燃料能按每 tick 一个零头买，而符箓仍然一次灌一个整数。**组件缺席**表示按物品自己的说法（原石是满的、空载体是空的），**空表**是第三种状态：被抽干过的容器。 |
+| `mxt:spirit_storage` | `Object2DoubleMap<Holder<Aura>>` | 物品堆的灵气存量，按灵气身份保存有限非负 double。存取和容量支持小数，展示保留两位；缺组件的含义由物品决定（灵石满、符箓空），空表表示已耗空。 |
 | `mxt:artifact_state` | `ArtifactStateComponent`（可选 `owner_uuid`、`owner_name`、`nourishment`） | 一件法器的持有者与喂养度。**身份**是 UUID（所有归属问题都问它），名字只用于显示、由认领者写一次。它是哪件法器由物品定义回答，装了多少灵气在 `mxt:spirit_storage`，两件事都不在这里重复。 |
 | `mxt:item_abilities` | `ItemAbilitiesComponent`（`abilities`） | 装备或激活期间**额外**授予的技能 id 列表，与定义声明的并集。行为 `mxt:add_ability` 是它的专用生产者（已写过的一条不写第二遍、原有条目一律保留）。 |
 | `mxt:storage` | `DataStorageHolder` | 技能运行期状态的宿主（冷却、充能、开关、计时、锁目标）。一对 `(技能 id, 状态种类)` 地址对应一格，同一种类的第二个值会**替换**而不是并列。值本身是可变的，由内容侧或物品宿主整份写入。 |
@@ -77,7 +77,7 @@ description: 本体注册的每一个物品数据组件：装什么、谁来写�
 
 | 组件 id | 载荷 | 作用 |
 | --- | --- | --- |
-| `mxt:secret_realm_token` | `SecretRealmTokenComponent`（可选 `realm`） | 一枚秘境令牌开哪座秘境，由数据包点名。 |
+| `mxt:secret_realm_token` | 可选 `realm`、`preset`、`duration_ticks`、`summoned`、`summoned_dimension` | realm 为秘境定义，preset 为裂隙预设；门的持续时间默认 0（永久），后两项由运行时记录复用的门 UUID 与维度。 |
 | `mxt:reward_box` | `ResourceKey<LootTable>` | 奖励箱开哪张战利品表。存的是 **`ResourceKey` 而不是 `Holder`**：`/reload` 会换掉战利品表实例，握着旧的那份会一直滚重载之前的表。 |
 | `mxt:token` | `TokenComponent`（可选 `kind`、`value`、`owner`） | 秘境令牌与交易令牌共用的**身份与权限**载荷。`owner` 是权限记录，故意不进提示框。 |
 | `mxt:identification` | `IdentificationComponent`（`result`） | 本体提供的未鉴定物品**鉴定后变成哪件物品**的已解析 id。 |
@@ -116,7 +116,7 @@ description: 本体注册的每一个物品数据组件：装什么、谁来写�
 
 | 组件 id | 载荷 | 作用 |
 | --- | --- | --- |
-| `mxt:rift` | `RiftComponent`（`target`、`color`） | 一个锚点要往裂缝里写的目的地与颜色。把它放在物品上，正是"裂缝还不存在就能先配好"的原因：一堆物品描述它将来会开的那道缝，也能重配它被用在的那道缝。 |
+| `mxt:rift` | 可选 `blueprint`、`recorded` | blueprint 为完整单门模板；recorded 为记录的目的地。编辑物品重复使用同一蓝图。 |
 
 ## 三种"谁说了算"
 
@@ -136,7 +136,7 @@ description: 本体注册的每一个物品数据组件：装什么、谁来写�
 ## 写组件时的两个坑
 
 - **列表里的空堆要用 `ItemStack.OPTIONAL_CODEC`。** 组件是要落盘、要同步的，列表里出现一个空堆会让**整个包编码失败**。本模组用空堆占位的列表一律走那个 codec。
-- **`mxt:rift` 的 `color` 取 `-1` 表示随目标维度**，不是"无色"。
+- `mxt:rift.blueprint` 的格式见 [rift](../datapack/json/rift.md#门模板与秘境布局)；`recorded` 使用相同的 destination 格式。
 
 ## 相关阅读
 

@@ -56,6 +56,7 @@ export const sections = [
           { page: 'player-guide/commands/quality', zh: '/quality', en: '/quality' },
           { page: 'player-guide/commands/realm', zh: '/realm', en: '/realm' },
           { page: 'player-guide/commands/resource', zh: '/resource', en: '/resource' },
+          { page: 'player-guide/commands/secret_realm', zh: '/secret_realm', en: '/secret_realm' },
           { page: 'player-guide/commands/spirit_root', zh: '/spirit_root', en: '/spirit_root' },
           { page: 'player-guide/commands/talisman', zh: '/talisman', en: '/talisman' },
           { page: 'player-guide/commands/technique', zh: '/technique', en: '/technique' },
@@ -70,14 +71,14 @@ export const sections = [
       { page: 'player-guide/curios-slots', zh: 'Curios 槽位', en: 'Curios Slots' },
       { page: 'player-guide/rift', zh: '裂隙', en: 'Rifts' },
       { page: 'player-guide/meteor', zh: '流星', en: 'Meteors' },
-      { page: 'player-guide/laser', zh: '激光粒子', en: 'Laser Particles' }
+      { page: 'player-guide/light-beam', zh: '光束粒子', en: 'Light Beam Particles' }
     ]
   },
   {
     text: { zh: '开发教程', en: 'Tutorials' },
     items: [
-      { page: 'tutorial/dev-mode', zh: '开发模式', en: 'Development Mode' },
       { page: 'tutorial/index', zh: '教程', en: 'Tutorials' },
+      { page: 'tutorial/dev-mode', zh: '开发模式', en: 'Development Mode' },
       // The sword aura is one entity action the ability page does not have room for, so it hangs
       // under it as a child; the parent stays a link to its own page.
       {
@@ -287,6 +288,7 @@ export const sections = [
               { page: 'datapack/types/other/secret-realm-generation', zh: 'secret_realm_generation_type（秘境生成方式）', en: 'Secret Realm Generations (secret_realm_generation_type)' }
             ]
           },
+          { page: 'datapack/json/rift', zh: 'rift（裂隙预设）', en: 'Rift Presets (rift)' },
           { page: 'datapack/json/realm_stage', zh: 'realm_stage（境界阶段）', en: 'realm_stage' },
           {
             page: 'datapack/json/resource',
@@ -443,6 +445,7 @@ export const sections = [
       { page: 'technical/damage', zh: '伤害系统', en: 'Damage System' },
       { page: 'technical/identification', zh: '敌我识别系统', en: 'Foe Identification' },
       { page: 'technical/aura', zh: '灵气计算', en: 'Aura Calculation' },
+      { page: 'technical/tick-dispatcher', zh: 'Tick 任务调度器', en: 'Tick Task Dispatcher' },
       { page: 'technical/ability', zh: '技能施放', en: 'Ability Casting' },
       { page: 'technical/cost', zh: '消耗', en: 'Cost' },
       { page: 'technical/talisman-scoring', zh: '画符判分', en: 'Talisman Scoring' }

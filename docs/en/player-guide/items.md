@@ -52,9 +52,9 @@ The items below are backed by a unified server-side implementation shipped with 
 | Beast Taming Bell | `mxt:beast_taming_bell` | `mxt:contract_bell` | Stores the beast it is tuned to (UUID, display name and the orders that beast takes). Right-click a spirit beast to tune it, right-click with nothing in front to open the wheel on the "contract beast" page, then pick a cell to order follow / wander / stay / recall. |
 | Spirit Beast Bag | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | Stores the complete persistent entity data of one contracted creature (its contract and profile attachments included), plus its type, its name at the time, the contract type and the owner - which is what lets the tooltip say what is inside without loading it. Use it on a spirit beast to store it, and right-click a block to release it on top of that block. |
 | Formation Plate | `mxt:formation_plate` | `mxt:formation_plate` | Stores `allowed` (which formations may be run, `#tags` included) and the selected `formation`. Using it on a block calls `FormationWorldService`; a plate with no bound formation identifies the structure built in front of it. |
-| Secret Realm Token | `mxt:secret_realm_token` | `mxt:secret_realm_token` | Stores a `secret_realm` definition. Right-click to enter the bound secret realm — the definition's own entry condition, instance cap and member cap all apply — and right-click inside the secret realm to return to the origin position, subject to its exit condition. |
+| Secret Realm Token | `mxt:secret_realm_token` | `mxt:secret_realm_token` | Right-click summons an entrance or a return portal inside a realm. Contact performs travel under entry/exit conditions and capacity rules. |
 | Reward Box | `mxt:reward_box` | `mxt:reward_box` | Stores the id of a loot table; right-click rolls that table once and puts what it rolls straight into the inventory. The roll happens where the player stands, with the player as its context and luck included, so conditions reading either work as they do for any other gift. One box is one roll, and **creative mode keeps the box**. A box with no table bound, or one naming a table the loaded packs do not provide, refuses with a message instead of eating the box. |
-| Rift (block item) | `mxt:rift` | `mxt:rift` | Places rift blocks; a stack carrying the component places a rift with that destination and colour. The whole mechanic is on the [Rifts](./rift.md) page. |
+| Rift Editor | `mxt:rift` | `mxt:rift` | Shares the planar portal editor with the Rift Anchor; requires operator level 2. See [Rifts](./rift.md). |
 | Spirit Vessel | `mxt:spirit_vessel` | `mxt:resource_capacity`, `mxt:resource_container` | Stores any `resource`, with a capacity of its own per resource (a resource the cap map does not name cannot be stored at all). **Hold right-click** to pour it into the holder's account, one unit of each resource a tick; there is **no mode** and no storing click. Filling it takes a display stand's spirit-power ray, or **firing spirit power with it in the main hand** — that firing is charged into the vessel instead of launching a ray. |
 | Technique Book | `mxt:technique_book` | `mxt:technique` | Stores a `technique` definition; **its tooltip prints the technique's name and, when the pack translated one, its description**, and **right-click reads the book into the chat log** — first the pages written on the book (`minecraft:writable_book_content`), then the same name and description. A technique with its own `learn_time` still only teaches at the end of the hold, and the blank book in the creative tab carries no component and says it names no technique. |
 | Jade Slip | `mxt:jade_slip` | `mxt:stored_text`, `mxt:jade_slip_reading` | Holds one piece of text (a component, so a bare string may be a translation key). **The text only lands in the chat log once the hold has run out** — 40 ticks (two seconds) unless the stack's `mxt:jade_slip_reading` says otherwise, and `0` or a sneaking right-click reads it on the click. The arm takes the reading pose while it runs; a slip with nothing written reads as a one-line notice. |
@@ -75,7 +75,7 @@ A Jade Slip does not go through that component: it stores one text component (`m
 
 ## See Also
 
-- The rift block and the Rift Anchor are documented on the [Rifts](./rift.md) page.
+- The rift editor and the Rift Anchor are documented on the [Rifts](./rift.md) page.
 - The commands that manage a single rift are in [Commands](./commands/mxt.md).
 
 ## Data Component Examples
@@ -87,7 +87,7 @@ give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_
 give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
 give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_realm"}]
 give @s mxt:reward_box[mxt:reward_box="mxt_test:reward_box/spirit_stones"]
-give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
+give @s mxt:rift_anchor[mxt:rift={recorded:{type:"position",dimension:"minecraft:overworld",pos:[0.5d,65.0d,0.5d]}}]
 give @s mxt:spirit_vessel[mxt:resource_capacity={"mxt_test:qi":1000.0},mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talisman:"mxt_test:flame_sigil"}]
 give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]

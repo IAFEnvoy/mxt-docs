@@ -65,9 +65,9 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 御兽铃 | `mxt:beast_taming_bell` | `mxt:contract_bell` | 保存"对准的那只灵宠"（UUID、显示名、它认的行为）。右键灵宠＝对准它，右键空处＝打开轮盘「契约灵兽」那一页，点一格给这只灵宠下跟随 / 游荡 / 驻守 / 召回的命令。 |
 | 灵兽袋 | `mxt:spirit_beast_bag` | `mxt:spirit_beast` | 保存一只已契约生物的完整持久化实体数据（契约与档案附件也在里面），另外记着它的类型、当时的名字、契约类型与主人——这几项让提示框不必加载实体就能说清袋里是谁。对灵宠右键收纳，**对着方块右键在方块上方放出**。 |
 | 阵盘 | `mxt:formation_plate` | `mxt:formation_plate` | 保存 `allowed`（允许激活哪些阵法，支持 `#标签`）与 `formation`（当前选中）；对方块使用时调用 `FormationWorldService`。没绑定阵法时会**自动识别**脚下这座阵法。 |
-| 秘境令牌 | `mxt:secret_realm_token` | `mxt:secret_realm_token` | 保存一份 `secret_realm` 定义；右键进入绑定秘境（走定义自己的进入条件、实例上限与在场人数上限），在秘境内右键返回原位置（受定义的退出条件约束）。 |
+| 秘境令牌 | `mxt:secret_realm_token` | `mxt:secret_realm_token` | 右键召唤通往绑定秘境的门；秘境中召返回门，接触后按进出条件与成员上限传送。 |
 | 奖励箱 | `mxt:reward_box` | `mxt:reward_box` | 保存一张掉落物表的 id；右键按这张表抽一次，抽到的东西直接进背包。这次抽取的位置是玩家脚下、上下文里带着开箱的玩家（`luck` 也算进去），所以按运气或按开箱者判的条件照常生效；一次消耗 1 个箱子，**创造模式不消耗**。没绑表、或当前数据包没有这张表时拒绝打开并给出提示，不会白吃掉箱子。 |
-| 裂隙（方块物品） | `mxt:rift` | `mxt:rift` | 摆放裂隙方块；堆叠上带组件时按组件里的目标与颜色摆。整套机制见[裂隙](./rift.md)。 |
+| 裂隙编辑器 | `mxt:rift` | `mxt:rift` | 与裂隙锚共用平面门编辑器，需要 2 级 OP。见[裂隙](./rift.md)。 |
 | 灵力容器 | `mxt:spirit_vessel` | `mxt:resource_capacity`、`mxt:resource_container` | 保存任意 `resource`，每种资源各自一份上限（上限表里没写的资源存不进）；**按住右键**把它倒进持有者账户（每 tick 每种资源 1 单位），**没有模式**、也没有"存入"的右键；往里灌靠展示架的灵力射线，或者**把它拿在主手发射灵力**（那一次灵力直接充进容器，不射出射线）。 |
 | 功法书 | `mxt:technique_book` | `mxt:technique` | 保存一份 `technique` 定义；**提示框里印功法名与描述**（描述取生成键的翻译，包没翻译就不印），**右键把它读进聊天栏**——先印书上写的页（`minecraft:writable_book_content`），再印同样的名字与描述。功法自己写了 `learn_time` 的仍然是长按读完才学会；创造栏里的空书没有组件，右键会说它没写明是哪一门功法。 |
 | 玉简 | `mxt:jade_slip` | `mxt:stored_text`、`mxt:jade_slip_reading` | 存一段文字（一个文本组件，所以可以写成 `translate`），**按住右键读满才把它整段打进聊天栏**：默认 40 tick（两秒），这一堆要快些慢些就写 `mxt:jade_slip_reading`（单位 tick），写 `0` 与**潜行右键**都是一点即读。读的过程里手臂是阅读的姿势，没写字的玉简读出来是一句提示。 |
@@ -122,7 +122,7 @@ give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_
 give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
 give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_realm"}]
 give @s mxt:reward_box[mxt:reward_box="mxt_test:reward_box/spirit_stones"]
-give @s mxt:rift[mxt:rift={target:"minecraft:the_nether",color:16729156}]
+give @s mxt:rift_anchor[mxt:rift={recorded:{type:"position",dimension:"minecraft:overworld",pos:[0.5d,65.0d,0.5d]}}]
 give @s mxt:spirit_vessel[mxt:resource_capacity={"mxt_test:qi":1000.0},mxt:resource_container={"mxt_test:qi":25.0}]
 give @s mxt:talisman[mxt:talisman={talisman:"mxt_test:flame_sigil"}]
 give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
@@ -148,5 +148,5 @@ give @s mxt:talisman[mxt:talisman={talisman:"mxt_test:common_sigil"},mxt:spirit_
 
 ## 另见
 
-- 裂隙方块与裂隙锚的完整机制见[裂隙](./rift.md)。
+- 裂隙与裂隙锚的完整机制见[裂隙](./rift.md)。
 - 管理单个裂隙的命令见[命令](./commands/mxt.md)。

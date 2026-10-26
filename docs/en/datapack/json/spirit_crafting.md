@@ -34,7 +34,7 @@ Matched against the shape of `pattern`.
 | `pattern` | String[] | **required** | One to three rows, each one to three characters. |
 | `key` | Character-to-ingredient map | **required** | Maps every symbol used in `pattern` to its ingredient. Each key must be a single non-space character. |
 | `result` | `ItemStackTemplate` | **required** | The item produced, written in the vanilla item stack template shape. |
-| `aura` | `Cost` array limited to `mxt:aura` entries | **required** | The aura cost of one craft, paid out of the table's own store, in whole units rounded up. See [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
+| `aura` | `Cost` array limited to `mxt:aura` entries | **required** | The aura cost of one craft, paid out of the table's own store with fractions preserved. See [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 
 ```json
 {
@@ -66,7 +66,7 @@ The ingredients have to match the non-empty slots of the grid exactly, in any or
 | `type` | String | **required** | Must be `mxt:spirit_shapeless`. |
 | `ingredients` | Ingredient array | **required** | One to nine ingredients, matched in any order. |
 | `result` | `ItemStackTemplate` | **required** | The item produced, written in the vanilla item stack template shape. |
-| `aura` | `Cost` array limited to `mxt:aura` entries | **required** | The aura cost of one craft, paid out of the table's own store, in whole units rounded up. See [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
+| `aura` | `Cost` array limited to `mxt:aura` entries | **required** | The aura cost of one craft, paid out of the table's own store with fractions preserved. See [Shared Data Types · `Cost`](../types/shared_data_types.md#cost). |
 
 ```json
 {
@@ -134,7 +134,7 @@ It judges the [tier the stack resolves to](./quality.md#resolution) (component �
 
 The whole array has to be paid in one go: if a single aura is missing, nothing is crafted — there is no partial deduction. Whether it can be paid depends only on the table's own store, never on how much anyone else carries.
 
-`amount` is a number provider, evaluated when the recipe matches and rounded up. If the value is not finite, is negative, or falls outside the integer range, that craft does not happen and the store is not corrupted. The same aura can also be written as an "aura id to number" map, where each entry is read as an `mxt:aura` entry.
+`amount` is a number provider evaluated when the recipe matches, retaining fractions: `0.25` costs `0.25`. The result must be finite and positive; otherwise the craft is refused without corrupting stock. Stock, requirements, the 99-times buffer capacity and menu synchronization all retain double precision; the UI displays two decimal places. The same aura can also be written as an "aura id to number" map, where each entry is read as an `mxt:aura` entry.
 
 The table keeps aura for the recipe it currently matches, and nothing else: **changing the grid, or matching a different recipe, discards whatever was stored**, and a grid that matches nothing clears it too. The table takes at most `99 ×` the amount one craft needs per aura, and anything sent beyond that is handed back unchanged. This store is **not saved to disk** — reloading the table restores the grid and the result slot only.
 

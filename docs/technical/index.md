@@ -25,6 +25,7 @@ description: 源码级的实现说明：伤害系统、敌我识别系统等子�
 | [伤害系统](/technical/damage) | 一次攻击从发出到目标掉血的完整路径：出力与减免为什么必须分在两地结算、元素关系怎么参与、哪些发伤害路径被收拢进来、战斗数值在代码里的真实运算顺序。 |
 | [敌我识别系统](/technical/identification) | 「这个实体算不算我的人」是怎么回答的：名单存在哪、判断事件如何覆盖、离线时谁替玩家回答、队伍类模组怎么接进来、以及现在有哪些调用方在问这个问题。 |
 | [灵气计算](/technical/aura) | 一个坐标的灵气值是怎么算出来的：静态模板怎么选域、区块库存与方块发射器怎么合并、一次查询的 140 µs 花在哪、子区块近似的误差有多大（含两张误差研究图），以及客户端拿到的为什么只是快照。 |
+| [Tick 任务调度器](/technical/tick-dispatcher) | 到期队列、随机周期、数量预算与开关如何工作，以及回调变更、时钟跳变、失败报告和方块缓存的接入边界。 |
 | [技能施放](/technical/ability) | 一次施放按什么顺序过闸门、轮盘按键与直接施放差在哪、技能的状态存在哪里、内容能写和能读的有哪些（六种状态种类、冷却与充能），以及撤销授予会清掉什么。 |
 | [消耗](/technical/cost) | 一次付款怎么从"要扣什么"走到真正的扣除：为什么金额在报价时就绑死、同一存储为什么只该写一项、账本与份额那套写法为什么被删掉（它带出过四类会扣错钱的缺陷），以及现在的形状（不回滚、脚本黑盒、容器不共享装槽）留下了哪些代价。 |
 | [画符判分](/technical/talisman-scoring) | 誊写的笔迹怎么变成一个 0~1 的完成度：判分参数、第 0 到第 7 步的每一步与公式、贴合为什么用 F1、为什么平移与缩放不判而旋转要扣分、探针实测的那组数字与两条已知偏差，以及服务端权威与逐点对账拦得住什么。 |
@@ -36,6 +37,7 @@ description: 源码级的实现说明：伤害系统、敌我识别系统等子�
 | 伤害系统 | `DamageCalculationService` | `src/main/java/com/iafenvoy/mxt/runtime/damage/` |
 | 敌我识别系统 | `FriendService` | `src/main/java/com/iafenvoy/mxt/runtime/friend/` |
 | 灵气计算 | `AuraService` | `src/main/java/com/iafenvoy/mxt/runtime/world/` |
+| Tick 任务调度器 | `TickDispatcher` | `src/main/java/com/iafenvoy/mxt/util/dispatcher/` |
 | 消耗 | `CostPayment` | `src/main/java/com/iafenvoy/mxt/data/cost/` |
 
 ## 模块关系

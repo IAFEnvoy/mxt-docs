@@ -34,6 +34,7 @@ description: 别的模组可以直接调用的运行时入口：读数据包注�
 | 问"它算不算我的人" | [`FriendService`](#friendservice) | `runtime.friend` |
 | 算一件物品的货币价值 | [`CurrencyValueService`](#currencyvalueservice) | `runtime.economy` |
 | 预览一炉、开一炉、终止一炉 | [`AlchemyWorkstationService`](#alchemyworkstationservice) | `runtime.alchemy` |
+| 添加一种运行期长按用途 | [`ItemUseCycle` / `ItemUseCycles`](#itemusecycles) | `api` / `runtime.hold` |
 
 ## 数据定义怎么读 {#definitions}
 
@@ -567,6 +568,27 @@ public interface QualityProvider {
 - **温度与产物不是外部写进去的**：`Parameters` 在开炉那一刻求值一次并冻结，活动批次读的是这份冻结值，`/reload` 之后新批次才读新配方。
 - **`start` 与 `preview` 共用同一条判定**：温度与产物容量只在"接受还是拒绝已经选出的那一条"这一步参与，不会让判定改选一条更弱的配方。
 - **供热方块回答两个数**，见 [AlchemyHeatSource](interfaces/alchemy/alchemy-heat-source.md)。
+
+## 运行期物品使用 {#itemusecycles}
+
+`com.iafenvoy.mxt.api.ItemUseCycle` 描述一次长按或消费用途。在 NeoForge 游戏事件总线上监听 `ResolveItemUseCycleEvent`，检查 `getHolder()` / `getStack()` 后调用 `claim(cycle)`；第一个认领者生效。内置 Hold 使用 HIGH，丹药兜底使用 NORMAL。
+
+| 方法 | 约定 |
+| --- | --- |
+| `id()` | 用途 Identifier；客户端与服务端一致 |
+| `durationTicks()` / `animation()` | 固定的正整数 tick 时长与使用动画 |
+| `canStart(holder, stack)` | 开始资格；默认允许 |
+| `tick(holder, stack, remainingTicks)` | 两侧调用；业务写入自行限制在服务端 |
+| `finish(level, holder, stack)` | 服务端完成一次，返回最终手部栈；默认保留原栈 |
+| `isConsumption()` | 默认 false；只有消费用途完成才触发丹药结算 |
+
+实现应为不可变描述，不持有实体或实时物品栈。需要消费时由 `finish` 实现扣除，并让 `isConsumption()` 返回 true；创造模式不减数量仍可计作消费。普通阅读用途不结算物品上的丹药效果。
+
+会话由 `runtime.hold.ItemUseCycles` 管理，不写入物品组件。右键自动解析；代码主动开始时，可先调用 `prepare(holder, stack)`，成功后再走物品的 `use` 或实体的 `startUsingItem`。栈须在该实体手中，Shift 点击和自带原生使用行为的物品不被接管。
+
+基础 `Item` 的开始、时长、动画和完成方法支持会话。自定义物品若覆盖这些方法，需委托对应基础实现才能参与。正常结束、取消、空闲、实体移除和断线均由服务清理；原版剩余物品与冷却处理保留。客户端远端姿态由同步后的使用标志重建，不增加网络消息。
+
+基础方法先执行自己的行为。只有 `use` 返回 `PASS`、没有开始使用且手部栈未改变时，才尝试会话；时长仅在原版返回 `0` 时补入，动画仅在返回 `NONE` 时补入。完成方法若已替换物品栈，或改变其数量、组件，就保留该结果并关闭会话，不再调用用途的 `finish`。用途完成回调仍在原版剩余物品和冷却处理之前执行。
 
 ## 服务端与客户端的边界 {#boundary}
 

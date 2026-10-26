@@ -195,7 +195,9 @@ sequenceDiagram
     participant B as AuraZoneEventBridge
     participant G as entity tick
     T->>T: every tick: build the pools of chunks loaded last tick
-    T->>T: every 10 ticks: count visitors, regenerate stock, rescan sections that came due
+    T->>T: every tick: rescan due sections in bounded batches
+    T->>T: every tick: update player coverage incrementally
+    T->>T: every tick: regenerate due chunks within the count budget
     B->>B: advance the query cache epoch
     B->>G: send a snapshot every 5 ticks
     G->>G: entity gate: new entity / moved a block / window elapsed
@@ -204,10 +206,11 @@ sequenceDiagram
 
 - **Chunk load**: the whole column's block cache is rebuilt once, and its pools are built on the next tick — zone resolution deliberately does not run inside the load callback, where the chunk is not fully ready.
 - **Block changes**: break/place events apply a **single-block delta on the spot** at the lowest priority, re-evaluating only that block and never scanning a section; a cancelled event never touches the cache.
-- **Rescan**: every section comes due on its own clock, `600 + rand(600)` ticks apart (30–60 seconds), staggered. This is what picks up `/setblock`, `/fill`, pistons and TNT, which no event reports.
-- **Force refresh**: the cache-clearing command still rebuilds the whole column of every loaded chunk in range, synchronously.
-- **Regeneration**: every 10 ticks (**Server Config → Aura → Block Aura Period**) loaded chunks run `amount + regenPerTick * elapsed ticks`, clamped by the ceiling.
-- **Per-tick memoisation**: results, static zone, pools, biome and availability are memoised per "position + this tick", and the epoch is advanced by `AuraZoneEventBridge` at the **end** of a tick — so stock changes inside one tick do not affect an answer already computed, and **a formation activated this tick is only visible next tick**.
+- **Rescan**: each section has a random target interval of `600..1199` ticks (about 30–60 seconds). Each tick processes due sections in order, up to `max(8, ceil(registered sections / 600))`. A backlog delays execution; the next random interval starts when the rescan actually runs, without replaying missed cycles. This picks up `/setblock`, `/fill`, pistons and TNT, which no event reports.
+- **Force refresh**: the command synchronously rebuilds the whole column of every loaded chunk in range and restarts those chunks' random rescan deadlines from the current tick.
+- **Regeneration**: **Server Config → Aura → Block Aura Period** sets the target interval, defaulting to 10 ticks. Each chunk has one recurring task whose first deadline uses a least-loaded phase. Each tick processes at most `max(1, ceil(registered chunks / period))` due chunks. Payment uses `amount + regenPerTick * actual elapsed ticks`; the first cycle counts only time since stock initialization, and unloaded time earns nothing. Full pools, empty pools with negative regeneration, and zero rates cause no writes; overflow remains finite.
+- **Visitor counts**: each tick compares player section positions and updates coverage boundaries only on movement, joining or leaving. Stationary players cause no coverage writes. Moving one section along one axis updates 98 entries, clipped to the level height. Counts remain in the runtime attachments of loaded chunks; newly loaded chunks are populated from the recorded player positions.
+- **Per-tick memoisation**: results, static zone, pools, biome and availability are memoised per "position + this tick", and the epoch is advanced by `AuraZoneEventBridge` at the **end** of a tick. Stock regeneration and player coverage changes explicitly invalidate position results so subsequent queries recompute. Other writes still depend on their own invalidation paths, and **a formation activated this tick is only visible next tick**.
 - **The entity gate**: entity ticks no longer query unconditionally; only a new entity, a changed block position, a changed dimension or an elapsed window resolves. The window is **Server Config → Aura → Entity Aura Period** (10 ticks by default, 1–1200; set it to 1 to query every entity every tick). The price is that a stationary entity's zone enter/leave events can be delayed by that many ticks.
 
 ## Performance: where the 140 µs of one query goes
@@ -245,7 +248,7 @@ Note that "actual" includes the stock and the block contributions while the envi
 
 | Setting | Default | Effect |
 | --- | --- | --- |
-| **Server Config → Aura → Block Aura Period** | 10 | Period in ticks for rebuilding the block cache and regenerating the stock. |
+| **Server Config → Aura → Block Aura Period** | 10 | Target period in ticks for staggered stock regeneration; visitor counts update incrementally every tick and section caches have separate random rescan deadlines. |
 | **Server Config → Aura → Entity Aura Period** | 10 | Window in ticks before a stationary entity re-resolves. |
 | **Server Config → Aura → Sync Period** | 5 | Interval in ticks between snapshots sent to clients. |
 | **Server Config → Aura → Timing Stats** | off | Prints query stage timings to the log every 10 seconds; diagnostics only. |

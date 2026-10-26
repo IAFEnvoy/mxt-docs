@@ -16,6 +16,8 @@ It is split from storage because "storage" and "being poured into" are not the s
 
 `HoldBinding` also offers a pair of **entity-aware** default overloads (`claims(LivingEntity, Provider, ItemStack)` and `holdTicks(LivingEntity, Provider, ItemStack)`) - a declaration that does not care who is holding the item never implements them; the [artifact](/en/datapack/json/artifact) is what uses them to leave a click alone when somebody else owns it.
 
+Pouring supports fractions: a self-described store accepts up to `1.0` per tick, and a final `0.25` gap accepts and charges only `0.25`. Definition-driven pouring follows `consume_speed × stack size` without a one-unit minimum. `SpiritPour.Entry` uses `double` for `stored` and `capacity`, as does the pour `intake`; only percentages and gesture ticks are rounded. Displayed values use two decimal places.
+
 The family fits together like this: storage is "can I be stored into", while being poured into and being held down are gestures an item opts into on top of it, and an implementation only picks the layer it needs.
 
 ```mermaid
@@ -28,9 +30,9 @@ classDiagram
     }
     class ItemAuraAccess {
         <<interface>>
-        +getCapacity(...) int
-        +insert(...) int
-        +extract(...) int
+        +getCapacity(...) double
+        +insert(...) double
+        +extract(...) double
     }
     class UseItemAuraAccess {
         <<interface>>

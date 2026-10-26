@@ -34,6 +34,7 @@ Three things up front:
 | Ask "does it count as one of mine" | [`FriendService`](#friendservice) | `runtime.friend` |
 | Compute an item's currency value | [`CurrencyValueService`](#currencyvalueservice) | `runtime.economy` |
 | Preview a batch, light a furnace, abort a batch | [`AlchemyWorkstationService`](#alchemyworkstationservice) | `runtime.alchemy` |
+| Add a runtime item-use gesture | [`ItemUseCycle` / `ItemUseCycles`](#itemusecycles) | `api` / `runtime.hold` |
 
 ## Reading data definitions {#definitions}
 
@@ -567,6 +568,27 @@ Key points:
   **The temperature and the outputs are not written in from outside**: `Parameters` is evaluated once at the moment of lighting and frozen, the active batch reads that frozen copy, and only a batch started after a `/reload` reads a new recipe.
   **`start` and `preview` share one judgement**: temperature and output capacity only take part in accepting or rejecting the entry that has already been chosen, and never make the judgement pick a weaker recipe.
   **A heat block answers only two numbers**, see [AlchemyHeatSource](interfaces/alchemy/alchemy heat source.md).
+
+## Runtime item use {#itemusecycles}
+
+`com.iafenvoy.mxt.api.ItemUseCycle` describes one hold or consumption gesture. Listen to `ResolveItemUseCycleEvent` on the NeoForge game event bus, inspect `getHolder()` / `getStack()`, and call `claim(cycle)`. The first claim wins. Built-in holds use HIGH priority; the pill fallback uses NORMAL.
+
+| Method | Contract |
+| --- | --- |
+| `id()` | Purpose Identifier, identical on the client and server |
+| `durationTicks()` / `animation()` | A fixed positive duration in ticks and the use animation |
+| `canStart(holder, stack)` | Start eligibility; allowed by default |
+| `tick(holder, stack, remainingTicks)` | Called on both sides; restrict gameplay writes to the server |
+| `finish(level, holder, stack)` | Completes once on the server and returns the final hand stack; preserves it by default |
+| `isConsumption()` | Defaults to false; only completed consumption gestures settle pill effects |
+
+Implementations should be immutable descriptions and must not retain an entity or live stack. A consuming gesture implements removal in `finish` and returns true from `isConsumption()`. Creative-mode use can count as consumption without reducing the stack. Reading does not grant pill effects attached to the item.
+
+`runtime.hold.ItemUseCycles` manages sessions without writing item components. Right-clicks resolve automatically. To start from code, call `prepare(holder, stack)` first, then the item's `use` or the entity's `startUsingItem` if preparation succeeds. The stack must be held by that entity. Shift-clicks and items with native use behavior are not taken over.
+
+The base `Item` methods for starting, duration, animation, and completion support sessions. A custom item overriding these methods must delegate to the corresponding base implementation to participate. The service cleans up on completion, cancellation, idle state, entity removal, and disconnect. Vanilla remainder and cooldown handling is retained. Remote-client poses are reconstructed from the synchronized use flag without additional network messages.
+
+Base methods run their own behavior first. A session starts only when `use` returns `PASS`, no use has started, and the held stack is unchanged. Duration is supplied only when the native result is `0`; animation is supplied only for `NONE`. If native completion replaces the stack or changes its count or components, that result is preserved and the session closes without calling the gesture's `finish`. Gesture completion still runs before vanilla remainder and cooldown handling.
 
 ## The server and client boundary {#boundary}
 

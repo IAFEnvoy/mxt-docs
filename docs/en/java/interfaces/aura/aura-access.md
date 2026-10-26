@@ -4,16 +4,18 @@ title: AuraAccess
 
 # AuraAccess
 
-The **aura access** interface implemented by block entities: a display stand or a container exchanges whole units of one aura at a time. The capacity is data-driven (an `item_aura` definition, an environmental pool) and comes from `getCapacity` rather than being hard-coded in Java.
+A general aura transfer contract. Targets distinguish auras by `Holder<Aura>`; capacities, requests and remainders are finite, non-negative `double` values, including fractions. Block stores and position-bound world pools can implement it. See [ItemAuraAccess](./item-aura-access.md) for items.
 
-| Member | Description |
+| Member | Meaning |
 | --- | --- |
-| `Object2IntMap<Holder<Aura>> getCapacity(@Nullable LivingEntity entity)` | How much of each aura this target accepts. The `entity` is empty for a machine or a display stand driven by a pipe. |
-| `int getCapacity(@Nullable LivingEntity entity, Holder<Aura> aura)` | The capacity of one aura; a default that reads the map above. |
-| `int insert(@Nullable LivingEntity entity, Holder<Aura> aura, int amount, boolean simulate)` | Moves one aura in; the return value is the part of `amount` that could **not** be moved. |
-| `int extract(@Nullable LivingEntity entity, Holder<Aura> aura, int amount, boolean simulate)` | Moves one aura out; the return value is the part of `amount` that could **not** be moved. |
-| `static int requireNonNegative(int amount)` | Rejects a negative amount with an `IllegalArgumentException`; call it at the entry of your implementation. |
+| `Object2DoubleMap<Holder<Aura>> getCapacity(@Nullable LivingEntity entity, Provider registries)` | Query capacity by aura; the holder may be absent. |
+| `double getCapacity(@Nullable LivingEntity entity, Provider registries, Holder<Aura> aura)` | Query one aura's capacity; reads the map by default. |
+| `double insert(@Nullable LivingEntity entity, Provider registries, Holder<Aura> aura, double amount, boolean exact, boolean simulate)` | Insert aura and return the amount not moved. |
+| `double extract(@Nullable LivingEntity entity, Provider registries, Holder<Aura> aura, double amount, boolean exact, boolean simulate)` | Extract aura and return the amount not moved. |
+| `static double requireNonNegative(double amount)` | Reject negatives, NaN and infinities; invalid Java calls throw `IllegalArgumentException`. |
 
-`simulate = true` only computes, so nothing changes; that is what a caller uses to ask "would this fit". One call handles one aura, so loop over several yourself.
+`exact=true` requires the entire request or no write; `exact=false` moves the portion that fits. `simulate=true` only checks: it must not write components, create attachments, run callbacks or normalize existing stock. Zero requests write nothing. Ordinary floating-point noise may be reconciled, but a tiny request against an empty store must still fail, and a positive request that cannot produce a representable change must not report a transfer.
 
-**The parameter is a `Holder<Aura>` rather than a `resource`**: a `resource` is only a numeric system (bounds, an icon, the bars), and it does not know what its own number is for; the `aura` is the identity of *which aura* it is, and it references a `resource` as the unit it is measured in (`Aura.resource()` = "which number do I count in"). So every field, parameter and storage key that means "which aura" uses a `Holder<Aura>` - the access interfaces, item and block stores, the environmental aura pools and `item_aura.type` all do. Conversely, a pure counter has no aura identity and **cannot** be stored in an item (it can enter a player's pool, because pools are keyed by value).
+A remainder of `0.0` means the entire request can move; the original request means nothing can move. Each call handles one aura. Capacity is not stock: simulate `extract` to query extractable amounts.
+
+`Holder<Aura>` names the aura; `Aura.resource()` only names its numeric unit. The explicit `Provider` also supports machines and absent holders. Calculation, persistence and synchronization retain fractions; displayed values use two decimal places.

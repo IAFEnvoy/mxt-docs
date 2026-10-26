@@ -887,6 +887,10 @@ description: 模组注册的全部内置实体行为类型，以及每种类型�
 { "type": "mxt:spawn_particles", "particle": { "type": "minecraft:flame" }, "count": 10 }
 ```
 
+使用[光束粒子](../../../player-guide/light-beam.md)时，可在 `particle` 对象中写 `"type": "mxt:light_beam"` 和 `"spread": true`，让短线中间宽、上下两端尖。`radius` 控制圆盘分布半径，`density` 控制单位截面的流道数量，`width` 控制单段短线尺寸。内层布尔值控制线条形状，外层 `spread` 数组仍控制发射散布。`bottom_effect` 与 `top_effect` 可分别开启两个终端的水平收拢或发散，均默认关闭，方向跟随 `flow_direction`。
+
+`filled` 默认 `true`；设为 `false` 时，短线只分布在整根柱体表面。`glow` 默认 `false`，开启后在竖直柱体内部绘制同色静止柔光，不延伸至终端水平面。
+
 只在服务端发出。逐观察者按 `bientity_condition` 过滤列表。`spread` 会先按实体自身的宽、眼高、宽缩放，再当作速度散布用。
 
 ### `mxt:spawn_effect_cloud`

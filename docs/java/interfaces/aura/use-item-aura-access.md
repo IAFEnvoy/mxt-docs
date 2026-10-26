@@ -18,6 +18,8 @@ title: UseItemAuraAccess
 
 这一族接口连起来是这样：存取是"能不能被存"，被灌与长按是额外选择加入的手势，实现者只挑自己那一层。
 
+灌注使用小数量：自述存储每 tick 最多接收 `1.0`，只缺 `0.25` 时接收并支付 `0.25`；定义路线按 `consume_speed × 堆叠` 执行，不再强制至少一个单位。`SpiritPour.Entry` 的 `stored` / `capacity` 与灌注的 `intake` 都是 `double`，只在百分比和手势 tick 数上取整。数值显示保留两位小数。
+
 ```mermaid
 classDiagram
     direction LR
@@ -28,9 +30,9 @@ classDiagram
     }
     class ItemAuraAccess {
         <<interface>>
-        +getCapacity(...) int
-        +insert(...) int
-        +extract(...) int
+        +getCapacity(...) double
+        +insert(...) double
+        +extract(...) double
     }
     class UseItemAuraAccess {
         <<interface>>

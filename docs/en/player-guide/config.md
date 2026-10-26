@@ -7,6 +7,8 @@ description: "The server configuration entries grouped by tab: talisman, alchemy
 
 This page collects the **server configuration** entries: they are grouped into tabs, and they take effect as soon as they are changed — the server reads the current value every time instead of caching it. **None of them is a command**, and only **Server Config → Tab → Entry** is written here, never a config file path or a raw key.
 
+For Client Config → World Effects → Scene Depth Enhancement, see [Light Beam](./light-beam.md#scene-depth-enhancement).
+
 ## Talisman
 
 The ten entries the talisman workstation uses, plus the cooldown that governs firing one by hand. The clock is always **the game tick when the server receives a packet**; a timestamp or an amount a client reports is never read.
@@ -42,3 +44,13 @@ The ten entries the talisman workstation uses, plus the cooldown that governs fi
 ## Command Aliases
 
 Every entry on the **Command Aliases** tab is one top-level alias command - the entry shows the command itself - and all of them are on by default. Turning one off removes only its top-level spelling; the `/mxt` entries stay complete. See [Commands](./commands.md) for the list.
+
+
+## Rifts
+
+| Entry | Default | What it governs |
+| --- | --- | --- |
+| **Server Config → Portals → Maximum portals per dimension** | `1024` | Maximum portals per dimension (1–4096). |
+| **Server Config → Portals → Maximum portals per section** | `32` | Maximum overlapping portal bounds per section (1–128). |
+| **Server Config → Portals → Maximum vertices per portal** | `128` | Maximum vertices per portal (3–128). |
+| **Server Config → Portals → Player portal limit** | `8` | Owned portals in loaded dimensions allowed for token summons (1–128); administrator commands bypass this limit. |

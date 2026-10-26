@@ -887,6 +887,10 @@ Spawns particles around the entity, optionally shown only to viewers that match 
 { "type": "mxt:spawn_particles", "particle": { "type": "minecraft:flame" }, "count": 10 }
 ```
 
+For [light beam particles](../../../player-guide/light-beam.md), set `"type": "mxt:light_beam"` and `"spread": true` inside the `particle` object to give each streak a broad middle and pointed ends. `radius` controls the distribution disk radius, `density` sets flow channels per unit of cross-sectional area, and `width` sets individual streak size. The inner boolean controls streak shape; the outer `spread` array still controls emission scatter. `bottom_effect` and `top_effect` independently enable horizontal inward or outward flow at each terminal. Both default to false and follow `flow_direction`.
+
+`filled` defaults to `true`; setting it to `false` places streaks only on the whole column's surface. `glow` defaults to `false` and adds a static glow of the same colour inside the vertical column, without extending onto the terminal planes.
+
 Sent on the server only. The viewer list is filtered per viewer with `bientity_condition`. `spread` is first scaled by the entity's own width, eye height and width, and then used as the velocity spread.
 
 ### `mxt:spawn_effect_cloud`

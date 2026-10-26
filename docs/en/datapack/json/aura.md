@@ -81,3 +81,5 @@ The chain belongs to this aura definition: every `realm_stage` points back at it
 :::
 
 An `aura` definition stores no text: its name and description are always derived from the registered id (`aura.mxt.<definition namespace>.<path>`, the description adding `.description`), so giving this aura words means translating those two keys. The generation rules and how to write the language files are in [Datapack Overview](../overview.md).
+
+`burst_amount` supports finite positive fractions: `0.25` is retained through payment, projectile synchronization, persistence and insertion on impact without flooring. Displayed amounts use two decimal places.

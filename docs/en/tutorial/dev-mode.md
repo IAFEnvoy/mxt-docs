@@ -72,7 +72,7 @@ If development mode already started recording at server startup, run only the se
 | Right of each row | A fixed 240-column bar chart, one column per tick; its upper Y-axis value appears at the top left. |
 | Right of the list | Click the scrollbar track, drag its thumb or use the mouse wheel over the list. The top buttons stay fixed. |
 
-The window holds the last 240 ticks, about 12 seconds at 20 TPS. `min`, `avg` and `max` are the minimum, average and maximum per-tick durations in that window. Complete idle ticks count as zero; incomplete ticks are excluded. Narrow windows place module names and statistics above their charts. Rows have no hover tooltips.
+The window holds the last 240 ticks, about 12 seconds at 20 TPS. `min`, `avg` and `max` are the minimum, average and maximum per-tick durations in that window. Complete idle ticks count as zero; incomplete ticks are excluded. Narrow windows place module names and statistics above their charts. Resting the pointer on a row's module name shows its full name and what that row counts.
 
 Each row scales its Y-axis to its own maximum, so compare modules using their millisecond values. Green means below 10 ms, yellow means 10–50 ms and red means at least 50 ms. Parent timings include nested calls; adding rows together does not give the whole server's tick duration.
 

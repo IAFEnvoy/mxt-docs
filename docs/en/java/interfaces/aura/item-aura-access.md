@@ -4,17 +4,17 @@ title: ItemAuraAccess
 
 # ItemAuraAccess
 
-The **storage** interface implemented by chargeable items, which answers only three things: which auras it can take, how much went in and how much came out. The capacity is computed from the stack itself - `getCapacity` takes the stack and its holder (which may be empty) - so a capacity must never be hard-coded in Java.
+The item aura transfer contract. Capacities and transferred amounts are `double` values for the entire stack, including fractions; item counts, slots and durability remain integral. Modes and remainders follow [AuraAccess](./aura-access.md).
 
-| Member | Description |
+| Member | Meaning |
 | --- | --- |
-| `Object2IntMap<Holder<Aura>> getCapacity(@Nullable LivingEntity entity, ItemStack stack)` | What this stack takes right now, split by aura; the numbers are for the **whole stack**. |
-| `int getCapacity(@Nullable LivingEntity entity, ItemStack stack, Holder<Aura> aura)` | The capacity of one aura in this stack; a default that reads the map above. |
-| `int insert(@Nullable LivingEntity entity, ItemStack stack, Holder<Aura> aura, int amount, boolean simulate)` | Adds one aura to this stack; the return value is the part of `amount` that could **not** be moved. |
-| `int extract(@Nullable LivingEntity entity, ItemStack stack, Holder<Aura> aura, int amount, boolean simulate)` | Takes one aura out of this stack; the return value is the part of `amount` that could **not** be moved. |
+| `Object2DoubleMap<Holder<Aura>> getCapacity(@Nullable LivingEntity entity, Provider registries, ItemStack stack)` | Query the entire stack's capacity. |
+| `double getCapacity(@Nullable LivingEntity entity, Provider registries, ItemStack stack, Holder<Aura> aura)` | Query one aura's capacity. |
+| `double insert(@Nullable LivingEntity entity, Provider registries, ItemStack stack, Holder<Aura> aura, double amount, boolean exact, boolean simulate)` | Insert and return the amount not moved. |
+| `double extract(@Nullable LivingEntity entity, Provider registries, ItemStack stack, Holder<Aura> aura, double amount, boolean exact, boolean simulate)` | Extract and return the amount not moved. |
 
-Which aura is stored and how much of it is recorded on the item itself by the `mxt:spirit_storage` component: a table of "aura → stored amount" keyed by `Holder<Aura>` with fractional values, shared by spirit stones, talisman carriers and artifacts, while this interface itself exchanges **whole units**. That is why a spirit stone treats its definition only as the source of the capacity, and does not re-read an existing store as another aura when a datapack changes `item_aura.type`.
+`exact=true` requires the whole request or no write; `simulate=true` is entirely read-only. The flags can be combined. Requests and capacities must be finite and non-negative. A spirit stone or talisman holding `1.75` must retain `0.75` after extracting `1.0`; an exact request for `2.0` must fail without rewriting the component.
 
-A missing component reads as "full" for a spirit stone and as "empty" for a talisman, and that answer is **given by the item**, not by the component - the component is only data.
+Spirit stones, talismans and artifacts use `mxt:spirit_storage`. Spirit vessels map aura to their resource container and only accept insertion through this interface. Missing components are interpreted by the item: full for stones, empty for talismans. Existing stock keeps its aura identity when definitions reload.
 
-Storage is asked **from anywhere**: a display stand reading and writing a talisman, the hotbar reading an item and an `item_aura` definition describing an item all use it. So an item that only implements this interface is **stored into**, and is not "poured into by holding right-click" - that gesture is something an item separately opts into, see [UseItemAuraAccess](./use-item-aura-access.md).
+Storage alone does not enable held pouring; opt into [UseItemAuraAccess](./use-item-aura-access.md) for that gesture. Calculations and synchronization retain fractions; presentation uses two decimal places.

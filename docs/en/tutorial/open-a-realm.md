@@ -139,7 +139,7 @@ A missing structure is not a load error: it returns `MISSING_STRUCTURE` on the w
 - **Aura**: an instance dimension is a runtime dimension with no `LevelStem` entry of its own, so `aura_zone.dimensions` can name the instance dimension id, the **definition id**, or the **stem id** — one entry then covers every instance that template opens.
 - **Biome-bound aura zones do not follow you in**: an `mxt:void` secret realm is `minecraft:the_void`, so a zone bound to `#minecraft:is_overworld` does not match. With no zone matching, the position falls back to the empty zone — a secret realm has **no aura by default**, and you have to bind one deliberately.
 - **Formations and aura stock** live in that dimension's own `data/`, so deleting an `owned: false` instance takes them with it.
-- **Rifts** (`mxt:rift`) can target a secret realm dimension: when the target is **not loaded** (a dormant claimed instance, a deleted one) the rift does not teleport — a deliberate safety valve, so a teleport never drags a world back open.
+- **Rifts** target a realm definition or coordinates in an instance and obey the same conditions, membership and capacity. Tokens summon entrances or return portals while inside. Define layout exits in the `portals` array.
 
 ## Verify
 

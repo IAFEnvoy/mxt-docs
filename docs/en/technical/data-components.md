@@ -48,7 +48,7 @@ The **Payload** column is the Java shape the codec decodes into, not JSON key na
 | Component id | Payload | What it does |
 | --- | --- | --- |
 | `mxt:item_aura` | `double remain` | The aura left on one **partially consumed** stack, as a single number. |
-| `mxt:spirit_storage` | `Object2DoubleMap<Holder<Aura>>` | The aura store on a stack implementing `ItemAuraAccess`: which auras and how much of each. The key is the **aura itself**, never the `resource` it is counted in - a plain counter carries no aura and has no business here. Amounts are doubles, so an artifact's fuel can be bought a fraction a tick while a talisman is still filled one whole unit at a time. A **missing component** means whatever the item says (pristine stone is full, an untouched carrier is empty); an **empty map** is a third thing, a store that was drained. |
+| `mxt:spirit_storage` | `Object2DoubleMap<Holder<Aura>>` | Finite non-negative double stock keyed by aura identity. Transfers and capacities retain fractions; presentation uses two decimal places. Missing components are interpreted by the item (full stone, empty talisman); an empty map records a drained store. |
 | `mxt:artifact_state` | `ArtifactStateComponent` (optional `owner_uuid`, `owner_name`, `nourishment`) | An artifact's owner and how well it has been fed. The **identity** is the UUID (every ownership question asks it); the name is display only, written once by whoever claimed the stack. Which artifact it is comes from the item's definition and how much aura it holds lives in `mxt:spirit_storage` - neither is repeated here. |
 | `mxt:item_abilities` | `ItemAbilitiesComponent` (`abilities`) | Ability IDs granted **in addition to** the definition's while the stack is equipped or otherwise active, unioned. The `mxt:add_ability` action is its dedicated producer (an entry already present is not written twice, and existing entries are always kept). |
 | `mxt:storage` | `DataStorageHolder` | The host for ability runtime state (cooldown, charges, toggle, timer, target lock). One `(ability id, state kind)` address is exactly one slot, so a second value of a kind already there **replaces** it instead of joining it. Values are mutable and written wholesale by the content side or the item host. |
@@ -77,7 +77,7 @@ The **Payload** column is the Java shape the codec decodes into, not JSON key na
 
 | Component id | Payload | What it does |
 | --- | --- | --- |
-| `mxt:secret_realm_token` | `SecretRealmTokenComponent` (optional `realm`) | Which secret realm an access token opens, named by the datapack. |
+| `mxt:secret_realm_token` | Optional `realm`, `preset`, `duration_ticks`, `summoned`, `summoned_dimension` | realm selects a realm definition, preset a rift preset; duration defaults to 0 (permanent). The last two are the runtime’s remembered portal UUID and dimension. |
 | `mxt:reward_box` | `ResourceKey<LootTable>` | Which loot table a reward box opens. It stores a **`ResourceKey`, not a `Holder`**: `/reload` swaps loot table instances, so a held one would keep rolling the table from before the reload. |
 | `mxt:token` | `TokenComponent` (optional `kind`, `value`, `owner`) | The **identity and permission** payload shared by realm and trading tokens. `owner` is a permission record and deliberately stays out of the tooltip. |
 | `mxt:identification` | `IdentificationComponent` (`result`) | The resolved item id a framework-provided unidentified item turns into once identified. |
@@ -116,7 +116,7 @@ The **Payload** column is the Java shape the codec decodes into, not JSON key na
 
 | Component id | Payload | What it does |
 | --- | --- | --- |
-| `mxt:rift` | `RiftComponent` (`target`, `color`) | The destination and colour an anchor stamps into a rift. Carrying it on the item is what lets a rift be configured before it exists: one stack describes the rift it will place, and reconfigures a rift it is used on. |
+| `mxt:rift` | Optional `blueprint`, `recorded` | blueprint is one complete portal template; recorded is a destination. Editor items reuse this blueprint. |
 
 ## Three Kinds of "Who Decides"
 
@@ -136,7 +136,7 @@ Two things that are easy to conflate:
 ## Two Traps When Writing Components
 
 - **Use `ItemStack.OPTIONAL_CODEC` for empty stacks in a list.** Components are saved and synced, and one empty stack in a list makes the **whole packet fail to encode**. Every list in this mod that uses an empty stack as a placeholder goes through that codec.
-- **`mxt:rift`'s `color` of `-1` means "follow the target dimension"**, not "no colour".
+- `mxt:rift.blueprint` follows the template in [rift](../datapack/json/rift.md#portal-templates-and-realm-layouts); `recorded` uses its destination format.
 
 ## See Also
 

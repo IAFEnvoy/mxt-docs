@@ -61,12 +61,12 @@ There is no "aura kind" field: the auras a definition makes a block emit are exa
 
 ## Runtime Behaviour
 
-- The cache is rebuilt after a chunk is loaded, a block changes, or the registry is loaded.
+- Chunk loading rebuilds the cache immediately; break/place events update individual blocks immediately. Each section also has a random rescan target interval of `600..1199` ticks and may be delayed by queued work.
 - A spirit stone vein can be stacked from several `block_aura` definitions and block tags to provide aura above the natural environment.
 - At runtime the query is performed over a 7×7×7 sub-chunk range: within the 3×3×3 range around the current sub-chunk the **real positions** of matching blocks are used, the outer ring is approximated with sub-chunk centres, and everything decays uniformly by `1 / max(1, distance squared)`.
 - The contribution of each source sub-chunk is roughly split by the number of players currently visiting it, while the inventory is still shared at the chunk level.
 - Block aura does not occupy the environment base maximum: it also adds an equal amount of storable aura capacity to the current chunk. With an environment maximum of 100 and a total block contribution of 30, the effective maximum of that chunk is 130.
-- The block aura cache and the chunk inventory update period are controlled by **Server Config → Aura → Block Aura Period**, every 10 ticks by default, with an allowed range of 1 to 1200 ticks.
+- **Server Config → Aura → Block Aura Period** controls the target interval for stock regeneration, defaulting to 10 ticks with an allowed range of 1 to 1200 ticks. Chunks run at staggered phases and recover by actual elapsed time. Visitor counts update incrementally every tick; cache rescans are processed in due order in batches each tick and are not gated by that period.
 - A recommended natural aura template keeps the environment `amount` very low and enables positive and negative noise; after the `/ 10 - 5` handling large areas have no natural aura, block contributions accumulate on top of that by the number of blocks in the chunk, so a spirit stone vein can be configured far above the natural value.
 
 ## Commands

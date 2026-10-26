@@ -19,7 +19,7 @@ title: Cost
 | 成员 | 说明 |
 | --- | --- |
 | `CostTarget target()` | 这一项从哪个存储出，以及通道种类。同一次付款里两项指向同一个目标，就是同一个存储。 |
-| `double amount()` | 固定数量，单位是那个存储自己的单位：实数数值、整数物品、整数银行灵气、一次脚本调用。 |
+| `double amount()` | 固定数量，单位是那个存储自己的单位：实数数值、整数物品、实数银行灵气、一次脚本调用。 |
 | `ResultWithData<List<Debit>> execute(boolean simulate)` | 两遍都走这一个方法：传 `true` 只问、什么都不写；传 `false` 真扣自己那条通道，并返回实际扣走的凭据。第一次实扣的结果就是终态，同一项不会被扣第二次。 |
 | `Transaction withAmount(double amount)` | 同一个绑定换个固定数量。付款改价就是这么改的，不会重跑原来的公式；`0` 由付款直接去掉，不执行一个空事务。 |
 
@@ -34,3 +34,12 @@ title: Cost
 这套形状为什么这么定、以及重复目标的边界，见[技术细节 · 消耗](/technical/cost)。
 
 付款者与通道由**调用点**提供（`CostContext` 带着付款者与它有哪些通道），数据包只写“要什么”：`mxt:item` / `mxt:js` 需要玩家，缺通道就是拒付而不是报错；阵法维护这类“主人可能不在线”的字段直接点名一个资源账户。**货币不是消耗**：`currency` 的报价与价值乘数永远不进 `Cost`。符箓的灵气条目是这套形状里唯一的例外——它扣的是载体自己灌进去的存量，容量另由一个倍率字段给出。
+
+灵气来源由 `AuraCostSource.bind(CostContext, Holder<Aura>, double)` 绑定固定事务。`CostContext` 包含 `payer`、`formula`、`origin`、`account`、`auraSource`、`itemTarget`，通过 `of` / `account` / `pool` / `bank` 工厂选择来源，也可用 `withAuraSource` 接入扩展。来源只解析目标，不查库存、不扣款；`execute(simulate)` 才负责模拟和真实扣除。账户灵气复用资源通道，环境池与银行共用 `AuraAccess` 存取。银行不再向上取整，数量与凭据均为 double；Java 实现需要按新签名重新编译。
+
+`origin` 是只用于日志诊断的 `String`，不决定价格、权限或付款通道。内置标签由 `com.iafenvoy.mxt.data.cost.context.CostSources` 提供为共享字符串常量；扩展可直接传入自己的标签，无需注册。
+
+```java
+CostContext.of(payer, CostSources.ABILITY);
+CostContext.of(payer, "example:ritual");
+```

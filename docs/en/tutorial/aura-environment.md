@@ -138,7 +138,7 @@ A spirit stone vein should be worth more than the ground it sits in.
 - `block_aura` has **no `priority`**: when several definitions hit one block (another pack wrote it too, or one gives a tag and another the concrete block), they **all apply and are added together**.
 - The contribution does **not** consume the environment maximum: it raises the chunk's effective capacity by the same amount. An environment maximum of `30` with `30` points of ore becomes `60`.
 - Queries look at a 7x7x7 range of sub-chunks: the inner 3x3x3 uses real block positions, the outer ring approximates with sub-chunk centres, and all of it decays by `1 / max(1, distance²)`.
-- The cache is rebuilt when a chunk loads, when a block changes and when the world loads, and the interval is **Server Config → Aura → Block Aura Period** (default `10` ticks, `1..1200`).
+- Chunk loading rebuilds the block cache immediately, and break/place events update individual blocks immediately. Each section also has a random rescan target interval of `600..1199` ticks; due work is processed in order in batches each tick and may be delayed by a backlog. **Server Config → Aura → Block Aura Period** (default `10` ticks, `1..1200`) controls the target interval for staggered stock regeneration, which uses actual elapsed time. Visitor counts update incrementally every tick; the setting does not control the rescan interval.
 
 A common pattern is to make the natural template almost empty and let blocks provide the aura:
 
@@ -294,3 +294,5 @@ Load the world again — these are data pack registries, so `/reload` does not p
 
 - [Create Items and Bind Actions with KubeJS](./create-items-with-kubejs.md) — the spirit stones and pills these tables refer to.
 - [Aura Zone](../datapack/json/aura_zone.md), [Block Aura](../datapack/json/block_aura.md) and [Item Aura](../datapack/json/item_aura.md) — every remaining field.
+
+Aura transfers, capacities, projectile amounts and crafting requirements support fractions. Pouring can fill a gap smaller than one unit and charges the amount actually moved. Interfaces and messages use two decimal places; calculations, persistence and synchronization keep full precision.

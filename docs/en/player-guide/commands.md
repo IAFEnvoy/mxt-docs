@@ -38,6 +38,7 @@ Each alias can be switched off on its own, which removes only its top-level spel
 - [/quality](/en/player-guide/commands/quality)
 - [/realm](/en/player-guide/commands/realm)
 - [/resource](/en/player-guide/commands/resource)
+- [/secret_realm](/en/player-guide/commands/secret_realm)
 - [/spirit_root](/en/player-guide/commands/spirit_root)
 - [/talisman](/en/player-guide/commands/talisman)
 - [/technique](/en/player-guide/commands/technique)
@@ -59,7 +60,7 @@ Registry IDs in commands use the vanilla `ResourceArgument`: parsing, tab comple
 
 A few arguments exist to name a reference the **current data pack no longer provides**: `/technique drop`, `/technique forget`, `/spirit_root remove|enable|disable`, `/physique remove|enable|disable`, `/curse remove` and `/ability revoke`. They use the vanilla `ResourceKeyArgument` (`resource_key`) instead: completions still come from the registry (the same currently-loaded definitions as above), but **parsing does not check that the entry exists**, so an ID that is not in the completion list is still accepted. That is required — what they really rescue is a reference **a body still stores while the current pack no longer provides it**: whether the entry was blocked by `neoforge:conditions` or its file was deleted outright, that `Holder` is still in the attachment **for the rest of the session** (attachments are decoded while the world loads and not on `/reload`; a reference whose definition cannot be found at that moment is dropped by the tolerant list codec, so entering the world again clears it), so `remove`, `enable` and `disable` all look the reference up among the ones the body holds rather than in the registry. `ResourceArgument` would reject that ID during parsing and close off the only path that rescues it.
 
-Dimension IDs (`/mxt secret_realm info|destroy`, `/mxt rift target|place|bind`) use the vanilla `DimensionArgument`, completing from the server's current level list (so `info` and `destroy` complete as well). Trigger signals (`/mxt trigger rules|publish`) and the picker's category ID (`/picker mxt:aura`) are **not registry entries**: they complete from the signal table and the picker's own categories respectively; the contract command's `behavior` comes from the command table in code, and `/curse cleanse`'s `#tag` wants a tag ID. A category is a registry.
+Dimension IDs (`/mxt secret_realm info|destroy`, `/mxt rift target|spawn`) use the vanilla `DimensionArgument`, completing from the server's current level list (so `info` and `destroy` complete as well). Trigger signals (`/mxt trigger rules|publish`) and the picker's category ID (`/picker mxt:aura`) are **not registry entries**: they complete from the signal table and the picker's own categories respectively; the contract command's `behavior` comes from the command table in code, and `/curse cleanse`'s `#tag` wants a tag ID. A category is a registry.
 
 ## Server Configuration
 

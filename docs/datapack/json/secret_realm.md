@@ -25,9 +25,10 @@ aside: false
 | `owned` | Boolean | `false` | 实例是否可被认领，见下。 |
 | `duration_ticks` | Long | `0` | 实例时限，`0` 表示不过期。 |
 | `structures` | 数组 | `[]` | 实例建好后、有人进去之前放置的结构，见下。 |
+| `portals` | 数组（最多 128） | `[]` | 首次准备实例时安装的门模板；见 [rift](./rift.md#门模板与秘境布局)。 |
 | `entry` | 对象或数组 | 无（随机落点） | 进入后的落点。写单个对象就是唯一落点；写数组则按 `weight` 加权随机选一处，见下。 |
 | `enter_condition` | `EntityCondition` | `mxt:always` | 对进入者求值，不成立则拒绝进入（`CONDITION_NOT_MET`）。 |
-| `exit_condition` | `EntityCondition` | `mxt:always` | **只约束主动离开**（令牌右键、`/mxt secret_realm exit`）。 |
+| `exit_condition` | `EntityCondition` | `mxt:always` | **只约束主动离开**（返回门、`/mxt secret_realm exit`）。 |
 | `enter_denied_message` | `Component` | 无 | 进入条件不成立时发给玩家的提示，缺省则显示失败码；裸字符串按翻译键处理。 |
 | `exit_denied_message` | `Component` | 无 | 同上，作用于退出条件。 |
 | `enter_action` | `EntityAction` | `mxt:no_op` | 进入行为，作用于进入者，时机在传送落位之后。 |
@@ -71,7 +72,7 @@ aside: false
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `pos` | `[x, y, z]` | 无 | 固定落点，写全三个数就精确使用这个坐标。缺省 `pos` 的条目改走随机落点，高度取该列地表。 |
+| `pos` | `[x, y, z]` | 无 | 固定的预定落点。缺省 `pos` 的条目改走随机落点，高度取该列地表。 |
 | `yaw` / `pitch` | Float | 进入者自身角度 | 固定朝向。 |
 | `random_center` | `[x, z]` | 边框中心 | `pos` 缺省时随机落点的圆心。 |
 | `random_radius` | Double | 边框直径的 40%（无边框时 `64`） | 随机落点半径。 |
@@ -82,6 +83,8 @@ aside: false
 随机落点在半径内均匀取点，不是"越靠外越多"。落点的高度取该列的地表（第一个挡住运动的方块）；写死 `pos` 的落点不做这个吸附。同一批进来的人按圆周六等分的位置散开，第一个落在锚点上，散开的那些重新吸附到各自列的地表。
 
 被选中的落点会成为这份实例的**锚点**并存进实例记录：后来的旅客（玩家或生物）落到同一处附近，而不是各自随机到秘境另一头。
+
+实际进入时先在预定落点及各轴偏移 4 格内寻找安全位置，找不到才尝试在空白处铺泥土平台；退出返回来源时也使用同一兜底。普通玩家通常为 3×3，按实体尺寸扩大并留一格边。平台不替换已有方块、不清理液体或障碍，并检查边界和其他实体；生成时脚部高度向上取整，至少高于世界最低高度一格。仍无法安全生成则拒绝传送，不写入新的成员或清除尚未结束的旅行记录。管理命令的 `check` 和 `anchor` 只检查，不生成落点平台。
 
 ## `owned`（可选，默认 `false`）
 
@@ -136,4 +139,4 @@ aside: false
 
 :::
 
-失败码会出现在 `item.mxt.secret_realm_token.enter_failed` 的提示里（除非定义自带 `*_denied_message`）：`DISABLED`（那个 id 不在当前注册表里，含被 `neoforge:conditions` 挡掉的定义）、`ALREADY_TRAVELLING`、`CONDITION_NOT_MET`、`NO_FREE_INSTANCE`、`MISSING_STRUCTURE`、`GENERATION_FAILED`、`MISSING_DIMENSION`（只有 `mxt:existing` 会缺维度）、`FULL`、`CANCELLED`（进入事件被取消）、`EXIT_DENIED`、`NOT_TRAVELLING`、`MISSING_ORIGIN`。
+失败码会出现在命令或接触传送门后的提示里（除非定义自带 `*_denied_message`）：`DISABLED`（那个 id 不在当前注册表里，含被 `neoforge:conditions` 挡掉的定义）、`ALREADY_TRAVELLING`、`CONDITION_NOT_MET`、`NO_FREE_INSTANCE`、`MISSING_STRUCTURE`、`GENERATION_FAILED`、`MISSING_DIMENSION`（只有 `mxt:existing` 会缺维度）、`FULL`、`CANCELLED`（进入事件被取消）、`EXIT_DENIED`、`NOT_TRAVELLING`、`MISSING_ORIGIN`。

@@ -37,6 +37,7 @@ title: 命令
 - [/quality](/player-guide/commands/quality)
 - [/realm](/player-guide/commands/realm)
 - [/resource](/player-guide/commands/resource)
+- [/secret_realm](/player-guide/commands/secret_realm)
 - [/spirit_root](/player-guide/commands/spirit_root)
 - [/talisman](/player-guide/commands/talisman)
 - [/technique](/player-guide/commands/technique)
@@ -46,7 +47,7 @@ title: 命令
 
 ## 权限
 
-需要管理员权限的命令在命令树中校验 `gamemaster` 权限：`/resource <id> set`、`/mxt breakthrough`、`/mxt secret_realm`（整棵子树：`list` / `info` / `enter` / `exit` / `destroy`）、`/mxt rift`（整棵子树：`info` / `target` / `color` / `place` / `bind`）、`/mxt soul reclaim`、`/mxt trigger publish`、`/cultivate select`、`/realm set`、`/lifespan get <targets>` / `set` / `add` / `reincarnate`、`/aura cache clear`、`/ability cast` / `grant` / `revoke`、`/contract bind` / `break` / `recall` / `behavior`、`/curse apply` / `remove` / `cleanse`、`/flight`（整棵子树，目前只有 `fill`）、`/formation bind` 与 `/formation owners add|remove`、`/spirit_root` 与 `/physique` 的 `grant` / `remove` / `enable` / `disable`、`/quality get <target>` / `set` / `clear` / `upgrade`、`/technique repair`（含 `dry-run`）/ `drop`，以及 `/lightning`、`/talisman`、`/tribulation` 的每一个节点。
+需要管理员权限的命令在命令树中校验 `gamemaster` 权限：`/resource <id> set`、`/mxt breakthrough`、`/mxt secret_realm`（整棵子树：`list` / `info` / `enter` / `exit` / `destroy`）、`/mxt rift`（整棵子树：`spawn` / `edit` / `info` / `target` / `enabled` / `duration` / `copy` / `transform` / `remove` / `export`）、`/mxt soul reclaim`、`/mxt trigger publish`、`/cultivate select`、`/realm set`、`/lifespan get <targets>` / `set` / `add` / `reincarnate`、`/aura cache clear`、`/ability cast` / `grant` / `revoke`、`/contract bind` / `break` / `recall` / `behavior`、`/curse apply` / `remove` / `cleanse`、`/flight`（整棵子树，目前只有 `fill`）、`/formation bind` 与 `/formation owners add|remove`、`/spirit_root` 与 `/physique` 的 `grant` / `remove` / `enable` / `disable`、`/quality get <target>` / `set` / `clear` / `upgrade`、`/technique repair`（含 `dry-run`）/ `drop`，以及 `/lightning`、`/talisman`、`/tribulation` 的每一个节点。
 
 `/mxt debug` 整棵子树和性能图表的数据接收需要 3 级管理员权限（`admin`），包含 `on`、`off`、`status [sources...]` 与 `gui`；`gui` 只能由玩家执行，见 [/mxt](./commands/mxt)。
 
@@ -58,7 +59,7 @@ title: 命令
 
 少数参数的用途是点名一个**当前数据包已经不提供**的引用——`/technique drop`、`/technique forget`、`/spirit_root remove|enable|disable`、`/physique remove|enable|disable`、`/curse remove`、`/ability revoke`。它们改用原版 `ResourceKeyArgument`（`resource_key`）：**补全照样来自注册表**（和上面同一份当前定义），但**解析时不校验条目是否存在**，所以手打一个补全里没有的 ID 也不会被拒。这是必须的——它们真正要救的是**身体里还存着、当前包却已经不提供**的那份引用：条目被 `neoforge:conditions` 挡掉、或者文件直接被删之后，**同一次会话里**附件里那份 `Holder` 还在（附件只在**世界加载**时解码，`/reload` 不重解；那一刻找不到定义的引用会被容错列表丢掉，所以重新进一次世界就干净了），所以 `remove`、`enable`、`disable` 都按身体持有的那条引用来找、不回查注册表。换成 `ResourceArgument` 会在解析阶段就按注册表拒收这个 ID，把唯一一条救人路径堵死。
 
-维度 ID（`/mxt secret_realm info|destroy`、`/mxt rift target|place|bind`）用原版 `DimensionArgument`，补全来自服务端当前的维度列表（因此 `info` 与 `destroy` 也有补全）。触发器信号（`/mxt trigger rules|publish`）与 `/picker` 的分类 ID（如 `mxt:aura`）**不是注册表条目**，它们的补全各自来自信号表与选择器分类；契约命令的 `behavior` 来自代码里那份命令表，`/curse cleanse` 的 `#标签` 要的是一个标签 ID。分类就是一张注册表。
+维度 ID（`/mxt secret_realm info|destroy`、`/mxt rift target|spawn`）用原版 `DimensionArgument`，补全来自服务端当前的维度列表（因此 `info` 与 `destroy` 也有补全）。触发器信号（`/mxt trigger rules|publish`）与 `/picker` 的分类 ID（如 `mxt:aura`）**不是注册表条目**，它们的补全各自来自信号表与选择器分类；契约命令的 `behavior` 来自代码里那份命令表，`/curse cleanse` 的 `#标签` 要的是一个标签 ID。分类就是一张注册表。
 
 ## 服务端配置
 
