@@ -4,15 +4,47 @@ title: /contract
 
 # `/contract`
 
-| Command | What it does |
-| --- | --- |
-| `/contract list [<player>]` (= `/mxt contract list`) | Lists the spirit beasts of that player from the **owner index**: contract type, beast UUID and whether it is loaded right now. Without `player` it is your own list, and no permission is needed. The index is a name list rather than the truth, so every row is checked back against the record on the creature and a row that no longer matches is dropped on the spot. |
-| `/contract info <target>` (= `/mxt contract info`) | Reads the contract record on the target: type, owner, when it was signed, recall state, the cooldown left and the order in force. When the creature's profile declares a progression chain it prints two more lines - the level it stands on and what the next one is (or "already the highest level"), plus how much mastery is still missing (the current value, what that level asks for, and which `resource` measures it). No permission needed. |
-| `/contract bind <player> <target> <contract_type> [force]` (= `/mxt contract bind …`) | Binds the target creature to `<player>` (gamemaster permission), through exactly the same flow as the Contract Scroll, with the price paid by that player. `force` skips the price and the per-owner limit. |
-| `/contract break <target> [force]` (= `/mxt contract break …`) | Releases the target from its contract (gamemaster permission) while the beast lives. `force` skips the "must be the owner" check. |
-| `/contract recall <target> [force]` (= `/mxt contract recall …`) | Makes the target answer a recall, the same as picking its "recall" cell on the Beast Taming Bell's wheel. `force` skips the recall cooldown. |
-| `/contract behavior <target> <behavior> [force]` (= `/mxt contract behavior …`) | Gives the target one order (gamemaster permission) through exactly the same flow as the bell's wheel. `behavior` is a code-side order id; the built-ins are `mxt:follow` / `mxt:wander` / `mxt:stay` / `mxt:recall` and they are what completion offers. A creature that does not take that order answers "it does not take that order". `mxt:recall` is **momentary** and equivalent to `recall` above. `force` skips the "must be the owner" check (and the cooldown for a recall). |
-| `/contract level <target> <level> [force]` (= `/mxt contract level …`) | Writes the target's **progression record** to one level (gamemaster permission). The chain's owner is the target's own creature profile, so naming the level is enough: it has to be **on its own chain** (a level that is not is refused with "that level is not on its chain", and `force` skips that check), and writing it rebuilds what it grants and publishes one `mxt:progression_level` signal, the same road a natural advancement takes. A target with no profile, or a profile that declares no chain, answers "it owns no progression chain". It **ignores** that level's own `mastery` and `condition` - those are the gates of natural advancement, and this is the debugging entry. |
+Inspects and operates spirit-beast contracts: the list, one record, binding, release, recall, orders and a progression level. Every node also exists as `/mxt contract …`.
+
+<div class="cmd-tree">
+
+- `/contract ...`
+
+  - `... list [<player>]`
+
+    Lists the spirit beasts of that player from the **owner index**: contract type, beast UUID and whether it is loaded right now. Without `player` it is your own list, and no permission is needed.
+
+  - `... info <target>`
+
+    Reads the contract record on the target: type, owner, when it was signed, recall state, the cooldown left and the order in force.
+
+  - `... bind <player> <target> <contract_type> [force]`
+
+    Binds the target creature to `<player>` (gamemaster permission), through exactly the same flow as the Contract Scroll, with the price paid by that player. `force` skips the price and the per-owner limit.
+
+  - `... break <target> [force]`
+
+    Releases the target from its contract (gamemaster permission) while the beast lives. `force` skips the "must be the owner" check.
+
+  - `... recall <target> [force]`
+
+    Makes the target answer a recall, the same as picking its "recall" cell on the Beast Taming Bell's wheel. `force` skips the recall cooldown.
+
+  - `... behavior <target> <behavior> [force]`
+
+    Gives the target one order (gamemaster permission) through exactly the same flow as the bell's wheel.
+
+  - `... level <target> <level> [force]`
+
+    Writes the target's **progression record** to one level (gamemaster permission).
+
+</div>
+
+The index behind `list` is a name list rather than the truth, so every row is checked back against the record on the creature and a row that no longer matches is dropped on the spot. When the creature's profile declares a progression chain, `info` prints two more lines - the level it stands on and what the next one is (or "already the highest level"), plus how much mastery is still missing (the current value, what that level asks for, and which `resource` measures it).
+
+For `behavior`, the argument is a code-side order id; the built-ins are `mxt:follow` / `mxt:wander` / `mxt:stay` / `mxt:recall` and they are what completion offers. A creature that does not take that order answers "it does not take that order". `mxt:recall` is **momentary** and equivalent to `recall` above. `force` skips the "must be the owner" check (and the cooldown for a recall).
+
+For `level`, the chain's owner is the target's own creature profile, so naming the level is enough: it has to be **on its own chain** (a level that is not is refused with "that level is not on its chain", and `force` skips that check), and writing it rebuilds what it grants and publishes one `mxt:progression_level` signal, the same road a natural advancement takes. A target with no profile, or a profile that declares no chain, answers "it owns no progression chain". It **ignores** that level's own `mastery` and `condition` - those are the gates of natural advancement, and this is the debugging entry.
 
 ## Who can be contracted
 

@@ -6,13 +6,29 @@ title: /lifespan
 
 `/lifespan`（= `/mxt lifespan`）读写每个身体的**寿元账本**：还剩多少刻与这一世被给到的上限。账本从哪里来、怎么结算、耗尽后发生什么，见[寿元](/player-guide/lifespan)。
 
-| 命令 | 作用 |
-| --- | --- |
-| `/mxt lifespan` / `/mxt lifespan get`（= `/lifespan`、`/lifespan get`） | 读执行者自己的账本。 |
-| `/mxt lifespan get <targets>` | 打印每个目标的账本（需要 gamemaster 权限）；从没记过账的目标报「未记账」。 |
-| `/mxt lifespan set <targets> <ticks>` | 把剩余与上限一起改写成 `ticks`（需要 gamemaster 权限）；`ticks` 不得为负。 |
-| `/mxt lifespan add <targets> <ticks>` | 增减寿元（需要 gamemaster 权限）：正数同时抬高剩余与上限，**负数只扣剩余、不动上限**。 |
-| `/mxt lifespan reincarnate <targets>` | 让每个目标当场**转世**（需要 gamemaster 权限）：跑一遍服务端配置「转世」页那份重置清单，再把账本按服务端配置「寿元 → 凡人基础寿元」重开。 |
+<div class="cmd-tree">
+
+- `/lifespan ...`
+
+  读执行者自己的账本。
+
+  - `... get <targets>`
+
+    打印每个目标的账本（需要 gamemaster 权限）；从没记过账的目标报「未记账」。
+
+  - `... set <targets> <ticks>`
+
+    把剩余与上限一起改写成 `ticks`（需要 gamemaster 权限）；`ticks` 不得为负。
+
+  - `... add <targets> <ticks>`
+
+    增减寿元（需要 gamemaster 权限）：正数同时抬高剩余与上限，**负数只扣剩余、不动上限**。
+
+  - `... reincarnate <targets>`
+
+    让每个目标当场**转世**（需要 gamemaster 权限）：跑一遍服务端配置「转世」页那份重置清单，再把账本按服务端配置「寿元 → 凡人基础寿元」重开。
+
+</div>
 
 ## 说明
 

@@ -4,11 +4,15 @@ title: /picker
 
 # `/picker`
 
-| 命令 | 作用 |
-| --- | --- |
-| `/picker [<category>]` | 打开物品选择器，列出所选分类对应的物品；`category` 是分类 ID（如 `mxt:aura`、`mxt:artifact`、`mxt:currency`、`mxt:item_binding`、`mxt:technique`），不填列出全部已登记分类。需要 gamemaster 权限，且只在创造模式下可用。 |
+<div class="cmd-tree">
 
-## `/picker`
+- `/picker [<category>]`
+
+  打开物品选择器，列出所选分类对应的物品；`category` 是分类 ID（如 `mxt:aura`、`mxt:artifact`、`mxt:currency`、`mxt:item_binding`、`mxt:technique`），不填列出全部已登记分类。需要 gamemaster 权限，且只在创造模式下可用。
+
+</div>
+
+## 分类能列出什么
 
 `/picker` 由 **Picker** 模组提供——本模组通过 `jarJar` 内置它，所以装本模组就有。界面长什么样、搜索怎么匹配、物品怎么拿出来，都归它，这里只写“分类能列出什么”。
 

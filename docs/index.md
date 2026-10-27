@@ -1,11 +1,11 @@
 ---
 title: MiXianTu
-description: MiXianTu（觅仙途）文档：安装、游玩内容、数据包 JSON 格式、类型参考、KubeJS 与 Java 扩展 API。
+description: 觅仙途文档：安装、游玩内容、数据包 JSON 格式、类型参考、KubeJS 与 Java 扩展 API。
 ---
 
-# MiXianTu
+# 觅仙途
 
-MiXianTu（觅仙途，模组 ID `mxt`）是一个 NeoForge **修仙模组框架**。它提供修仙玩法所需的**通用规则与运行时**——修炼、灵气环境、境界与数值、技能、阵法、天劫、锻造、炼丹与经济——但不预设任何具体世界观数值。
+`觅仙途`是一个 NeoForge **修仙模组框架**。它提供修仙玩法所需的**通用规则与运行时**——修炼、灵气环境、境界与数值、技能、阵法、天劫、锻造、炼丹与经济——但不预设任何具体世界观数值。
 
 具体物品、方块和配方由数据包、KubeJS 或其他内容模组提供，MiXianTu 的注册表与绑定表再赋予它们玩法。
 
@@ -39,7 +39,7 @@ MiXianTu（觅仙途，模组 ID `mxt`）是一个 NeoForge **修仙模组框架
 | 项目 | 要求 |
 | --- | --- |
 | Minecraft | `26.1.2` |
-| NeoForge | `26.1.2.99` |
+| NeoForge | `26.1.2.99` 或更高 |
 | 必需前置 | Jupiter 与 ApricityUI 需单独安装；Curios API 等其余必需前置随模组打包 |
 | 可选兼容 | KubeJS（脚本内容）、JEI（配方查看）、Jade（方块信息） |
 

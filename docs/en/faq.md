@@ -15,7 +15,7 @@ Jupiter and ApricityUI are required dependencies, and every other required depen
 
 ## How Do I Switch a Piece of Content Off Temporarily?
 
-Write a NeoForge resource condition into **the definition file itself**; an entry whose condition does not hold **never enters the registry**, so nothing reads it and it never shows up in command completion either:
+Write a NeoForge resource condition into **the definition file itself**; an entry whose condition does not hold **does not enter the registry**, so nothing reads it and it never shows up in command completion either:
 
 ```json
 {
@@ -25,11 +25,11 @@ Write a NeoForge resource condition into **the definition file itself**; an entr
 }
 ```
 
-`neoforge:never` is always false, which makes it the simplest pack-wide switch; delete the block again and the entry is live as before. The conditions all live in the `neoforge:` namespace: `never` / `always`, `mod_loaded` (`modid`), `registered` (`registry`, defaulting to `minecraft:item`, plus `value`), `and` / `or` (`values`), `not` (`value`) and `feature_flags_enabled` (`flags`). A condition can be written in **any** registry entry file; every datapack registry treats them the same way. Tag-based conditions such as `tag_empty` **cannot** be used here, because tags are not bound yet when a registry entry is decoded; recipes and loot tables can use them. When the condition holds, `neoforge:conditions` is stripped before the definition codec sees the file and every other field is read as usual.
+::: warning
 
-**A condition that does not hold is not a load error.** The loader marks the entry `SKIPPED_ELEMENT_MARKER` and skips it, leaving one DEBUG line, `Skipping loading registry entry … as its conditions were not met`, and the world loads normally. So when "the file is right there and the game ignores it", that DEBUG line is the only clue — and the default log level does not show it.
+An entry whose condition does not hold is the same as a definition that was never written, and a holder reference pointing at it fails to decode along with it. There is no middle state where the definition stays around, stops taking part in gameplay and can still be referenced by others.
 
-The price is that "gone" means gone: an entry whose condition fails is the same as a definition that was never written, and a holder reference pointing at it fails to decode along with it. There is no middle state where the definition stays around, stops taking part in gameplay and can still be referenced by others. The project is still unreleased, so old JSON and old saves are not guaranteed to stay compatible. See the [Datapack overview](./datapack/overview.md) for the rest of the loading rules.
+:::
 
 ## Why Does `/reload` Not Apply My Edit?
 
@@ -41,7 +41,7 @@ To apply an edit, load the world again: in single player, leave to the title scr
 
 A formula problem that the codec can already see while the data pack is parsed — a malformed expression, a bad `params` entry, an empty weighted list — is a **decode error**. The loader collects every failing entry and reports them together, and the load fails with its usual aggregated error, so you see *all* broken formulas at once rather than only the first one. That part behaves the same in development and in production.
 
-Problems that only show up when a formula is evaluated — a name no variable provides, a name the current context cannot supply such as `realm_rank` in an ability formula, a variable that produces `NaN` or a variable that throws — are reported at runtime instead, because nothing can know them earlier. A development environment logs the whole error, including the exception and its stack trace when there is one, and keeps evaluating with `0`; production logs one warning line per distinct message and also continues with `0`. So a typo is loud while you write the data pack, is still visible in a server log, and never silently zeroes a value forever. See [Formula Variables](./datapack/types/formula_variables.md).
+Problems that only show up when a formula is evaluated — a name no variable provides, a name the current context cannot supply such as `realm_rank` in an ability formula, a variable that produces `NaN` or a variable that throws — are reported at runtime instead, because nothing can know them earlier. To keep the log clean, production silences them, while a development environment logs the whole error, including the exception and its stack trace, and keeps evaluating with `0`. See [Formula Variables](./datapack/types/formula_variables.md).
 
 ## Can I Make My Own Content Pack and Distribute It?
 
@@ -56,6 +56,8 @@ The mod's code and assets are **All Rights Reserved**, and commercial distributi
 ## Where Can I Edit Datapacks Without Writing JSON by Hand?
 
 The [Datapack Visual Editor](https://datapack.mcdev.tech/) edits this mod's datapacks in the browser as a form, with field descriptions and registry completion.
+
+Or hand these docs to an AI and use them as a skill.
 
 ## Where Can I Ask Questions?
 

@@ -59,7 +59,7 @@ The Curios slot screen buttons control each slot's `getRenders()` state and the 
 
 ## Swap Keybind
 
-"Swap Main Hand with Back Weapon Slot" (`key.mxt.swap_back`) swaps the main hand stack with the first `back_weapon` slot. If the main hand stack is not valid for that slot, the swap does nothing. The keybind is unbound by default; see [Keys and HUD](./keys-and-hud.md).
+"Swap Main Hand with Back Weapon Slot" (`key.mxt.swap_back`) swaps the main hand stack with the first `back_weapon` slot. If the main hand stack is not valid for that slot, the swap does nothing. The keybind is unbound by default; see [Wheel, Resource Bars and Aura HUD](./keys-and-hud.md).
 
 ## Resource-Pack Render Offsets
 

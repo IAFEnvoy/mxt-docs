@@ -6,13 +6,29 @@ title: /lifespan
 
 `/lifespan` (= `/mxt lifespan`) reads and rewrites every body's **lifespan ledger**: how many ticks of life are left and the ceiling this life was granted. Where a ledger comes from, how it is settled and what running out does are on [Lifespan](/en/player-guide/lifespan).
 
-| Command | Effect |
-| --- | --- |
-| `/mxt lifespan` / `/mxt lifespan get` (= `/lifespan`, `/lifespan get`) | Reads the caller's own ledger. |
-| `/mxt lifespan get <targets>` | Prints every target's ledger (needs the `gamemaster` permission); a body that was never accounted for reports "not accounted for". |
-| `/mxt lifespan set <targets> <ticks>` | Rewrites both numbers to `ticks` (needs the `gamemaster` permission); `ticks` may not be negative. |
-| `/mxt lifespan add <targets> <ticks>` | Adjusts the ledger (needs the `gamemaster` permission): a positive amount raises both the remaining life and its ceiling, while **a negative amount only lowers what is left and never the ceiling**. |
-| `/mxt lifespan reincarnate <targets>` | Makes every target be **reborn** on the spot (needs the `gamemaster` permission): it runs the reset list on the **Server Config → Reincarnation** tab and reopens the ledger from **Server Config → Lifespan → Base lifespan**. |
+<div class="cmd-tree">
+
+- `/lifespan ...`
+
+  Reads the caller's own ledger.
+
+  - `... get <targets>`
+
+    Prints every target's ledger (needs the `gamemaster` permission); a body that was never accounted for reports "not accounted for".
+
+  - `... set <targets> <ticks>`
+
+    Rewrites both numbers to `ticks` (needs the `gamemaster` permission); `ticks` may not be negative.
+
+  - `... add <targets> <ticks>`
+
+    Adjusts the ledger (needs the `gamemaster` permission): a positive amount raises both the remaining life and its ceiling, while **a negative amount only lowers what is left and never the ceiling**.
+
+  - `... reincarnate <targets>`
+
+    Makes every target be **reborn** on the spot (needs the `gamemaster` permission): it runs the reset list on the **Server Config → Reincarnation** tab and reopens the ledger from **Server Config → Lifespan → Base lifespan**.
+
+</div>
 
 ## Notes
 

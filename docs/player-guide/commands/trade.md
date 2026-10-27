@@ -4,9 +4,13 @@ title: /trade
 
 # `/trade`
 
-| 命令 | 作用 |
-| --- | --- |
-| `/trade <player>`（= `/mxt trade <player>`） | 向玩家发起交易请求。 |
+<div class="cmd-tree">
+
+- `/trade <player>`
+
+  向玩家发起交易请求。也可以写成 `/mxt trade <player>`。
+
+</div>
 
 对方接受后双方各开一个交易界面：各自往自己的报价格里放东西，按「确认」表示同意这一次的报价。
 

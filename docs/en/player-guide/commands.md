@@ -11,12 +11,25 @@ Each alias can be switched off on its own, which removes only its top-level spel
 
 **Three commands live outside `/mxt`**. `/hud` and `/wheel` are registered with the client's own dispatcher, so they only work when typed into chat by hand, they need no permission, and nothing is sent to the server. `/picker` comes from the bundled Picker mod (see [/picker](./commands/picker)); this mod no longer provides a `/mxt picker`.
 
-| Command | Effect |
-| --- | --- |
-| `/hud` | Lists every movable HUD element: layout key, the anchor it is bound to, position, size and whether it currently has anything to draw. When the HUD layout editor shows nothing, this is what tells "nothing is registered" apart from "it is registered but has no content right now". |
-| `/hud open` | Opens the HUD layout editor, the same as the `key.mxt.hud_layout` keybind (right `Shift` by default). |
-| `/hud <layout key> reset` | Puts one element back in its default position; the layout key is in the `/hud` output, such as `resource_bars.left`. The reset also **deletes the saved value for that element** from `config/mxt/mxt-hud.json`, so it is still in its default place after a restart (with nothing saved, the element follows the window again until you move it once more). |
-| `/wheel` (= `/wheel configure`) | Opens the **wheel editor**, the same as the `key.mxt.wheel_configuration` keybind (**unbound by default** - set one in the controls screen if you want it). Six columns of spirit power on the left, six columns of abilities on the right, and the **main wheel**'s twelve cells in one shared row underneath; `Escape` saves and closes. Outside a world it only says the editor cannot be opened right now instead of showing an empty screen. The pages behind it are not edited here: they are read from what you carry. |
+<div class="cmd-tree">
+
+- `/hud ...`
+
+  Lists every movable HUD element: layout key, the anchor it is bound to, position, size and whether it currently has anything to draw. When the HUD layout editor shows nothing, this is what tells "nothing is registered" apart from "it is registered but has no content right now".
+
+  - `... open`
+
+    Opens the HUD layout editor, the same as the `key.mxt.hud_layout` keybind (right `Shift` by default).
+
+  - `... <layout key> reset`
+
+    Puts one element back in its default position; the layout key is in the `/hud` output, such as `resource_bars.left`. The reset also **deletes the saved value for that element**, so it is still in its default place after a restart (with nothing saved, the element follows the window again until you move it once more).
+
+- `/wheel [configure]`
+
+  Opens the **wheel editor**, the same as the `key.mxt.wheel_configuration` keybind (**unbound by default** - set one in the controls screen if you want it). Six columns of spirit power on the left, six columns of abilities on the right, and the **main wheel**'s twelve cells in one shared row underneath; `Escape` saves and closes. Outside a world it only says the editor cannot be opened right now instead of showing an empty screen. The pages behind it are not edited here: they are read from what you carry.
+
+</div>
 
 ## Sub-pages
 

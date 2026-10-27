@@ -25,9 +25,9 @@ export const sections = [
   {
     text: { zh: '游玩指南', en: 'Player Guide' },
     items: [
-      { page: 'player-guide/index', zh: '总览', en: 'Overview' },
-      { page: 'player-guide/keys-and-hud', zh: '按键与 HUD', en: 'Keys and HUD' },
-      { page: 'player-guide/items', zh: '物品与方块', en: 'Items and Blocks' },
+      { page: 'player-guide/index', zh: '游玩内容', en: 'Player Guide' },
+      { page: 'player-guide/keys-and-hud', zh: '轮盘、资源条与灵气 HUD', en: 'Wheel, Resource Bars and Aura HUD' },
+      { page: 'player-guide/items', zh: '内置物品与组件', en: 'Items and Blocks' },
       { page: 'player-guide/lifespan', zh: '寿元', en: 'Lifespan' },
       {
         // The page itself is the group's entry; one sub-page per root command. `alpha`

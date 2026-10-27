@@ -9,10 +9,10 @@ description: 本体提供的框架级物品、Curios 槽位、快捷键、HUD �
 
 | 目标 | 文档 |
 | --- | --- |
-| 认识内置物品、方块与物品绑定 | [物品与方块](/player-guide/items) |
+| 认识内置物品、方块与物品绑定 | [内置物品与组件](/player-guide/items) |
 | 查裂隙方块与裂隙锚的用法 | [裂隙](/player-guide/rift) |
 | 召唤与调整燃烧流星 | [流星](/player-guide/meteor) |
-| 查按键、轮盘、资源条与人物信息面板 | [按键与 HUD](/player-guide/keys-and-hud) |
+| 查按键、轮盘、资源条与人物信息面板 | [轮盘、资源条与灵气 HUD](/player-guide/keys-and-hud) |
 | 用命令调试或管理玩法 | [命令](/player-guide/commands) |
 | 查服务端配置项 | [服务端配置](/player-guide/config) |
 | 配置背武器与腰带槽位 | [Curios 槽位](/player-guide/curios-slots) |

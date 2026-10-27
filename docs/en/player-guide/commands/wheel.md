@@ -4,9 +4,13 @@ title: /wheel
 
 # `/wheel`
 
-| Command | Effect |
-| --- | --- |
-| `/wheel` (= `/wheel configure`) | Opens the **wheel editor**, the same as the `key.mxt.wheel_configuration` keybind (**unbound by default** - set one in the controls screen if you want it). |
+<div class="cmd-tree">
+
+- `/wheel [configure]`
+
+  Opens the **wheel editor**, the same as the `key.mxt.wheel_configuration` keybind (**unbound by default** - set one in the controls screen if you want it).
+
+</div>
 
 **Opening it asks nothing of the server.** The editor is purely client-side: it reads the attachments and registries that have already been synchronised, so this command sends no payload and needs no permission - `/wheel` and `/wheel configure` are two spellings of the same entry point. **Outside a world it does not open an empty screen**: it only answers "the wheel editor cannot be opened right now - enter a world first".
 

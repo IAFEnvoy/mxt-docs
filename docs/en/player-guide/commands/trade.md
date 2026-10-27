@@ -4,9 +4,13 @@ title: /trade
 
 # `/trade`
 
-| Command | Effect |
-|---|---|
-| `/trade <player>` (= `/mxt trade <player>`) | Sends a trade request to that player. |
+<div class="cmd-tree">
+
+- `/trade <player>`
+
+  Sends a trade request to that player. Also available as `/mxt trade <player>`.
+
+</div>
 
 Once the other player accepts, both sides get a trade window: each puts items into their own offer and presses **Accept** to agree to that offer.
 

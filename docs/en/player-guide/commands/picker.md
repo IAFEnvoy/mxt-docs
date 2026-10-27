@@ -4,11 +4,15 @@ title: /picker
 
 # `/picker`
 
-| Command | Effect |
-|---|---|
-| `/picker [<category>]` | Opens the item picker, which lists the items behind the selected categories; `category` is a category ID such as `mxt:aura`, `mxt:artifact`, `mxt:currency`, `mxt:item_binding` or `mxt:technique`, and leaving it out walks every registered category. It needs the `gamemaster` permission and only works in creative mode. |
+<div class="cmd-tree">
 
-## `/picker`
+- `/picker [<category>]`
+
+  Opens the item picker, which lists the items behind the selected categories; `category` is a category ID such as `mxt:aura`, `mxt:artifact`, `mxt:currency`, `mxt:item_binding` or `mxt:technique`, and leaving it out walks every registered category. It needs the `gamemaster` permission and only works in creative mode.
+
+</div>
+
+## What each category lists
 
 `/picker` comes from the **Picker** mod - this mod bundles it through `jarJar`, so installing this mod is enough. What the screen looks like, how the search matches and how an item leaves it are that mod's business; what follows is only what each category lists.
 

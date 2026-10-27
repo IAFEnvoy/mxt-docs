@@ -6,16 +6,29 @@ title: /resource
 
 `/resource` 管的是**数值账户**（`mxt:resource`）：读或改写自己身上某一份数值，以及看那份数值声明的[资源条](/datapack/json/resource.md)现在会算出什么。**写入需要 gamemaster 权限，查询不需要。**
 
-| 命令 | 作用 |
-| --- | --- |
-| `/resource`（= `/mxt resource`） | 不填参数时列出**全部资源条**的原始值，见下。 |
-| `/resource <id>` | 读自己那份数值的当前值。 |
-| `/resource <id> bar [index]` | 只看这一份数值声明的资源条，`index` 再限定到其中一条。 |
-| `/resource <id> set <value>` | 直接把自己的数值改写成 `value`（需要 gamemaster 权限）。 |
+<div class="cmd-tree">
 
-**读值与列资源条合成了一条命令**：两者问的都是同一份数值，所以不带参数就是"把全部列出来"，点名一个 `id` 就是读它，再多一个 `bar` 才是看它的条。从前的 `/mxt resourcebar` 已并入这里——它不再是一个节点，列全部改由不带参数的 `/resource` 承担。
+- `/resource ...`
 
-## `/resource bar`
+  不填参数时列出**全部资源条**的原始值。
+
+  - `... <id>`
+
+    读自己那份数值的当前值。
+
+  - `... <id> bar [index]`
+
+    只看这一份数值声明的资源条，`index` 再限定到其中一条。
+
+  - `... <id> set <value>`
+
+    直接把自己的数值改写成 `value`（需要 gamemaster 权限）。
+
+</div>
+
+**读值与列资源条合成了一条命令**：两者问的都是同一份数值，所以不带参数就是"把全部列出来"，点名一个 `id` 就是读它，再多一个 `bar` 才是看它的条。
+
+## bar
 
 资源条是**定义里声明**的东西（数值自己的 `bars` 数组），它描述这条在哪里画、画成什么样、按什么上下文取数、什么时候才画。这条命令把它当时算出的东西全打出来：
 
@@ -31,7 +44,7 @@ title: /resource
 
 ## 与 HUD 的关系
 
-这条命令打的是**数值本身**，不是屏幕上画出来的像素。游戏里画条的是 HUD 元素（`resource_bars.left` / `resource_bars.right` / 目标 / Boss），它们的开关、位置和缩放见[按键与 HUD](/player-guide/keys-and-hud.md)与 `/hud`。两边读的是同一份定义与同一个上下文，所以命令里看到的值和条上应该一致；不一致时先看[可见性条件](/datapack/json/resource.md)是不是把那一条挡掉了，或者锚点是不是被拖到了窗口外。
+这条命令打的是**数值本身**，不是屏幕上画出来的像素。游戏里画条的是 HUD 元素（`resource_bars.left` / `resource_bars.right` / 目标 / Boss），它们的开关、位置和缩放见[轮盘、资源条与灵气 HUD](/player-guide/keys-and-hud.md)与 `/hud`。两边读的是同一份定义与同一个上下文，所以命令里看到的值和条上应该一致；不一致时先看[可见性条件](/datapack/json/resource.md)是不是把那一条挡掉了，或者锚点是不是被拖到了窗口外。
 
 ## 顶层别名
 

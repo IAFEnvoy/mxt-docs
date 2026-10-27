@@ -6,16 +6,29 @@ title: /resource
 
 `/resource` covers the **value accounts** (`mxt:resource`): reading or rewriting one of your own values, and seeing what the [resource bars](../../datapack/json/resource.md) that value declares would currently compute. **Writing needs the `gamemaster` permission; reading does not.**
 
-| Command | Effect |
-|---|---|
-| `/resource` (= `/mxt resource`) | With no arguments, lists **every resource bar**, described below. |
-| `/resource <id>` | Reads the current value of one of your own accounts. |
-| `/resource <id> bar [index]` | Looks only at the bars that value declares, optionally narrowed to one of them by `index`. |
-| `/resource <id> set <value>` | Rewrites your own value outright (needs the `gamemaster` permission). |
+<div class="cmd-tree">
 
-**Reading a value and listing bars are one command**: both ask about the same account, so no arguments means "list them all", naming an `id` reads it, and one more word, `bar`, shows its bars. The old `/mxt resourcebar` is folded in here — it is no longer a node of its own, and listing everything is what a bare `/resource` does.
+- `/resource ...`
 
-## `/resource bar`
+  With no arguments, lists **every resource bar**.
+
+  - `... <id>`
+
+    Reads the current value of one of your own accounts.
+
+  - `... <id> bar [index]`
+
+    Looks only at the bars that value declares, optionally narrowed to one of them by `index`.
+
+  - `... <id> set <value>`
+
+    Rewrites your own value outright (needs the `gamemaster` permission).
+
+</div>
+
+**Reading a value and listing bars are one command**: both ask about the same account, so no arguments means "list them all", naming an `id` reads it, and one more word, `bar`, shows its bars.
+
+## bar
 
 A resource bar is **declared in a definition** (the value's own `bars` array); it says where the bar is drawn, what it looks like, which context supplies its numbers and when it is drawn at all. This command prints everything it computes at that moment:
 
@@ -31,7 +44,7 @@ When a context cannot produce values, that bar reports that it is currently unav
 
 ## Relation to the HUD
 
-This command prints the **values themselves**, not the pixels drawn on screen. The bars on screen are HUD elements (`resource_bars.left`, `resource_bars.right`, the target and boss overlays), whose toggles, positions and scaling live in [Keys and HUD](../keys-and-hud.md) and `/hud`. Both read the same definitions and the same contexts, so what the command prints and what a bar shows should agree; when they do not, first check whether a [visibility condition](../../datapack/json/resource.md) is hiding that bar, or whether its anchor has been dragged off the window.
+This command prints the **values themselves**, not the pixels drawn on screen. The bars on screen are HUD elements (`resource_bars.left`, `resource_bars.right`, the target and boss overlays), whose toggles, positions and scaling live in [Wheel, Resource Bars and Aura HUD](../keys-and-hud.md) and `/hud`. Both read the same definitions and the same contexts, so what the command prints and what a bar shows should agree; when they do not, first check whether a [visibility condition](../../datapack/json/resource.md) is hiding that bar, or whether its anchor has been dragged off the window.
 
 ## Top-level alias
 

@@ -4,14 +4,49 @@ title: /quality
 
 # `/quality`
 
-| 命令 | 作用 |
-| --- | --- |
-| `/quality`（= `/mxt quality`） | 看自己**主手**物品的品质：现在解析出来的那一档，以及它所属的链条。不需要权限。 |
-| `/quality get [<target>]`（= `/mxt quality get …`） | 同上，看别人的（需要 gamemaster 权限）。 |
-| `/quality set <targets> <quality>`（= `/mxt quality set …`） | 把品质**覆盖组件**写到目标主手的物品上（需要 gamemaster 权限）。它压过这一堆携带的定义与注册表那一层，`/quality clear` 摘掉；这一档能不能用仍由它自己的 `condition` 与所属链条决定。 |
-| `/quality clear <targets>`（= `/mxt quality clear …`） | 摘掉主手物品上的覆盖组件（`/quality set` 写的、**锻造结算**与**画符铭刻**写的都是它），让它退回这一堆携带的定义声明的档位、再退回注册表 `mxt:default_quality` 给的那一档（需要 gamemaster 权限）。本来就没有覆盖时逐个目标报失败。 |
-| `/quality upgrade <targets>`（= `/mxt quality upgrade …`） | 把主手物品在它所属的链条上**往上推一档**（需要 gamemaster 权限）：先过**下一档**自己写的 `upgrade_condition`，代价就是它的 `upgrade_costs`（`plan` → `commit` **整组原子**，付不出就一点不动、也不写档）。已经在顶端、或解析出的档不在链上时都会逐个目标报出原因。 |
-| `/quality chain <quality>`（= `/mxt quality chain …`） | 打印这一档所在的**整条品质链**，不需要权限：链上在它之前的是灰色、它自己是绿色、之后的是白色。一档只属于一条链（运行时沿 `next` 走出来的那一条）；不在任何链上或链条没走通时报「没有品质链包含它」，当前包不提供这一档时同样会被拒绝。链名写在入口档上，入口档没有名字时这一行开头的链名显示成 `null`。 |
+查看与改写物品的**品质**。每个节点也可以写成 `/mxt quality …`；写入需要 gamemaster 权限，查询不需要。
+
+<div class="cmd-tree">
+
+- `/quality ...`
+
+  看自己**主手**物品的品质：现在解析出来的那一档，以及它所属的链条。
+
+  - `... get [<target>]`
+
+    同上，看别人的（需要 gamemaster 权限）。
+
+  - `... set <targets> <quality>`
+
+    把品质**覆盖组件**写到目标主手的物品上（需要 gamemaster 权限）。
+
+  - `... clear <targets>`
+
+    摘掉主手物品上的覆盖组件（需要 gamemaster 权限）。
+
+  - `... upgrade <targets>`
+
+    把主手物品在它所属的链条上**往上推一档**（需要 gamemaster 权限）。
+
+  - `... chain <quality>`
+
+    打印这一档所在的**整条品质链**。
+
+</div>
+
+## set 与 clear
+
+`set` 写的组件压过这一堆携带的定义与注册表那一层，`/quality clear` 摘掉它；这一档能不能用仍由它自己的 `condition` 与所属链条决定。
+
+`clear` 摘掉的是 `/quality set`、**锻造结算**与**画符铭刻**都写在同一个组件里的那份覆盖，摘下之后物品退回这一堆携带的定义声明的档位、再退回注册表 `mxt:default_quality` 给的那一档。本来就没有覆盖时逐个目标报失败。
+
+## upgrade
+
+先过**下一档**自己写的 `upgrade_condition`，代价就是它的 `upgrade_costs`（`plan` → `commit` **整组原子**，付不出就一点不动、也不写档）。已经在顶端、或解析出的档不在链上时都会逐个目标报出原因。
+
+## chain
+
+链上在它之前的是灰色、它自己是绿色、之后的是白色。一档只属于一条链（运行时沿 `next` 走出来的那一条）；不在任何链上或链条没走通时报「没有品质链包含它」，当前包不提供这一档时同样会被拒绝。链名写在入口档上，入口档没有名字时这一行开头的链名显示成 `null`。
 
 ## 品质是哪一档
 

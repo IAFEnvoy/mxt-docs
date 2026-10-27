@@ -186,6 +186,32 @@ html:lang(en) .VPNavBarTitle .title {
   font-size: 23px;
 }
 
+/* Command pages show the syntax as a tree, the way a wiki does: one form per
+   line, its description underneath, depth carried by indentation instead of
+   bullets. Descriptions keep the body font; only the form is monospace. */
+.vp-doc .cmd-tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 1.6em;
+}
+
+.vp-doc .cmd-tree > ul {
+  padding-left: 0;
+}
+
+.vp-doc .cmd-tree li {
+  margin: 0;
+  padding-top: .5em;
+}
+
+.vp-doc .cmd-tree li > p {
+  margin: 0;
+}
+
+.vp-doc .cmd-tree li > p + p {
+  margin-top: .25em;
+}
+
 /* Long JSON fields scroll inside tables instead of widening the page. */
 .vp-doc table {
   display: block;

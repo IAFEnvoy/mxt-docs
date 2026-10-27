@@ -12,7 +12,7 @@ The mod itself provides framework items, slots, commands and interaction; the ac
 | Meet the built-in items, blocks and item bindings | [Items and Blocks](./items.md) |
 | Look up the Rift block and the Rift Anchor | [Rifts](./rift.md) |
 | Summon and customize burning meteors | [Meteors](./meteor.md) |
-| Look up keybinds, the wheel, resource bars and the character panel | [Keys and HUD](./keys-and-hud.md) |
+| Look up keybinds, the wheel, resource bars and the character panel | [Wheel, Resource Bars and Aura HUD](./keys-and-hud.md) |
 | Debug or manage gameplay with commands | [Commands](./commands.md) |
 | Look up the server configuration entries | [Server Configuration](./config.md) |
 | Configure the back weapon and belt slots | [Curios Slots](./curios-slots.md) |

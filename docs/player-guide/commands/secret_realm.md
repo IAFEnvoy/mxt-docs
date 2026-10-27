@@ -6,19 +6,49 @@ title: /secret_realm
 
 秘境管理命令，整棵子树需要 **2 级 OP（gamemaster）**。也可使用 `/mxt secret_realm`；根别名由服务端的命令别名设置控制。
 
-秘境定义是模板，实例才是实际维度。实例维度键为 `<定义命名空间>:secret_realm/<定义路径>/<序号>`，序号从 `0` 开始。命令参数支持补全已登记的实例，包括休眠中的实例。
+<div class="cmd-tree">
 
-| 命令 | 作用 |
-| --- | --- |
-| `/secret_realm definitions` | 列出可用的秘境定义 ID。 |
-| `/secret_realm list` | 列出实例维度、定义、人数上限、所有者、准备与加载状态。 |
-| `/secret_realm info <dimension>` | 查看指定实例及其保存的入口坐标。 |
-| `/secret_realm enter <definition>` | 按定义选择可加入的实例，或按规则创建实例并进入。 |
-| `/secret_realm join <dimension>` | 进入指定实例，不另找一份实例。 |
-| `/secret_realm check <dimension>` | 以执行玩家的体积与状态检查预定落点，报告安全结果和附近搜索结果。 |
-| `/secret_realm anchor <dimension> <x> <y> <z>` | 将实例入口设为指定的安全坐标。 |
-| `/secret_realm exit` | 回到进入秘境时保存的位置，仍受退出条件限制。 |
-| `/secret_realm destroy <dimension>` | 强制结束实例并删除其地形；`mxt:existing` 类型只清理实例成员，不删除真实维度。 |
+- `/secret_realm ...`
+
+  - `... definitions`
+
+    列出可用的秘境定义 ID。
+
+  - `... list`
+
+    列出实例维度、定义、人数上限、所有者、准备与加载状态。
+
+  - `... info <dimension>`
+
+    查看指定实例及其保存的入口坐标。
+
+  - `... enter <definition>`
+
+    按定义选择可加入的实例，或按规则创建实例并进入。
+
+  - `... join <dimension>`
+
+    进入指定实例，不另找一份实例。
+
+  - `... check <dimension>`
+
+    以执行玩家的体积与状态检查预定落点，报告安全结果和附近搜索结果。
+
+  - `... anchor <dimension> <x> <y> <z>`
+
+    将实例入口设为指定的安全坐标。
+
+  - `... exit`
+
+    回到进入秘境时保存的位置，仍受退出条件限制。
+
+  - `... destroy <dimension>`
+
+    强制结束实例并删除其地形；`mxt:existing` 类型只清理实例成员，不删除真实维度。
+
+</div>
+
+秘境定义是模板，实例才是实际维度。实例维度键为 `<定义命名空间>:secret_realm/<定义路径>/<序号>`，序号从 `0` 开始。命令参数支持补全已登记的实例，包括休眠中的实例。
 
 `loaded=false` 表示实例当前未加载，不代表实例已销毁。`info` 只读登记信息；`check` 和 `anchor` 会打开目标实例、按需准备地形和加载落点附近区块，但不传送玩家，也不增加成员。
 
