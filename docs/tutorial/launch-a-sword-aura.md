@@ -179,5 +179,5 @@ description: "用实体行为 mxt:spawn_sword_aura 做一条按键技能：发�
 
 - [行为类型](../datapack/types/action/entity_action_types.md) —— `mxt:spawn_sword_aura` 与 `mxt:explode` 的完整字段表，以及其它可以放进 `collide_action` 的行为。
 - [定义技能](./add-an-ability.md) —— 技能类型、通用字段、消耗与授予路径的总入口。
-- [内置物品与组件](../player-guide/items.md) —— 法器、载体与组件怎么给玩家一条能按的技能。
+- [内置物品](../player-guide/items.md) —— 法器、载体与组件怎么给玩家一条能按的技能。
 - [数值提供器](../datapack/types/number_provider_types.md) —— `speed` 这类字段除了写数字，还能写公式。

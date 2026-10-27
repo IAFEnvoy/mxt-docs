@@ -202,5 +202,5 @@ description: "把一件物品做成飞行法器：载具定义、御器之术、
 - [artifact（法器）](../datapack/json/artifact.md) —— `abilities` / `spirit_capacity` / `require_owner` 与长按认主。
 - [定义功法与晋级](./define-a-technique.md) —— 把术写进 `granted_abilities`，让学会功法就能飞。
 - [载具渲染器](../java/interfaces/mount/renderer.md) / [载具实体契约](../java/interfaces/mount/vehicle.md) —— 自己画一套外观，或自带一种载具本体。
-- [轮盘、资源条与灵气 HUD](../player-guide/keys-and-hud.md) —— 起剑那一格怎么钉、开关怎么显示。
+- [按键与轮盘](../player-guide/keys-and-wheel.md) —— 起剑那一格怎么钉、开关怎么显示。
 - [命令 · 飞行](../player-guide/commands/flight.md) —— `/flight fill` 的完整说明。

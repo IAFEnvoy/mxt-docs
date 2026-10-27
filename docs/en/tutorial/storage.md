@@ -79,7 +79,7 @@ An ability is granted in exactly two situations: the item is **in the main hand 
 
 To make storage reliably reachable, write `curios_equipable` as `true` and keep the item in a Curios slot. The four `charm` slots take the items in the `curios:charm` tag plus artifacts that declare `curios_equipable: true`, which is the easiest place to put it.
 
-For how the wheel selects and spends, see [Wheel, Resource Bars and Aura HUD](../player-guide/keys-and-hud.md).
+For how the wheel selects and spends, see [Keys and Wheel](../player-guide/keys-and-wheel.md).
 
 ## Step 3 — What a Press Does
 
@@ -156,5 +156,5 @@ Abilities and artifacts are definitions in data pack registries, so load the wor
 - [Ability Types](../datapack/types/other/ability.md) — the fields `mxt:storage` reads and its failure reasons on a press.
 - [Artifact (artifact)](../datapack/json/artifact.md) — the full field list for `items` / `abilities` / `require_owner` / `curios_equipable`, plus the tooltip rules.
 - [Curios Slots](../player-guide/curios-slots.md) — which slots take artifacts that declare `curios_equipable`.
-- [Wheel, Resource Bars and Aura HUD](../player-guide/keys-and-hud.md) — how the main wheel and the derived pages read what your gear gives you.
+- [Keys and Wheel](../player-guide/keys-and-wheel.md) — how the main wheel and the derived pages read what your gear gives you.
 - [Entity Action Types](../datapack/types/action/entity_action_types.md) — which store `mxt:modify_ability_storage` writes to.

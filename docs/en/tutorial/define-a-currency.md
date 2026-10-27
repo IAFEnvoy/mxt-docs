@@ -207,5 +207,5 @@ Currency is a data pack registry, read when the **world loads**, and `/reload` d
 ## Next
 
 - [Currency](../datapack/json/currency.md) — every field in full, plus the Exchange Station's behaviour and how to disable a definition.
-- [Generic Items and Components](../player-guide/items.md) — the mod's own four spirit stone tiers with their default currency values, and the Exchange Station, Trade Station and Cheque Table blocks.
+- [Built-in Items](../player-guide/items.md) — the mod's own four spirit stone tiers with their default currency values, and the Exchange Station, Trade Station and Cheque Table blocks.
 - [Create Items and Bind Actions with KubeJS](./create-items-with-kubejs.md) — which file the registration in step 1 goes into, and when items and data packs each take effect.

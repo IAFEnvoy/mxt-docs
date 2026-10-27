@@ -179,5 +179,5 @@ This file rather than a new granting route, because in [Define an Ability](./add
 
 - [Action Types](../datapack/types/action/entity_action_types.md) — the full field tables for `mxt:spawn_sword_aura` and `mxt:explode`, and the other actions that can go into `collide_action`.
 - [Define an Ability](./add-an-ability.md) — the main entry point for ability types, common fields, costs and granting routes.
-- [Built-in Items and Components](../player-guide/items.md) — how artifacts, carriers and components hand a player an ability to press.
+- [Built-in Items](../player-guide/items.md) — how artifacts, carriers and components hand a player an ability to press.
 - [Number Providers](../datapack/types/number_provider_types.md) — fields like `speed` take a formula as well as a number.

@@ -202,5 +202,5 @@ Data pack definitions are read while the world loads, so leave to the title scre
 - [Artifact (artifact)](../datapack/json/artifact.md) — `abilities` / `spirit_capacity` / `require_owner` and claiming with a long press.
 - [Define a Technique and Its Levels](./define-a-technique.md) — writing the skill into `granted_abilities` so learning the technique is what lets you fly.
 - [MountRenderer](../java/interfaces/mount/renderer.md) / [MountVehicle](../java/interfaces/mount/vehicle.md) — draw an appearance of your own, or ship a mount body of your own.
-- [Wheel, Resource Bars and Aura HUD](../player-guide/keys-and-hud.md) — how the take-off cell is pinned and how the switch is shown.
+- [Keys and Wheel](../player-guide/keys-and-wheel.md) — how the take-off cell is pinned and how the switch is shown.
 - [/flight](../player-guide/commands/flight.md) — the full write-up of `/flight fill`.

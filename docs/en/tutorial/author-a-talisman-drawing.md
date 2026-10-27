@@ -241,7 +241,7 @@ So `paper` narrows within the tag: paper outside the tag can never start a drawi
 | **Server Config → Talisman → Pigment Rate** | `1.0` | Pigment per pixel of stroke length. |
 | **Server Config → Talisman → Pigment Per Stroke Floor** / **Cap** | `1` / `0` | The least and the most one stroke takes (`0` means no cap). |
 
-The strokes of a 90 × 210 talisman usually sum to 400–1200 pixels, so one default brush traces about three to five of them. **A stroke with too little pigment is refused**, and once the refusals pass **Server Config → Talisman → Rejected Strokes Allowed** (default `3`) that drawing fails and the materials are gone; "the brush is no longer on the cursor" is not counted. The full brush-and-pigment rules are in [Brushes and Pigment](../player-guide/items.md#brushes-and-pigment).
+The strokes of a 90 × 210 talisman usually sum to 400–1200 pixels, so one default brush traces about three to five of them. **A stroke with too little pigment is refused**, and once the refusals pass **Server Config → Talisman → Rejected Strokes Allowed** (default `3`) that drawing fails and the materials are gone; "the brush is no longer on the cursor" is not counted. The full brush-and-pigment rules are in [Brushes and Pigment](../player-guide/alchemy-and-brush.md#brushes-and-pigment).
 
 ## Step 5 — Tracing It at the Workstation
 
@@ -295,5 +295,5 @@ A drawing recipe is a **vanilla recipe**, so `/reload` is enough to read it agai
 
 - [Talisman Drawing](../datapack/json/talisman_drawing.md) — every field in full, plus the load-time checks and the example that gates on paper tiers.
 - [Talisman](../datapack/json/talisman.md) — the definition the top-level `talisman` names: what it inscribes, how much it holds, what one invocation pays, and how wear and tier land on the carrier.
-- [Generic Items](../player-guide/items.md) — the talisman workstation, the brush and pigment as the player meets them.
+- [Alchemy and the Brush](../player-guide/alchemy-and-brush.md) — the talisman workstation, the brush and pigment as the player meets them.
 - [Define a Talisman](./inscribe-a-talisman.md) — the prerequisite and the other half: write `example:flame_sigil` and the ability it inscribes first, then come back to see what this page draws.

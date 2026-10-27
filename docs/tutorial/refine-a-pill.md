@@ -273,4 +273,4 @@ give @s mxt:pill[mxt:pill={pill:"example:warming_pill"}]
 - [pill（丹药）](../datapack/json/pill.md) —— 服用行为、丹毒、阈值与过量后的残留。
 - [pill_binding（丹药绑定）](../datapack/json/pill_binding.md) —— 认领物品、服用次数与冷却。
 - [quality（品质）](../datapack/json/quality.md) —— `alchemy_modifier` 怎么缩短开炉时长。
-- [内置物品与组件](../player-guide/items.md) —— 丹炉各部件与丹药载体在游戏里怎么用。
+- [炼丹与符笔](../player-guide/alchemy-and-brush.md) —— 丹炉各部件与丹药载体在游戏里怎么用。

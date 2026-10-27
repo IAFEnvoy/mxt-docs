@@ -1,11 +1,11 @@
 ---
-title: Items and Blocks
-description: The framework materials, functional carriers, workstations and binding tables that MiXianTu registers on its own.
+title: Built-in Items
+description: The framework materials, functional carriers and blocks that MiXianTu registers on its own.
 ---
 
-# Items and Blocks
+# Built-in Items
 
-MiXianTu does not preset numbers for any gameplay system, but it does provide a small set of generic carrier items and components. Data-driven item gameplay usually attaches to existing items through the binding tables or the item-keyed registries instead.
+MiXianTu does not preset numbers for any gameplay system, but it does provide a small set of generic carrier items and components. Data-driven item gameplay usually attaches to existing items through the binding tables or the item-keyed registries instead (see [Item Bindings and Components](./item-bindings.md)).
 
 ## Generic Materials
 
@@ -17,7 +17,7 @@ MiXianTu does not preset numbers for any gameplay system, but it does provide a 
 | Supreme Spirit Stone | `mxt:supreme_spirit_stone` | 1000 | A rare, high-value medium. |
 | Cheque | `mxt:cheque` | Set by its item component | A signable value carrier for the existing trade system. Its tooltip shows its value and, when it is not blank, the name of its issuer (`item.mxt.cheque.issuer`). |
 
-The four spirit stones share the `SpiritStoneItem` base class and implement spirit power charge and drain. Capacity is not defined in code: it is taken from the `aura` the `item_aura` registry gives that item, and after the world is loaded again the first real access truncates old values above the new maximum. A spirit stone without the `mxt:spirit_storage` component is treated as fully charged, while an empty `amounts` map — or one that does not list that aura — means empty. The Display Stand tries to charge the spirit stone it displays when it receives spirit power, and when cultivation fuel runs out the same stone is drained and returned.
+The four spirit stones share the `SpiritStoneItem` base class and implement spirit power charge and drain. Capacity is not defined in code: it is taken from the `aura` the `item_aura` registry gives that item, and after the world is loaded again the first real access truncates old values above the new maximum. A spirit stone without the `mxt:spirit_storage` component is treated as fully charged, while an empty `amounts` map — or one that does not list that aura — means empty. The stash the stone holds is written under the aura key (`{amounts:{"mxt:common":100}}`), so a datapack changing the definition's `type` afterwards never rewrites a stone already in the world. The Display Stand tries to charge the spirit stone it displays when it receives spirit power, and when cultivation fuel runs out the same stone is drained and returned.
 
 The bundled `currency` datapack only defines a 10:1 two-way exchange and the values above. Content packs can overwrite these values directly, or reference any of the four spirit stones from an `item_binding`, formation, artifact, cultivation or trade definition. The mod also registers Copper Coin, Iron Coin, Gold Coin, Diamond Coin, Emerald Coin and Netherite Coin (`mxt:copper_coin`, `mxt:iron_coin`, `mxt:gold_coin`, `mxt:diamond_coin`, `mxt:emerald_coin`, `mxt:netherite_coin`), which have no item behaviour of their own: their values and exchanges come from the same `currency` registry and its bundled entries.
 
@@ -44,7 +44,7 @@ Blank carriers, identity items and fixed props are ordinary items as well. Block
 
 ## Generic Functional Items
 
-The items below are backed by a unified server-side implementation shipped with the mod. Each item only stores a datapack holder or persistent state; it does not copy the rules of the corresponding module, and the actual contract, formation, secret realm and resource values still come from datapacks.
+The items below are backed by a unified server-side implementation shipped with the mod. Each item only stores a datapack holder or persistent state; it does not copy the rules of the corresponding module, and the actual contract, formation, secret realm and resource values still come from datapacks. How to write these components by hand is on [Item Bindings and Components](./item-bindings.md#data-component-examples).
 
 | Item | ID | Persistent component | Unified behaviour |
 |---|---|---|---|
@@ -62,7 +62,7 @@ The items below are backed by a unified server-side implementation shipped with 
 | Identification Mirror | `mxt:identification_mirror` | consumes `mxt:identification` | Resolves items that carry an identification component in a unified way; the items to identify come from content packs or other mods. |
 | Spirit Root | `mxt:spirit_root` | `mxt:spirit_root` | Stores a `spirit_root` definition; right-click to gain that root ("already held" and element conflicts are refused as usual, see [spirit_root](/en/datapack/json/spirit_root#holding)), spending one item on success and **none in creative mode**. |
 | Physique | `mxt:physique` | `mxt:physique` | Stores a `physique` definition; right-click to gain that physique ("already held", an unmet `holder_condition` and exclusive-tag conflicts are refused as usual, see [physique](/en/datapack/json/physique#holding)), spending one item on success and **none in creative mode**. |
-| Talisman Brush | `mxt:talisman_brush` | `mxt:brush_pigment` | A brush holds a pigment store of its own, refilled with the same click the vanilla bundle uses (point at pigment with the brush on the cursor). Pigment is whatever sits in the `#mxt:brush_pigment` item tag, which in the base pack is cinnabar `mxt:cinnabar` alone; what one portion is worth comes from the server config (see [Talisman Brush and Pigment](#brushes-and-pigment)). |
+| Talisman Brush | `mxt:talisman_brush` | `mxt:brush_pigment` | A brush holds a pigment store of its own, refilled with the same click the vanilla bundle uses (point at pigment with the brush on the cursor). Pigment is whatever sits in the `#mxt:brush_pigment` item tag, which in the base pack is cinnabar `mxt:cinnabar` alone; what one portion is worth comes from the server config (see [Alchemy and the Brush](./alchemy-and-brush.md#brushes-and-pigment)). |
 | Talisman | `mxt:talisman` | `mxt:talisman`, `mxt:spirit_storage` | Holds the one `talisman` definition inscribed on it, plus a `mode` (`fire` by default, or `store`); inscribing another replaces it. Holding right-click pours spirit power in (capacity = one invocation's aura entries times the inscriptions' `capacity` multiplier, itself capped by what the carrier has left, counted per aura); a full carrier fires everything inscribed on it, and once the store covers one invocation's aura entries a plain right-click fires it too — declare a `durability` / `consume` and a larger multiplier to fire several times from a single pour. A sneak-use switches the mode. An inscribed definition may declare a durability (`durability` / `consume`): the cap is written into the vanilla components (`max_damage` plus `max_stack_size: 1` and `damage: 0`), so the item shows a durability bar, and firing spends wear instead of whole carriers until the carrier breaks. |
 
 The values of both `mxt:resource_container` and `mxt:resource_capacity` are bare maps whose keys are resource IDs; there is no `values` wrapper, and a wrongly wrapped value is silently read as one unreadable key — the map stays empty and only a warning is logged. A spirit vessel with no capacity written down stores nothing at all: a value has no natural maximum, so the number has to come from `mxt:resource_capacity`.
@@ -72,32 +72,6 @@ When a Contract Scroll, Formation Plate, Secret Realm Token or Reward Box has no
 A Technique Book's pages use vanilla's writable-book page component, `minecraft:writable_book_content`. Its `pages` is a list of **plain strings** and cannot hold a `translate` component, so the body text a page prints exists in exactly the **one language the pack wrote it in**; `custom_name` is unaffected and still follows the language setting. The mod only reads the pages back out and prints them into the chat log verbatim, never translating them. **Lifting this limit takes a change in the mod itself** — no datapack can work around it.
 
 A Jade Slip does not go through that component: it stores one text component (`mxt:stored_text`) and a bare string there is a translation key, so a slip's body does follow the language.
-
-## See Also
-
-- The rift editor and the Rift Anchor are documented on the [Rifts](./rift.md) page.
-- The commands that manage a single rift are in [Commands](./commands/mxt.md).
-
-## Data Component Examples
-
-Component values can be written directly with the item component syntax or from KubeJS, and the referenced datapack registry IDs are parsed by the vanilla registry codec:
-
-```mcfunction
-give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_servant"}]
-give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
-give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_realm"}]
-give @s mxt:reward_box[mxt:reward_box="mxt_test:reward_box/spirit_stones"]
-give @s mxt:rift_anchor[mxt:rift={recorded:{type:"position",dimension:"minecraft:overworld",pos:[0.5d,65.0d,0.5d]}}]
-give @s mxt:spirit_vessel[mxt:resource_capacity={"mxt_test:qi":1000.0},mxt:resource_container={"mxt_test:qi":25.0}]
-give @s mxt:talisman[mxt:talisman={talisman:"mxt_test:flame_sigil"}]
-give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
-give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
-give @s mxt:technique_book[mxt:technique="mxt_test:azure_water_manual"]
-```
-
-The last line is how a **manual** is made: a stack teaches a technique only while it carries the `mxt:technique` component, and a technique book with neither that component nor any declaration's `items` claiming it teaches nothing and shows no technique in its tooltip. The binding (`technique_binding`) only decides **which items are the manual and what has to hold before learning**, plus which item `/picker mxt:technique` generates as its carrier (**the creative tab does not generate carriers**); how long a read takes and in what pose is written on the [technique](../datapack/json/technique.md) itself. Writing the item into the binding's `items` also makes a stack a manual with no component at all. See [Technique Binding](../datapack/json/technique_binding.md).
-
-The second and third lines from the bottom are how a **spirit root item** and a **physique item** are made: the component names the definition ID, and right-clicking grants it (a spirit root is refused over "already held / element conflict", a physique over "already held / unmet condition / exclusive-tag conflict"), spending one item on success and **none in creative mode**. See [spirit_root](../datapack/json/spirit_root.md#holding) and [physique](../datapack/json/physique.md#holding).
 
 ## Blocks and Workstations
 
@@ -113,57 +87,6 @@ The second and third lines from the bottom are how a **spirit root item** and a 
 | Spirit Stone Ore | `mxt:spirit_stone_ore` | The mod's spirit stone ore block; it drops experience when mined. Aura contributions are defined by datapacks. |
 | Spirit Stone Block | `mxt:spirit_stone_block` | The storage block; the bundled `block_aura` entry makes it an aura source. |
 
-## Alchemy and Spirit Herbs
-
-A furnace is not one block: it is a fixed 3x3x3 you build by hand. The core carries the furnace spec, the two input stores split main ingredients from auxiliary ingredients and the catalyst, the output store only hands results out, and the other 18 cells are casing (the bottom layer only needs its four corners).
-
-| Block | ID | Function |
-|---|---|---|
-| Alchemy Furnace Core | `mxt:alchemy_furnace` | The cell on the front face at the middle layer. The heat readout plus the Set / Start / Abort controls sit on the page this cell opens. |
-| Main Ingredient Input | `mxt:alchemy_main_input` | On your left when you face the front. Two main-ingredient slots. |
-| Auxiliary Ingredient Input | `mxt:alchemy_auxiliary_input` | On your right when you face the front. Two auxiliary slots plus one catalyst slot. |
-| Alchemy Output | `mxt:alchemy_output` | Top centre. Four take-only output slots. |
-| Alchemy Furnace Casing | `mxt:alchemy_furnace_casing` | The four bottom corners and the two layers above, 18 cells in all, each carrying its own wall material. Casing opens no screen. |
-| Pill | `mxt:pill` | The pill carrier: vanilla eating, a name and a tooltip. What a dose does is on [Pill](../datapack/json/pill.md); which items are that pill, how many times it can be taken and how much toxicity it adds come from its [Pill Binding](../datapack/json/pill_binding.md). |
-
-The hand feel is: **a heat block in the bottom centre cell, main ingredients in the left store, auxiliary ingredients and the catalyst in the right store, and the result taken from the output store.** Loading materials never starts a batch by itself; a player presses Start on the core's page. A shell with a missing cell, an invalid wall material or a cell claimed by another furnace does not form and cannot run.
-
-**The mod ships no heat block.** The numbers a heat block gives come from the `mxt:heat_source` registry (a block may also implement the interface itself), and the mod supplies no default. The temperature ceiling is the lowest of three: the furnace specification's own optional `max_temperature`, the coldest wall material in the whole furnace, and the highest temperature the heat block gives. A higher-tier specification with a large `max_temperature` can raise it, but never past the walls and the heat block.
-
-A heat block's own item tooltip starts with a "Heat source" header and prints the two numbers it gives — a "Maximum furnace temperature" line and a "Heating: … per tick" line. A block that implements the heat interface prints no numbers: it says the heat it gives depends on the block's own state. The furnace core's tooltip lists the main, auxiliary and catalyst slot counts and the capacity, plus a "Specification ceiling" line whenever the specification declares `max_temperature`; the 3x3x3 layout and the heat cell line sit behind Shift, and without Shift the tooltip ends with "Hold Shift for the build guide".
-
-Neither the input stores nor the core accept hoppers, and a heat block is not a container either; the output store can only be pulled from its bottom face, and once the furnace is formed that face looks onto the middle-layer centre casing, so no hopper fits there. Removing casing or a store while a batch is running settles that batch as a failure once and does not return the materials already loaded; removing a store only drops that store's own contents.
-
-Eating a pill accumulates toxicity: what a dose does, where the threshold sits and what is left after an overdose are on [Pill](../datapack/json/pill.md), and the mod only keeps the ledger. Toxicity does not fade on its own by default; with **Server Config → Alchemy → Natural toxicity decay per second** set to a positive number, an active entity that already has toxicity loses some once every 20 ticks, nothing happens offline, and an entity that has never taken a pill does not gain an empty ledger.
-
-## Brushes and Pigment
-
-The talisman brush `mxt:talisman_brush` **does not stack** — one brush is one store of pigment of its own, kept in the item component `mxt:brush_pigment`: a non-negative integer where **one unit is one pixel of stroke length**, and omitting the component is the same thing as writing `0` (an empty brush either way). The little strip in the inventory cell is how much is left (it only shows while there is pigment), and the tooltip carries a "Pigment: stored / ceiling" line whose ceiling is **Server Config → Talisman → Brush Capacity** (4000 by default, roughly enough to trace 3–5 talismans).
-
-Refilling is the same click the vanilla bundle uses: with the brush on the cursor, **click a stack of pigment** (either mouse button) and the brush takes **one portion — one item — per click**, so four clicks are four portions; a full brush takes nothing. **It is not tied to one screen or one slot**: your inventory, a chest and the drawing workstation all work, and no screen has a pigment slot of its own. What one portion is worth is **Server Config → Talisman → Pigment Per Portion** (1000 by default), and a pack adds a kind of pigment by putting the item in the `#mxt:brush_pigment` tag (cinnabar `mxt:cinnabar` only in the base pack) — no recipe is involved.
-
-The pigment is what drawing spends: at the talisman workstation it is taken by the length of each stroke, see [`mxt:talisman_drawing`](/en/datapack/json/talisman_drawing).
-
-## Item Bindings
-
-MiXianTu does not create logical datapack items. Physical items must be registered by Minecraft, a content mod or KubeJS; datapacks only attach MiXianTu gameplay rules to those existing item IDs.
-
-| Table | Purpose |
-|---|---|
-| `item_binding` | Attaches behaviour, conditions, spirit roots or generic display to an existing item. |
-| `weapon_binding` | Adds vanilla attribute modifiers (a weapon's own attack damage and speed go here too) plus attack, use and tick behaviour. |
-| `pill` | What one pill does: the dose action, its toxicity gain, the overdose threshold and what an overdose leaves behind. |
-| `pill_binding` | Claims a family of existing items as one pill, with its use cap and cooldown. |
-| `tool_binding` | Claims tool items and lists the forging methods they unlock. |
-| `blueprint_binding` | Claims blueprint items and lists the forging blueprints they offer. |
-| `technique_binding` | Describes **which items are one technique's manual**, the item the mod generates as its carrier, and the conditions that gate learning. Whether a stack is a manual, and which technique it teaches, follows the stack's own `mxt:technique` data component first and a declaration's `items` second. |
-
-`item_binding`, `weapon_binding`, `tool_binding` and `blueprint_binding` are registries, just like `pill`, `pill_binding` and `technique_binding`: one file per definition, living at `data/<namespace>/mxt/<table>/<entry>.json`, where the entry claims items with `items` (`pill` claims no items — `pill_binding` is what claims them).
-
-`items` on the claiming tables accepts a single item, a vanilla item tag, wildcards, regular expressions and mixed arrays; `carrier_item` is the exception, taking one item ID only. `blocks` on `block_aura` and `heat_source` takes a block ID or a `#`-prefixed block tag, expanded at load time. A `technique_binding` declaration is matched by technique id, and its `items` is the optional route.
-
-**Per-stack additions are data components**: `mxt:quality` (single value — a whole quality object, changing both the tier and the ladder this stack reads), `mxt:element` (a list — unioned with the definition), `mxt:pill` (an optional `pill` naming a pill definition, plus `on_consume` / `toxicity_gain` / `toxicity_threshold` / `on_overdose` / `toxicity_after_overdose` overlaid field by field), `mxt:technique_reading` (field-by-field override of the reading parameters), `mxt:forging_methods` and `mxt:forging_blueprints` (lists — unioned with the definition). They are written for one stack only. `conditions` and a weapon's numbers and actions have **no** component: a per-stack change means adding a definition that claims that item in the matching item-keyed registry, and per-stack weapon numbers go through vanilla `minecraft:attribute_modifiers`. See [Item Binding](../datapack/json/item_binding.md) for the shared matching, condition and quality rules, and [Weapon Binding](../datapack/json/weapon_binding.md), [Pill Binding](../datapack/json/pill_binding.md) and [Technique Binding](../datapack/json/technique_binding.md) for the fields of each binding type.
-
 ## Item Aura
 
 An `item_aura` registry entry gives an existing item a releasable aura capacity, a consumption speed, a completion behaviour and an optional `result_stack`.
@@ -171,3 +94,8 @@ An `item_aura` registry entry gives an existing item a releasable aura capacity,
 During cultivation the whole matching stack is taken out of the inventory, and capacity, consumption speed and release speed all scale with the stack count, so the total consumption time does not change. The remaining aura is kept in the item's `mxt:item_aura` component, while the capacity is always computed dynamically from the datapack.
 
 See [Item Aura](../datapack/json/item_aura.md) for the full runtime behaviour and the field list.
+
+## See Also
+
+- The rift editor and the Rift Anchor are documented on the [Rifts](./rift.md) page.
+- The commands that manage a single rift are in [Commands](./commands/mxt.md).

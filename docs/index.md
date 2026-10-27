@@ -25,7 +25,7 @@ description: 觅仙途文档：安装、游玩内容、数据包 JSON 格式、�
 | 安装模组并确认前置 | [基本信息与安装](/installation) |
 | 用开发模式复现问题并检查模块耗时 | [开发模式](/tutorial/dev-mode) |
 | 跟着步骤做出第一份内容 | [教程](/tutorial/) |
-| 了解按键、HUD、物品和命令 | [游玩指南](/player-guide/keys-and-hud) |
+| 了解按键、HUD、物品和命令 | [游玩指南](/player-guide/keys-and-wheel) |
 | 写第一个数据包 | [数据包开发总览](/datapack/overview) |
 | 查某个注册表的每个字段 | [JSON 数据格式](/datapack/json/) |
 | 浏览内置行为与条件类型 | [类型参考](/datapack/types/) |

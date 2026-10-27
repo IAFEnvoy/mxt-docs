@@ -1,32 +1,14 @@
 ---
-title: 内置物品与组件
+title: 内置物品
 ---
 
-# 内置物品与组件
+# 内置物品
 
-MiXianTu 不为每个玩法预设具体数值，但提供少量通用承载物品和组件。数据驱动物品玩法通常通过绑定表或物品键注册表挂到现有物品上。
+MiXianTu 不为每个玩法预设具体数值，但提供少量通用承载物品和组件。数据驱动物品玩法通常通过绑定表或物品键注册表挂到现有物品上（见[物品绑定与组件](./item-bindings.md)）。
 
 ## 通用物品
 
 当前内置内容包括灵石系列、灵铁锭、灵木、朱砂、符纸、符箓、契约卷轴、召回符、御兽铃、令牌、灵石袋、戒指、锻造台、丹炉部件、丹药载体、药渣、杂质、奖励箱和展示架等。具体注册名以 `src/main/java/com/iafenvoy/mxt/registry` 和资源文件为准。**灵植方块不在其中**：灵植定义用 `blocks` 认领已有方块、用 `growth.drops` 认领自己的果实，本体不注册任何草方块。
-
-## 物品绑定
-
-| 表 | 用途 |
-| --- | --- |
-| `item_binding` | 给现有物品附加行为、条件、灵根或通用显示。 |
-| `weapon_binding` | 给武器附加原版属性修正（攻击力与攻速也写在这里）与攻击/使用/Tick 行为。 |
-| `pill` | 一份丹药的作用：食用行为、丹毒增量、过量阈值与过量后的残留。 |
-| `pill_binding` | 把一族已有物品认成同一份丹药，并给出服用次数与冷却。 |
-| `tool_binding` | 认领工具物品，并给出它们解锁的锻打方式。 |
-| `blueprint_binding` | 认领图纸物品，并给出它们提供的锻造蓝图。 |
-| `technique_binding` | 描述一门功法的**手册是哪几件物品**、本体替它生成载体时用哪个物品，以及学习前的条件。**哪一叠是手册、教的是哪门功法，先看堆上的物品组件 `mxt:technique`；没有组件时才看声明的 `items`。** |
-
-`item_binding`、`weapon_binding`、`tool_binding`、`blueprint_binding` 与 `pill`、`pill_binding`、`technique_binding` 一样都是注册表：一份文件一条定义，文件在 `data/<命名空间>/mxt/<表>/<条目>.json`，条目用 `items` 认领物品（`pill` 不认领物品，认领它的是 `pill_binding`）。
-
-各张认领表的 `items` 支持单个物品、原版物品标签、通配符、正则和混合数组；`carrier_item` 是例外，它只接受单个物品 id。`block_aura` 与 `heat_source` 的 `blocks` 只认方块 id 或 `#方块标签`，标签在加载期展开。`technique_binding` 的声明按功法 id 匹配，它的 `items` 是可选的那条路。
-
-**逐件附加的内容走物品组件**：`mxt:quality`（单值，整份品质对象；档位与这一堆读的链一起换）、`mxt:element`（列表，与定义取并集）、`mxt:pill`（可选 `pill` 指名一份丹药定义，`on_consume` / `toxicity_gain` / `toxicity_threshold` / `on_overdose` / `toxicity_after_overdose` 再按字段覆盖）、`mxt:technique_reading`（按字段覆盖功法阅读参数）、`mxt:forging_methods` 与 `mxt:forging_blueprints`（列表，与定义取并集）——它们只写给这一堆。`conditions` 与武器的数值/动作**没有**组件：想逐件改就在对应的物品键注册表里加一条认领那件物品的定义，武器的属性数值则写原版 `minecraft:attribute_modifiers`。
 
 ## 灵气物品
 
@@ -57,7 +39,7 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 
 ## 统一功能载体
 
-以下物品由本体提供统一服务端实现。物品只保存数据包 Holder 或持久化状态，不复制对应模块的规则；具体契约、阵法、秘境和资源数值仍由数据包定义。
+以下物品由本体提供统一服务端实现。物品只保存数据包 Holder 或持久化状态，不复制对应模块的规则；具体契约、阵法、秘境和资源数值仍由数据包定义。它们各自组件怎么手写见[物品绑定与组件](./item-bindings.md#数据组件示例)。
 
 | 物品 | ID | 持久化组件 | 统一行为 |
 | --- | --- | --- | --- |
@@ -75,76 +57,12 @@ MiXianTu 是框架模组。本体只提供可被多个系统复用、没有固�
 | 鉴定镜 | `mxt:identification_mirror` | 消费 `mxt:identification` | 统一解析带有鉴定组件的物品；具体待鉴定物品由内容包或其他模组提供。 |
 | 灵根 | `mxt:spirit_root` | `mxt:spirit_root` | 保存一份 `spirit_root` 定义；右键获得这条灵根（"已持有"与元素互斥照旧被拒，见 [spirit_root](/datapack/json/spirit_root#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
 | 体质 | `mxt:physique` | `mxt:physique` | 保存一份 `physique` 定义；右键获得这项体质（"已持有"、`holder_condition` 不满足与互斥标签冲突照旧被拒，见 [physique](/datapack/json/physique#holding)），授予成功时消耗 1 个，**创造模式不消耗**。 |
-| 符笔 | `mxt:talisman_brush` | `mxt:brush_pigment` | 符笔装自己的颜料存量，加料是原版储物袋那套点击（提着符笔点一下颜料就蘸）。颜料就是物品标签 `#mxt:brush_pigment` 里的物品，主资源包里只有朱砂 `mxt:cinnabar`；一份颜料给多少由服务端配置说了算（见[符笔与颜料](#符笔与颜料)）。 |
+| 符笔 | `mxt:talisman_brush` | `mxt:brush_pigment` | 符笔装自己的颜料存量，加料是原版储物袋那套点击（提着符笔点一下颜料就蘸）。颜料就是物品标签 `#mxt:brush_pigment` 里的物品，主资源包里只有朱砂 `mxt:cinnabar`；一份颜料给多少由服务端配置说了算（见[符笔与颜料](./alchemy-and-brush.md#符笔与颜料)）。 |
 | 符箓 | `mxt:talisman` | `mxt:talisman` + `mxt:spirit_storage` | 保存**已铭刻的那条符箓**：一个 `talisman` 定义条目（缺省就是刚做出来的空载体），加上一个模式字段 `mode`（`"fire"` 缺省／`"store"`）；一张载体只铭刻一条，再刻一条会顶掉前一条。手持按住右键灌注灵气（容量 = 一次发动的灵气用量 × 铭刻定义的 `capacity` 倍率，实际倍率还要跟载体剩余使用次数取小，按灵气分别计量），灌满那一刻铭刻的能力全部发动并消耗一件本体（`store` 模式除外：它只积累，不自动发动）。存量够付清一次发动的灵气条目时，**右键即发动**——写了 `durability` / `consume` 再配大倍率，就能灌满一次连打好几次（见 [灌注与激发](/datapack/json/talisman)）。**潜行 + 右键切换模式**，`store` 且已灌满时潜行使用不切换而是**直接发动**。摆在展示架上被填满时按模式处理，并以展示架的位置作为激发地点——公式与位置类行为都用它（见 [灌注与激发](/datapack/json/talisman)）。铭刻（写符）服务尚未接入，`mxt:talisman` 组件目前可以手写或用物品组件语法直接写入（`/talisman give` 也能发）；灌注进度与灵石共用同一个存储组件 `mxt:spirit_storage`（按灵气记已灌单位，缺省表示一点都没灌）。**徒手右键与灌满自动发动走同一个入口**，但两条规则各按"在哪"分：**冷却只是手上的闸门**（服务端配置「符箓 → 使用冷却」，默认 20 刻、0 关闭），一次**尝试**就进冷却，窗口内长按灌注不会发动、那一 tick 的灵气也不会被灌进去；**消耗则按位置分**——手上一次发动消耗一件本体（**创造模式不消耗**），摆在展示架上的**永远消耗**、且不查也不记冷却。两条规则都由 `SpiritSource.consumedByHand()` 区分。**铭刻的定义可以声明耐久**（`durability` / `consume`）：上限写进原版组件（`max_damage` 加 `max_stack_size: 1` 与 `damage: 0`，物品上就有耐久条），每次发动改成扣耐久、扣满那一次销毁载体；没声明耐久的载体照旧一次一张本体。 |
 
 功法书的页用原版书写书的页组件 `minecraft:writable_book_content`。它的 `pages` 是一串**纯字符串**，放不进 `translate` 组件，所以书上印出来的正文只有数据包写下时用的**那一种语言**——`custom_name`（物品名）不受影响，照常跟随语言切换。本体只把页读出来原样发进聊天栏，不做任何翻译。**这层限制得由本体改动才能解决**，数据包侧无解。
 
 玉简不走那条路：它存的是一个完整的文本组件（`mxt:stored_text`），裸字符串就是翻译键，所以玉简的正文可以跟着语言切换。
-
-## 炼丹与灵植
-
-丹炉不是一件方块：它是一座手搭的固定 3×3×3。核心带炉型规格，两个投料仓分放主药与辅药药引，产物仓只负责出货，其余 18 格砌成炉壁（底层只放四角）。
-
-| 方块 | ID | 用途 |
-| --- | --- | --- |
-| 丹炉核心 | `mxt:alchemy_furnace` | 正面中层那一块。炉温读数与「设定 / 开炉 / 终止」在这块打开的页面上。 |
-| 主药投料仓 | `mxt:alchemy_main_input` | 面向正面时在左侧，两个主药格。 |
-| 辅药投料仓 | `mxt:alchemy_auxiliary_input` | 面向正面时在右侧，两个辅药格加一个药引格。 |
-| 丹炉产物仓 | `mxt:alchemy_output` | 顶部中心，四个输出格，只能取出。 |
-| 丹炉炉壁 | `mxt:alchemy_furnace_casing` | 底层四角与上面两层，共 18 格，每块带自己的炉壁材料；炉壁不打开界面。 |
-| 丹药 | `mxt:pill` | 丹药载体，提供原版食用、名字与 Tooltip；吃下去做什么写在 [pill](../datapack/json/pill.md) 上，服用次数与冷却由 [pill_binding](../datapack/json/pill_binding.md) 给。 |
-
-手感是：**供热方块放进底层正中央那一格，主药放左侧仓，辅药与药引放右侧仓，成品从产物仓取。** 放进材料不会自己开炉，要玩家在核心那一页点「开炉」。壳不齐、炉壁材料无效、格子被另一座炉占了，都不算成型，也就开不了炉。
-
-**本体不提供热源方块**：供热方块的数值写在注册表 [`mxt:heat_source`](../datapack/json/heat_source.md) 里（方块也可以自己实现接口），本体没有默认值。炉温上限是三者取最低：炉型规格自己可选的 `max_temperature`、整炉里最低的那块炉壁耐温、供热方块给出的最高温；所以换一款把 `max_temperature` 写大的高炉阶规格能把这个上限抬高，但抬不过炉壁与供热。
-
-供热方块的物品提示框以「供热方块」起头，写出它的两个数——一行「可提供的最高炉温」、一行「升温速度」。方块自己实现供热接口时提示框不写数字，只说可提供的热量由方块自身状态决定。丹炉核心那一件的提示框列主药 / 辅药 / 药引三档格数与容量，炉型规格写了 `max_temperature` 时再多一行「炉型上限」；`3×3×3` 与供热格那两行搭建说明收在 Shift 后面，不按 Shift 时提示框以「按住 Shift 查看搭建说明」结尾。
-
-投料仓与核心都不接受漏斗，供热方块也不是容器；产物仓只能从它的下侧面抽出，而那一面成型后正对着中层中心那块炉壁，所以那里放不进漏斗。活动批次里拆炉壁或拆一座仓，这一批按失败结算一次，已经投进去的材料不返还；拆一座仓只掉这座仓自己的物品。
-
-丹药吃完会累计丹毒：服丹的药效、阈值与过量后剩多少写在 [pill](../datapack/json/pill.md) 里，本体只负责记账。默认丹毒不会自己退；服务端配置「炼丹 → 每秒丹毒自然消退」设成正数后，已经有丹毒的活跃实体每累计 20 刻退一次，离线不退，也不会给没服过丹的实体建一份空账。
-
-## 符笔与颜料
-
-符笔 `mxt:talisman_brush` **不叠放**——一支笔就是一口自己的颜料存量，记在物品组件 `mxt:brush_pigment` 里：一个非负整数，**1 单位就是 1 像素弧长**，没写这个组件与写 `0` 是一回事（都是空笔）。物品格里那一小条就是还剩多少（只在有颜料时出现），提示框另有一行「颜料：已存 / 上限」，上限是**服务端配置「符箓 → 符笔容量」**（默认 4000，约能描满 3–5 张符）。
-
-加料就是**蘸料**，和原版储物袋（`minecraft:bundle`）同一套点击：**光标提着符笔，对着颜料物品点一下**（左键右键都行），点一次笔吸进**一份**（一个物品），点几下就蘸几份；笔满时一次都不吃。**它不挑界面**——背包、箱子、画符工作站里的格子都行，界面里没有专门的颜料槽，也不必跑去某个界面合成。一份颜料给多少由**服务端配置「符箓 → 一份颜料的点数」**说了算（默认 1000）。
-
-颜料是用来画符的：在画符工作站里按每一笔的长度从这口存量里扣，见 [`mxt:talisman_drawing`](/datapack/json/talisman_drawing)。
-
-## 数据组件示例
-
-组件值可以直接在物品组件语法或 KubeJS 中写入，引用的数据包注册表 ID 会由原版注册表 Codec 解析：
-
-```mcfunction
-give @s mxt:contract_scroll[mxt:contract_scroll={contract_type:"mxt_test:master_servant"}]
-give @s mxt:formation_plate[mxt:formation_plate={formation:"mxt_test:spirit_gathering"}]
-give @s mxt:secret_realm_token[mxt:secret_realm_token={realm:"mxt_test:trial_realm"}]
-give @s mxt:reward_box[mxt:reward_box="mxt_test:reward_box/spirit_stones"]
-give @s mxt:rift_anchor[mxt:rift={recorded:{type:"position",dimension:"minecraft:overworld",pos:[0.5d,65.0d,0.5d]}}]
-give @s mxt:spirit_vessel[mxt:resource_capacity={"mxt_test:qi":1000.0},mxt:resource_container={"mxt_test:qi":25.0}]
-give @s mxt:talisman[mxt:talisman={talisman:"mxt_test:flame_sigil"}]
-give @s mxt:physique[mxt:physique="mxt_test:sword_bone"]
-give @s mxt:spirit_root[mxt:spirit_root="mxt_test:fire_root"]
-give @s mxt:technique_book[mxt:technique="mxt_test:azure_water_manual"]
-```
-
-最后一行是**手册**的做法：堆上带 `mxt:technique` 组件时，这一叠才教那门功法；不带组件、也没有任何声明的 `items` 认领的功法书什么都不教、Tooltip 里也不显示功法。功法绑定（`technique_binding`）只决定**手册是哪几件物品、学它之前要过什么条件**，以及 `/picker mxt:technique` 替它生成的载体用哪个物品（**创造模式物品栏不生成载体**）；读多久、什么姿势写在[功法](/datapack/json/technique)自己身上。把物品写进声明的 `items` 也可以让那一叠不带组件就当手册，见[功法绑定](/datapack/json/technique_binding)。
-
-倒数第二、第三行是**灵根物品**与**体质物品**的做法：组件里写定义 ID，右键即授予（灵根被拒的理由是"已持有 / 元素互斥"，体质是"已持有 / 条件不满足 / 互斥标签冲突"），成功消耗 1 个、**创造模式不消耗**，见 [spirit_root](/datapack/json/spirit_root#holding) 与 [physique](/datapack/json/physique#holding)。
-
-注意 `mxt:resource_container` 与 `mxt:resource_capacity` 的值都是**裸 map**，键就是资源 ID，**没有** `values` 外壳；写错外壳会被当作一个无法解析的键**静默忽略**（只留一条 WARN 日志），表仍是空的。灵力容器**没写上限就什么都存不进**——数值本身没有天然上限，容量必须由 `mxt:resource_capacity` 写下来。
-
-铭刻好的符箓还可以带上一部分灌注进度（`mxt:spirit_storage` 与灵石共用，按 aura 记已灌单位，缺省表示一点都没灌）：
-
-```mcfunction
-give @s mxt:talisman[mxt:talisman={talisman:"mxt_test:common_sigil"},mxt:spirit_storage={amounts:{"mxt:common":3}}]
-```
-
-阵盘也可以在游戏内绑定：主手持有阵盘时执行 `/mxt formation bind <formation>`（需要 gamemaster 权限）。绑定不再是取得可用阵盘的前提——**没绑定的阵盘右键时会自己认出脚下的阵法**（见 [未绑定的阵盘会自动识别](/datapack/json/formation)），命令与组件语法的用处变成了**限制**这块盘能立哪一座。组件语法要求先知道注册表 ID 和 NBT 结构，命令则由服务端做 Tab 补全并在 ID 不存在时拒绝。
-
-契约卷轴、阵盘、秘境令牌和奖励箱没有绑定定义时会安全失败，并显示提示；灵兽袋、灵力容器和令牌的状态保存在 ItemStack 数据组件中，服务端是唯一权威。
 
 ## 另见
 

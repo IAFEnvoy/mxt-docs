@@ -25,7 +25,7 @@ The project is still in development. Datapack formats and other interfaces are n
 | Install the mod and check requirements | [Installation](./installation.md) |
 | Reproduce problems and inspect module timings | [Development Mode](./tutorial/dev-mode.md) |
 | Build your first content step by step | [Tutorials](./tutorial/index.md) |
-| Learn the keybinds, HUD, items and commands | [Player Guide](./player-guide/keys-and-hud.md) |
+| Learn the keybinds, HUD, items and commands | [Player Guide](./player-guide/keys-and-wheel.md) |
 | Write your first datapack | [Datapack overview](./datapack/overview.md) |
 | Look up every field of a registry | [JSON Data Formats](./datapack/json/index.md) |
 | Browse the built-in action and condition types | [Types Reference](./datapack/types/index.md) |

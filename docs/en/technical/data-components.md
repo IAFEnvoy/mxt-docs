@@ -143,4 +143,4 @@ Two things that are easy to conflate:
 - [Data Loading](/en/technical/data-loading) - where the persistent and network codecs are registered, the order components and declarations merge in, and the three layers of quality resolution.
 - [Attachments](/en/technical/attachments) - the other half of the "where does state live" question: the things that hang on an entity, a chunk or a level.
 - [Java API](/en/java/api) - the service entry points that read components, such as `QualityService`.
-- [Generic Items](/en/player-guide/items) - which built-in items carry which components, with `give` examples to copy.
+- [Built-in Items](/en/player-guide/items) - which built-in items carry which components, with `give` examples to copy.

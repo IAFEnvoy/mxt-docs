@@ -9,10 +9,14 @@ The mod itself provides framework items, slots, commands and interaction; the ac
 
 | Goal | Documentation |
 | --- | --- |
-| Meet the built-in items, blocks and item bindings | [Items and Blocks](./items.md) |
+| Meet the items the mod ships | [Built-in Items](./items.md) |
+| Attach gameplay rules to existing items | [Item Bindings and Components](./item-bindings.md) |
+| Look up keybinds, the wheel and paging | [Keys and Wheel](./keys-and-wheel.md) |
+| Place the HUD, read the bars and open the character panel | [HUD and Panels](./hud.md) |
+| Use the Spirit Crafting Table, display stands and Curios slots | [Workstations, Display Stands and Slots](./workstations.md) |
+| Brew pills, draw talismans and refill pigment | [Alchemy and the Brush](./alchemy-and-brush.md) |
 | Look up the Rift block and the Rift Anchor | [Rifts](./rift.md) |
 | Summon and customize burning meteors | [Meteors](./meteor.md) |
-| Look up keybinds, the wheel, resource bars and the character panel | [Wheel, Resource Bars and Aura HUD](./keys-and-hud.md) |
 | Debug or manage gameplay with commands | [Commands](./commands.md) |
 | Look up the server configuration entries | [Server Configuration](./config.md) |
 | Configure the back weapon and belt slots | [Curios Slots](./curios-slots.md) |

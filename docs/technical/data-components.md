@@ -143,4 +143,4 @@ description: 本体注册的每一个物品数据组件：装什么、谁来写�
 - [数据加载](/technical/data-loading)：组件的持久化与网络 codec 在哪里登记、组件与声明的合并顺序、品质解析的三层。
 - [附件](/technical/attachments)：同一个"状态放哪"问题的另一侧——挂在实体、区块与世界上的那些。
 - [Java API](/java/api)：`QualityService` 等读组件的服务入口。
-- [通用物品](/player-guide/items)：哪些本体物品带哪些组件，以及可以直接抄的 `give` 例子。
+- [内置物品](/player-guide/items)：哪些本体物品带哪些组件，以及可以直接抄的 `give` 例子。

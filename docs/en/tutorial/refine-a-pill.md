@@ -273,4 +273,4 @@ How a batch **settles once it has started** has not been checked item by item in
 - [pill](../datapack/json/pill.md) — the dose action, toxicity, the threshold and what is left after an overdose.
 - [pill_binding](../datapack/json/pill_binding.md) — which items are claimed, the use cap and the cooldown.
 - [quality](../datapack/json/quality.md) — how `alchemy_modifier` shortens a batch.
-- [Items and Blocks](../player-guide/items.md) — how the furnace parts and the pill carrier behave in game.
+- [Alchemy and the Brush](../player-guide/alchemy-and-brush.md) — how the furnace parts and the pill carrier behave in game.

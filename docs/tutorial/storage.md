@@ -79,7 +79,7 @@ description: "给一件物品挂一条储物技能：格数怎么算、箱子存
 
 想让玩家稳稳按到储物，就把 `curios_equipable` 写成 `true`，并让物品待在 Curios 槽里。`charm` 的四个格收 `curios:charm` 标签里的物品，加上声明了 `curios_equipable: true` 的法器，这是最省事的位置。
 
-轮盘怎么选、怎么用，见[轮盘、资源条与灵气 HUD](../player-guide/keys-and-hud.md)。
+轮盘怎么选、怎么用，见[按键与轮盘](../player-guide/keys-and-wheel.md)。
 
 ## 第 3 步 —— 按下之后
 
@@ -156,5 +156,5 @@ description: "给一件物品挂一条储物技能：格数怎么算、箱子存
 - [技能类型](../datapack/types/other/ability.md) —— `mxt:storage` 自己的字段与按下时的失败原因。
 - [artifact（法器）](../datapack/json/artifact.md) —— `items` / `abilities` / `require_owner` / `curios_equipable` 的完整字段表与提示框口径。
 - [Curios 槽位](../player-guide/curios-slots.md) —— 哪几个槽位收 `curios_equipable` 的法器。
-- [轮盘、资源条与灵气 HUD](../player-guide/keys-and-hud.md) —— 主盘与从盘怎么读装备给的技能。
+- [按键与轮盘](../player-guide/keys-and-wheel.md) —— 主盘与从盘怎么读装备给的技能。
 - [实体行为类型](../datapack/types/action/entity_action_types.md) —— `mxt:modify_ability_storage` 写的是哪一份存储。

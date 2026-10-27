@@ -26,8 +26,12 @@ export const sections = [
     text: { zh: '游玩指南', en: 'Player Guide' },
     items: [
       { page: 'player-guide/index', zh: '游玩内容', en: 'Player Guide' },
-      { page: 'player-guide/keys-and-hud', zh: '轮盘、资源条与灵气 HUD', en: 'Wheel, Resource Bars and Aura HUD' },
-      { page: 'player-guide/items', zh: '内置物品与组件', en: 'Items and Blocks' },
+      { page: 'player-guide/keys-and-wheel', zh: '按键与轮盘', en: 'Keys and Wheel' },
+      { page: 'player-guide/hud', zh: 'HUD 与面板', en: 'HUD and Panels' },
+      { page: 'player-guide/workstations', zh: '工作台、展示架与槽位', en: 'Workstations, Display Stands and Slots' },
+      { page: 'player-guide/items', zh: '内置物品', en: 'Built-in Items' },
+      { page: 'player-guide/item-bindings', zh: '物品绑定与组件', en: 'Item Bindings and Components' },
+      { page: 'player-guide/alchemy-and-brush', zh: '炼丹与符笔', en: 'Alchemy and the Brush' },
       { page: 'player-guide/lifespan', zh: '寿元', en: 'Lifespan' },
       {
         // The page itself is the group's entry; one sub-page per root command. `alpha`

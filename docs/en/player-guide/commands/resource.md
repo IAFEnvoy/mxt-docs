@@ -44,7 +44,7 @@ When a context cannot produce values, that bar reports that it is currently unav
 
 ## Relation to the HUD
 
-This command prints the **values themselves**, not the pixels drawn on screen. The bars on screen are HUD elements (`resource_bars.left`, `resource_bars.right`, the target and boss overlays), whose toggles, positions and scaling live in [Wheel, Resource Bars and Aura HUD](../keys-and-hud.md) and `/hud`. Both read the same definitions and the same contexts, so what the command prints and what a bar shows should agree; when they do not, first check whether a [visibility condition](../../datapack/json/resource.md) is hiding that bar, or whether its anchor has been dragged off the window.
+This command prints the **values themselves**, not the pixels drawn on screen. The bars on screen are HUD elements (`resource_bars.left`, `resource_bars.right`, the target and boss overlays), whose toggles, positions and scaling live in [HUD and Panels](../hud.md) and `/hud`. Both read the same definitions and the same contexts, so what the command prints and what a bar shows should agree; when they do not, first check whether a [visibility condition](../../datapack/json/resource.md) is hiding that bar, or whether its anchor has been dragged off the window.
 
 ## Top-level alias
 

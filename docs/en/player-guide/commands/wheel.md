@@ -25,4 +25,4 @@ title: /wheel
 
 **The pages behind it are not here**: the cells contributed by the main hand, the off hand, artifacts and a contract beast are read **live** from what you carry and from the beast bell in your hand, so what the editor would show and what you see in a fight are not the same thing - the editor neither previews nor edits them (the screen carries no explanatory text). **A fresh save starts with an empty wheel**: nothing is filled in for you, so put entries into the twelve cells here first; with **the whole wheel empty**, pressing "Wheel Select" (`R` by default) does not open the wheel, because there is nothing to choose.
 
-How the wheel itself is used (`R` to choose, `V` to use, paging, cooldowns and stale entries) is on [Wheel, Resource Bars and Aura HUD](../keys-and-hud.md#wheel-menu); how cells are numbered and why the layout lives on the server is on [Wheel Entries](../../java/wheel.md).
+How the wheel itself is used (`R` to choose, `V` to use, paging, cooldowns and stale entries) is on [Keys and Wheel](../keys-and-wheel.md#wheel-menu); how cells are numbered and why the layout lives on the server is on [Wheel Entries](../../java/wheel.md).

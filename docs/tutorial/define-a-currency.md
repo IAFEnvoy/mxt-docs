@@ -207,5 +207,5 @@ StartupEvents.registry('item', event => {
 ## 接下来
 
 - [currency（货币）](../datapack/json/currency.md) —— 每个字段的完整说明、兑换站行为与停用一条定义。
-- [内置物品与组件](../player-guide/items.md) —— 本体自带的四阶灵石与它们的默认货币值，以及兑换站、支票台这些方块。
+- [内置物品](../player-guide/items.md) —— 本体自带的四阶灵石与它们的默认货币值，以及兑换站、支票台这些方块。
 - [KubeJS 创建物品并绑定行为](./create-items-with-kubejs.md) —— 第 1 步那行注册写在哪个文件里，以及物品与数据包各自的生效时机。

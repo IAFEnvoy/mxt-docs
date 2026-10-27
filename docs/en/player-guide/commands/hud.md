@@ -33,4 +33,4 @@ The reset also **deletes the saved value for that element**, so it is still in i
 
 The position and size it prints are the element's rectangle **right now**: positions are stored as a window anchor plus a pixel offset, so changing the resolution or the GUI scale does not move the layout, and an element is always kept inside the window (clamping does not rewrite what is stored).
 
-Dragging, resetting and each element's default place are on [Wheel, Resource Bars and Aura HUD](../keys-and-hud.md#hud-layout-editor); how a module registers an element is on [Client Screens](../../java/screens.md).
+Dragging, resetting and each element's default place are on [HUD and Panels](../hud.md#hud-layout-editor); how a module registers an element is on [Client Screens](../../java/screens.md).
