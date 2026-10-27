@@ -65,29 +65,7 @@ Disabling client configuration “Rifts → Custom shader” selects a basic sol
 
 ## Commands
 
-The entire `/mxt rift` subtree requires operator level 2. `id` is the portal UUID; coordinates and facing use the execution dimension. Facing is `north|south|east|west|up|down`.
-
-Looking up or editing an unloaded portal by UUID reads its storage chunk. Listing the dimension or exporting its layout may read multiple chunks. UUID command suggestions do not load chunks.
-
-```text
-/mxt rift spawn <preset> <origin> <facing> position <dimension> <destination>
-/mxt rift spawn <preset> <origin> <facing> secret_realm <definition>
-/mxt rift spawn <preset> <origin> <facing> return
-/mxt rift edit [id]
-/mxt rift info [id]
-/mxt rift target <id> position <dimension> <destination>
-/mxt rift target <id> secret_realm <definition>
-/mxt rift target <id> return
-/mxt rift enabled <id> <true|false>
-/mxt rift duration <id> <ticks>
-/mxt rift copy <id> <origin>
-/mxt rift transform <id> move <offset>
-/mxt rift transform <id> rotate <degrees>
-/mxt rift transform <id> scale <factor>
-/mxt rift transform <id> mirror
-/mxt rift remove <id>
-/mxt rift export <id> <preset|layout>
-```
+The entire `/mxt rift` subtree requires operator level 2. `id` is the portal UUID, and coordinates and facing use the execution dimension. Looking up or editing an unloaded portal by UUID reads its storage chunk, while listing the dimension or exporting its layout may read several; UUID completion loads no chunks. Every form, with its arguments and examples, is on [`/rift`](./commands/rift.md).
 
 ## Blueprints and Export
 

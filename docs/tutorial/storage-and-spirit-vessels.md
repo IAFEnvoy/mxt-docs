@@ -75,7 +75,7 @@ description: "灵力容器那件东西的形状与边界；储物与飞行法器
 
 - [储物](./storage.md) —— 子教程：一条挂在物品上的储物技能，格数怎么算、箱子存在哪、怎么预填。
 - [飞行法器](./flying-mount.md) —— 子教程：一件会飞的物品，载具、术与两笔燃料账。
-- [物品绑定与组件](../player-guide/item-bindings.md) —— `mxt:spirit_vessel` 与 `mxt:resource_container` 的组件写法。
+- [数据组件](/technical/data-components) —— `mxt:spirit_vessel` 与 `mxt:resource_container` 的组件写法。
 - [resource（资源）](../datapack/json/resource.md) —— 灵力容器里那些键引用的是哪张注册表。
 - [artifact（法器）](../datapack/json/artifact.md) —— 两篇子教程都要用到的那份定义。
 - [按键与轮盘](../player-guide/keys-and-wheel.md) —— 按一下会发生什么，以及轮盘上的格子。

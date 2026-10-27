@@ -76,13 +76,3 @@ title: /contract
 主人能给灵宠下的命令是 **跟随 / 游荡 / 驻守 / 召回** 四条，它们是**生物自己的代码**回答的（`ContractOperations.behaviors()`），不是数据包字段；内容模组可以自己再加一条。**当前那条只有一份**，记在灵宠的契约记录里，旧存档或读不出来的 id 一律按"跟随"处理。
 
 玩家的入口是**御兽铃**：右键一只自己的已契约灵宠＝把铃对准它（铃会记住它的名字与它认的命令），再右键空处＝打开轮盘并停在「契约灵兽」那一页，点哪一格就下哪条命令——**跟随 / 游荡 / 驻守**是常驻的（换一条就覆盖上一条），**召回**是一次性的（执行完当前命令不变）。这组 `behavior` 命令是同一件事的管理员入口。契约类型的 `follow_action` 只在**当前是跟随**时跑。
-
-## 捕捉是物品的事
-
-**捕捉不是实体侧的门槛**：任何生物都可能被捕捉，**怎么捕捉由物品决定**——能装什么、要不要契约、代价多少，全是那个物品自己的规则。灵兽袋自己的规则是"你自己的已契约灵兽、一次一只"。生物只有在实现 `CaptureListener` 时才会收到"被收走 / 被放出"的通知（`onCaptured` / `onReleased`），**不实现它照样能被收走**，只是收不到通知。
-
-## 失败原因
-
-卷轴、御兽铃、灵兽袋与这组命令打的是**同一张**文案表，键是 `contract.mxt.failure.<小写枚举名>`：`already_bound`、`not_contractable`、`owner_conditions`、`creature_conditions`、`limit_reached`、`insufficient_cost`、`not_bound`、`not_owner`、`recall_cooldown`、`recall_pending`（召回闩已经置上、还没落地）、`cancelled`、`unsupported_behavior`（这只生物不认这条命令）、`behavior_refused`（它认，但拒绝了这次）。
-
-`/contract level` 的失败文案是另一套，键是 `command.mxt.contract.failure.<小写枚举名>`：`unknown_owner`（它没有拥有任何进度链）、`foreign_level`（这一级不在它的链上）、`same_level`（它已经在这一级了）、`unknown_level`（没有这一级）、`server_only`（只能在服务端做）。后两个只会从脚本侧出现。

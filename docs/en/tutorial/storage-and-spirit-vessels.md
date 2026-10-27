@@ -75,7 +75,7 @@ Then fill it: put it on a display stand and let a ray hit it, or fire spirit pow
 
 - [Storage](./storage.md) — the sub-tutorial: a storage ability hung on an item, how the slot count settles, where the box lives and how to pre-fill it.
 - [Flying Mounts](./flying-mount.md) — the sub-tutorial: an item that flies, its mount, its skill and the two fuel bills.
-- [Item Bindings and Components](../player-guide/item-bindings.md) — the component syntax for `mxt:spirit_vessel` and `mxt:resource_container`.
+- [Data Components](/en/technical/data-components) — the component syntax for `mxt:spirit_vessel` and `mxt:resource_container`.
 - [Resource (resource)](../datapack/json/resource.md) — which registry the keys inside a spirit vessel point at.
 - [Artifact (artifact)](../datapack/json/artifact.md) — the definition both sub-tutorials need.
 - [Keys and Wheel](../player-guide/keys-and-wheel.md) — what a press does, and the cells on the wheel.

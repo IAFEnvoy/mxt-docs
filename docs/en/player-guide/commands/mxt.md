@@ -48,7 +48,7 @@ The mod's root command: registries, attachments, profiling, values, cultivation,
 
   - `... breakthrough <aura>`
 
-    Attempts a breakthrough into the realm that the given aura leads to.
+    Attempts a breakthrough into the realm that the given aura leads to. See [`/breakthrough`](/en/player-guide/commands/breakthrough).
 
   - `... realm ...`
 
@@ -102,10 +102,6 @@ Profiling is off by default in normal mode; run `/mxt debug on` to start recordi
 
 Run `/mxt debug gui` to open the list. Each row shows a localized module name and min / avg / max in milliseconds, with a bar chart of the last 240 ticks on the right. Sort by module name, minimum, average or maximum duration, in either direction. Charts stay 240 px wide, with the upper Y-axis value labeled at the top left of each chart. The panel is compact and centered; narrow windows place names and statistics above their charts.
 
-Scroll with the mouse wheel, click the right-hand track or drag its thumb; the buttons above the list stay fixed, and rows have no hover tooltips. Parent durations include nested calls, so the rows must not be added together. The footer recommends the spark mod for more accurate analysis.
-
-In singleplayer, local snapshots update on each server tick while the GUI is open. The screen reads the latest data directly each frame, without the 5-tick packet interval. In multiplayer, including a world opened to LAN, data arrives every 5 ticks only while the GUI is open. Closing it, disconnecting or losing permission stops the subscription. Opening the GUI does not enable recording.
-
 `/mxt debug status` calculates min, avg, max, 50%, 95%, 99%, call count and valid tick count over the last 240 ticks on demand. Specify multiple Sources separated by spaces, with completion support, for example `/mxt debug status server/cost server/economy/change`; omit them to query all Sources. Incomplete ticks are excluded; complete idle ticks count as zero.
 
 ## secret_realm
@@ -116,4 +112,4 @@ The entire subtree requires operator level 2. `definitions` lists definitions; `
 
 Rifts are planar polygon portals managed by UUID. The entire subtree requires operator level 2: `spawn`, `edit`, `info`, `target`, `enabled`, `duration`, `copy`, `transform`, `remove` and `export` share portal validation and travel rules.
 
-The mechanic itself and every subcommand are on the [Rifts](/en/player-guide/rift) page.
+The mechanic itself is on the [Rifts](/en/player-guide/rift) page, and every subcommand is on [`/rift`](/en/player-guide/commands/rift).

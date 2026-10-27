@@ -48,7 +48,7 @@ title: /mxt
 
   - `... breakthrough <aura>`
 
-    尝试突破到这门**灵气**（`mxt:aura` 条目，补全给的就是它）所通往的境界。缺哪一种修炼资源由境界自己声明，失败时会点名。
+    尝试突破到这门**灵气**（`mxt:aura` 条目，补全给的就是它）所通往的境界。缺哪一种修炼资源由境界自己声明，失败时会点名。见 [`/breakthrough`](/player-guide/commands/breakthrough)。
 
   - `... realm ...`
 
@@ -102,10 +102,6 @@ title: /mxt
 
 用 `/mxt debug gui` 打开列表。每行显示本地化模块名称和 min / avg / max（毫秒），右侧是最近 240 tick 的柱图；可以按模块名称、最小、平均或最大耗时排序，并切换升降序。图表固定为 240 px 宽，纵轴上限标在图表左侧顶部。页面紧凑居中，窄窗口将名称与统计放到图表上方。
 
-列表支持滚轮与右侧滚动条，点击轨道或拖动滑块即可上下查看；顶部按钮保持固定，列表没有悬停提示。父项包含子调用耗时，各项不能直接相加。底部提示建议使用 spark 模组进行更准确的分析。
-
-单人游戏在 GUI 打开时按每个服务端 tick 更新本地快照，界面每帧直接读取最新数据，不受 5 tick 发包周期限制。多人游戏（包括开放到局域网）仅在 GUI 打开时每 5 tick 接收一次数据；关闭界面、断线或失去权限会停止订阅。打开 GUI 不会自动开启记录。
-
 `/mxt debug status` 按需计算最近 240 tick 的 min、avg、max、50%、95%、99%、调用次数与有效 tick 数。可以用空格指定多个 Source，支持补全，例如 `/mxt debug status server/cost server/economy/change`；省略参数则查询全部 Source。不完整的 tick 不参与统计，完整的空闲 tick 计为零。
 
 ## secret_realm
@@ -116,4 +112,4 @@ title: /mxt
 
 裂隙是以 UUID 管理的平面多边形门。整棵子树需要 2 级 OP：`spawn`、`edit`、`info`、`target`、`enabled`、`duration`、`copy`、`transform`、`remove`、`export` 调用同一套校验与传送规则。
 
-机制与逐条命令的说明见[裂隙](/player-guide/rift)。
+机制见[裂隙](/player-guide/rift)，逐条命令见 [`/rift`](/player-guide/commands/rift)。

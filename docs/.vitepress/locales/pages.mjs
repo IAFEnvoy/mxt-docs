@@ -30,7 +30,6 @@ export const sections = [
       { page: 'player-guide/hud', zh: 'HUD 与面板', en: 'HUD and Panels' },
       { page: 'player-guide/workstations', zh: '工作台、展示架与槽位', en: 'Workstations, Display Stands and Slots' },
       { page: 'player-guide/items', zh: '内置物品', en: 'Built-in Items' },
-      { page: 'player-guide/item-bindings', zh: '物品绑定与组件', en: 'Item Bindings and Components' },
       { page: 'player-guide/alchemy-and-brush', zh: '炼丹与符笔', en: 'Alchemy and the Brush' },
       { page: 'player-guide/lifespan', zh: '寿元', en: 'Lifespan' },
       {
@@ -45,6 +44,7 @@ export const sections = [
           { page: 'player-guide/commands/mxt', zh: '/mxt（含子命令）', en: '/mxt (and subcommands)' },
           { page: 'player-guide/commands/ability', zh: '/ability', en: '/ability' },
           { page: 'player-guide/commands/aura', zh: '/aura', en: '/aura' },
+          { page: 'player-guide/commands/breakthrough', zh: '/breakthrough', en: '/breakthrough' },
           { page: 'player-guide/commands/contract', zh: '/contract', en: '/contract' },
           { page: 'player-guide/commands/cultivate', zh: '/cultivate', en: '/cultivate' },
           { page: 'player-guide/commands/curse', zh: '/curse', en: '/curse' },
@@ -60,6 +60,7 @@ export const sections = [
           { page: 'player-guide/commands/quality', zh: '/quality', en: '/quality' },
           { page: 'player-guide/commands/realm', zh: '/realm', en: '/realm' },
           { page: 'player-guide/commands/resource', zh: '/resource', en: '/resource' },
+          { page: 'player-guide/commands/rift', zh: '/rift', en: '/rift' },
           { page: 'player-guide/commands/secret_realm', zh: '/secret_realm', en: '/secret_realm' },
           { page: 'player-guide/commands/spirit_root', zh: '/spirit_root', en: '/spirit_root' },
           { page: 'player-guide/commands/talisman', zh: '/talisman', en: '/talisman' },

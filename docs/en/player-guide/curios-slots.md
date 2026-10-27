@@ -13,7 +13,7 @@ MiXianTu provides player Curios slots in the order **back → belt**, plus four 
 | `belt_item` | 2 | 1 | `curios:tag`, `mxt:belt_item_auto` | Items in the tag, plus what the automatic validator allows. |
 | `charm` | 4 | 200 | `curios:tag`, `mxt:charm_artifact_auto` | Items in the tag, plus artifacts declaring `curios_equipable: true`. |
 
-The slots are registered for `minecraft:player`. The bundled `curios:tag` tags already list the vanilla swords (and the bow for the belt slot) together with the mod's own `#mxt:back_equipable` and `#mxt:belt_equipable` extension tags. `charm` is Curios' **built-in** slot: the mod only adds the size and its own validator to it, keeps the slot's own name and icon (`curios.identifier.charm`, `curios:slot/empty_charm_slot`), and puts nothing into the `curios:charm` item tag itself.
+The slots are registered for `minecraft:player`. The bundled `curios:tag` tags already list the vanilla swords (and the bow for the belt slot) together with the mod's own `#mxt:back_equipable` and `#mxt:belt_equipable` extension tags. `charm` is Curios' **built-in** slot: the mod only adds the size and its own validator to it and puts nothing into the `curios:charm` item tag itself.
 
 ## Automatic Validators
 
@@ -27,7 +27,7 @@ All of them are additional-allow logic: they never override or modify `curios:ta
 
 ### The Charm Slots
 
-The four `charm` slots are Curios' **built-in** `charm` slot, widened by this mod: `data/mxt/curios/slots/charm.json` adds the size `4` and the `mxt:charm_artifact_auto` validator to it, and leaves the slot's own order and icon alone. Membership is a property of the item's definition — an artifact opts in by writing `curios_equipable: true` — so there is **no server configuration entry** for these slots. To allow something that is not an artifact, put the item in the `curios:charm` item tag; the `curios:tag` validator stays in place. An artifact in a charm slot works like any other Curios item: the abilities its definition grants are synced and revoked with it.
+The four `charm` slots are Curios' **built-in** `charm` slot, widened by this mod: `data/mxt/curios/slots/charm.json` adds the size `4` and the `mxt:charm_artifact_auto` validator to it. Membership is a property of the item's definition — an artifact opts in by writing `curios_equipable: true` — so there is **no server configuration entry** for these slots. To allow something that is not an artifact, put the item in the `curios:charm` item tag; the `curios:tag` validator stays in place. An artifact in a charm slot works like any other Curios item: the abilities its definition grants are synced and revoked with it.
 
 > Curios slot ids are global strings and definitions with the same id merge, so these four slots are the whole modpack's `charm` slot: other mods' charm items share them.
 

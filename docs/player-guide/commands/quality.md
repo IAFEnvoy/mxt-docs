@@ -56,12 +56,6 @@ title: /quality
 2. **这一堆携带的定义**自己声明的档，读的是那件物品上装着定义身份的那份组件。声明 `quality` 的九个定义是 `technique`、`alchemy_furnace`、`alchemy_wall_material`、`spirit_root`、`physique`、`pill`、`formation`、`secret_realm`、`contract_type`；
 3. 注册表 [default_quality](/datapack/json/default_quality)：物品在表里写了哪一档。
 
-第 2 层回答的是"一类定义共用一件内置物品、物品说不清是哪一档"的那批：所有功法书、所有丹药、所有炉型规格、灵根石与体质石都是这样。`artifact` 与 `spirit_herb` 都不携带物品身份、堆上没有定义身份可问，`talisman` 的载体装着一列符、同样没有单份定义可问——这三者的档落在第 3 层里；灵植写了 `quality_by_age` 时，采收会先按药龄把档写进第 1 层组件。
-
-链条看这一堆解析出的那一档：链名写在档位自己身上（写在入口档），所以绑定表与组件都不必声明链，见[品质](/datapack/json/quality)。三层都没有答案时这一堆就是没有品质，**不会去补某条链的入口档**。
-
-`set` 写的就是第 1 层那个覆盖组件，所以它压过后面两层；`clear` 之后物品退回第 2 层，只有定义也没声明时，才落到注册表写的档——**锻造结算与画符铭刻写的那一档也一起被清掉**（它们写在同一个组件里，不单独存）。`upgrade` 成功后也把新的那一档写进同一个覆盖组件——所以升级过的物品从此以覆盖组件为准，`/quality clear` 按同样三层重新解析。
-
 ## 升级只升一档
 
 `upgrade` 只推**一档**，付的就是**下一档**自己写的 `upgrade_costs`；想爬两级就执行两次，每次各付各的代价。写了 `next` 却没写代价的那一步是空代价，等于白升；想让某一档当顶端就不写它的 `next`。完整规则见[品质](/datapack/json/quality)。

@@ -47,7 +47,7 @@ description: "back_weapon、belt_item 与 charm 三个 Curios 槽位的格数、
 
 ### `charm` 槽位（四个）
 
-四个 `charm` 槽位直接用 **Curios 内置的 `charm` 槽型**：本模组只在它上面补了格数（4）和一个自动验证器 `mxt:charm_artifact_auto`，槽位名字与图标仍由 Curios 提供（`curios.identifier.charm`、`curios:slot/empty_charm_slot`）。它只接收 `artifact` 里声明了 `curios_equipable: true` 的法器，**没有对应的服务端配置项**——要让别的物品也能放进去，就把物品加进 `curios:charm` 物品标签（`curios:tag` 验证器仍然生效）。放在槽里的法器照常生效：它授予的被动／主动技能与其他 Curios 物品走同一条同步，脱下即回收。这四格不渲染，也没有快捷交换。
+四个 `charm` 槽位直接用 **Curios 内置的 `charm` 槽型**：本模组只在它上面补了格数（4）和一个自动验证器 `mxt:charm_artifact_auto`，它只接收 `artifact` 里声明了 `curios_equipable: true` 的法器，**没有对应的服务端配置项**——要让别的物品也能放进去，就把物品加进 `curios:charm` 物品标签（`curios:tag` 验证器仍然生效）。放在槽里的法器照常生效：它授予的被动／主动技能与其他 Curios 物品走同一条同步，脱下即回收。
 
 > Curios 的槽位 id 是全局字符串，同 id 的定义会合并，所以这 4 格是给整个整合包的 `charm` 槽型定的：别的模组的 charm 物品同样共享它们。
 

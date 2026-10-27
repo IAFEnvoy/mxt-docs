@@ -56,12 +56,6 @@ A stack's quality is the **first** of these that answers:
 2. the tier **the definition the stack itself carries** declares, read from whichever component on that item names a definition identity. The nine definitions declaring `quality` are `technique`, `alchemy_furnace`, `alchemy_wall_material`, `spirit_root`, `physique`, `pill`, `formation`, `secret_realm` and `contract_type`;
 3. the [default_quality](/en/datapack/json/default_quality) registry: whichever tier the item is given there.
 
-Layer 2 is what answers for "several definitions of a type share one built-in item, so the item cannot say which tier applies": every technique manual, every pill, every furnace specification, the spirit-root stone and the physique stone. Neither `artifact` nor `spirit_herb` carries an item identity, so nothing on the stack names a definition identity, and a `talisman` carrier holds a list of bills rather than one definition — those three land in layer 3, and a herb that writes `quality_by_age` has its tier stamped into layer 1 at harvest first.
-
-The ladder follows the tier the stack resolves: the ladder's name is written on the tier itself (on the entry tier), so neither a binding nor a component has to declare it, see [Quality](/en/datapack/json/quality). When none of the three layers answers, the stack has no quality at all and **no ladder's entry tier is supplied for it**.
-
-`set` writes that first layer, so it outranks the two below it; `clear` sends the item back to layer 2, and only when the definition declares no tier either does it reach what the registry writes — **the tier a forge run or an inscription wrote is cleared with it** (it lives in that same component rather than being stored separately). A successful `upgrade` writes the new tier into the same override component, so an upgraded item is decided by the override from then on and `/quality clear` resolves the three layers again.
-
 ## One tier at a time
 
 `upgrade` moves exactly **one** tier and pays the `upgrade_costs` the **next tier** declares; climbing two tiers means running it twice and paying twice. A tier that writes `next` without any cost has that step at an empty price, so it is effectively free; to make a tier the top, leave its `next` out. The full rules are on [Quality](/en/datapack/json/quality).

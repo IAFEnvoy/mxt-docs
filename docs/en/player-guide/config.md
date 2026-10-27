@@ -39,7 +39,7 @@ The ten entries the talisman workstation uses, plus the cooldown that governs fi
 
 | Entry | Default | What it governs |
 | --- | --- | --- |
-| **Server Config → Debug → Debug Mode** | off | Opens the doors kept for reproducing something: trading with yourself, formula failures logged with the whole stack trace, the information panel reporting entries it cannot fit, and the internal trace log printed line by line. In a development build this entry does nothing, because it is already on there. On a release server it lets a player reporting a bug reach the same doors without a second install. |
+| **Server Config → Debug → Debug Mode** | off | Opens the doors kept for reproducing something: trading with yourself, formula failures logged with the whole stack trace, the information panel reporting entries it cannot fit, and the internal trace log printed line by line. Development environments force it on. |
 
 ## Command Aliases
 

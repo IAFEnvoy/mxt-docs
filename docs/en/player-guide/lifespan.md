@@ -5,7 +5,13 @@ description: How the lifespan ledger is written, how the server settles it, what
 
 # Lifespan
 
-**A lifespan is a ledger kept on each body**, holding two numbers: how many ticks of life are left and the ceiling this life was granted, both in ticks (24000 ticks is one game day) and both stored in the `lifespan` attachment. **Every number in the ledger comes from a data pack, a command or the server config** — the mod hard-codes no world-view value of its own — and the server config decides how the line runs. The whole system is **off by default**, so upgrading changes nothing.
+**A lifespan is a ledger kept on each body**, holding two numbers: how many ticks of life are left and the ceiling this life was granted, both in ticks (24000 ticks is one game day) and both stored in the `lifespan` attachment. **Every number in the ledger comes from a data pack, a command or the server config** — the mod hard-codes no world-view value of its own — and the server config decides how the line runs.
+
+::: warning
+
+The feature is off by default; switch it on in the server config. With the switch off the lifespan line stands still: no settlement, no seeding, no expiry, no warning, and the character panel does not draw that row.
+
+:::
 
 ## Where the numbers come from
 
@@ -13,12 +19,12 @@ description: How the lifespan ledger is written, how the server settles it, what
 | --- | --- |
 | `lifespan` on a `realm_stage` | Once, on the breakthrough that reaches that stage, as an increment; a literal constant must be finite and non-negative or loading is refused. |
 | The `mxt:modify_lifespan` entity action | `add` (negative amounts take life away) or `set` (rewrites both numbers at once). |
-| The `mxt:reincarnate` entity action | Makes a body be reborn on the spot: it runs the very same reset list as **On expiry** set to `reincarnate` and reopens the ledger from **Base lifespan** (`0` means not accounting for the body at all); it writes no number of its own, it only reopens the account. The details belong to the [entity action types](/en/datapack/types/action/entity_action_types). |
+| The `mxt:reincarnate` entity action | Makes a body be reborn on the spot: it runs the very same reset list as **On expiry** set to `reincarnate` and reopens the ledger from **Base lifespan** (`0` means not accounting for the body at all). The details belong to the [entity action types](/en/datapack/types/action/entity_action_types). |
 | The command `/mxt lifespan set` / `add` / `reincarnate` | An administrator rewrites or adjusts it directly; `reincarnate` makes a body be reborn on the spot and reopens the ledger from the **Base lifespan** setting. |
 | KubeJS `MxtLifespan` | A script reads or writes it. |
 | **Server Config → Lifespan → Base lifespan** | With the master switch on and that value above `0`, this is what a body is seeded with on first login, or on the first settlement of a body that **holds a ledger nobody ever granted life to**; it is also the starting point when `add` opens a brand-new ledger. Reincarnation recomputes to it too. |
 
-A body with **no ledger** reads as "not accounted for": the `lifespan_remaining` / `lifespan_total` formula variables read `NaN` and `/mxt lifespan get` says so outright. **Writes are unaffected by the master switch**, which only decides whether time passes.
+A body with **no ledger** reads as "not accounted for": the `lifespan_remaining` / `lifespan_total` formula variables read `NaN` and `/mxt lifespan get` says so outright.
 
 ## How the server settles it
 
@@ -44,10 +50,6 @@ Before any of that, `Pre` of `lifespanEnd` fires and **can be cancelled**: a lis
 
 The character information panel (`Z` by default) gains a **Lifespan** row: the remaining life and the ceiling, read as years through **Ticks per year**, or as ticks when that setting is `1`; a body with no ledger, or one whose ledger has been closed (a negative remainder), shows "Unlimited". With the **master switch off the whole row is not drawn**.
 
-## Command
-
-`/mxt lifespan` (with the top-level alias `/lifespan`, switched by **Server Config → Command Aliases → /lifespan**) reads and rewrites the ledger: `get` prints every target's ledger, `set` rewrites both numbers, `add` adjusts them (a negative amount takes life away and only lowers what is left, never the ceiling) and `reincarnate` makes a target be reborn on the spot (it runs the reset list on the Reincarnation tab and reopens the ledger from **Base lifespan**, where `0` means not accounting for the body at all). The write nodes `set` / `add` and `reincarnate`, and `get` when it names other targets, need the `gamemaster` permission. Each subcommand is described on [`/lifespan`](/en/player-guide/commands/lifespan).
-
 ## Server Config
 
 ### Lifespan
@@ -55,11 +57,11 @@ The character information panel (`Z` by default) gains a **Lifespan** row: the r
 | Setting | Default | Effect |
 | --- | --- | --- |
 | **Server Config → Lifespan → Enable lifespan** | off | The master switch, described under "How the server settles it" above. |
-| **Server Config → Lifespan → Base lifespan** | 0 | The ticks granted on first login, or on the first settlement of a body that **holds a ledger nobody ever granted life to**; `0` disables seeding. Range `0..1000000000000`. |
+| **Server Config → Lifespan → Base lifespan** | 0 | The ticks granted on first login, or on the first settlement of a body that **holds a ledger nobody ever granted life to**; `0` disables seeding. |
 | **Server Config → Lifespan → Settle interval** | 20 | How many ticks pass between two settlements. Range `1..72000`. |
-| **Server Config → Lifespan → Age per settle** | 20 | How many ticks of life each settlement spends; its ratio to the settle interval is the rate (20/20 is normal, 20/40 half speed, 40/20 double), and `0` settles without ageing. Range `0..72000`. |
+| **Server Config → Lifespan → Age per settle** | 20 | How many ticks of life each settlement spends; its ratio to the settle interval is the rate (20/20 is normal, 20/40 half speed, 40/20 double), and `0` settles without ageing. |
 | **Server Config → Lifespan → On expiry** | death | The values are `death` / `reincarnate` / `none`, described under "After it runs out". |
-| **Server Config → Lifespan → Warning threshold** | 0.1 | The fraction of the ceiling at which the action bar warns once — only on the crossing; `0` turns it off, and `1` never fires either, because the remaining life is never above its own ceiling. Range `0.0..1.0`. |
+| **Server Config → Lifespan → Warning threshold** | 0.1 | The fraction of the ceiling at which the action bar warns once — only on the crossing; `0` turns it off, and `1` never fires either, because the remaining life is never above its own ceiling. |
 | **Server Config → Lifespan → Ticks per year** | 24000 | The divisor the character panel and the warning use to read ticks as years; `1` shows ticks. Range `1..1000000`. |
 
 ### Reincarnation

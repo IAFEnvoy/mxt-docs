@@ -10,7 +10,6 @@ The mod itself provides framework items, slots, commands and interaction; the ac
 | Goal | Documentation |
 | --- | --- |
 | Meet the items the mod ships | [Built-in Items](./items.md) |
-| Attach gameplay rules to existing items | [Item Bindings and Components](./item-bindings.md) |
 | Look up keybinds, the wheel and paging | [Keys and Wheel](./keys-and-wheel.md) |
 | Place the HUD, read the bars and open the character panel | [HUD and Panels](./hud.md) |
 | Use the Spirit Crafting Table, display stands and Curios slots | [Workstations, Display Stands and Slots](./workstations.md) |

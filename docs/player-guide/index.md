@@ -10,7 +10,6 @@ description: 本体提供的框架级物品、Curios 槽位、快捷键、HUD �
 | 目标 | 文档 |
 | --- | --- |
 | 认识本体自带的物品与组件 | [内置物品](/player-guide/items) |
-| 把玩法规则接到已有物品上 | [物品绑定与组件](/player-guide/item-bindings) |
 | 查按键、轮盘与翻页 | [按键与轮盘](/player-guide/keys-and-wheel) |
 | 摆 HUD、看资源条与人物面板 | [HUD 与面板](/player-guide/hud) |
 | 用灵气工作台、展示架与 Curios 槽位 | [工作台、展示架与槽位](/player-guide/workstations) |

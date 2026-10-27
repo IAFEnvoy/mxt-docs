@@ -47,8 +47,4 @@ This example creates a larger blue flame with `CC` opacity, about 80%:
 
 Without `collide_action`, the meteor passes through blocks until its lifetime expires. `collide_action` and `caster` follow the same rules as [sword aura impacts](/en/tutorial/launch-a-sword-aura): solid blocks are checked only when an impact action is present, and an impact removes the meteor. The action is attributed to `caster`; if the caster cannot be resolved, the meteor simply disappears. Entity collisions and fluids are not checked.
 
-## Flame Settings and Visual Checks
-
-Client configuration “Projectile Flames → Enable projectile flames” controls the effect. Disabling it makes meteors invisible. Flame intensity, wind coefficient, world wind, and distance settings are shared with sword auras. Near, middle, and far effects switch at `16`, `48`, and `128` blocks by default; flames are hidden beyond the maximum distance. Particle sample counts and surface flame opacity affect sword auras only.
-
 Inspect stationary and moving flames from the side, head-on, and close to the core. Also check occlusion behind walls and the appearance through glass or water. Animation should stop while the game is paused. Meteors are visual entities; summoning one does not automatically ignite nearby blocks.

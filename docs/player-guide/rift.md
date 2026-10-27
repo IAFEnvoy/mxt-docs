@@ -21,15 +21,7 @@ description: 自由平面轮廓、目的地、编辑器与秘境令牌召门。
 | `/mxt rift edit` | 创建草稿，默认禁用，提交后才发布。 |
 | 秘境令牌 | 在前方召唤入口；人在秘境中时召唤返回门。 |
 
-编辑器左侧是轮廓画布，右侧属性栏可滚动。选择点后拖动；Shift 追加或排除选区，空白处拖动框选，右键或中键拖动画布，滚轮缩放。边工具拖动两个端点。顶点编号从 `0` 开始，可以按编号选取并输入坐标。
-
-坐标按 X / Y / Z 分为三个输入框；宽高、局部坐标、缩放等相关参数并排填写。浮点数显示三位小数，未修改的值保留原始精度；整数参数仍显示整数。启用传送门和邻近安全落点使用勾选框，目的地类型和门面样式使用下拉框，目的地页只显示当前类型所需的字段。数值输入支持上下微调，yaw、pitch 留空表示保留传送前视角。
-
-基础形状包括矩形、圆角矩形、椭圆、正多边形、拱门和固定种子的裂缝。变换支持选区平移、旋转、缩放、剪切、镜像，以及倒角、整体偏移和 Bézier 边。无选区的变换作用于全部顶点。吸附间距 `1`、`0.5`、`0.0625` 分别对应整格、半格、1/16 格，`0` 为自由移动。
-
-世界预览时面板收起到顶部。开启世界编辑后，在面板外按住右键拖动视角，左键按屏幕中心的视线使用工具；面板按钮仍可点击。Esc 先退出世界编辑，再按 Esc 关闭；返回画布也会退出世界编辑。先在面板选好工具：三点平面连续点击三个方块命中点；贴合工具点击方块面；轮廓笔按视线与当前平面的交点加点；移动工具把选区移到瞄准位置。三个共线点不能确定平面。
-
-撤销与重做最多保存 64 步，完整拖拽只算一步。无效轮廓保留在草稿中，服务端拒绝提交，原门继续工作。应用不会自动续期；改变持续时间或点续期才重新计时。删除需要在 3 秒内再次点击确认。
+![裂隙编辑器](/images/player-guide/rift-editor.webp)
 
 ## 目的地与传送
 
@@ -42,12 +34,6 @@ description: 自由平面轮廓、目的地、编辑器与秘境令牌召门。
 实体必须碰到实际多边形区域，从正面和背面均可触发；凹口不传送。到达后有传送冷却，离开所有门面后才能再次触发。骑乘、载客和平台拒绝的跨维度传送不支持。
 
 坐标门检查整个实体的碰撞、液体、危险方块、世界边界和支撑。先搜索已有安全位置；没有合适落点时，尝试在空白处铺一层泥土。普通玩家通常生成 3×3 平台，较大实体按体积扩大并留一格边。平台不会替换已有方块、排液体或挖开空间，必须完整位于世界边界内且不占用其他实体。无法安全生成时保留原位置。秘境入口、坐标门和回程共用这项兜底。
-
-铺泥土时脚部高度向上对齐整数；世界最低高度处至少抬高一格，给平台留出位置。`nearby=false` 也遵循这项高度调整，但不会搜索其他位置。已有安全位置不会因此改动。
-
-需要加载时异步等待，离开门面、门被编辑或删除、退出游戏会取消；最多等待 200 tick。传入秘境实例的坐标门也要通过成员、条件和人数检查，不能绕过秘境规则。
-
-等待结束立即释放临时区块加载；若释放异常，临时保活约 300 tick 后自动过期，加载未完成时也会计时。该兜底不延长玩家的 200 tick 等待上限，时间按服务端 tick 计算。
 
 ## 秘境令牌
 
@@ -65,29 +51,7 @@ description: 自由平面轮廓、目的地、编辑器与秘境令牌召门。
 
 ## 命令
 
-整棵 `/mxt rift` 子树需要 2 级 OP，`id` 为门 UUID。坐标和方向在当前执行维度解释；facing 为 `north|south|east|west|up|down`。
-
-按 UUID 查询或编辑未加载的门时，会读取它的存储区块；列举整个维度和导出整个布局也可能读取多个区块。命令的 UUID 补全不会因此加载区块。
-
-```text
-/mxt rift spawn <preset> <origin> <facing> position <dimension> <destination>
-/mxt rift spawn <preset> <origin> <facing> secret_realm <definition>
-/mxt rift spawn <preset> <origin> <facing> return
-/mxt rift edit [id]
-/mxt rift info [id]
-/mxt rift target <id> position <dimension> <destination>
-/mxt rift target <id> secret_realm <definition>
-/mxt rift target <id> return
-/mxt rift enabled <id> <true|false>
-/mxt rift duration <id> <ticks>
-/mxt rift copy <id> <origin>
-/mxt rift transform <id> move <offset>
-/mxt rift transform <id> rotate <degrees>
-/mxt rift transform <id> scale <factor>
-/mxt rift transform <id> mirror
-/mxt rift remove <id>
-/mxt rift export <id> <preset|layout>
-```
+整棵 `/mxt rift` 子树需要 2 级 OP，`id` 为门 UUID，坐标与朝向在当前执行维度解释。建门、换目的地、改时长、开关、复制、变换与导出逐条见 [`/rift`](./commands/rift)。
 
 ## 蓝图与导出
 

@@ -76,13 +76,3 @@ The price is paid by the **owner** and may use the owner's resource account, inv
 The orders an owner can give are **follow / wander / stay / recall**, and they are answered by **the creature's own code** (`ContractOperations.behaviors()`) rather than by a data pack field; a content mod may add one of its own. **There is only one copy of the order in force**, on the beast's contract record, and an old save or an id that no longer resolves reads as follow.
 
 The player's entry point is the **Beast Taming Bell**: right-clicking one of your own bound beasts tunes the bell to it (the bell remembers its name and the orders it takes), and right-clicking with nothing in front opens the wheel on the "contract beast" page - picking a cell gives that order. **Follow / wander / stay** stay in force (the next one replaces them); **recall** happens once and leaves the current order alone. This `behavior` command is the operator's way in. A contract type's `follow_action` only runs while the order in force is follow.
-
-## Capturing is the item's business
-
-**Capturing is not a gate on the creature**: any creature may be captured, and **how a capture works is decided by the item** - what it may hold, whether it needs a contract, what it costs are all that item's own rules. The Spirit Beast Bag's own rule is "your own contracted beast, one at a time". A creature only hears about it if it implements `CaptureListener` (`onCaptured` / `onReleased`), and **one that does not implement it can still be taken** - it simply hears nothing.
-
-## Refusal reasons
-
-The scroll, the bell, the bag and this command all print from **one** table of texts, keyed `contract.mxt.failure.<lowercase enum name>`: `already_bound`, `not_contractable`, `owner_conditions`, `creature_conditions`, `limit_reached`, `insufficient_cost`, `not_bound`, `not_owner`, `recall_cooldown`, `recall_pending` (the latch is already set and has not landed yet), `cancelled`, `unsupported_behavior` (the creature does not take that order) and `behavior_refused` (it takes it, but refused this one).
-
-`/contract level` prints from a second table, keyed `command.mxt.contract.failure.<lowercase enum name>`: `unknown_owner` (it owns no progression chain), `foreign_level` (that level is not on its chain), `same_level` (it already stands on that level), `unknown_level` (there is no such level) and `server_only` (server side only). The last two only ever come from a script.

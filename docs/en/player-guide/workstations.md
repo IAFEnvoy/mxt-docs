@@ -16,7 +16,7 @@ A Display Stand (`mxt:oak_display_stand` and the five other wood variants) holds
 
 - Using an item on an empty stand places one of that item on the stand.
 - Using the stand again returns the displayed item, which drops above the centre of the block. Breaking the stand also drops it.
-- If the displayed item implements the aura access interface the ray can fill it; Jade shows the item, and a spirit-power percentage line whenever the item itself can report a charge reading (an `item_aura` definition, or its own `pour`) — a spirit vessel is only ever poured into and reports no reading, so it has no such bar. The stand tries to charge a displayed spirit stone whenever it receives spirit power. A spirit vessel is filled by that ray too (see [Storage and Spirit Vessels](../tutorial/storage-and-spirit-vessels.md)), and firing spirit power with one in the main hand likewise charges it instead of launching a ray.
+- If the displayed item implements the aura access interface the ray can fill it. The stand tries to charge a displayed spirit stone whenever it receives spirit power. A spirit vessel is filled by that ray too (see [Storage and Spirit Vessels](../tutorial/storage-and-spirit-vessels.md)), and firing spirit power with one in the main hand likewise charges it instead of launching a ray.
 
 ## Curios Slots
 
